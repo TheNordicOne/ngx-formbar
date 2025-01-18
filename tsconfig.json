@@ -4,9 +4,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "paths": {
-      "core": [
-        "./dist/core"
-      ]
+      "core": ["./dist/core"]
     },
     "outDir": "./dist/out-tsc",
     "strict": true,
