@@ -7,7 +7,7 @@
       "projectType": "library",
       "root": "projects/core",
       "sourceRoot": "projects/core/src",
-      "prefix": "lib",
+      "prefix": "ngxfw",
       "architect": {
         "build": {
           "builder": "@angular/build:ng-packagr",
