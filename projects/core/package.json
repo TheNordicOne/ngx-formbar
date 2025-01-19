@@ -21,12 +21,12 @@
     "json-form"
   ],
   "author": {
-    "name": "Alexander Pahn",
-    "email": "alexander.pahn@outlook.com"
+    "name": "My Name",
+    "email": "my-email@outlook.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TheNordicOne/ngx-formwork?tab=readme-ov-file"
+    "url": "https://github.com/TheNordicOne/ngx-formwork"
   },
   "bugs": {
     "url": "https://github.com/TheNordicOne/ngx-formwork/issues"
