@@ -9,6 +9,7 @@
     "test": "ng test",
     "lint": "ng lint"
   },
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.0.0",
