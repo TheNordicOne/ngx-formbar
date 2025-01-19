@@ -1,17 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CoreComponent } from './core.component';
+import { FormComponent } from './form.component';
 
-describe('CoreComponent', () => {
-  let component: CoreComponent;
-  let fixture: ComponentFixture<CoreComponent>;
+describe('FormComponent', () => {
+  let component: FormComponent;
+  let fixture: ComponentFixture<FormComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CoreComponent],
-    }).compileComponents();
+      imports: [FormComponent]
+    })
+    .compileComponents();
 
-    fixture = TestBed.createComponent(CoreComponent);
+    fixture = TestBed.createComponent(FormComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
