@@ -28,6 +28,9 @@ jobs:
       - name: Run tests
         run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
 
+      - name: Check dist contents
+        run: ls -la dist/core
+
       - name: Create Release
         id: create_release
         env:
@@ -41,6 +44,8 @@ jobs:
             --latest
 
       - name: Publish to npm
-        run: npm publish
+        run: |
+          cd dist/core
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
