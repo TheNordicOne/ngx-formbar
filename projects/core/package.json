@@ -8,6 +8,27 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "typescript",
+    "reactive-forms",
+    "json-form"
+  ],
+  "author": {
+    "name": "Alexander Pahn",
+    "email": "alexander.pahn@outlook.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheNordicOne/ngx-formwork?tab=readme-ov-file"
+  },
+  "bugs": {
+    "url": "https://github.com/TheNordicOne/ngx-formwork/issues"
+  }
 }
