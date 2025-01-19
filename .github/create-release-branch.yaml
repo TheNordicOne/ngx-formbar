@@ -1,0 +1,47 @@
+name: Create Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version Type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  create-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+
+      - name: Bump version
+        run: |
+          NEW_VERSION=$(npm version ${{ inputs.version_type }})
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Create release branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create and switch to release branch
+          git checkout -b release/${NEW_VERSION}
+
+          # Push the branch
+          git push -u origin release/${NEW_VERSION}
