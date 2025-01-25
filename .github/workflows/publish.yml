@@ -1,4 +1,4 @@
-name: publish.yml
+name: Publish
 on:
   release:
     types:
