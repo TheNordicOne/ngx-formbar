@@ -7,6 +7,7 @@ on:
       - develop
       - 'release/**'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   test:
