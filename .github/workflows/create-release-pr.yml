@@ -98,7 +98,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
   create_release_pr:
-    needs: generate_token
+    needs: [generate_token, bump_version]
     name: Create Release PR
     runs-on: ubuntu-latest
     permissions:
@@ -108,18 +108,19 @@ jobs:
       GH_TOKEN: ${{ needs.generate_token.outputs.token }}
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+            token: ${{ needs.generate_token.outputs.token }}
 
-      - name: Create Release PR
-        run: |
-          git checkout -b release/next-version
-
-          gh pr create \
-            --base main \
-            --head release/next-version \
-            --title "Release ${{ needs.bump_version.outputs.version }}" \
-            --body "Release ${{ needs.bump_version.outputs.version }}" \
-            --label "release"
+        - name: Create Release PR
+          env:
+            GITHUB_TOKEN: ${{ needs.generate_token.outputs.token }}
+          run: |
+            git checkout -b release/next-version
+            gh pr create \
+              --base main \
+              --head release/next-version \
+              --title "Release ${{ needs.bump_version.outputs.version }}" \
+              --body "Release ${{ needs.bump_version.outputs.version }}" \
+              --label "release"
