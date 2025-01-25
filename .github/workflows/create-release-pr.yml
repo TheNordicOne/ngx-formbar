@@ -65,7 +65,7 @@ jobs:
         working-directory: projects/core
         run: |
 
-          if [ -n "${{ inputs.version_type }}" != "auto" ]; then
+          if [ "${{ inputs.version_type }}" != "auto" ]; then
             VERSION=$(npm version ${{ inputs.version_type }})
           else
             bump=$(conventional-recommended-bump -p angular)
