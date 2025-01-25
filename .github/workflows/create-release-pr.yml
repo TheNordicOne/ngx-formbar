@@ -85,7 +85,6 @@ jobs:
           git push origin release/next-version
 
   generate_token:
-    needs: bump_version
     name: Generate Token
     runs-on: ubuntu-latest
     outputs:
