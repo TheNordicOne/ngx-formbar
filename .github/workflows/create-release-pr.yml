@@ -98,7 +98,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
   create_release_pr:
-    needs: generate_token
+    needs: [generate_token,bump_version]
     name: Create Release PR
     runs-on: ubuntu-latest
     permissions:
