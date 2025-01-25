@@ -105,7 +105,7 @@ jobs:
       contents: write
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token}}
+      GH_TOKEN: ${{ needs.generate_token.outputs.token }}
 
     steps:
       - name: Checkout Repository
@@ -116,8 +116,6 @@ jobs:
       - name: Create Release PR
         run: |
           git checkout -b release/next-version
-
-          gh auth login --with-token < ${{ needs.generate_token.outputs.token }}
 
           gh pr create \
             --base main \
