@@ -72,7 +72,7 @@ jobs:
             VERSION=$(npm version $bump -m "Upgrade to %s")
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "New version is $$VERSION"
+          echo "New version is $VERSION"
 
       - name: Commit changes
         working-directory: projects/core
