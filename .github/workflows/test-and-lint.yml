@@ -2,7 +2,7 @@ name: Test and Lint
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop, 'release/*' ]
     types: [ opened, synchronize, reopened ]
   workflow_dispatch:
   workflow_call:
