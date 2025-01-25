@@ -56,8 +56,8 @@ jobs:
         run: |
           version=$(jq -r .version projects/core/package.json)
 
-          gh release create "$version" \
-            --title "Release $version" \
+          gh release create "v$version" \
+            --title "Release v$version" \
             --draft=false \
             --prerelease=false \
             --generate-notes \
