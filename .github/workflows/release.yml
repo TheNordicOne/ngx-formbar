@@ -50,10 +50,17 @@ jobs:
       - name: Pack npm package
         run: cd dist && npm pack
 
+      - name: Generate Token
+        uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Create Release
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           version=$(jq -r .version projects/core/package.json)
 

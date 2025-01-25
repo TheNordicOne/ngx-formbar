@@ -84,15 +84,27 @@ jobs:
         run: |
           git push origin release/next-version
 
+  generate_token:
+    name: Generate Token
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.generate-token.outputs.token }}
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
   create_release_pr:
-    needs: bump_version
+    needs: generate_token
     name: Create Release PR
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ needs.generate_token.outputs.token }}
 
     steps:
       - name: Checkout Repository
