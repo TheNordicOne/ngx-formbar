@@ -1,0 +1,64 @@
+name: Create Release
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    types: [ closed ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-dependencies
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/core
+
+
+  create_release:
+    name: Create Release
+    needs: build
+    permissions:
+      contents: write
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release'))
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Get code
+        uses: actions/checkout@v4
+
+      - name: Get build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: ./dist
+
+      - name: Pack npm package
+        run: cd dist && npm pack
+
+      - name: Create Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version package.json)
+
+          gh release create "$version" \
+            --title "Release $version" \
+            --draft=false \
+            --prerelease=false \
+            --generate-notes \
+            ./dist/*.tgz

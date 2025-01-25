@@ -1,0 +1,36 @@
+name: Test and Lint
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+  workflow_run:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-dependencies
+
+      - name: Run tests
+        run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Lint
+        run: npm run lint

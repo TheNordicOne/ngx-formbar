@@ -1,0 +1,111 @@
+name: Create Release PR
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        type: choice
+        description: 'Version type to bump'
+        required: true
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+        default: 'auto'
+
+jobs:
+  create_release_branch:
+    name: Create Release Branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release Branch
+        run: |
+          git checkout -b release/next-version
+          git push origin release/next-version --force
+
+  bump_version:
+    needs: create_release_branch
+    name: Bump Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version-bump.outputs.version }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Switch to release branch
+        run: |
+          git checkout release/next-version
+
+      - name: Configure Git Credentials
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install additional dependencies
+        run: |
+          npm install -g conventional-recommended-bump
+          npm install -g conventional-changelog-angular
+
+      - name: Bump version
+        id: version-bump
+        working-directory: projects/core
+        run: |
+
+          if [ -n "${{ inputs.version_type }}" != "auto" ]; then
+            VERSION=$(npm version ${{ inputs.version_type }} -m "Upgrade to %s")
+          else
+            bump=$(conventional-recommended-bump -p angular)
+            VERSION=$(npm version $bump -m "Upgrade to %s")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "New version is $$VERSION"
+
+      - name: Commit changes
+        run: |
+          git add package.json ../../package.json
+          git commit -m "chore: bump version to ${{ steps.version-bump.outputs.version }}"
+
+      - name: Push changes
+        run: |
+          git push origin release/next-version
+
+  create_release_pr:
+    needs: bump_version
+    name: Create Release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release PR
+        run: |
+          git checkout -b release/next-version
+
+          gh pr create \
+            --base main \
+            --head release/next-version \
+            --title "Release ${{ needs.bump_version.outputs.version }}" \
+            --body "Release ${{ needs.bump_version.outputs.version }}" \
+            --label "release"
