@@ -54,7 +54,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          version=$(jq -r .version package.json)
+          version=$(jq -r .version projects/core/package.json)
 
           gh release create "$version" \
             --title "Release $version" \
