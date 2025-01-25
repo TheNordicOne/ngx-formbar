@@ -66,10 +66,10 @@ jobs:
         run: |
 
           if [ -n "${{ inputs.version_type }}" != "auto" ]; then
-            VERSION=$(npm version ${{ inputs.version_type }} -m "Upgrade to %s")
+            VERSION=$(npm version ${{ inputs.version_type }})
           else
             bump=$(conventional-recommended-bump -p angular)
-            VERSION=$(npm version $bump -m "Upgrade to %s")
+            VERSION=$(npm version $bump)
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "New version is $VERSION"
@@ -78,7 +78,7 @@ jobs:
         working-directory: projects/core
         run: |
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version-bump.outputs.version }}"
+          git commit -m "chore: bumped version to ${{ steps.version-bump.outputs.version }}"
 
       - name: Push changes
         run: |
