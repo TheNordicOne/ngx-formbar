@@ -33,5 +33,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
 
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-dependencies
+
       - name: Lint
         run: npm run lint
