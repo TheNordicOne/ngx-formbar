@@ -157,10 +157,10 @@ export default config(
           ],
         },
         {
-          type: 'component',
+          type: 'feature',
           mode: 'full',
-          capture: ['lib', 'componentName'],
-          pattern: ['projects/**/lib/components/*/**/*'],
+          capture: ['lib', 'featureName'],
+          pattern: ['projects/**/lib/features/*/**/*'],
         },
         {
           type: 'core',
@@ -192,10 +192,10 @@ export default config(
               allow: ['shared'],
             },
             {
-              from: ['component'],
+              from: ['feature'],
               allow: [
                 'shared',
-                ['component', { componentName: '${from.componentName}' }],
+                ['feature', { featureName: '${from.featureName}' }],
               ],
             },
             {
@@ -204,7 +204,7 @@ export default config(
             },
             {
               from: ['root'],
-              allow: ['root', 'core', 'component', 'shared'],
+              allow: ['root', 'core', 'feature', 'shared'],
             },
           ],
         },
