@@ -107,6 +107,7 @@ export default config(
     },
   },
   {
+    name: 'Jasmine',
     files: ['projects/**/*.spec.ts'],
     extends: [jasminePlugin.configs.recommended, prettierConfig],
     languageOptions: {
@@ -115,7 +116,9 @@ export default config(
       },
     },
     plugins: { jasmine: jasminePlugin },
-    rules: {},
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+    },
   },
   {
     name: 'Angular',
