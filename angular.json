@@ -38,7 +38,7 @@
               "projects/core/**/*.ts",
               "projects/core/**/*.html"
             ],
-            "eslintConfig": "./eslint.config.js"
+            "eslintConfig": "./eslint.config.mjs"
           }
         }
       }
