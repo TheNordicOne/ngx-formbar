@@ -8,6 +8,12 @@
       "root": "projects/core",
       "sourceRoot": "projects/core/src",
       "prefix": "ngxfw",
+      "schematics": {
+        "@schematics/angular:component": {
+          "inlineTemplate": false,
+          "inlineStyle": true
+        }
+      },
       "architect": {
         "build": {
           "builder": "@angular/build:ng-packagr",
