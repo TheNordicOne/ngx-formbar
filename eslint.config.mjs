@@ -145,6 +145,15 @@ export default config(
           ],
         },
         {
+          type: 'component-test',
+          mode: 'full',
+          capture: ['lib', 'featureName'],
+          pattern: [
+            'projects/**/lib/features/*/**/*.cy.ts',
+            'projects/**/lib/features/*/**/*.spec.ts',
+          ],
+        },
+        {
           type: 'feature',
           mode: 'full',
           capture: ['lib', 'featureName'],
@@ -202,6 +211,14 @@ export default config(
             {
               from: ['test'],
               allow: ['root', 'core', 'feature', 'shared'],
+            },
+            {
+              from: ['component-test'],
+              allow: [
+                'test',
+                'shared',
+                ['feature', { featureName: '${from.featureName}' }],
+              ],
             },
           ],
         },
