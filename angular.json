@@ -116,7 +116,7 @@
               "projects/dummy/**/*.ts",
               "projects/dummy/**/*.html"
             ],
-            "eslintConfig": "projects/dummy/eslint.config.js"
+            "eslintConfig": "projects/dummy/eslint.config.mjs"
           }
         }
       }
