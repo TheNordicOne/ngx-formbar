@@ -211,7 +211,7 @@ export default config(
             },
             {
               from: ['test'],
-              allow: ['root', 'core', 'feature', 'shared'],
+              allow: ['test', 'root', 'core', 'feature', 'shared'],
             },
             {
               from: ['component-test'],
