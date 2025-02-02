@@ -133,7 +133,7 @@ export default config(
         },
       },
       'boundaries/dependency-nodes': ['import', 'dynamic-import'],
-      'boundaries/include': ['projects/**/lib/**/*'],
+      'boundaries/include': ['projects/**/lib/**/*', 'projects/**/test/**/*'],
       'boundaries/elements': [
         {
           type: 'shared',
@@ -154,6 +154,11 @@ export default config(
           type: 'core',
           mode: 'full',
           pattern: ['projects/**/lib/core/**/*'],
+        },
+        {
+          type: 'test',
+          mode: 'full',
+          pattern: ['projects/**/test/**/*'],
         },
         {
           type: 'root',
@@ -192,6 +197,10 @@ export default config(
             },
             {
               from: ['root'],
+              allow: ['root', 'core', 'feature', 'shared'],
+            },
+            {
+              from: ['test'],
               allow: ['root', 'core', 'feature', 'shared'],
             },
           ],
