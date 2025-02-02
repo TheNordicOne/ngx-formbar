@@ -1,0 +1,5 @@
+# About Dummy App
+
+This app only exists for testing purposes. The main reason is to enable support for Cypress Tests, without needing manual configuration.
+
+Furthermore can this app be used for any other manuel or e2e testing.
