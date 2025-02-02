@@ -47,7 +47,6 @@
     "eslint-formatter-mo": "^2.2.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-boundaries": "^5.0.1",
-    "eslint-plugin-jasmine": "^4.2.2",
     "eslint-plugin-jsonc": "^2.19.1",
     "eslint-plugin-typescript-enum": "^2.1.0",
     "globals": "^15.14.0",
