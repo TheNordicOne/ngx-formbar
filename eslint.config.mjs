@@ -5,7 +5,6 @@ import { configs as jsoncConfigs } from 'eslint-plugin-jsonc';
 import globals from 'globals';
 import { config, configs as tsConfigs } from 'typescript-eslint';
 import boundaries from 'eslint-plugin-boundaries';
-import jasminePlugin from 'eslint-plugin-jasmine';
 
 export default config(
   { ignores: ['.angular/*', 'dist/*'] },
@@ -104,20 +103,6 @@ export default config(
       '@angular-eslint/template/i18n': 'off',
       // Turning this off to be able to use signals
       // There currently is no way to differentiate between a signal and a function call, other thant adding prefixes or suffixes      "@angular-eslint/template/no-call-expression": "off",
-    },
-  },
-  {
-    name: 'Jasmine',
-    files: ['projects/**/*.spec.ts'],
-    extends: [jasminePlugin.configs.recommended, prettierConfig],
-    languageOptions: {
-      globals: {
-        ...globals.jasmine,
-      },
-    },
-    plugins: { jasmine: jasminePlugin },
-    rules: {
-      '@typescript-eslint/no-unsafe-call': 'off',
     },
   },
   {
