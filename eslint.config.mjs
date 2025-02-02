@@ -102,7 +102,8 @@ export default config(
     rules: {
       '@angular-eslint/template/i18n': 'off',
       // Turning this off to be able to use signals
-      // There currently is no way to differentiate between a signal and a function call, other thant adding prefixes or suffixes      "@angular-eslint/template/no-call-expression": "off",
+      // There currently is no way to differentiate between a signal and a function call, other thant adding prefixes or suffixes
+      '@angular-eslint/template/no-call-expression': 'off',
     },
   },
   {
