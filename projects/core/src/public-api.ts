@@ -2,4 +2,4 @@
  * Public API Surface of core
  */
 
-export * from './lib/components/index';
+export * from './lib/features/index';
