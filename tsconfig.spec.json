@@ -4,7 +4,7 @@
     "outDir": "../../out-tsc/spec",
     "types": ["jest"],
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
   },
   "files": ["jest.config.js"],
   "include": ["projects/**/*.spec.ts", "projects/**/*.d.ts"]
