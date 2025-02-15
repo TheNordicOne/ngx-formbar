@@ -19,5 +19,5 @@ export class ContentHostComponent<T extends NgxFwContent> {
     return component ?? null;
   });
 
-  readonly componentInputs = computed(() => ({ control: this.content() }));
+  readonly componentInputs = computed(() => ({ content: this.content() }));
 }
