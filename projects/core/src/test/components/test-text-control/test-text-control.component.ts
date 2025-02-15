@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-import { NgxFwControl } from '../../../lib/types/content.type';
+
+import { TestTextControl } from '../../types/controls.type';
 
 @Component({
   selector: 'ngxfw-test-text-control',
@@ -7,7 +8,7 @@ import { NgxFwControl } from '../../../lib/types/content.type';
   templateUrl: './test-text-control.component.html',
 })
 export class TestTextControlComponent {
-  readonly content = input<NgxFwControl>();
+  readonly content = input<TestTextControl>();
 
   readonly testId = computed(() => {
     const control = this.content();
