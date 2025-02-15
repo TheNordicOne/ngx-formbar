@@ -1,6 +1,7 @@
 import { NgxFwFormComponent } from './ngx-fw-form.component';
 import { ContentRegistrationService } from '../../services/content-registration.service';
 import { Type } from '@angular/core';
+import { dummyControlContainer } from '../../../test/integration/shared/control-container';
 
 describe('Form Component', () => {
   it('it should create the component', () => {
@@ -12,6 +13,7 @@ describe('Form Component', () => {
             new Map<string, Type<unknown>>(),
           ),
         },
+        dummyControlContainer,
       ],
       componentProperties: {
         formContent: [],

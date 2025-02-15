@@ -20,6 +20,28 @@ describe('Control', () => {
       cy.getByTestId('first').should('exist');
       cy.getByTestId('first-label').should('have.text', 'First label');
       cy.getByTestId('first-hint').should('have.text', 'This is a hint');
+
+      cy.getByTestId('first-input').should('have.value', 'First Default');
+    });
+
+    it('should work without default value', () => {
+      cy.mount(ControlIntegrationHostComponent, {
+        providers: [formworkProviders],
+        componentProperties: {
+          content: {
+            id: 'first',
+            type: 'test-text-control',
+            label: 'First label',
+            hint: 'This is a hint',
+          },
+        },
+      });
+
+      cy.getByTestId('first').should('exist');
+      cy.getByTestId('first-label').should('have.text', 'First label');
+      cy.getByTestId('first-hint').should('have.text', 'This is a hint');
+
+      cy.getByTestId('first-input').should('have.value', '');
     });
   });
 });

@@ -4,10 +4,11 @@ import { viewProviders } from '../../../lib/helper/view-providers';
 import { ngxfwControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
 import { NgxfwControlDirective } from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'ngxfw-test-text-control',
-  imports: [],
+  imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html',
   viewProviders,
   hostDirectives: [ngxfwControlHostDirective],
