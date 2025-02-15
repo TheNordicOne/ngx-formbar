@@ -1,11 +1,11 @@
-import { IntegrationHostComponent } from './integration-host/integration-host.component';
+import { RegistrationIntegrationHostComponent } from './integration-host/registration-integration-host.component';
 import { provideFormwork } from '../../../lib';
 import { TestTextControlComponent } from '../../components/test-text-control/test-text-control.component';
 import { TestGroupComponent } from '../../components/test-group/test-group.component';
 
 describe('Content Registration', () => {
   it('should show registered content', () => {
-    cy.mount(IntegrationHostComponent, {
+    cy.mount(RegistrationIntegrationHostComponent, {
       providers: [
         provideFormwork(
           {
