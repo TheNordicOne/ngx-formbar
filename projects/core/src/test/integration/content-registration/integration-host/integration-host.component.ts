@@ -1,7 +1,7 @@
 import { Component, inject, input } from '@angular/core';
-import { ContentHostComponent } from '../../../../lib/features/form/components/content-host/content-host.component';
+import { ContentHostComponent } from '../../../../lib/components/content-host/content-host.component';
 import { TestTextControl } from '../../../types/controls.type';
-import { ContentRegistrationService } from '../../../../lib/features/form/services/content-registration.service';
+import { ContentRegistrationService } from '../../../../lib/services/content-registration.service';
 
 @Component({
   selector: 'ngxfw-integration-host',

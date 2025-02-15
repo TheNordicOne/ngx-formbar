@@ -2,9 +2,9 @@ import { ContentHostComponent } from './content-host.component';
 import {
   TestTextControl,
   UnknownContent,
-} from '../../../../../test/types/controls.type';
-import { TestGroup } from '../../../../../test/types/group.type';
-import { registrations } from '../../../../../test/helper/registrations';
+} from '../../../test/types/controls.type';
+import { TestGroup } from '../../../test/types/group.type';
+import { registrations } from '../../../test/helper/registrations';
 
 describe('Content Host Component', () => {
   it('should create the component', () => {

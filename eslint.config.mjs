@@ -139,26 +139,22 @@ export default config(
         {
           type: 'shared',
           mode: 'full',
-          pattern: [
-            'projects/**/lib/shared/**/*',
-            'projects/**/lib/tokens/**/*',
-            'projects/**/lib/types/**/*',
-          ],
+          pattern: ['projects/shared/**/*'],
         },
         {
           type: 'component-test',
           mode: 'full',
-          capture: ['lib', 'featureName'],
+          capture: ['project'],
           pattern: [
-            'projects/**/lib/features/*/**/*.cy.ts',
-            'projects/**/lib/features/*/**/*.spec.ts',
+            'projects/**/lib/*/**/*.cy.ts',
+            'projects/**/lib/*/**/*.spec.ts',
           ],
         },
         {
-          type: 'feature',
+          type: 'project',
           mode: 'full',
-          capture: ['lib', 'featureName'],
-          pattern: ['projects/**/lib/features/*/**/*'],
+          capture: ['project'],
+          pattern: ['projects/**/lib/*/**/*', 'projects/**/lib/*'],
         },
         {
           type: 'core',
@@ -168,12 +164,7 @@ export default config(
         {
           type: 'test',
           mode: 'full',
-          pattern: ['projects/**/test/**/*'],
-        },
-        {
-          type: 'root',
-          mode: 'full',
-          pattern: ['projects/**/lib/*'],
+          pattern: ['projects/**/test/*/**/*', 'projects/**/test/*'],
         },
         {
           type: 'index',
@@ -195,30 +186,23 @@ export default config(
               allow: ['shared'],
             },
             {
-              from: ['feature'],
-              allow: [
-                'shared',
-                ['feature', { featureName: '${from.featureName}' }],
-              ],
+              from: ['project'],
+              allow: ['shared', ['project', { project: '${from.project}' }]],
             },
             {
               from: ['core'],
               allow: ['shared'],
             },
             {
-              from: ['root'],
-              allow: ['root', 'core', 'feature', 'shared'],
-            },
-            {
               from: ['test'],
-              allow: ['test', 'root', 'core', 'feature', 'shared', 'index'],
+              allow: ['test', 'root', 'core', 'project', 'shared', 'index'],
             },
             {
               from: ['component-test'],
               allow: [
                 'test',
                 'shared',
-                ['feature', { featureName: '${from.featureName}' }],
+                ['project', { project: '${from.project}' }],
               ],
             },
           ],
