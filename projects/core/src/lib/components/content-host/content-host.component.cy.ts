@@ -34,7 +34,7 @@ describe('Content Host Component', () => {
           registrations,
         },
       });
-      cy.getByTestId('group').should('exist');
+      cy.getByTestId('group-some-group').should('exist');
     });
 
     it('uses content type control', () => {
@@ -49,7 +49,7 @@ describe('Content Host Component', () => {
           registrations,
         },
       });
-      cy.getByTestId('control').should('exist');
+      cy.getByTestId('control-some-control').should('exist');
     });
   });
 });
