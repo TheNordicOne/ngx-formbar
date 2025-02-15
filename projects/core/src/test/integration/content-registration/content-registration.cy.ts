@@ -8,7 +8,7 @@ describe('Content Registration', () => {
       componentProperties: {
         content: {
           type: 'test-text-control',
-          id: '',
+          id: 'control',
           label: 'Test',
         },
       },

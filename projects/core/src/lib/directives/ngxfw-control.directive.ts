@@ -1,4 +1,4 @@
-import { Directive, input } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 import { NgxFwControl } from '../types/content.type';
 
 @Directive({
@@ -6,4 +6,5 @@ import { NgxFwControl } from '../types/content.type';
 })
 export class NgxfwControlDirective<T extends NgxFwControl> {
   readonly content = input.required<T>();
+  readonly testId = computed(() => this.content().id);
 }
