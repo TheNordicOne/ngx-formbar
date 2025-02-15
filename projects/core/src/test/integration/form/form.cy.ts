@@ -11,22 +11,27 @@ describe('Form', () => {
             {
               id: 'first',
               type: 'test-text-control',
+              label: 'First',
             },
             {
               id: 'second',
               type: 'test-text-control',
+              label: 'Second',
             },
             {
               id: 'third',
               type: 'test-text-control',
+              label: 'Third',
             },
             {
               id: 'fourth',
               type: 'test-text-control',
+              label: 'Fourth',
             },
             {
               id: 'fifth',
               type: 'test-text-control',
+              label: 'Fifth',
             },
           ],
         },
