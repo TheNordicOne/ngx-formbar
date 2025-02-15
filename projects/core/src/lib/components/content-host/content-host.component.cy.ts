@@ -51,7 +51,7 @@ describe('Content Host Component', () => {
           registrations,
         },
       });
-      cy.getByTestId('control-some-control').should('exist');
+      cy.getByTestId('some-control').should('exist');
     });
   });
 });

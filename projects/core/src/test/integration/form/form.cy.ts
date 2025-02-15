@@ -39,11 +39,11 @@ describe('Form', () => {
     });
 
     it('should show all content based on the form config', () => {
-      cy.getByTestId('control-first').should('exist');
-      cy.getByTestId('control-second').should('exist');
-      cy.getByTestId('control-third').should('exist');
-      cy.getByTestId('control-fourth').should('exist');
-      cy.getByTestId('control-fifth').should('exist');
+      cy.getByTestId('first').should('exist');
+      cy.getByTestId('second').should('exist');
+      cy.getByTestId('third').should('exist');
+      cy.getByTestId('fourth').should('exist');
+      cy.getByTestId('fifth').should('exist');
     });
   });
 });

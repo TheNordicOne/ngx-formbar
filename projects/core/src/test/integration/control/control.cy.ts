@@ -17,12 +17,9 @@ describe('Control', () => {
         },
       });
 
-      cy.getByTestId('control-first').should('exist');
-      cy.getByTestId('control-first-label').should('have.text', 'First label');
-      cy.getByTestId('control-first-hint').should(
-        'have.text',
-        'This is a hint',
-      );
+      cy.getByTestId('first').should('exist');
+      cy.getByTestId('first-label').should('have.text', 'First label');
+      cy.getByTestId('first-hint').should('have.text', 'This is a hint');
     });
   });
 });
