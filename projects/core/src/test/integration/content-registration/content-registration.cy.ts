@@ -9,6 +9,7 @@ describe('Content Registration', () => {
         content: {
           type: 'test-text-control',
           id: '',
+          label: 'Test',
         },
       },
     });

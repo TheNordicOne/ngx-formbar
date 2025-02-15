@@ -11,6 +11,7 @@ describe('Content Host Component', () => {
     const content: UnknownContent = {
       id: 'some-group',
       type: 'unknown',
+      label: 'Unkown',
     };
 
     cy.mount(ContentHostComponent, {
@@ -41,6 +42,7 @@ describe('Content Host Component', () => {
       const content: TestTextControl = {
         id: 'some-control',
         type: 'test-text-control',
+        label: 'Some Control',
       };
 
       cy.mount(ContentHostComponent, {

@@ -11,6 +11,7 @@ export type NgxFwFormGroup = NgxFwBaseContent & {
 
 export type NgxFwControl = NgxFwBaseContent & {
   id: string;
+  label: string;
 };
 
 export type NgxFwContent = OneOf<[NgxFwFormGroup, NgxFwControl]>;
