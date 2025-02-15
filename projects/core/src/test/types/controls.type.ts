@@ -1,4 +1,4 @@
-import { NgxFwControl } from '../../lib/features/form/types/content.type';
+import { NgxFwControl } from '../../lib/types/content.type';
 
 export type TestTextControl = NgxFwControl & {
   type: 'test-text-control';
