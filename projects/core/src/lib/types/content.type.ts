@@ -1,4 +1,4 @@
-import { OneOf } from '../../../shared/helper/type.helper';
+import { OneOf } from '../helper/type.helper';
 
 type NgxFwBaseContent = {
   type: string;

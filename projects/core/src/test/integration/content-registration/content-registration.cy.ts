@@ -1,5 +1,5 @@
 import { IntegrationHostComponent } from './integration-host/integration-host.component';
-import { provideFormwork } from '../../../lib/features';
+import { provideFormwork } from '../../../lib';
 import { TestTextControlComponent } from '../../components/test-text-control/test-text-control.component';
 import { TestGroupComponent } from '../../components/test-group/test-group.component';
 
