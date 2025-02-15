@@ -6,9 +6,9 @@ import { ContentRegistrationService } from '../../../../lib/services/content-reg
 @Component({
   selector: 'ngxfw-integration-host',
   imports: [ContentHostComponent],
-  templateUrl: './integration-host.component.html',
+  templateUrl: './registration-integration-host.component.html',
 })
-export class IntegrationHostComponent {
+export class RegistrationIntegrationHostComponent {
   private readonly contentRegistrationService = inject(
     ContentRegistrationService,
   );
