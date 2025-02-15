@@ -2,5 +2,9 @@
 <label [htmlFor]="content()?.id" [attr.data-testId]="testId() + '-label'">{{
   content()?.label
 }}</label>
-<input [attr.data-testId]="testId() + '-input'" [id]="content()?.id" />
+<input
+  [attr.data-testId]="testId() + '-input'"
+  [id]="content()?.id"
+  [formControlName]="content().id"
+/>
 <span [attr.data-testId]="testId() + '-hint'">{{ content()?.hint }}</span>

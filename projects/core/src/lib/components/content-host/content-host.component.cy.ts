@@ -5,6 +5,7 @@ import {
 } from '../../../test/types/controls.type';
 import { TestGroup } from '../../../test/types/group.type';
 import { registrations } from '../../../test/helper/registrations';
+import { dummyControlContainer } from '../../../test/integration/shared/control-container';
 
 describe('Content Host Component', () => {
   it('should create the component', () => {
@@ -50,6 +51,7 @@ describe('Content Host Component', () => {
           content,
           registrations,
         },
+        providers: [dummyControlContainer],
       });
       cy.getByTestId('some-control').should('exist');
     });
