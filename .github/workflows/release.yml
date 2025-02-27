@@ -63,3 +63,7 @@ jobs:
             --prerelease=false \
             --generate-notes \
             ./dist/*.tgz
+
+  publish:
+    needs: create_release
+    uses: ./.github/workflows/publish.yml
