@@ -6,6 +6,7 @@ import {
 import { TestGroup } from '../../../test/types/group.type';
 import { registrations } from '../../../test/helper/registrations';
 import { dummyControlContainer } from '../../../test/integration/shared/control-container';
+import { formworkProviders } from '../../../test/integration/shared/provide-formwork';
 
 describe('Content Host Component', () => {
   it('should create the component', () => {
@@ -16,6 +17,7 @@ describe('Content Host Component', () => {
     };
 
     cy.mount(ContentHostComponent, {
+      providers: [dummyControlContainer, formworkProviders],
       componentProperties: {
         content,
         registrations,
@@ -28,15 +30,17 @@ describe('Content Host Component', () => {
       const content: TestGroup = {
         id: 'some-group',
         type: 'test-group',
+        controls: [],
       };
 
       cy.mount(ContentHostComponent, {
+        providers: [dummyControlContainer, formworkProviders],
         componentProperties: {
           content,
           registrations,
         },
       });
-      cy.getByTestId('group-some-group').should('exist');
+      cy.getByTestId('some-group').should('exist');
     });
 
     it('uses content type control', () => {
@@ -47,11 +51,11 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(ContentHostComponent, {
+        providers: [dummyControlContainer, formworkProviders],
         componentProperties: {
           content,
           registrations,
         },
-        providers: [dummyControlContainer],
       });
       cy.getByTestId('some-control').should('exist');
     });
