@@ -13,6 +13,7 @@ export type NgxFwControl = NgxFwBaseContent & {
   id: string;
   label: string;
   defaultValue?: unknown;
+  nonNullable?: boolean;
 };
 
 export type NgxFwContent = OneOf<[NgxFwFormGroup, NgxFwControl]>;

@@ -25,7 +25,10 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   }
 
   ngOnInit(): void {
-    const formControl = new FormControl(this.content().defaultValue);
+    const content = this.content();
+    const formControl = new FormControl(content.defaultValue, {
+      nonNullable: content.nonNullable
+    });
 
     this.parentFormGroup?.addControl(this.content().id, formControl, {
       emitEvent: false,
