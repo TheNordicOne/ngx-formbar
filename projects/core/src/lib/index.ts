@@ -3,3 +3,7 @@ export * from './types/content.type';
 export * from './types/registration.type';
 export * from './config/provide-formfwork';
 export * from './directives/ngxfw-control.directive';
+export * from './directives/ngxfw-group.directive';
+export * from './helper/control-container-view-providers';
+export * from './helper/ngxfw-control-host-directive';
+export * from './helper/ngxfw-group-host-directive';

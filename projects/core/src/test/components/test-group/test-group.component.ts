@@ -5,13 +5,13 @@ import { NgxfwGroupDirective } from '../../../lib/directives/ngxfw-group.directi
 import { TestGroup } from '../../types/group.type';
 import { NgxFwContent } from '../../../lib';
 import { ReactiveFormsModule } from '@angular/forms';
-import { viewProviders } from '../../../lib/helper/view-providers';
+import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 
 @Component({
   selector: 'ngxfw-test-group',
   imports: [ContentHostComponent, ReactiveFormsModule],
   templateUrl: './test-group.component.html',
-  viewProviders,
+  viewProviders: controlContainerViewProviders,
   hostDirectives: [ngxfwGroupHostDirective],
 })
 export class TestGroupComponent {

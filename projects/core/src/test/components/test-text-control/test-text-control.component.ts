@@ -1,6 +1,6 @@
 import { Component, inject, Signal } from '@angular/core';
 
-import { viewProviders } from '../../../lib/helper/view-providers';
+import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { ngxfwControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
 import { NgxfwControlDirective } from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
@@ -10,7 +10,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   selector: 'ngxfw-test-text-control',
   imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html',
-  viewProviders,
+  viewProviders: controlContainerViewProviders,
   hostDirectives: [ngxfwControlHostDirective],
 })
 export class TestTextControlComponent {
