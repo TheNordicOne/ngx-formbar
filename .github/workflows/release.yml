@@ -66,4 +66,6 @@ jobs:
 
   publish:
     needs: create_release
+    permissions:
+      id-token: write
     uses: ./.github/workflows/publish.yml
