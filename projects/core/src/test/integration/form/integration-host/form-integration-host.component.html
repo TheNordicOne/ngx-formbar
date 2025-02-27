@@ -1,3 +1,13 @@
-<form [formGroup]="form">
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
   <ngxfw-form [formContent]="formContent()" />
+  <button data-testId="submit" type="submit">Submit</button>
 </form>
+
+<button data-testId="patch" type="button" (click)="patchValue()">Patch</button>
+<button data-testId="reset" type="button" (click)="reset()">Reset</button>
+
+@for (entry of formValues(); track entry[0]){
+  <div>
+    <span [attr.data-testId]="entry[0]">{{entry[1]}}</span>
+  </div>
+}
