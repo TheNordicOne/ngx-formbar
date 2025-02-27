@@ -1,5 +1,3 @@
-import { OneOf } from '../helper/type.helper';
-
 type NgxFwBaseContent = {
   type: string;
 };
@@ -7,6 +5,7 @@ type NgxFwBaseContent = {
 export type NgxFwFormGroup = NgxFwBaseContent & {
   id: string;
   title?: string;
+  controls: NgxFwContent[];
 };
 
 export type NgxFwControl = NgxFwBaseContent & {
@@ -14,6 +13,7 @@ export type NgxFwControl = NgxFwBaseContent & {
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
+  [key: string]: unknown;
 };
 
-export type NgxFwContent = OneOf<[NgxFwFormGroup, NgxFwControl]>;
+export type NgxFwContent = NgxFwFormGroup | NgxFwControl;

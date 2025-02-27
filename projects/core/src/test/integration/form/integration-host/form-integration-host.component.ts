@@ -1,7 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { NgxFwFormComponent } from '../../../../lib';
-import { NgxFwContent } from '../../../../lib';
+import { NgxFwContent, NgxFwFormComponent } from '../../../../lib';
 
 @Component({
   selector: 'ngxfw-form-integration-host',
@@ -11,27 +10,52 @@ import { NgxFwContent } from '../../../../lib';
 export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
   readonly formContent = input.required<NgxFwContent[]>();
-  readonly formValues = signal<[string, unknown][]>([]);
+  readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 
   form = this.formBuilder.group({});
 
-  reset(){
+  reset() {
     this.form.reset();
   }
 
-  patchValue(){
+  patchValue() {
     this.form.patchValue({
       first: 'patched-first',
       second: 'patched-second',
       third: 'patched-third',
       fourth: 'patched-fourth',
       fifth: 'patched-fifth',
-    })
+    });
   }
 
-  onSubmit(){
-    const value = this.form.getRawValue();
-    const entries = Object.entries(value)
-    this.formValues.set(entries);
+  onSubmit() {
+    const formValue = this.form.getRawValue();
+    const result = this.flattenFormValues(formValue);
+    this.formValues.set(result);
+  }
+
+  flattenFormValues(
+    obj: object,
+    parentPath = '',
+  ): { path: string; value: unknown }[] {
+    let result: { path: string; value: unknown }[] = [];
+
+    Object.entries(obj).forEach(([key, value]) => {
+      console.log(key, value);
+      const path = parentPath ? `${parentPath}.${key}` : key;
+
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
+        result = result.concat(this.flattenFormValues(value as object, path));
+        return;
+      }
+
+      result.push({ path, value });
+    });
+
+    return result;
   }
 }

@@ -1,4 +1,4 @@
-import { NgxFwFormGroup } from '../../lib/types/content.type';
+import { NgxFwFormGroup } from '../../lib';
 
 export type TestGroup = NgxFwFormGroup & {
   type: 'test-group';

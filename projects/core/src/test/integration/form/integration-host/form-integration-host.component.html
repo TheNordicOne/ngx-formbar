@@ -6,8 +6,8 @@
 <button data-testId="patch" type="button" (click)="patchValue()">Patch</button>
 <button data-testId="reset" type="button" (click)="reset()">Reset</button>
 
-@for (entry of formValues(); track entry[0]){
+@for (entry of formValues(); track entry.path) {
   <div>
-    <span [attr.data-testId]="entry[0]">{{entry[1]}}</span>
+    <span [attr.data-testId]="entry.path + '-value'">{{ entry.value }}</span>
   </div>
 }
