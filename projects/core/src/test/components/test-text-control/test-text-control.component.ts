@@ -18,4 +18,8 @@ export class TestTextControlComponent {
 
   readonly content: Signal<TestTextControl> = this.control.content;
   readonly testId: Signal<string> = this.control.testId;
+
+  get controlInstance() {
+    return this.control.control;
+  }
 }

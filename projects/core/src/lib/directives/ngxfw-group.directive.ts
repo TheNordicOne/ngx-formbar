@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { NgxFwFormGroup } from '../types/content.type';
 import { ControlContainer, FormGroup } from '@angular/forms';
-import { ContentRegistrationService } from '../services/content-registration.service';
+import { ComponentRegistrationService } from '../services/component-registration.service';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -18,7 +18,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 {
   private parentContainer = inject(ControlContainer);
   private readonly contentRegistrationService = inject(
-    ContentRegistrationService,
+    ComponentRegistrationService,
   );
 
   readonly content = input.required<T>();

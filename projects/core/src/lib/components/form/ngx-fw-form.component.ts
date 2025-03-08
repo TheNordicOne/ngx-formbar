@@ -1,7 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { NgxFwContent } from '../../types/content.type';
 import { ContentHostComponent } from '../content-host/content-host.component';
-import { ContentRegistrationService } from '../../services/content-registration.service';
+import { ComponentRegistrationService } from '../../services/component-registration.service';
 
 @Component({
   selector: 'ngxfw-form',
@@ -10,7 +10,7 @@ import { ContentRegistrationService } from '../../services/content-registration.
 })
 export class NgxFwFormComponent {
   private readonly contentRegistrationService = inject(
-    ContentRegistrationService,
+    ComponentRegistrationService,
   );
   readonly registrations = this.contentRegistrationService.registrations;
 
