@@ -3,22 +3,148 @@ import {
   makeEnvironmentProviders,
   Type,
 } from '@angular/core';
-import { RegistrationConfig } from '../types/registration.type';
-import { ContentRegistrationService } from '../services/content-registration.service';
+import { ComponentRegistrationService } from '../services/component-registration.service';
+import { FormworkConfig } from '../types/provide.type';
+import { ComponentRegistrationConfig } from '../types/registration.type';
+import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
+import {
+  AsyncValidatorConfig,
+  RegistrationRecord,
+  ValidatorConfig,
+  ValidatorKey,
+} from '../types/validation.type';
+import { ValidatorRegistrationService } from '../services/validator-registration.service';
 
-export function provideFormwork(
-  ...registrationConfigs: RegistrationConfig[]
-): EnvironmentProviders {
-  const registrations = new Map<string, Type<unknown>>();
-
-  registrationConfigs.forEach((reg) => {
-    registrations.set(reg.type, reg.component);
-  });
+export function provideFormwork<
+  S extends RegistrationRecord,
+  A extends RegistrationRecord,
+>(config: FormworkConfig<S, A>): EnvironmentProviders {
+  const {
+    componentRegistrations,
+    validatorRegistrations,
+    asyncValidatorRegistrations,
+  } = config;
 
   return makeEnvironmentProviders([
     {
-      provide: ContentRegistrationService,
-      useValue: new ContentRegistrationService(registrations),
+      provide: ComponentRegistrationService,
+      useValue: createComponentRegistrationService(componentRegistrations),
+    },
+    {
+      provide: ValidatorRegistrationService,
+      useValue: createValidatorRegistrationService(
+        validatorRegistrations,
+        asyncValidatorRegistrations,
+      ),
     },
   ]);
+}
+
+function createComponentRegistrationService(
+  componentRegistrations: ComponentRegistrationConfig[],
+) {
+  const registrations = toComponentRegistrationMap(componentRegistrations);
+  return new ComponentRegistrationService(registrations);
+}
+
+function toComponentRegistrationMap(
+  componentRegistrations: ComponentRegistrationConfig[],
+) {
+  const registrations = new Map<string, Type<unknown>>();
+  componentRegistrations.forEach((reg) => {
+    registrations.set(reg.type, reg.component);
+  });
+  return registrations;
+}
+
+function createValidatorRegistrationService<
+  S extends RegistrationRecord,
+  A extends RegistrationRecord,
+>(config?: ValidatorConfig<S>, asyncConfig?: AsyncValidatorConfig<A>) {
+  const registrations = toValidatorRegistrationMap(config, asyncConfig);
+  return new ValidatorRegistrationService(...registrations);
+}
+
+function toValidatorRegistrationMap<
+  S extends RegistrationRecord,
+  A extends RegistrationRecord,
+>(
+  config?: ValidatorConfig<S>,
+  asyncConfig?: AsyncValidatorConfig<A>,
+): [Map<string, ValidatorFn[]>, Map<string, AsyncValidatorFn[]>] {
+  if (!config && !asyncConfig) {
+    return [
+      new Map<string, ValidatorFn[]>(),
+      new Map<string, AsyncValidatorFn[]>(),
+    ];
+  }
+
+  const registrations = toValidatorMap(config);
+  const asyncRegistrations = toAsyncValidatorMap(asyncConfig);
+
+  return [registrations, asyncRegistrations];
+}
+
+function toValidatorMap<S extends RegistrationRecord>(
+  config?: ValidatorConfig<S>,
+) {
+  if (!config) {
+    return new Map<string, ValidatorFn[]>();
+  }
+  const rawRegistrations = new Map<string, (ValidatorFn | ValidatorKey<S>)[]>(
+    Object.entries(config),
+  );
+  const registrations = new Map<string, ValidatorFn[]>();
+  const memo = new Map<string, ValidatorFn[]>();
+
+  for (const [key, validators] of rawRegistrations) {
+    registrations.set(key, toValidatorFn(validators, rawRegistrations, memo));
+  }
+  return registrations;
+}
+
+function toValidatorFn<T extends RegistrationRecord, V>(
+  validators: (V | ValidatorKey<T>)[],
+  registrations: Map<string, (V | ValidatorKey<T>)[]>,
+  memo = new Map<string, V[]>(),
+): V[] {
+  return validators.flatMap((v) => {
+    switch (typeof v) {
+      case 'string': {
+        const memoedValue = memo.get(v);
+        if (memoedValue) {
+          return memoedValue;
+        }
+        const resolved = toValidatorFn(
+          registrations.get(v) ?? [],
+          registrations,
+          memo,
+        );
+        memo.set(v, resolved);
+        return resolved;
+      }
+      default:
+        return v;
+    }
+  });
+}
+
+function toAsyncValidatorMap<A extends RegistrationRecord>(
+  config?: AsyncValidatorConfig<A>,
+) {
+  if (!config) {
+    return new Map<string, AsyncValidatorFn[]>();
+  }
+
+  const rawRegistrations = new Map<
+    string,
+    (AsyncValidatorFn | ValidatorKey<A>)[]
+  >(Object.entries(config));
+  const registrations = new Map<string, AsyncValidatorFn[]>();
+  const memo = new Map<string, AsyncValidatorFn[]>();
+
+  for (const [key, validators] of rawRegistrations) {
+    registrations.set(key, toValidatorFn(validators, rawRegistrations, memo));
+  }
+  return registrations;
 }

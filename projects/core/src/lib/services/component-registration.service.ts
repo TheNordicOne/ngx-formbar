@@ -9,7 +9,7 @@ import {
 @Injectable({
   providedIn: 'root',
 })
-export class ContentRegistrationService {
+export class ComponentRegistrationService {
   private readonly _registrations: WritableSignal<Map<string, Type<unknown>>>;
   readonly registrations: Signal<Map<string, Type<unknown>>>;
 

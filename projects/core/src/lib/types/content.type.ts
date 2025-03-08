@@ -13,6 +13,8 @@ export type NgxFwControl = NgxFwBaseContent & {
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
+  validators?: string[];
+  asyncValidators?: string[];
   [key: string]: unknown;
 };
 
