@@ -8,3 +8,31 @@
   [formControlName]="content().id"
 />
 <span [attr.data-testId]="testId() + '-hint'">{{ content()?.hint }}</span>
+
+@if (controlInstance?.hasError('required')) {
+  <span [attr.data-testId]="testId() + '-validation-error-required'"
+    >Required</span
+  >
+}
+
+@if (controlInstance?.hasError('async')) {
+  <span [attr.data-testId]="testId() + '-validation-error-async'">async</span>
+}
+
+@if (controlInstance?.hasError('minlength')) {
+  <span [attr.data-testId]="testId() + '-validation-error-min-chars'"
+    >Needs 3 characters</span
+  >
+}
+
+@if (controlInstance?.hasError('letter')) {
+  <span [attr.data-testId]="testId() + '-validation-error-letter'"
+    >Must contain the letter A</span
+  >
+}
+
+@if (controlInstance?.hasError('combined')) {
+  <span [attr.data-testId]="testId() + '-validation-error-combined'"
+    >All conditions must apply</span
+  >
+}

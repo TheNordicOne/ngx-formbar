@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NgxFwFormComponent } from './ngx-fw-form.component';
-import { ContentRegistrationService } from '../../services/content-registration.service';
+import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { Type } from '@angular/core';
 import { ControlContainer, FormGroupDirective } from '@angular/forms';
 
@@ -14,8 +14,8 @@ describe('FormComponent', () => {
       imports: [NgxFwFormComponent],
       providers: [
         {
-          provide: ContentRegistrationService,
-          useValue: new ContentRegistrationService(
+          provide: ComponentRegistrationService,
+          useValue: new ComponentRegistrationService(
             new Map<string, Type<unknown>>(),
           ),
         },

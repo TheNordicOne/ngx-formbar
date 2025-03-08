@@ -1,6 +1,6 @@
 import { Type } from '@angular/core';
 
-export type RegistrationConfig = {
+export type ComponentRegistrationConfig = {
   type: string;
   component: Type<unknown>;
 };

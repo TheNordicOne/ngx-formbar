@@ -1,23 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ContentRegistrationService } from './content-registration.service';
+import { ComponentRegistrationService } from './component-registration.service';
 import { Type } from '@angular/core';
 
 describe('ContentRegistrationService', () => {
-  let service: ContentRegistrationService;
+  let service: ComponentRegistrationService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: ContentRegistrationService,
-          useValue: new ContentRegistrationService(
+          provide: ComponentRegistrationService,
+          useValue: new ComponentRegistrationService(
             new Map<string, Type<unknown>>(),
           ),
         },
       ],
     });
-    service = TestBed.inject(ContentRegistrationService);
+    service = TestBed.inject(ComponentRegistrationService);
   });
 
   it('should be created', () => {
