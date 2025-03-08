@@ -1,5 +1,5 @@
 import { NgxFwFormComponent } from './ngx-fw-form.component';
-import { ContentRegistrationService } from '../../services/content-registration.service';
+import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { Type } from '@angular/core';
 import { dummyControlContainer } from '../../../test/integration/shared/control-container';
 
@@ -8,8 +8,8 @@ describe('Form Component', () => {
     cy.mount(NgxFwFormComponent, {
       providers: [
         {
-          provide: ContentRegistrationService,
-          useValue: new ContentRegistrationService(
+          provide: ComponentRegistrationService,
+          useValue: new ComponentRegistrationService(
             new Map<string, Type<unknown>>(),
           ),
         },

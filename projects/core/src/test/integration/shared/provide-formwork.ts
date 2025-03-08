@@ -1,14 +1,30 @@
 import { provideFormwork } from '../../../lib';
 import { TestTextControlComponent } from '../../components/test-text-control/test-text-control.component';
 import { TestGroupComponent } from '../../components/test-group/test-group.component';
+import { Validators } from '@angular/forms';
+import {
+  asyncValidator,
+  letterValidator,
+} from '../../validator/test.validator';
 
-export const formworkProviders = provideFormwork(
-  {
-    type: 'test-text-control',
-    component: TestTextControlComponent,
+export const formworkProviders = provideFormwork({
+  componentRegistrations: [
+    {
+      type: 'test-text-control',
+      component: TestTextControlComponent,
+    },
+    {
+      type: 'test-group',
+      component: TestGroupComponent,
+    },
+  ],
+  validatorRegistrations: {
+    required: [Validators.required],
+    'min-chars': [Validators.minLength(3)],
+    letter: [letterValidator],
+    combined: ['min-chars', Validators.required, 'letter'],
   },
-  {
-    type: 'test-group',
-    component: TestGroupComponent,
+  asyncValidatorRegistrations: {
+    async: [asyncValidator],
   },
-);
+});
