@@ -1,6 +1,14 @@
-import { ControlContainer, FormGroupDirective } from '@angular/forms';
+import {
+  ControlContainer,
+  FormGroup,
+  FormGroupDirective,
+} from '@angular/forms';
 
 export const dummyControlContainer = {
   provide: ControlContainer,
-  useValue: new FormGroupDirective([], []),
+  useFactory: () => {
+    const directive = new FormGroupDirective([], []);
+    directive.form = new FormGroup({});
+    return directive;
+  },
 };
