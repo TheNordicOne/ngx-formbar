@@ -22,7 +22,6 @@ export const formworkProviders = provideFormwork({
     },
   ],
   validatorRegistrations: {
-    required: [Validators.required],
     'min-chars': [Validators.minLength(3)],
     letter: [letterValidator],
     combined: ['min-chars', Validators.required, 'letter'],

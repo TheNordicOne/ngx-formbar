@@ -6,7 +6,7 @@ import {
 import { ComponentRegistrationService } from '../services/component-registration.service';
 import { FormworkConfig } from '../types/provide.type';
 import { ComponentRegistrationConfig } from '../types/registration.type';
-import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
+import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
 import {
   AsyncValidatorConfig,
   RegistrationRecord,
@@ -94,7 +94,7 @@ function toValidatorMap<S extends RegistrationRecord>(
   const rawRegistrations = new Map<string, (ValidatorFn | ValidatorKey<S>)[]>(
     Object.entries(config),
   );
-  const registrations = new Map<string, ValidatorFn[]>();
+  const registrations = getDefaultRegistrations();
   const memo = new Map<string, ValidatorFn[]>();
 
   for (const [key, validators] of rawRegistrations) {
@@ -147,4 +147,13 @@ function toAsyncValidatorMap<A extends RegistrationRecord>(
     registrations.set(key, toValidatorFn(validators, rawRegistrations, memo));
   }
   return registrations;
+}
+
+function getDefaultRegistrations() {
+  return new Map<string, ValidatorFn[]>([
+    ['required', [Validators.required]],
+    ['requiredTrue', [Validators.requiredTrue]],
+    ['email', [Validators.email]],
+    ['nullValidator', [Validators.nullValidator]],
+  ]);
 }
