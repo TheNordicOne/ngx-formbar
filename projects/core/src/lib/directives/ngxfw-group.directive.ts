@@ -1,10 +1,10 @@
 import {
   computed,
   Directive,
+  effect,
   inject,
   input,
   OnDestroy,
-  OnInit,
 } from '@angular/core';
 import { NgxFwFormGroup } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
@@ -15,7 +15,7 @@ import { ValidatorRegistrationService } from '../services/validator-registration
   selector: '[ngxfwGroup]',
 })
 export class NgxfwGroupDirective<T extends NgxFwFormGroup>
-  implements OnInit, OnDestroy
+  implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
   private readonly contentRegistrationService = inject(
@@ -42,21 +42,23 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   get group() {
     return this.parentFormGroup?.get(this.content().id) as FormControl | null;
   }
+  constructor() {
+    effect(() => {
+      const content = this.content();
+      this.parentFormGroup?.removeControl(content.id);
 
-  ngOnInit(): void {
-    const content = this.content();
-    const validators = this.getValidators(content);
-    const asyncValidators = this.getAsyncValidators(content);
+      const validators = this.getValidators(content);
+      const asyncValidators = this.getAsyncValidators(content);
 
-    this.parentFormGroup?.addControl(
-      this.content().id,
-      new FormGroup([], validators, asyncValidators),
-      {
-        emitEvent: false,
-      },
-    );
+      this.parentFormGroup?.addControl(
+        this.content().id,
+        new FormGroup([], validators, asyncValidators),
+        {
+          emitEvent: false,
+        },
+      );
+    });
   }
-
   ngOnDestroy(): void {
     this.parentFormGroup?.removeControl(this.content().id);
   }
