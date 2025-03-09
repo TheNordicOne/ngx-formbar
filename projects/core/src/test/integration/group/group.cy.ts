@@ -44,4 +44,59 @@ describe('Group', () => {
       cy.getByTestId('second').should('exist');
     });
   });
+
+  describe('validation', () => {
+    it('should use multiple validators (custom, async)', () => {
+      cy.mount(GroupIntegrationHostComponent, {
+        providers: [formworkProviders],
+        componentProperties: {
+          content: {
+            type: 'test-group',
+            id: 'test-group',
+            title: 'First Group',
+            controls: [
+              {
+                id: 'first',
+                type: 'test-text-control',
+                label: 'First label',
+              },
+              {
+                id: 'second',
+                type: 'test-text-control',
+                label: 'Second label',
+              },
+            ],
+            validators: ['no-duplicates', 'forbidden-letter-a'],
+            asyncValidators: ['async-group'],
+          },
+        },
+      });
+      cy.getByTestId('first-input').as('firstInput');
+      cy.getByTestId('second-input').as('secondInput');
+
+      cy.get('@firstInput').type('X');
+      cy.get('@secondInput').type('X');
+      cy.get('@secondInput').blur();
+
+      cy.getByTestId('test-group-validation-error-no-duplicates').should(
+        'contain.text',
+        'No duplicate values',
+      );
+
+      cy.get('@firstInput').clear();
+      cy.get('@firstInput').blur();
+
+      cy.getByTestId('test-group-validation-error-async').should(
+        'contain.text',
+        'async',
+      );
+
+      cy.get('@firstInput').type('A');
+
+      cy.getByTestId('test-group-validation-error-forbidden-letter-a').should(
+        'contain.text',
+        'The letter A is not allowed',
+      );
+    });
+  });
 });
