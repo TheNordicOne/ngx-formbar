@@ -1,10 +1,10 @@
 import {
   computed,
   Directive,
+  effect,
   inject,
   input,
   OnDestroy,
-  OnInit,
 } from '@angular/core';
 import { NgxFwControl } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
@@ -14,7 +14,7 @@ import { ValidatorRegistrationService } from '../services/validator-registration
   selector: '[ngxfwControl]',
 })
 export class NgxfwControlDirective<T extends NgxFwControl>
-  implements OnInit, OnDestroy
+  implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
   private validatorRegistrationService = inject(ValidatorRegistrationService);
@@ -35,19 +35,22 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     return this.parentFormGroup?.get(this.content().id) as FormControl | null;
   }
 
-  ngOnInit(): void {
-    const content = this.content();
+  constructor() {
+    effect(() => {
+      const content = this.content();
+      this.parentFormGroup?.removeControl(content.id);
 
-    const validators = this.getValidators(content);
-    const asyncValidators = this.getAsyncValidators(content);
-    const formControl = new FormControl(content.defaultValue, {
-      nonNullable: content.nonNullable,
-      validators,
-      asyncValidators,
-    });
+      const validators = this.getValidators(content);
+      const asyncValidators = this.getAsyncValidators(content);
+      const formControl = new FormControl(content.defaultValue, {
+        nonNullable: content.nonNullable,
+        validators,
+        asyncValidators,
+      });
 
-    this.parentFormGroup?.addControl(this.content().id, formControl, {
-      emitEvent: false,
+      this.parentFormGroup?.addControl(this.content().id, formControl, {
+        emitEvent: false,
+      });
     });
   }
 
