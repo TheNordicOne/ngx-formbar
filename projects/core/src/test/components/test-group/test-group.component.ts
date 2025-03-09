@@ -22,4 +22,8 @@ export class TestGroupComponent {
   readonly controls: Signal<NgxFwContent[]> = this.control.controls;
   readonly registrations: Signal<Map<string, Type<unknown>>> =
     this.control.registrations;
+
+  get groupInstance() {
+    return this.control.group;
+  }
 }

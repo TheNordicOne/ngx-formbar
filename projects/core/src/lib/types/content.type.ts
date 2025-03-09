@@ -1,5 +1,7 @@
 type NgxFwBaseContent = {
   type: string;
+  validators?: string[];
+  asyncValidators?: string[];
 };
 
 export type NgxFwFormGroup = NgxFwBaseContent & {
@@ -13,8 +15,6 @@ export type NgxFwControl = NgxFwBaseContent & {
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
-  validators?: string[];
-  asyncValidators?: string[];
   [key: string]: unknown;
 };
 
