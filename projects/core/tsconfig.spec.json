@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/spec",
-    "types": ["jasmine"]
+    "types": ["vitest/globals"],
+    "target": "es2016"
   },
-  "include": ["projects/**/*.spec.ts", "projects/**/*.d.ts"]
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"],
+  "exclude": [
+    "../../cypress/**/*.ts",
+    "../../cypress.config.ts"
+  ],
+  "files": ["src/test-setup.ts"]
 }

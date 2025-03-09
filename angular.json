@@ -31,14 +31,7 @@
           "defaultConfiguration": "production"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/core/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
-          }
+          "builder": "@analogjs/vitest-angular:test"
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
@@ -65,9 +58,7 @@
             "outputPath": "dist/dummy",
             "index": "projects/dummy/src/index.html",
             "browser": "projects/dummy/src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "projects/dummy/tsconfig.app.json",
             "assets": [
               {
@@ -75,9 +66,7 @@
                 "input": "projects/dummy/public"
               }
             ],
-            "styles": [
-              "projects/dummy/src/styles.css"
-            ],
+            "styles": ["projects/dummy/src/styles.css"],
             "scripts": []
           },
           "configurations": {
@@ -120,24 +109,7 @@
           "builder": "@angular-devkit/build-angular:extract-i18n"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
-            "tsConfig": "projects/dummy/tsconfig.spec.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "projects/dummy/public"
-              }
-            ],
-            "styles": [
-              "projects/dummy/src/styles.css"
-            ],
-            "scripts": []
-          }
+          "builder": "@analogjs/vitest-angular:test"
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
@@ -153,9 +125,7 @@
     }
   },
   "cli": {
-    "schematicCollections": [
-      "angular-eslint"
-    ],
+    "schematicCollections": ["angular-eslint"],
     "analytics": false
   }
 }
