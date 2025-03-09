@@ -1,11 +1,13 @@
 import { Component, inject, Signal, Type } from '@angular/core';
 import { ContentHostComponent } from '../../../lib/components/content-host/content-host.component';
-import { ngxfwGroupHostDirective } from '../../../lib/helper/ngxfw-group-host-directive';
-import { NgxfwGroupDirective } from '../../../lib/directives/ngxfw-group.directive';
+import {
+  controlContainerViewProviders,
+  NgxFwContent,
+  NgxfwGroupDirective,
+  ngxfwGroupHostDirective,
+} from '../../../lib';
 import { TestGroup } from '../../types/group.type';
-import { NgxFwContent } from '../../../lib';
 import { ReactiveFormsModule } from '@angular/forms';
-import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 
 @Component({
   selector: 'ngxfw-test-group',

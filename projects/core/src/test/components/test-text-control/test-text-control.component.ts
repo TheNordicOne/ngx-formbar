@@ -1,8 +1,10 @@
 import { Component, inject, Signal } from '@angular/core';
 
-import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
-import { ngxfwControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
-import { NgxfwControlDirective } from '../../../lib';
+import {
+  controlContainerViewProviders,
+  NgxfwControlDirective,
+  ngxfwControlHostDirective,
+} from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
 
