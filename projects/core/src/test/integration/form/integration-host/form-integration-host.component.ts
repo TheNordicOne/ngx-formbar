@@ -41,7 +41,6 @@ export class FormIntegrationHostComponent {
     let result: { path: string; value: unknown }[] = [];
 
     Object.entries(obj).forEach(([key, value]) => {
-      console.log(key, value);
       const path = parentPath ? `${parentPath}.${key}` : key;
 
       if (
