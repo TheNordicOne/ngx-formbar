@@ -1,6 +1,6 @@
 {
   "name": "ngx-formwork",
-  "version": "0.0.10",
+  "version": "1.0.0",
   "peerDependencies": {
     "@angular/common": "^19.2.1",
     "@angular/core": "^19.2.1"
