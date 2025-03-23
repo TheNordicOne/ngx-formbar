@@ -4,6 +4,7 @@ import {
   ArrayExpression,
   BinaryExpression,
   BinaryOperator,
+  ConditionalExpression,
   Identifier,
   Literal,
   LogicalExpression,
@@ -101,7 +102,7 @@ export class ExpressionService {
       case 'MemberExpression':
         return this.evaluateMemberExpression(node, context);
       case 'ConditionalExpression':
-        break;
+        return this.evaluateConditionalExpression(node, context);
       case 'CallExpression':
         break;
       case 'NewExpression':
@@ -520,5 +521,25 @@ export class ExpressionService {
         }
         return leftValue;
     }
+  }
+
+  /**
+   * Evaluates a conditional (ternary) expression (condition ? trueValue : falseValue)
+   * @param node The conditional expression node
+   * @param context The context containing variables and objects
+   * @returns The result based on the condition evaluation
+   */
+  private evaluateConditionalExpression(
+    node: ConditionalExpression,
+    context: FormContext,
+  ): unknown {
+    const condition = this.evaluateAstNode(node.test, context);
+    const isConditionTrue = Boolean(condition);
+
+    if (isConditionTrue) {
+      return this.evaluateAstNode(node.consequent, context);
+    }
+
+    return this.evaluateAstNode(node.alternate, context);
   }
 }
