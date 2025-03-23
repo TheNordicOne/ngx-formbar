@@ -228,7 +228,7 @@ describe('ExpressionService', () => {
 
     evaluateExpression(
       'address.zipCode | 8',
-      12349, // 12345 | 8 = 12349
+      12345, // 12345 | 8 = 12345
       'Bitwise OR operator (|)',
     );
 
