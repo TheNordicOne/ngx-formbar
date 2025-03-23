@@ -10,6 +10,7 @@ import {
   PrivateIdentifier,
   Program,
   Super,
+  UnaryExpression,
 } from 'acorn';
 import { FormContext } from '../types/expression.type';
 
@@ -77,7 +78,7 @@ export class ExpressionService {
 
     switch (node.type) {
       case 'Identifier':
-        return this.evaluateIdentifier(node);
+        return this.evaluateIdentifier(node, context);
       case 'Literal':
         return this.evaluateLiteral(node);
       case 'ArrayExpression':
@@ -87,7 +88,7 @@ export class ExpressionService {
       case 'FunctionExpression':
         break;
       case 'UnaryExpression':
-        break;
+        return this.evaluateUnaryExpression(node, context);
       case 'UpdateExpression':
         break;
       case 'BinaryExpression':
@@ -390,11 +391,15 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates an identifier node
+   * Evaluates an identifier node by looking it up in the context
    * @param node The identifier node
-   * @returns The name of the identifier
+   * @param context The context containing variables and objects
+   * @returns The value of the identifier from the context
    */
-  private evaluateIdentifier(node: Identifier) {
+  private evaluateIdentifier(node: Identifier, context: FormContext): unknown {
+    if (typeof context === 'object' && node.name in context) {
+      return context[node.name];
+    }
     return node.name;
   }
 
@@ -415,18 +420,71 @@ export class ExpressionService {
 
       if (element.type !== 'SpreadElement') {
         resultArray.push(this.evaluateAstNode(element, context));
-        continue; // Process next element
+        continue;
       }
 
       const spreadValue = this.evaluateAstNode(element.argument, context);
 
       if (Array.isArray(spreadValue)) {
         resultArray.push(...(spreadValue as unknown[]));
-        continue; // Process next element
+        continue;
       }
       throw new TypeError(`Cannot spread non-array value in array literal`);
     }
 
     return resultArray;
+  }
+
+  /**
+   * Evaluates a unary expression (e.g., !x, -value, typeof obj)
+   * @param node The unary expression node
+   * @param context The context containing variables and objects
+   * @returns The result of the unary operation
+   */
+  private evaluateUnaryExpression(
+    node: UnaryExpression,
+    context: FormContext,
+  ): unknown {
+    const argumentValue = this.evaluateAstNode(node.argument, context);
+    console.log(argumentValue);
+    switch (node.operator) {
+      case '-':
+        if (typeof argumentValue !== 'number') {
+          throw new TypeError('Unary - operator requires a number');
+        }
+        return -argumentValue;
+
+      case '+':
+        if (typeof argumentValue === 'string') {
+          const numberValue = Number(argumentValue);
+          if (isNaN(numberValue)) {
+            throw new TypeError(
+              `Cannot convert string "${argumentValue}" to number`,
+            );
+          }
+          return numberValue;
+        } else if (typeof argumentValue !== 'number') {
+          throw new TypeError('Unary + operator requires a number or string');
+        }
+        return +argumentValue;
+
+      case '!':
+        return !argumentValue;
+
+      case '~':
+        if (typeof argumentValue !== 'number') {
+          throw new TypeError('Bitwise NOT (~) operator requires a number');
+        }
+        return ~argumentValue;
+
+      case 'typeof':
+        return typeof argumentValue;
+
+      case 'void':
+        return undefined;
+
+      case 'delete':
+        throw new Error('Delete operator is not supported in expressions');
+    }
   }
 }
