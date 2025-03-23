@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-
 import { ExpressionService } from './expression.service';
+import { FormContext } from '../types/expression.type';
 
 describe('ExpressionService', () => {
   let service: ExpressionService;
@@ -68,6 +68,7 @@ describe('ExpressionService', () => {
   function evaluateExpressionExpectingError(
     input: string,
     description?: string,
+    overrideContext?: FormContext,
   ) {
     const testTitle = description
       ? `should throw an error when evaluating ${input} (${description})`
@@ -75,7 +76,9 @@ describe('ExpressionService', () => {
 
     it(testTitle, function () {
       const ast = service.parseExpressionToAst(input);
-      expect(() => service.evaluateExpression(ast, context)).toThrow();
+      expect(() =>
+        service.evaluateExpression(ast, overrideContext ?? context),
+      ).toThrow();
     });
   }
 
@@ -83,6 +86,7 @@ describe('ExpressionService', () => {
     input: string,
     output: unknown,
     description?: string,
+    overrideContext?: FormContext,
   ) {
     // Convert the output to string safely, handling different types
     const outputStr =
@@ -99,7 +103,9 @@ describe('ExpressionService', () => {
 
     it(testTitle, function () {
       const ast = service.parseExpressionToAst(input);
-      expect(service.evaluateExpression(ast, context)).toEqual(output);
+      expect(
+        service.evaluateExpression(ast, overrideContext ?? context),
+      ).toEqual(output);
     });
   }
 
@@ -1197,6 +1203,280 @@ describe('ExpressionService', () => {
     evaluateExpressionExpectingError(
       'const x = 10; x => x * 2',
       'Invalid arrow function syntax - not in method call context',
+    );
+  });
+
+  describe('Deep Nested Property Access', () => {
+    evaluateExpression(
+      'account.lastTransaction.type.toUpperCase()',
+      'WITHDRAWAL',
+      'Accessing a method on a deeply nested property',
+    );
+
+    evaluateExpression(
+      'address.notes[0].length',
+      17,
+      'Accessing a property of an array element',
+    );
+
+    evaluateExpression(
+      '({ a: { b: { c: { d: 123 } } } }).a.b.c.d',
+      123,
+      'Accessing a very deeply nested property in an object literal',
+    );
+
+    evaluateExpression(
+      '({ a: [{ b: [{ c: 42 }] }] }).a[0].b[0].c',
+      42,
+      'Accessing a deep property through mixed arrays and objects',
+    );
+
+    evaluateExpression(
+      'address["notes"][address["floor"] - address["floor"] + 1]["length"]',
+      24,
+      'Complex dynamic property access with nested expressions',
+    );
+  });
+
+  describe('Large Expressions', () => {
+    it('should handle expressions with many operations', () => {
+      // Create a large arithmetic expression
+      let largeExpr = 'person.age';
+      for (let i = 0; i < 50; i++) {
+        largeExpr += ` + ${i.toString()}`;
+      }
+
+      const ast = service.parseExpressionToAst(largeExpr);
+      const result = service.evaluateExpression(ast, context);
+
+      // Calculate expected result: 42 + 0 + 1 + 2 + ... + 49
+      const expected = 42 + (49 * 50) / 2; // 42 + sum of 0 through 49
+      expect(result).toBe(expected);
+    });
+
+    it('should handle expressions with many nested parentheses', () => {
+      // Create an expression with many nested parentheses
+      let nestedExpr = 'person.age';
+      for (let i = 0; i < 30; i++) {
+        nestedExpr = `(${nestedExpr})`;
+      }
+
+      const ast = service.parseExpressionToAst(nestedExpr);
+      const result = service.evaluateExpression(ast, context);
+      expect(result).toBe(42);
+    });
+  });
+
+  describe('Context Immutability', () => {
+    it('should not modify the context during evaluation', () => {
+      // Create a deep copy of the context
+      const originalContext = structuredClone(context);
+
+      // Evaluate expressions that might mutate the context
+      const ast1 = service.parseExpressionToAst('person.age + 10');
+      service.evaluateExpression(ast1, context);
+
+      const ast2 = service.parseExpressionToAst(
+        'account.lastTransaction.type.toUpperCase()',
+      );
+      service.evaluateExpression(ast2, context);
+
+      const ast3 = service.parseExpressionToAst(
+        'address.notes.map(note => note.toUpperCase())',
+      );
+      service.evaluateExpression(ast3, context);
+
+      // Original context values should remain unchanged
+      expect(context.person.age).toBe(originalContext.person.age);
+      expect(context.account.lastTransaction.type).toBe(
+        originalContext.account.lastTransaction.type,
+      );
+      expect(context.address.notes[0]).toBe(originalContext.address.notes[0]);
+      expect(context.address.notes[1]).toBe(originalContext.address.notes[1]);
+    });
+  });
+
+  describe('Complex Arrow Functions', () => {
+    evaluateExpression(
+      'address.notes.map(note => note.length).reduce((acc, len) => acc + len, 0)',
+      41,
+      'Chained array methods with arrow functions',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3, 4, 5].filter(n => n % 2 === 0).map(n => n * n)',
+      [4, 16],
+      'Filter and map with arrow functions',
+    );
+
+    evaluateExpression(
+      '["a", "b", "c"].map((item, index) => `${index}-${item}`)',
+      ['0-a', '1-b', '2-c'],
+      'Arrow function using multiple parameters',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3].reduce((result, num) => result + (num * 2), 0)',
+      12,
+      'Reduce with arrow function containing grouped expressions',
+    );
+  });
+
+  describe('Method Chaining', () => {
+    evaluateExpression(
+      'person.firstName.toUpperCase().concat(" ", person.lastName.toLowerCase())',
+      'HANS mueller',
+      'Chained string methods',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3, 4].filter(n => n > 1).map(n => n * 2).join("-")',
+      '4-6-8',
+      'Multiple chained array methods',
+    );
+
+    evaluateExpression(
+      'person.firstName.concat(" ", person.lastName).toUpperCase().split(" ").join("_")',
+      'HANS_MUELLER',
+      'Complex string method chaining with four operations',
+    );
+  });
+
+  describe('Large Data Structures', () => {
+    it('should handle large arrays', () => {
+      // Create a large array context
+      const largeContext = {
+        largeArray: Array.from({ length: 1000 }, (_, i) => i),
+        ...context,
+      };
+
+      const ast = service.parseExpressionToAst(
+        'largeArray.filter(n => n % 100 === 0).length',
+      );
+      const result = service.evaluateExpression(ast, largeContext);
+      expect(result).toBe(10); // 0, 100, 200, ..., 900
+    });
+
+    it('should handle large objects', () => {
+      // Create a large object context
+      const largeContext = {
+        largeObject: {} as Record<string, number>,
+        ...context,
+      };
+
+      // Add 1000 properties to the object
+      for (let i = 0; i < 1000; i++) {
+        largeContext.largeObject[`prop${i.toString()}`] = i;
+      }
+
+      // Test accessing a deep property
+      const ast = service.parseExpressionToAst('largeObject.prop999');
+      const result = service.evaluateExpression(ast, largeContext);
+      expect(result).toBe(999);
+    });
+  });
+
+  describe('Error Recovery and Service Stability', () => {
+    it('should continue to work after handling errors', () => {
+      // First cause an error
+      const errorAst = service.parseExpressionToAst('person.age / 0');
+      expect(() => service.evaluateExpression(errorAst, context)).toThrow();
+
+      // Then try a valid expression
+      const validAst = service.parseExpressionToAst('person.age + 1');
+      const result = service.evaluateExpression(validAst, context);
+      expect(result).toBe(43);
+    });
+
+    it('should handle multiple errors in sequence without breaking', () => {
+      // Series of expressions that cause errors
+      const errorExprs = [
+        'person.firstName - 10',
+        'nullValue.property',
+        'person.age / 0',
+        'this.context',
+      ];
+
+      // All should throw but not break the service
+      for (const expr of errorExprs) {
+        const ast = service.parseExpressionToAst(expr);
+        expect(() => service.evaluateExpression(ast, context)).toThrow();
+      }
+
+      // Service should still work after all errors
+      const validAst = service.parseExpressionToAst('person.firstName');
+      const result = service.evaluateExpression(validAst, context);
+      expect(result).toBe('Hans');
+    });
+  });
+
+  describe('Nullish Value Handling in Chains', () => {
+    // Create a context with nullable properties for testing
+    const nullishContext = {
+      user: {
+        profile: null,
+        settings: {
+          theme: 'dark',
+          notifications: {
+            email: true,
+            push: false,
+          },
+        },
+      },
+      data: {
+        items: [
+          { id: 1, value: null },
+          { id: 2, value: 'test' },
+        ],
+        metadata: undefined,
+      },
+    };
+
+    evaluateExpressionExpectingError(
+      'user.profile.name',
+      'Accessing property on null should throw',
+      nullishContext,
+    );
+
+    evaluateExpression(
+      'user.settings.theme',
+      'dark',
+      'Accessing property in a chain with no null values',
+      nullishContext,
+    );
+
+    evaluateExpression(
+      'data.items[0].id',
+      1,
+      'Accessing property of object with null sibling property',
+      nullishContext,
+    );
+
+    evaluateExpressionExpectingError(
+      'data.items[0].value.toString()',
+      'Calling method on null property should throw',
+      nullishContext,
+    );
+
+    evaluateExpressionExpectingError(
+      'data.metadata.something',
+      'Accessing property on undefined should throw',
+      nullishContext,
+    );
+
+    // Test nullish coalescing in chains
+    evaluateExpression(
+      'user.profile ?? "No profile"',
+      'No profile',
+      'Nullish coalescing with null value in chain',
+      nullishContext,
+    );
+
+    evaluateExpression(
+      'data.metadata ?? { created: "now" }',
+      { created: 'now' },
+      'Nullish coalescing with undefined value in chain',
+      nullishContext,
     );
   });
 });
