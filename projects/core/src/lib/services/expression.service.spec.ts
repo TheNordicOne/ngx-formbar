@@ -498,4 +498,136 @@ describe('ExpressionService', () => {
       'Super is not supported',
     );
   });
+
+  describe('Unary Operators', () => {
+    // Tests for arithmetic unary operators
+    evaluateExpression('-person.age', -42, 'Unary negation operator (-)');
+
+    evaluateExpression(
+      '+address.houseNumber',
+      69,
+      'Unary plus operator with string-to-number conversion (+)',
+    );
+
+    evaluateExpression('+person.age', 42, 'Unary plus operator with number');
+
+    evaluateExpressionExpectingError(
+      '+person.firstName',
+      'Unary plus operator with non-numeric string should throw',
+    );
+
+    // Tests for logical operators
+    evaluateExpression(
+      '!account.isOverdrawn',
+      true,
+      'Logical NOT operator (!) with falsy value',
+    );
+
+    evaluateExpression(
+      '!person.isActive',
+      false,
+      'Logical NOT operator (!) with truthy value',
+    );
+
+    evaluateExpression(
+      '!!person.isActive',
+      true,
+      'Double logical NOT operator (!!) to convert to boolean',
+    );
+
+    // Tests for bitwise operators
+    evaluateExpression('~address.floor', -3, 'Bitwise NOT operator (~)');
+
+    evaluateExpression('~0', -1, 'Bitwise NOT operator (~) with zero');
+
+    evaluateExpressionExpectingError(
+      '~"string"',
+      'Bitwise NOT operator (~) with non-number should throw',
+    );
+
+    // Tests for type operators
+    evaluateExpression(
+      'typeof person.age',
+      'number',
+      'typeof operator with numeric value',
+    );
+
+    evaluateExpression(
+      'typeof person.firstName',
+      'string',
+      'typeof operator with string value',
+    );
+
+    evaluateExpression(
+      'typeof person.isActive',
+      'boolean',
+      'typeof operator with boolean value',
+    );
+
+    evaluateExpression(
+      'typeof nullValue',
+      'object',
+      'typeof operator with null value',
+    );
+
+    evaluateExpression(
+      'typeof undefinedValue',
+      'undefined',
+      'typeof operator with undefined value',
+    );
+
+    evaluateExpression(
+      'typeof address',
+      'object',
+      'typeof operator with object value',
+    );
+
+    // Tests for void operator
+    evaluateExpression(
+      'void 0',
+      undefined,
+      'void operator returns undefined regardless of operand',
+    );
+
+    evaluateExpression(
+      'void person.age',
+      undefined,
+      'void operator with variable reference',
+    );
+
+    evaluateExpression(
+      'void (person.age + 10)',
+      undefined,
+      'void operator with complex expression',
+    );
+
+    // Tests for delete operator
+    evaluateExpressionExpectingError(
+      'delete person.age',
+      'delete operator should not be supported for safety',
+    );
+
+    // Tests for more complex combinations
+    evaluateExpression('-(-person.age)', 42, 'Double negation');
+
+    evaluateExpression('~(~address.floor)', 2, 'Double bitwise NOT');
+
+    evaluateExpression(
+      'typeof !person.isActive',
+      'boolean',
+      'typeof with logical NOT',
+    );
+
+    evaluateExpression(
+      'typeof typeof person.age',
+      'string',
+      'typeof operator applied to result of typeof',
+    );
+
+    evaluateExpression(
+      '!(person.age > 50)',
+      true,
+      'Logical NOT with comparison expression',
+    );
+  });
 });
