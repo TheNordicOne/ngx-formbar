@@ -74,8 +74,8 @@ describe('ExpressionService', () => {
       : `should throw an error when evaluating ${input}`;
 
     it(testTitle, function () {
-      const ast = service.buildExpressionAst(input);
-      expect(() => service.evaluate(ast, context)).toThrow();
+      const ast = service.parseExpressionToAst(input);
+      expect(() => service.evaluateExpression(ast, context)).toThrow();
     });
   }
 
@@ -98,8 +98,8 @@ describe('ExpressionService', () => {
       : `should evaluate ${input} to ${outputStr}`;
 
     it(testTitle, function () {
-      const ast = service.buildExpressionAst(input);
-      expect(service.evaluate(ast, context)).toEqual(output);
+      const ast = service.parseExpressionToAst(input);
+      expect(service.evaluateExpression(ast, context)).toEqual(output);
     });
   }
 
