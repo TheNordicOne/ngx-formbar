@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as acorn from 'acorn';
 import {
+  ArrayExpression,
   BinaryExpression,
   BinaryOperator,
   Identifier,
@@ -63,7 +64,7 @@ export class ExpressionService {
       case 'Literal':
         return this.literal(node);
       case 'ArrayExpression':
-        break;
+        return this.evaluateArray(node, context);
       case 'ObjectExpression':
         break;
       case 'FunctionExpression':
@@ -334,5 +335,31 @@ export class ExpressionService {
 
   private identifier(node: Identifier) {
     return node.name;
+  }
+
+  private evaluateArray(node: ArrayExpression, context: FormContext) {
+    const result: unknown[] = [];
+
+    for (const element of node.elements) {
+      if (element === null) {
+        result.push(undefined);
+        continue;
+      }
+
+      if (element.type !== 'SpreadElement') {
+        result.push(this.evaluateNode(element, context));
+        continue;
+      }
+
+      const spreadValue = this.evaluateNode(element.argument, context);
+
+      if (Array.isArray(spreadValue)) {
+        result.push(...(spreadValue as unknown[]));
+        continue;
+      }
+      throw new TypeError(`Cannot spread non-array value in array literal`);
+    }
+
+    return result;
   }
 }
