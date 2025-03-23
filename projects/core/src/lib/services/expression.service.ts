@@ -16,6 +16,29 @@ import {
 } from 'acorn';
 import { FormContext } from '../types/expression.type';
 
+// Define all unsupported node types in one place
+const UNSUPPORTED_NODE_TYPES = new Set([
+  'ThisExpression',
+  'Super',
+  'PrivateIdentifier',
+  'ObjectExpression',
+  'FunctionExpression',
+  'UpdateExpression',
+  'AssignmentExpression',
+  'CallExpression',
+  'NewExpression',
+  'SequenceExpression',
+  'ArrowFunctionExpression',
+  'YieldExpression',
+  'TemplateLiteral',
+  'TaggedTemplateExpression',
+  'ClassExpression',
+  'MetaProperty',
+  'AwaitExpression',
+  'ChainExpression',
+  'ImportExpression',
+]);
+
 @Injectable({
   providedIn: 'root',
 })
@@ -66,16 +89,8 @@ export class ExpressionService {
     node: acorn.Expression | PrivateIdentifier | Super,
     context: FormContext,
   ): unknown {
-    if (node.type === 'PrivateIdentifier') {
-      throw TypeError('Private identifiers are not supported in expressions');
-    }
-
-    if (node.type === 'Super') {
-      throw TypeError('Super keyword is not supported in expressions');
-    }
-
-    if (node.type === 'ThisExpression') {
-      throw TypeError('This keyword is not supported in expressions');
+    if (UNSUPPORTED_NODE_TYPES.has(node.type)) {
+      throw new TypeError(`${node.type} is not supported in expressions`);
     }
 
     switch (node.type) {
@@ -85,52 +100,21 @@ export class ExpressionService {
         return this.evaluateLiteral(node);
       case 'ArrayExpression':
         return this.evaluateArrayExpression(node, context);
-      case 'ObjectExpression':
-        break;
-      case 'FunctionExpression':
-        break;
       case 'UnaryExpression':
         return this.evaluateUnaryExpression(node, context);
-      case 'UpdateExpression':
-        break;
       case 'BinaryExpression':
         return this.evaluateBinaryExpression(node, context);
-      case 'AssignmentExpression':
-        break;
       case 'LogicalExpression':
         return this.evaluateLogicalExpression(node, context);
       case 'MemberExpression':
         return this.evaluateMemberExpression(node, context);
       case 'ConditionalExpression':
         return this.evaluateConditionalExpression(node, context);
-      case 'CallExpression':
-        break;
-      case 'NewExpression':
-        break;
-      case 'SequenceExpression':
-        break;
-      case 'ArrowFunctionExpression':
-        break;
-      case 'YieldExpression':
-        break;
-      case 'TemplateLiteral':
-        break;
-      case 'TaggedTemplateExpression':
-        break;
-      case 'ClassExpression':
-        break;
-      case 'MetaProperty':
-        break;
-      case 'AwaitExpression':
-        break;
-      case 'ChainExpression':
-        break;
-      case 'ImportExpression':
-        break;
       case 'ParenthesizedExpression':
-        break;
+        return this.evaluateAstNode(node.expression, context);
+      default:
+        throw new TypeError(`Unsupported node type: ${node.type}`);
     }
-    return null;
   }
 
   /**
@@ -346,7 +330,9 @@ export class ExpressionService {
       throw new Error('Cannot access properties of null or undefined');
     }
 
-    const propertyValue = this.evaluateAstNode(node.property, context);
+    const propertyValue = node.computed
+      ? this.evaluateAstNode(node.property, context)
+      : (node.property as Identifier).name;
 
     if (
       typeof propertyValue !== 'string' &&
@@ -467,7 +453,7 @@ export class ExpressionService {
     context: FormContext,
   ): unknown {
     const argumentValue = this.evaluateAstNode(node.argument, context);
-    console.log(argumentValue);
+
     switch (node.operator) {
       case '-':
         if (typeof argumentValue !== 'number') {
