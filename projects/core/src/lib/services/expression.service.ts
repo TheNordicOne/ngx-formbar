@@ -6,6 +6,7 @@ import {
   BinaryOperator,
   Identifier,
   Literal,
+  LogicalExpression,
   MemberExpression,
   PrivateIdentifier,
   Program,
@@ -96,7 +97,7 @@ export class ExpressionService {
       case 'AssignmentExpression':
         break;
       case 'LogicalExpression':
-        break;
+        return this.evaluateLogicalExpression(node, context);
       case 'MemberExpression':
         return this.evaluateMemberExpression(node, context);
       case 'ConditionalExpression':
@@ -485,6 +486,39 @@ export class ExpressionService {
 
       case 'delete':
         throw new Error('Delete operator is not supported in expressions');
+    }
+  }
+
+  /**
+   * Evaluates a logical expression (&&, ||, ??)
+   * @param node The logical expression node
+   * @param context The context containing variables and objects
+   * @returns The result of the logical operation
+   */
+  private evaluateLogicalExpression(
+    node: LogicalExpression,
+    context: FormContext,
+  ): unknown {
+    const leftValue = this.evaluateAstNode(node.left, context);
+
+    switch (node.operator) {
+      case '&&':
+        if (!leftValue) {
+          return leftValue;
+        }
+        return this.evaluateAstNode(node.right, context);
+
+      case '||':
+        if (leftValue) {
+          return leftValue;
+        }
+        return this.evaluateAstNode(node.right, context);
+
+      case '??':
+        if (leftValue === null || leftValue === undefined) {
+          return this.evaluateAstNode(node.right, context);
+        }
+        return leftValue;
     }
   }
 }
