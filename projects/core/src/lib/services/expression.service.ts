@@ -2,35 +2,35 @@ import { Injectable } from '@angular/core';
 import * as acorn from 'acorn';
 import {
   ArrayExpression,
+  ArrowFunctionExpression,
   BinaryExpression,
   BinaryOperator,
+  CallExpression,
   ConditionalExpression,
   Identifier,
   Literal,
   LogicalExpression,
   MemberExpression,
+  ObjectExpression,
   PrivateIdentifier,
   Program,
+  SequenceExpression,
+  SpreadElement,
   Super,
+  TemplateLiteral,
   UnaryExpression,
 } from 'acorn';
 import { FormContext } from '../types/expression.type';
 
-// Define all unsupported node types in one place
 const UNSUPPORTED_NODE_TYPES = new Set([
   'ThisExpression',
   'Super',
   'PrivateIdentifier',
-  'ObjectExpression',
   'FunctionExpression',
   'UpdateExpression',
   'AssignmentExpression',
-  'CallExpression',
   'NewExpression',
-  'SequenceExpression',
-  'ArrowFunctionExpression',
   'YieldExpression',
-  'TemplateLiteral',
   'TaggedTemplateExpression',
   'ClassExpression',
   'MetaProperty',
@@ -86,13 +86,15 @@ export class ExpressionService {
    * @returns The result of evaluating the node
    */
   private evaluateAstNode(
-    node: acorn.Expression | PrivateIdentifier | Super,
+    node: acorn.Expression | PrivateIdentifier | Super | SpreadElement,
     context: FormContext,
   ): unknown {
+    // Check if the node type is unsupported first
     if (UNSUPPORTED_NODE_TYPES.has(node.type)) {
       throw new TypeError(`${node.type} is not supported in expressions`);
     }
 
+    // Handle supported node types
     switch (node.type) {
       case 'Identifier':
         return this.evaluateIdentifier(node, context);
@@ -112,6 +114,17 @@ export class ExpressionService {
         return this.evaluateConditionalExpression(node, context);
       case 'ParenthesizedExpression':
         return this.evaluateAstNode(node.expression, context);
+      case 'ObjectExpression':
+        return this.evaluateObjectExpression(node, context);
+      case 'SequenceExpression':
+        return this.evaluateSequenceExpression(node, context);
+      case 'TemplateLiteral':
+        return this.evaluateTemplateLiteral(node, context);
+      case 'CallExpression':
+        return this.evaluateCallExpression(node, context);
+      case 'ArrowFunctionExpression':
+        return this.evaluateArrowFunctionExpression(node, context);
+
       default:
         throw new TypeError(`Unsupported node type: ${node.type}`);
     }
@@ -546,5 +559,261 @@ export class ExpressionService {
     }
 
     return this.evaluateAstNode(node.alternate, context);
+  }
+
+  /**
+   * Evaluates an object expression (object literal)
+   * @param node The object expression node
+   * @param context The context containing variables and objects
+   * @returns The evaluated object
+   */
+  private evaluateObjectExpression(
+    node: ObjectExpression,
+    context: FormContext,
+  ): object {
+    const result: Record<string, unknown> = {};
+
+    for (const property of node.properties) {
+      if (property.type !== 'Property') {
+        continue;
+      }
+
+      const prop = property;
+
+      let key: string;
+      if (prop.key.type === 'Identifier' && !prop.computed) {
+        key = prop.key.name;
+      } else {
+        const evaluatedKey = this.evaluateAstNode(prop.key, context);
+        key = String(evaluatedKey);
+      }
+
+      result[key] = this.evaluateAstNode(prop.value, context);
+    }
+
+    return result;
+  }
+
+  /**
+   * Evaluates a sequence expression (comma-separated expressions)
+   * @param node The sequence expression node
+   * @param context The context containing variables and objects
+   * @returns The result of the last expression in the sequence
+   */
+  private evaluateSequenceExpression(
+    node: SequenceExpression,
+    context: FormContext,
+  ): unknown {
+    let result: unknown;
+
+    for (const expression of node.expressions) {
+      result = this.evaluateAstNode(expression, context);
+    }
+
+    return result;
+  }
+
+  /**
+   * Evaluates a template literal
+   * @param node The template literal node
+   * @param context The context containing variables and objects
+   * @returns The evaluated template string
+   */
+  private evaluateTemplateLiteral(
+    node: TemplateLiteral,
+    context: FormContext,
+  ): string {
+    let result = '';
+
+    for (let i = 0; i < node.quasis.length; i++) {
+      const cookedValue = node.quasis[i].value.cooked;
+      result = result.concat(cookedValue ?? '');
+      if (i < node.expressions.length) {
+        const exprValue = this.evaluateAstNode(node.expressions[i], context);
+        result = result.concat(String(exprValue));
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Evaluates a function call expression with strict type checking
+   * @param node The function call expression node
+   * @param context The context containing variables and objects
+   * @returns The result of the function call
+   */
+  private evaluateCallExpression(
+    node: CallExpression,
+    context: FormContext,
+  ): unknown {
+    if (node.callee.type !== 'MemberExpression') {
+      throw new TypeError('Only method calls are supported');
+    }
+
+    const memberExpr = node.callee;
+    const object = this.evaluateAstNode(memberExpr.object, context);
+
+    if (object === null || object === undefined) {
+      throw new Error('Cannot call methods on null or undefined');
+    }
+
+    let methodName: string;
+    if (!memberExpr.computed && memberExpr.property.type === 'Identifier') {
+      methodName = memberExpr.property.name;
+    } else if (memberExpr.computed) {
+      const propertyValue = this.evaluateAstNode(memberExpr.property, context);
+      if (
+        typeof propertyValue !== 'string' &&
+        typeof propertyValue !== 'number'
+      ) {
+        throw new TypeError('Method name must be a string or number');
+      }
+      methodName = String(propertyValue);
+    } else {
+      throw new TypeError('Unexpected property type in method call');
+    }
+
+    const args: unknown[] = [];
+    for (const arg of node.arguments) {
+      args.push(this.evaluateAstNode(arg, context));
+    }
+
+    type SafeMethodsMap = {
+      string: readonly string[];
+      number: readonly string[];
+      boolean: readonly string[];
+      array: readonly string[];
+    };
+
+    const SAFE_METHODS: SafeMethodsMap = {
+      string: [
+        'charAt',
+        'concat',
+        'includes',
+        'endsWith',
+        'indexOf',
+        'lastIndexOf',
+        'padEnd',
+        'padStart',
+        'repeat',
+        'replace',
+        'slice',
+        'split',
+        'startsWith',
+        'substring',
+        'toLowerCase',
+        'toUpperCase',
+        'trim',
+        'trimEnd',
+        'trimStart',
+      ],
+      number: ['toFixed', 'toPrecision', 'toString'],
+      boolean: ['toString'],
+      array: [
+        'concat',
+        'every',
+        'filter',
+        'find',
+        'findIndex',
+        'includes',
+        'indexOf',
+        'join',
+        'lastIndexOf',
+        'map',
+        'reduce',
+        'reduceRight',
+        'slice',
+        'some',
+        'toString',
+      ],
+    };
+
+    const objType: string = typeof object;
+    let isAllowed = false;
+
+    if (objType === 'string' && SAFE_METHODS.string.includes(methodName)) {
+      isAllowed = true;
+    } else if (
+      objType === 'number' &&
+      SAFE_METHODS.number.includes(methodName)
+    ) {
+      isAllowed = true;
+    } else if (
+      objType === 'boolean' &&
+      SAFE_METHODS.boolean.includes(methodName)
+    ) {
+      isAllowed = true;
+    } else if (
+      Array.isArray(object) &&
+      SAFE_METHODS.array.includes(methodName)
+    ) {
+      isAllowed = true;
+    } else if (objType === 'object') {
+      const objectWithMethods = object as Record<string, unknown>;
+      isAllowed =
+        methodName in objectWithMethods &&
+        typeof objectWithMethods[methodName] === 'function';
+    }
+
+    if (!isAllowed) {
+      throw new TypeError(
+        `Method ${methodName} is not supported on type ${objType}`,
+      );
+    }
+
+    const objectWithMethod = object as Record<string, unknown>;
+    const method = objectWithMethod[methodName];
+
+    if (typeof method !== 'function') {
+      throw new TypeError(`${methodName} is not a function`);
+    }
+
+    return method.apply(object, args);
+  }
+
+  /**
+   * Evaluates an arrow function expression
+   * @param node The arrow function expression node
+   * @param context The context containing variables and objects
+   * @returns A function that can be called from other expressions
+   */
+  private evaluateArrowFunctionExpression(
+    node: ArrowFunctionExpression,
+    context: FormContext,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  ): Function {
+    // We only support simple arrow functions with single parameters and expression bodies
+    if (
+      node.body.type !== 'BlockStatement' &&
+      node.body.type !== 'Identifier' &&
+      node.body.type !== 'MemberExpression' &&
+      node.body.type !== 'CallExpression' &&
+      node.body.type !== 'BinaryExpression' &&
+      node.body.type !== 'TemplateLiteral'
+    ) {
+      throw new TypeError('Unsupported arrow function body type');
+    }
+
+    return (...args: unknown[]): unknown => {
+      const arrowContext = { ...context };
+
+      for (let i = 0; i < node.params.length && i < args.length; i++) {
+        const param = node.params[i];
+        if (param.type !== 'Identifier') {
+          throw new TypeError(
+            'Only simple identifier parameters are supported in arrow functions',
+          );
+        }
+
+        const paramName = param.name;
+        arrowContext[paramName] = args[i];
+      }
+      if (node.body.type !== 'BlockStatement') {
+        return this.evaluateAstNode(node.body, arrowContext);
+      }
+
+      throw new TypeError('Block-bodied arrow functions are not supported');
+    };
   }
 }

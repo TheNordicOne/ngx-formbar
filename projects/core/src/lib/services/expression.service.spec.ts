@@ -913,4 +913,290 @@ describe('ExpressionService', () => {
       'Dynamic array access with expression as index',
     );
   });
+
+  // Add these test suites to your expression.service.spec.ts file
+
+  describe('Object Expression', () => {
+    evaluateExpression(
+      '({ name: "Example", value: 42 })',
+      { name: 'Example', value: 42 },
+      'Basic object literal with string and number values',
+    );
+
+    evaluateExpression(
+      '({ firstName: person.firstName, lastName: person.lastName })',
+      { firstName: 'Hans', lastName: 'Mueller' },
+      'Object literal with property references',
+    );
+
+    evaluateExpression(
+      '({ sum: person.age + address.floor, product: person.age * address.floor })',
+      { sum: 44, product: 84 },
+      'Object literal with computed values',
+    );
+
+    evaluateExpression(
+      '({ ["computed" + "Key"]: 42 })',
+      { computedKey: 42 },
+      'Object literal with computed property name',
+    );
+
+    evaluateExpression(
+      '({ [person.firstName]: person.age })',
+      { Hans: 42 },
+      'Object literal with dynamic property name from context',
+    );
+
+    evaluateExpression(
+      '({ a: 1, b: { c: 2, d: { e: 3 } } })',
+      { a: 1, b: { c: 2, d: { e: 3 } } },
+      'Nested object literals',
+    );
+
+    evaluateExpression(
+      '({ arrayProp: [1, 2, 3], objectProp: { x: "y" } })',
+      { arrayProp: [1, 2, 3], objectProp: { x: 'y' } },
+      'Object literal with array and object values',
+    );
+
+    evaluateExpression(
+      '({ age: person.age > 40 ? "Senior" : "Junior" })',
+      { age: 'Senior' },
+      'Object literal with conditional expression',
+    );
+
+    evaluateExpression('({})', {}, 'Empty object literal');
+  });
+
+  describe('Sequence Expression', () => {
+    evaluateExpression(
+      '(1, 2, 3)',
+      3,
+      'Basic sequence expression (returns the last value)',
+    );
+
+    evaluateExpression(
+      '(person.age, address.floor, subscription.monthlyFee)',
+      29.99,
+      'Sequence expression with property references',
+    );
+
+    evaluateExpression(
+      '((person.age + 5), (address.floor * 2))',
+      4,
+      'Sequence expression with arithmetic expressions',
+    );
+
+    evaluateExpression(
+      '(undefinedValue, nullValue, 42)',
+      42,
+      'Sequence expression with null and undefined values',
+    );
+
+    evaluateExpression(
+      '(person.age > 30, person.age < 50, "Result")',
+      'Result',
+      'Sequence expression with comparison operations',
+    );
+
+    evaluateExpression(
+      '((person.age, person.firstName), (address.city, address.country))',
+      'Germany',
+      'Nested sequence expressions',
+    );
+
+    evaluateExpression(
+      '((void 0), (42))',
+      42,
+      'Sequence expression with void operator',
+    );
+  });
+
+  describe('Template Literal', () => {
+    evaluateExpression(
+      '`Hello, World!`',
+      'Hello, World!',
+      'Basic template literal without expressions',
+    );
+
+    evaluateExpression(
+      '`Hello, ${person.firstName}!`',
+      'Hello, Hans!',
+      'Template literal with single expression',
+    );
+
+    evaluateExpression(
+      '`${person.firstName} ${person.lastName} is ${person.age} years old`',
+      'Hans Mueller is 42 years old',
+      'Template literal with multiple expressions',
+    );
+
+    evaluateExpression(
+      '`The sum is ${person.age + address.floor}`',
+      'The sum is 44',
+      'Template literal with arithmetic expression',
+    );
+
+    evaluateExpression(
+      '`User is ${person.age > 30 ? "senior" : "junior"}`',
+      'User is senior',
+      'Template literal with conditional expression',
+    );
+
+    evaluateExpression(
+      '`Nested ${`template ${person.firstName}`}`',
+      'Nested template Hans',
+      'Nested template literals',
+    );
+
+    evaluateExpression(
+      '`${person.isActive ? `${person.firstName} is active` : "Inactive user"}`',
+      'Hans is active',
+      'Template literal with conditional nested template',
+    );
+
+    evaluateExpression('``', '', 'Empty template literal');
+  });
+
+  describe('Combined Expression Types', () => {
+    evaluateExpression(
+      '({ template: `Hello, ${person.firstName}`, sequence: (1, 2, 3) })',
+      { template: 'Hello, Hans', sequence: 3 },
+      'Object with template and sequence expressions',
+    );
+
+    evaluateExpression(
+      '({ address: `${address.street}, ${address.city}`, info: { name: person.firstName, age: person.age } })',
+      { address: 'Some Street, Berlin', info: { name: 'Hans', age: 42 } },
+      'Nested object with template literal',
+    );
+
+    evaluateExpression(
+      '`User ${person.firstName} has address ${address.street}`',
+      'User Hans has address Some Street',
+      'Template literal with multiple property references',
+    );
+
+    evaluateExpression(
+      '(person.age > 30 ? ({ type: "Senior" }) : ({ type: "Junior" })).type',
+      'Senior',
+      'Property access on conditional object expression',
+    );
+
+    evaluateExpression(
+      '`Items: ${address.notes[0]}, ${address.notes[1]}`',
+      'Items: Key under Doormat, Second door on the right',
+      'Template literal with array access',
+    );
+  });
+
+  describe('Call Expression', () => {
+    evaluateExpression(
+      'subscription.monthlyFee.toFixed(2)',
+      '29.99',
+      'Number method call with argument',
+    );
+
+    evaluateExpression(
+      'person.firstName.toUpperCase()',
+      'HANS',
+      'String method call with no arguments',
+    );
+
+    evaluateExpression(
+      'person.firstName.concat(" ", person.lastName)',
+      'Hans Mueller',
+      'String method call with multiple arguments',
+    );
+
+    evaluateExpression(
+      'address.notes.join(", ")',
+      'Key under Doormat, Second door on the right',
+      'Array method call',
+    );
+
+    evaluateExpression(
+      'address.notes.includes("Key under Doormat")',
+      true,
+      'Array method returning boolean',
+    );
+
+    evaluateExpression(
+      'person.isActive.toString()',
+      'true',
+      'Boolean method call',
+    );
+
+    evaluateExpression(
+      '`Price: €${subscription.monthlyFee.toFixed(2)}`',
+      'Price: €29.99',
+      'Template literal with method call on numeric value',
+    );
+
+    evaluateExpression(
+      '({ name: person.firstName.toUpperCase(), price: subscription.monthlyFee.toFixed(1) })',
+      { name: 'HANS', price: '30.0' },
+      'Object with method calls as values',
+    );
+
+    evaluateExpression(
+      'address.notes.map(note => note.toUpperCase()).join(", ")',
+      'KEY UNDER DOORMAT, SECOND DOOR ON THE RIGHT',
+      'Chained method calls on arrays',
+    );
+
+    // Error cases
+    evaluateExpressionExpectingError(
+      'Math.random()',
+      'Only method calls on context properties are supported',
+    );
+
+    evaluateExpressionExpectingError(
+      'person.age.unknownMethod()',
+      'Unsupported method call should throw',
+    );
+  });
+
+  describe('Arrow Function Expression', () => {
+    evaluateExpression(
+      'address.notes.map(note => note.toUpperCase()).join(", ")',
+      'KEY UNDER DOORMAT, SECOND DOOR ON THE RIGHT',
+      'Arrow function with map and join methods',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3, 4].filter(n => n > 2)',
+      [3, 4],
+      'Arrow function with filter method',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3, 4].map(n => n * 2)',
+      [2, 4, 6, 8],
+      'Arrow function with map method',
+    );
+
+    evaluateExpression(
+      '[10, 20, 30].some(value => value > 25)',
+      true,
+      'Arrow function with some method returning boolean',
+    );
+
+    evaluateExpression(
+      '[10, 20, 30].every(value => value > 5)',
+      true,
+      'Arrow function with every method returning boolean',
+    );
+
+    evaluateExpression(
+      '[10, 20, 30].find(value => value > 15)',
+      20,
+      'Arrow function with find method',
+    );
+
+    evaluateExpressionExpectingError(
+      'const x = 10; x => x * 2',
+      'Invalid arrow function syntax - not in method call context',
+    );
+  });
 });
