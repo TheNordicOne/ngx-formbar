@@ -17,54 +17,71 @@ import { FormContext } from '../types/expression.type';
   providedIn: 'root',
 })
 export class ExpressionService {
-  private cache = new Map<string, Program>();
+  private astCache = new Map<string, Program>();
 
-  buildExpressionAst(expression: string): Program {
-    const cachedAst = this.cache.get(expression);
+  /**
+   * Parses an expression string into an abstract syntax tree (AST)
+   * @param expressionString The expression to parse
+   * @returns The parsed AST
+   */
+  parseExpressionToAst(expressionString: string): Program {
+    const cachedAst = this.astCache.get(expressionString);
     if (cachedAst) {
       return cachedAst;
     }
 
-    const ast = acorn.parse(expression, { ecmaVersion: 2022 });
-    this.cache.set(expression, ast);
+    const ast = acorn.parse(expressionString, { ecmaVersion: 2022 });
+    this.astCache.set(expressionString, ast);
     return ast;
   }
 
-  evaluate(ast: Program, context?: FormContext): unknown {
+  /**
+   * Evaluates an expression AST within the provided context
+   * @param ast The parsed AST to evaluate
+   * @param context The context containing variables and objects referenced in the expression
+   * @returns The result of evaluating the expression
+   */
+  evaluateExpression(ast: Program, context?: FormContext): unknown {
     if (!context) {
       return null;
     }
     const node = ast.body[0];
     if (node.type !== 'ExpressionStatement') {
-      throw TypeError(`Unsupported type ${node.type}`);
+      throw TypeError(`Unsupported statement type: ${node.type}`);
     }
 
-    return this.evaluateNode(node.expression, context);
+    return this.evaluateAstNode(node.expression, context);
   }
 
-  private evaluateNode(
+  /**
+   * Evaluates a node in the AST
+   * @param node The AST node to evaluate
+   * @param context The context containing variables and objects
+   * @returns The result of evaluating the node
+   */
+  private evaluateAstNode(
     node: acorn.Expression | PrivateIdentifier | Super,
     context: FormContext,
   ): unknown {
     if (node.type === 'PrivateIdentifier') {
-      throw TypeError('Cannot use private identifiers');
+      throw TypeError('Private identifiers are not supported in expressions');
     }
 
     if (node.type === 'Super') {
-      throw TypeError('super keyword is not supported');
+      throw TypeError('Super keyword is not supported in expressions');
     }
 
     if (node.type === 'ThisExpression') {
-      throw TypeError('ThisExpression is not supported');
+      throw TypeError('This keyword is not supported in expressions');
     }
 
     switch (node.type) {
       case 'Identifier':
-        return this.identifier(node);
+        return this.evaluateIdentifier(node);
       case 'Literal':
-        return this.literal(node);
+        return this.evaluateLiteral(node);
       case 'ArrayExpression':
-        return this.evaluateArray(node, context);
+        return this.evaluateArrayExpression(node, context);
       case 'ObjectExpression':
         break;
       case 'FunctionExpression':
@@ -74,13 +91,13 @@ export class ExpressionService {
       case 'UpdateExpression':
         break;
       case 'BinaryExpression':
-        return this.binary(node, context);
+        return this.evaluateBinaryExpression(node, context);
       case 'AssignmentExpression':
         break;
       case 'LogicalExpression':
         break;
       case 'MemberExpression':
-        return this.member(node, context);
+        return this.evaluateMemberExpression(node, context);
       case 'ConditionalExpression':
         break;
       case 'CallExpression':
@@ -113,23 +130,44 @@ export class ExpressionService {
     return null;
   }
 
-  private literal(node: Literal) {
+  /**
+   * Evaluates a literal value node
+   * @param node The literal node to evaluate
+   * @returns The literal value
+   */
+  private evaluateLiteral(node: Literal) {
     return node.value;
   }
 
-  private binary(node: BinaryExpression, context: FormContext) {
+  /**
+   * Evaluates a binary expression (e.g., a + b, x > y)
+   * @param node The binary expression node
+   * @param context The context containing variables and objects
+   * @returns The result of the binary operation
+   */
+  private evaluateBinaryExpression(
+    node: BinaryExpression,
+    context: FormContext,
+  ) {
     const leftNode = node.left;
     const rightNode = node.right;
 
-    const left = this.evaluateNode(leftNode, context);
-    const right = this.evaluateNode(rightNode, context);
-    return this.applyOperator(left, node.operator, right);
+    const leftValue = this.evaluateAstNode(leftNode, context);
+    const rightValue = this.evaluateAstNode(rightNode, context);
+    return this.executeBinaryOperation(leftValue, node.operator, rightValue);
   }
 
-  private applyOperator(
-    left: unknown,
+  /**
+   * Executes a binary operation with the given values and operator
+   * @param leftValue The left operand
+   * @param operator The binary operator
+   * @param rightValue The right operand
+   * @returns The result of applying the operator to the operands
+   */
+  private executeBinaryOperation(
+    leftValue: unknown,
     operator: BinaryOperator,
-    right: unknown,
+    rightValue: unknown,
   ) {
     const isNumber = (value: unknown): value is number =>
       typeof value === 'number';
@@ -141,59 +179,59 @@ export class ExpressionService {
     switch (operator) {
       // Arithmetic operators
       case '+':
-        if (isNumber(left) && isNumber(right)) {
-          return left + right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue + rightValue;
         }
 
-        if (isString(left) || isString(right)) {
-          return String(left) + String(right);
+        if (isString(leftValue) || isString(rightValue)) {
+          return String(leftValue) + String(rightValue);
         }
 
         throw new TypeError('+ operator requires numbers or strings');
 
       case '-':
-        if (isNumber(left) && isNumber(right)) {
-          return left - right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue - rightValue;
         }
         throw new TypeError('- operator requires numbers');
 
       case '*':
-        if (isNumber(left) && isNumber(right)) {
-          return left * right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue * rightValue;
         }
         throw new TypeError('* operator requires numbers');
 
       case '/':
-        if (isNumber(left) && isNumber(right)) {
-          if (right === 0) {
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          if (rightValue === 0) {
             throw new Error('Division by zero');
           }
-          return left / right;
+          return leftValue / rightValue;
         }
         throw new TypeError('/ operator requires numbers');
 
       case '%':
-        if (isNumber(left) && isNumber(right)) {
-          if (right === 0) {
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          if (rightValue === 0) {
             throw new Error('Modulo by zero');
           }
-          return left % right;
+          return leftValue % rightValue;
         }
         throw new TypeError('% operator requires numbers');
 
       case '**':
-        if (isNumber(left) && isNumber(right)) {
-          return left ** right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue ** rightValue;
         }
         throw new TypeError('** operator requires numbers');
 
       // Comparison operators
       case '<':
         if (
-          (isNumber(left) && isNumber(right)) ||
-          (isString(left) && isString(right))
+          (isNumber(leftValue) && isNumber(rightValue)) ||
+          (isString(leftValue) && isString(rightValue))
         ) {
-          return left < right;
+          return leftValue < rightValue;
         }
         throw new TypeError(
           '< operator requires operands of the same type (numbers or strings)',
@@ -201,10 +239,10 @@ export class ExpressionService {
 
       case '>':
         if (
-          (isNumber(left) && isNumber(right)) ||
-          (isString(left) && isString(right))
+          (isNumber(leftValue) && isNumber(rightValue)) ||
+          (isString(leftValue) && isString(rightValue))
         ) {
-          return left > right;
+          return leftValue > rightValue;
         }
         throw new TypeError(
           '> operator requires operands of the same type (numbers or strings)',
@@ -212,10 +250,10 @@ export class ExpressionService {
 
       case '<=':
         if (
-          (isNumber(left) && isNumber(right)) ||
-          (isString(left) && isString(right))
+          (isNumber(leftValue) && isNumber(rightValue)) ||
+          (isString(leftValue) && isString(rightValue))
         ) {
-          return left <= right;
+          return leftValue <= rightValue;
         }
         throw new TypeError(
           '<= operator requires operands of the same type (numbers or strings)',
@@ -223,143 +261,172 @@ export class ExpressionService {
 
       case '>=':
         if (
-          (isNumber(left) && isNumber(right)) ||
-          (isString(left) && isString(right))
+          (isNumber(leftValue) && isNumber(rightValue)) ||
+          (isString(leftValue) && isString(rightValue))
         ) {
-          return left >= right;
+          return leftValue >= rightValue;
         }
         throw new TypeError(
           '>= operator requires operands of the same type (numbers or strings)',
         );
 
       case '==':
-        return left == right;
+        return leftValue == rightValue;
       case '!=':
-        return left != right;
+        return leftValue != rightValue;
       case '===':
-        return left === right;
+        return leftValue === rightValue;
       case '!==':
-        return left !== right;
+        return leftValue !== rightValue;
 
       case '|':
-        if (isNumber(left) && isNumber(right)) {
-          return left | right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue | rightValue;
         }
         throw new TypeError('| operator requires numbers');
 
       case '&':
-        if (isNumber(left) && isNumber(right)) {
-          return left & right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue & rightValue;
         }
         throw new TypeError('& operator requires numbers');
 
       case '^':
-        if (isNumber(left) && isNumber(right)) {
-          return left ^ right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue ^ rightValue;
         }
         throw new TypeError('^ operator requires numbers');
 
       case '<<':
-        if (isNumber(left) && isNumber(right)) {
-          return left << right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue << rightValue;
         }
         throw new TypeError('<< operator requires numbers');
 
       case '>>':
-        if (isNumber(left) && isNumber(right)) {
-          return left >> right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue >> rightValue;
         }
         throw new TypeError('>> operator requires numbers');
 
       case '>>>':
-        if (isNumber(left) && isNumber(right)) {
-          return left >>> right;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+          return leftValue >>> rightValue;
         }
         throw new TypeError('>>> operator requires numbers');
 
       case 'in':
-        if (!isObject(right) || !isString(left)) {
+        if (!isObject(rightValue) || !isString(leftValue)) {
           throw new TypeError(
             'Right operand must be an object for "in" operator and left operand must be of type string',
           );
         }
-        return left in right;
+        return leftValue in rightValue;
       default:
         throw new Error(`Unsupported binary operator: ${operator}`);
     }
   }
 
-  private member(node: MemberExpression, context: FormContext) {
-    const object = this.evaluateNode(node.object, context);
+  /**
+   * Evaluates a member expression (e.g., obj.prop, arr[0])
+   * @param node The member expression node
+   * @param context The context containing variables and objects
+   * @returns The value of the member
+   */
+  private evaluateMemberExpression(
+    node: MemberExpression,
+    context: FormContext,
+  ) {
+    const objectValue = this.evaluateAstNode(node.object, context);
 
-    if (object === null || object === undefined) {
+    if (objectValue === null || objectValue === undefined) {
       throw new Error('Cannot access properties of null or undefined');
     }
 
-    const property = this.evaluateNode(node.property, context);
+    const propertyValue = this.evaluateAstNode(node.property, context);
 
-    if (typeof property !== 'string' && typeof property !== 'number') {
+    if (
+      typeof propertyValue !== 'string' &&
+      typeof propertyValue !== 'number'
+    ) {
       throw Error(
-        `Property has to be a string or number, but was ${typeof property}`,
+        `Property accessor must be a string or number, but was ${typeof propertyValue}`,
       );
     }
 
-    if (typeof object === 'object') {
-      return this.getObjectProperty(
-        object as Record<string, unknown>,
-        property,
+    if (typeof objectValue === 'object') {
+      return this.getPropertyFromObject(
+        objectValue as Record<string, unknown>,
+        propertyValue,
       );
     }
 
-    if (typeof object !== 'string' && typeof object !== 'number') {
+    if (typeof objectValue !== 'string' && typeof objectValue !== 'number') {
       throw Error(
-        `Object has to be a string or number, but was ${typeof property}`,
+        `Object must be a string, number, or object, but was ${typeof propertyValue}`,
       );
     }
 
-    const parent = this.getObjectProperty(context, object);
+    const parentObject = this.getPropertyFromObject(context, objectValue);
 
-    if (!parent || typeof parent !== 'object') {
-      return parent;
+    if (!parentObject || typeof parentObject !== 'object') {
+      return parentObject;
     }
 
-    return parent[property as keyof typeof parent];
+    return parentObject[propertyValue as keyof typeof parentObject];
   }
 
-  private getObjectProperty(
+  /**
+   * Gets a property from an object by key
+   * @param object The object to retrieve the property from
+   * @param propertyKey The property key (string or number)
+   * @returns The value of the property
+   */
+  private getPropertyFromObject(
     object: Record<string, unknown>,
-    property: string | number,
+    propertyKey: string | number,
   ) {
-    return object[property];
+    return object[propertyKey];
   }
 
-  private identifier(node: Identifier) {
+  /**
+   * Evaluates an identifier node
+   * @param node The identifier node
+   * @returns The name of the identifier
+   */
+  private evaluateIdentifier(node: Identifier) {
     return node.name;
   }
 
-  private evaluateArray(node: ArrayExpression, context: FormContext) {
-    const result: unknown[] = [];
+  /**
+   * Evaluates an array expression node
+   * @param node The array expression node
+   * @param context The context containing variables and objects
+   * @returns The evaluated array
+   */
+  private evaluateArrayExpression(node: ArrayExpression, context: FormContext) {
+    const resultArray: unknown[] = [];
 
     for (const element of node.elements) {
       if (element === null) {
-        result.push(undefined);
+        resultArray.push(undefined);
         continue;
       }
 
       if (element.type !== 'SpreadElement') {
-        result.push(this.evaluateNode(element, context));
-        continue;
+        resultArray.push(this.evaluateAstNode(element, context));
+        continue; // Process next element
       }
 
-      const spreadValue = this.evaluateNode(element.argument, context);
+      const spreadValue = this.evaluateAstNode(element.argument, context);
 
       if (Array.isArray(spreadValue)) {
-        result.push(...(spreadValue as unknown[]));
-        continue;
+        resultArray.push(...(spreadValue as unknown[]));
+        continue; // Process next element
       }
       throw new TypeError(`Cannot spread non-array value in array literal`);
     }
 
-    return result;
+    return resultArray;
   }
 }
