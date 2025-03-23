@@ -331,7 +331,7 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates a member expression (e.g., obj.prop, arr[0])
+   * Evaluates a member expression (e.g., obj.prop, arr[0]) with improved safety
    * @param node The member expression node
    * @param context The context containing variables and objects
    * @returns The value of the member
@@ -339,7 +339,7 @@ export class ExpressionService {
   private evaluateMemberExpression(
     node: MemberExpression,
     context: FormContext,
-  ) {
+  ): unknown {
     const objectValue = this.evaluateAstNode(node.object, context);
 
     if (objectValue === null || objectValue === undefined) {
@@ -364,19 +364,38 @@ export class ExpressionService {
       );
     }
 
-    if (typeof objectValue !== 'string' && typeof objectValue !== 'number') {
+    if (typeof objectValue === 'string') {
+      if (
+        propertyValue === 'length' ||
+        typeof String.prototype[
+          propertyValue as keyof typeof String.prototype
+        ] === 'function'
+      ) {
+        return objectValue[propertyValue as keyof string];
+      }
+
+      if (typeof propertyValue === 'number' || !isNaN(Number(propertyValue))) {
+        return objectValue[propertyValue as keyof typeof objectValue];
+      }
+
       throw Error(
-        `Object must be a string, number, or object, but was ${typeof propertyValue}`,
+        `Invalid property access on string: ${String(propertyValue)}`,
       );
     }
 
-    const parentObject = this.getPropertyFromObject(context, objectValue);
-
-    if (!parentObject || typeof parentObject !== 'object') {
-      return parentObject;
+    if (typeof objectValue === 'number') {
+      throw Error(
+        `Cannot access properties on a number value: ${String(objectValue)}.${String(propertyValue)}`,
+      );
     }
 
-    return parentObject[propertyValue as keyof typeof parentObject];
+    if (typeof objectValue === 'boolean') {
+      throw Error(
+        `Cannot access properties on a boolean value: ${String(objectValue)}.${String(propertyValue)}`,
+      );
+    }
+
+    throw Error(`Cannot access properties on type: ${typeof objectValue}`);
   }
 
   /**
