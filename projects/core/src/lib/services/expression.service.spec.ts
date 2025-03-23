@@ -59,350 +59,12 @@ describe('ExpressionService', () => {
     emptyString: '',
   };
 
-  const expressions: {
-    expression: string;
-    expected?: unknown;
-    description?: string;
-    expectError?: boolean;
-  }[] = [
-    // Equality operators
-    {
-      expression: 'address.street === "Some Street"',
-      expected: true,
-      description: 'Strict equality operator (===)',
-    },
-    {
-      expression: 'address.street !== "Some Street"',
-      expected: false,
-      description: 'Strict inequality operator (!==)',
-    },
-    {
-      expression: 'address.floor == 2',
-      expected: true,
-      description: 'Abstract equality operator (==)',
-    },
-    {
-      expression: 'address.floor == "2"',
-      expected: true,
-      description: 'Abstract equality operator with type coercion (==)',
-    },
-    {
-      expression: 'address.floor != 3',
-      expected: true,
-      description: 'Abstract inequality operator (!=)',
-    },
-
-    // Comparison operators
-    {
-      expression: 'address.floor > 1',
-      expected: true,
-      description: 'Greater than operator (>)',
-    },
-    {
-      expression: 'address.floor >= 1',
-      expected: true,
-      description: 'Greater than or equal operator (>=)',
-    },
-    {
-      expression: 'address.floor >= 2',
-      expected: true,
-      description: 'Greater than or equal operator with equal values (>=)',
-    },
-    {
-      expression: 'address.floor >= 3',
-      expected: false,
-      description:
-        'Greater than or equal operator with larger right value (>=)',
-    },
-    {
-      expression: 'address.floor < 1',
-      expected: false,
-      description: 'Less than operator (<)',
-    },
-    {
-      expression: 'address.floor <= 1',
-      expected: false,
-      description: 'Less than or equal operator (<=)',
-    },
-    {
-      expression: 'address.floor <= 2',
-      expected: true,
-      description: 'Less than or equal operator with equal values (<=)',
-    },
-    {
-      expression: 'address.floor <= 3',
-      expected: true,
-      description: 'Less than or equal operator with larger right value (<=)',
-    },
-
-    // Array and property access
-    {
-      expression: 'address.notes[1]',
-      expected: 'Second door on the right',
-      description: 'Array access with index',
-    },
-    {
-      expression: 'address["street"]',
-      expected: 'Some Street',
-      description: 'Object property access with bracket notation',
-    },
-    {
-      expression: 'account.lastTransaction.type',
-      expected: 'withdrawal',
-      description: 'Nested object property access with dot notation',
-    },
-
-    // Arithmetic operators
-    {
-      expression: 'person.age + 8',
-      expected: 50,
-      description: 'Addition operator (+)',
-    },
-    {
-      expression: 'person.age - 2',
-      expected: 40,
-      description: 'Subtraction operator (-)',
-    },
-    {
-      expression: 'person.age * 2',
-      expected: 84,
-      description: 'Multiplication operator (*)',
-    },
-    {
-      expression: 'person.age / 2',
-      expected: 21,
-      description: 'Division operator (/)',
-    },
-    {
-      expression: 'person.age % 5',
-      expected: 2,
-      description: 'Remainder/modulo operator (%)',
-    },
-    {
-      expression: 'person.age ** 2',
-      expected: 1764,
-      description: 'Exponentiation operator (**)',
-    },
-    {
-      expression: '-person.age',
-      expected: -42,
-      description: 'Unary negation operator (-)',
-    },
-    {
-      expression: '+address.houseNumber',
-      expected: 69,
-      description: 'Unary plus operator with type conversion (+)',
-    },
-
-    // Bitwise operators
-    {
-      expression: 'inventory.totalItems & 255',
-      expected: 71, // 583 & 255 = 71
-      description: 'Bitwise AND operator (&)',
-    },
-    {
-      expression: 'address.zipCode | 8',
-      expected: 12349, // 12345 | 8 = 12349
-      description: 'Bitwise OR operator (|)',
-    },
-    {
-      expression: 'address.floor ^ 3',
-      expected: 1, // 2 ^ 3 = 1
-      description: 'Bitwise XOR operator (^)',
-    },
-    {
-      expression: '~address.floor',
-      expected: -3, // ~2 = -3
-      description: 'Bitwise NOT operator (~)',
-    },
-    {
-      expression: 'address.floor << 3',
-      expected: 16, // 2 << 3 = 16
-      description: 'Left shift operator (<<)',
-    },
-    {
-      expression: 'inventory.totalItems >> 3',
-      expected: 72, // 583 >> 3 = 72
-      description: 'Right shift operator (>>)',
-    },
-    {
-      expression: 'account.balance >>> 4',
-      expected: 78, // Integer part of 1250.75 >>> 4 = 78
-      description: 'Unsigned right shift operator (>>>)',
-    },
-
-    // Logical operators
-    {
-      expression: 'person.isActive && address.isVerified',
-      expected: true,
-      description: 'Logical AND operator (&&) with two truthy values',
-    },
-    {
-      expression: 'person.isActive && account.isOverdrawn',
-      expected: false,
-      description: 'Logical AND operator (&&) with one falsy value',
-    },
-    {
-      expression: 'person.isActive || account.isOverdrawn',
-      expected: true,
-      description: 'Logical OR operator (||) with one truthy value',
-    },
-    {
-      expression: '!person.isActive || subscription.isAutoRenewal',
-      expected: true,
-      description: 'Logical OR operator (||) with negated first value',
-    },
-    {
-      expression: '!account.isOverdrawn',
-      expected: true,
-      description: 'Logical NOT operator (!) with falsy value',
-    },
-    {
-      expression: 'nullValue ?? "No value provided"',
-      expected: 'No value provided',
-      description: 'Nullish coalescing operator (??) with null left value',
-    },
-    {
-      expression: 'undefinedValue ?? "No value provided"',
-      expected: 'No value provided',
-      description: 'Nullish coalescing operator (??) with undefined left value',
-    },
-    {
-      expression: 'zero ?? "No value provided"',
-      expected: 0,
-      description: 'Nullish coalescing operator (??) with zero left value',
-    },
-    {
-      expression: 'emptyString ?? "No value provided"',
-      expected: '',
-      description:
-        'Nullish coalescing operator (??) with empty string left value',
-    },
-
-    // Conditional (ternary) operator
-    {
-      expression: 'person.age > 40 ? "Option A" : "Option B"',
-      expected: 'Option A',
-      description: 'Conditional/ternary operator (? :) with true condition',
-    },
-    {
-      expression: 'person.age < 30 ? "Option A" : "Option B"',
-      expected: 'Option B',
-      description: 'Conditional/ternary operator (? :) with false condition',
-    },
-
-    // Type operators
-    {
-      expression: 'typeof person.age',
-      expected: 'number',
-      description: 'typeof operator with numeric value',
-    },
-    {
-      expression: 'typeof person.firstName',
-      expected: 'string',
-      description: 'typeof operator with string value',
-    },
-    {
-      expression: 'typeof person.isActive',
-      expected: 'boolean',
-      description: 'typeof operator with boolean value',
-    },
-    {
-      expression: 'typeof nullValue',
-      expected: 'object',
-      description: 'typeof operator with null value',
-    },
-
-    // String operators
-    {
-      expression: 'person.firstName + " " + person.lastName',
-      expected: 'Hans Mueller',
-      description: 'String concatenation with plus operator (+)',
-    },
-    {
-      expression:
-        '"Prefix: " + address.street + " " + address.houseNumber + ", " + address.zipCode + " " + address.city',
-      expected: 'Prefix: Some Street 69, 12345 Berlin',
-      description: 'Multiple string concatenation with variables and literals',
-    },
-
-    // Complex expressions
-    {
-      expression:
-        'person.age > 40 && address.floor > 0 && subscription.plan === "premium"',
-      expected: true,
-      description: 'Multiple logical AND operators with comparison expressions',
-    },
-    {
-      expression: '(person.age > 50 || address.floor > 1) && person.isActive',
-      expected: true,
-      description:
-        'Combination of logical operators with parenthesized expression',
-    },
-    {
-      expression:
-        'address.notes.length > 0 ? address.notes[0] : "Alternative text"',
-      expected: 'Key under Doormat',
-      description: 'Ternary operator with array length property access',
-    },
-    {
-      expression: '(person.age + address.floor) * 2',
-      expected: 88,
-      description:
-        'Arithmetic expression with parentheses for precedence control',
-    },
-    {
-      expression:
-        'subscription.plan === "premium" ? subscription.monthlyFee - (subscription.monthlyFee * subscription.discount / 100) : subscription.monthlyFee',
-      expected: 25.4915,
-      description: 'Ternary operator with complex arithmetic calculation',
-    },
-    {
-      expression:
-        'account.balance > account.savingsGoal ? "Message A" : "Message B"',
-      expected: 'Message B',
-      description: 'Ternary operator with numeric comparison',
-    },
-    {
-      expression:
-        'inventory.totalItems < inventory.reorderThreshold ? "Message A" : "Message B"',
-      expected: 'Message B',
-      description: 'Comparison of numeric values in object properties',
-    },
-
-    // Unsupported feature tests
-    {
-      expression: 'this.person',
-      expectError: true,
-      description: 'ThisExpression is not supported',
-    },
-    {
-      expression: 'class Example {  }',
-      expectError: true,
-      description: 'Class is not supported',
-    },
-  ];
-
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(ExpressionService);
   });
 
-  expressions.forEach((testCase) => {
-    if (testCase.expectError) {
-      evaluateExpressionExpectingError(
-        testCase.expression,
-        testCase.description,
-      );
-    } else {
-      evaluateExpression(
-        testCase.expression,
-        testCase.expected,
-        testCase.description,
-      );
-    }
-  });
-
+  // Helper functions for test execution
   function evaluateExpressionExpectingError(
     input: string,
     description?: string,
@@ -440,4 +102,400 @@ describe('ExpressionService', () => {
       expect(service.evaluate(ast, context)).toEqual(output);
     });
   }
+
+  describe('Equality Operators', () => {
+    evaluateExpression(
+      'address.street === "Some Street"',
+      true,
+      'Strict equality operator (===)',
+    );
+
+    evaluateExpression(
+      'address.street !== "Some Street"',
+      false,
+      'Strict inequality operator (!==)',
+    );
+
+    evaluateExpression(
+      'address.floor == 2',
+      true,
+      'Abstract equality operator (==)',
+    );
+
+    evaluateExpression(
+      'address.floor == "2"',
+      true,
+      'Abstract equality operator with type coercion (==)',
+    );
+
+    evaluateExpression(
+      'address.floor != 3',
+      true,
+      'Abstract inequality operator (!=)',
+    );
+  });
+
+  describe('Comparison Operators', () => {
+    evaluateExpression('address.floor > 1', true, 'Greater than operator (>)');
+
+    evaluateExpression(
+      'address.floor >= 1',
+      true,
+      'Greater than or equal operator (>=)',
+    );
+
+    evaluateExpression(
+      'address.floor >= 2',
+      true,
+      'Greater than or equal operator with equal values (>=)',
+    );
+
+    evaluateExpression(
+      'address.floor >= 3',
+      false,
+      'Greater than or equal operator with larger right value (>=)',
+    );
+
+    evaluateExpression('address.floor < 1', false, 'Less than operator (<)');
+
+    evaluateExpression(
+      'address.floor <= 1',
+      false,
+      'Less than or equal operator (<=)',
+    );
+
+    evaluateExpression(
+      'address.floor <= 2',
+      true,
+      'Less than or equal operator with equal values (<=)',
+    );
+
+    evaluateExpression(
+      'address.floor <= 3',
+      true,
+      'Less than or equal operator with larger right value (<=)',
+    );
+  });
+
+  describe('Array and Property Access', () => {
+    evaluateExpression(
+      'address.notes[1]',
+      'Second door on the right',
+      'Array access with index',
+    );
+
+    evaluateExpression(
+      'address["street"]',
+      'Some Street',
+      'Object property access with bracket notation',
+    );
+
+    evaluateExpression(
+      'account.lastTransaction.type',
+      'withdrawal',
+      'Nested object property access with dot notation',
+    );
+  });
+
+  describe('Arithmetic Operators', () => {
+    evaluateExpression('person.age + 8', 50, 'Addition operator (+)');
+
+    evaluateExpression('person.age - 2', 40, 'Subtraction operator (-)');
+
+    evaluateExpression('person.age * 2', 84, 'Multiplication operator (*)');
+
+    evaluateExpression('person.age / 2', 21, 'Division operator (/)');
+
+    evaluateExpression('person.age % 5', 2, 'Remainder/modulo operator (%)');
+
+    evaluateExpression('person.age ** 2', 1764, 'Exponentiation operator (**)');
+
+    evaluateExpression('-person.age', -42, 'Unary negation operator (-)');
+
+    evaluateExpression(
+      '+address.houseNumber',
+      69,
+      'Unary plus operator with type conversion (+)',
+    );
+  });
+
+  describe('Bitwise Operators', () => {
+    evaluateExpression(
+      'inventory.totalItems & 255',
+      71, // 583 & 255 = 71
+      'Bitwise AND operator (&)',
+    );
+
+    evaluateExpression(
+      'address.zipCode | 8',
+      12349, // 12345 | 8 = 12349
+      'Bitwise OR operator (|)',
+    );
+
+    evaluateExpression(
+      'address.floor ^ 3',
+      1, // 2 ^ 3 = 1
+      'Bitwise XOR operator (^)',
+    );
+
+    evaluateExpression(
+      '~address.floor',
+      -3, // ~2 = -3
+      'Bitwise NOT operator (~)',
+    );
+
+    evaluateExpression(
+      'address.floor << 3',
+      16, // 2 << 3 = 16
+      'Left shift operator (<<)',
+    );
+
+    evaluateExpression(
+      'inventory.totalItems >> 3',
+      72, // 583 >> 3 = 72
+      'Right shift operator (>>)',
+    );
+
+    evaluateExpression(
+      'account.balance >>> 4',
+      78, // Integer part of 1250.75 >>> 4 = 78
+      'Unsigned right shift operator (>>>)',
+    );
+  });
+
+  describe('Logical Operators', () => {
+    evaluateExpression(
+      'person.isActive && address.isVerified',
+      true,
+      'Logical AND operator (&&) with two truthy values',
+    );
+
+    evaluateExpression(
+      'person.isActive && account.isOverdrawn',
+      false,
+      'Logical AND operator (&&) with one falsy value',
+    );
+
+    evaluateExpression(
+      'person.isActive || account.isOverdrawn',
+      true,
+      'Logical OR operator (||) with one truthy value',
+    );
+
+    evaluateExpression(
+      '!person.isActive || subscription.isAutoRenewal',
+      true,
+      'Logical OR operator (||) with negated first value',
+    );
+
+    evaluateExpression(
+      '!account.isOverdrawn',
+      true,
+      'Logical NOT operator (!) with falsy value',
+    );
+
+    evaluateExpression(
+      'nullValue ?? "No value provided"',
+      'No value provided',
+      'Nullish coalescing operator (??) with null left value',
+    );
+
+    evaluateExpression(
+      'undefinedValue ?? "No value provided"',
+      'No value provided',
+      'Nullish coalescing operator (??) with undefined left value',
+    );
+
+    evaluateExpression(
+      'zero ?? "No value provided"',
+      0,
+      'Nullish coalescing operator (??) with zero left value',
+    );
+
+    evaluateExpression(
+      'emptyString ?? "No value provided"',
+      '',
+      'Nullish coalescing operator (??) with empty string left value',
+    );
+  });
+
+  describe('Conditional (Ternary) Operator', () => {
+    evaluateExpression(
+      'person.age > 40 ? "Option A" : "Option B"',
+      'Option A',
+      'Conditional/ternary operator (? :) with true condition',
+    );
+
+    evaluateExpression(
+      'person.age < 30 ? "Option A" : "Option B"',
+      'Option B',
+      'Conditional/ternary operator (? :) with false condition',
+    );
+  });
+
+  describe('Type Operators', () => {
+    evaluateExpression(
+      'typeof person.age',
+      'number',
+      'typeof operator with numeric value',
+    );
+
+    evaluateExpression(
+      'typeof person.firstName',
+      'string',
+      'typeof operator with string value',
+    );
+
+    evaluateExpression(
+      'typeof person.isActive',
+      'boolean',
+      'typeof operator with boolean value',
+    );
+
+    evaluateExpression(
+      'typeof nullValue',
+      'object',
+      'typeof operator with null value',
+    );
+  });
+
+  describe('String Operators', () => {
+    evaluateExpression(
+      'person.firstName + " " + person.lastName',
+      'Hans Mueller',
+      'String concatenation with plus operator (+)',
+    );
+
+    evaluateExpression(
+      '"Prefix: " + address.street + " " + address.houseNumber + ", " + address.zipCode + " " + address.city',
+      'Prefix: Some Street 69, 12345 Berlin',
+      'Multiple string concatenation with variables and literals',
+    );
+  });
+
+  describe('Array Expressions', () => {
+    evaluateExpression('[1, 2, 3]', [1, 2, 3], 'Simple array literal');
+
+    evaluateExpression(
+      '[person.age, address.floor, subscription.monthlyFee]',
+      [42, 2, 29.99],
+      'Array literal with property references',
+    );
+
+    evaluateExpression(
+      '[1, , 3]',
+      [1, undefined, 3],
+      'Sparse array with holes',
+    );
+
+    evaluateExpression(
+      '[...address.notes]',
+      ['Key under Doormat', 'Second door on the right'],
+      'Array literal with spread element',
+    );
+
+    evaluateExpression(
+      '[1, 2, ...address.notes, 3, 4]',
+      [1, 2, 'Key under Doormat', 'Second door on the right', 3, 4],
+      'Array literal with spread element in the middle',
+    );
+
+    evaluateExpression(
+      '[[1, 2], [3, 4]]',
+      [
+        [1, 2],
+        [3, 4],
+      ],
+      'Nested array literals',
+    );
+
+    evaluateExpression(
+      '[...inventory.categories, ...subscription.features]',
+      [
+        'electronics',
+        'clothing',
+        'books',
+        'priority_support',
+        'no_ads',
+        'premium_content',
+      ],
+      'Multiple spread elements in array literal',
+    );
+
+    evaluateExpression(
+      '[...address.notes, address.notes]',
+      [
+        'Key under Doormat',
+        'Second door on the right',
+        ['Key under Doormat', 'Second door on the right'],
+      ],
+      'Spread followed by the original array',
+    );
+  });
+
+  describe('Complex Expressions', () => {
+    evaluateExpression(
+      'person.age > 40 && address.floor > 0 && subscription.plan === "premium"',
+      true,
+      'Multiple logical AND operators with comparison expressions',
+    );
+
+    evaluateExpression(
+      '(person.age > 50 || address.floor > 1) && person.isActive',
+      true,
+      'Combination of logical operators with parenthesized expression',
+    );
+
+    evaluateExpression(
+      'address.notes.length > 0 ? address.notes[0] : "Alternative text"',
+      'Key under Doormat',
+      'Ternary operator with array length property access',
+    );
+
+    evaluateExpression(
+      '(person.age + address.floor) * 2',
+      88,
+      'Arithmetic expression with parentheses for precedence control',
+    );
+
+    evaluateExpression(
+      'subscription.plan === "premium" ? subscription.monthlyFee - (subscription.monthlyFee * subscription.discount / 100) : subscription.monthlyFee',
+      25.4915,
+      'Ternary operator with complex arithmetic calculation',
+    );
+
+    evaluateExpression(
+      'account.balance > account.savingsGoal ? "Message A" : "Message B"',
+      'Message B',
+      'Ternary operator with numeric comparison',
+    );
+
+    evaluateExpression(
+      'inventory.totalItems < inventory.reorderThreshold ? "Message A" : "Message B"',
+      'Message B',
+      'Comparison of numeric values in object properties',
+    );
+  });
+
+  describe('Unsupported Features', () => {
+    evaluateExpressionExpectingError(
+      'this.person',
+      'ThisExpression is not supported',
+    );
+
+    evaluateExpressionExpectingError(
+      'class Example {  }',
+      'Class is not supported',
+    );
+
+    evaluateExpressionExpectingError(
+      'class Example { #privateField = 1; method() { return this.#privateField; } }',
+      'PrivateIdentifier is not supported',
+    );
+
+    evaluateExpressionExpectingError(
+      'class Child extends Parent { method() { return super.parentMethod(); } }',
+      'Super is not supported',
+    );
+  });
 });
