@@ -826,9 +826,12 @@ export class ExpressionService {
       node.body.type !== 'MemberExpression' &&
       node.body.type !== 'CallExpression' &&
       node.body.type !== 'BinaryExpression' &&
+      node.body.type !== 'LogicalExpression' &&
       node.body.type !== 'TemplateLiteral'
     ) {
-      throw new TypeError('Unsupported arrow function body type');
+      throw new TypeError(
+        `Unsupported arrow function body type: ${node.body.type}`,
+      );
     }
 
     return (...args: unknown[]): unknown => {
