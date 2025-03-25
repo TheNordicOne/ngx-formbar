@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/cached-dependencies
 
       - name: Run tests
-        run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+        run: npm run test
 
   lint:
     runs-on: ubuntu-latest
