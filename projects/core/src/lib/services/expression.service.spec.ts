@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ExpressionService } from './expression.service';
 import { FormContext } from '../types/expression.type';
+import { toSafeString } from '../helper/string';
 
 describe('ExpressionService', () => {
   let service: ExpressionService;
@@ -88,14 +89,7 @@ describe('ExpressionService', () => {
     description?: string,
     overrideContext?: FormContext,
   ) {
-    // Convert the output to string safely, handling different types
-    const outputStr =
-      output === null
-        ? 'null'
-        : output === undefined
-          ? 'undefined'
-          : // eslint-disable-next-line @typescript-eslint/no-base-to-string
-            String(output);
+    const outputStr = toSafeString(output);
 
     const testTitle = description
       ? `should evaluate ${input} to ${outputStr} (${description})`
