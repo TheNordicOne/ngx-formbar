@@ -2,6 +2,9 @@ type NgxFwBaseContent = {
   type: string;
   validators?: string[];
   asyncValidators?: string[];
+  hide?: string;
+  hideStrategy?: HideStrategy;
+  valueStrategy?: ValueStrategy;
 };
 
 export type NgxFwFormGroup = NgxFwBaseContent & {
@@ -19,3 +22,6 @@ export type NgxFwControl = NgxFwBaseContent & {
 };
 
 export type NgxFwContent = NgxFwFormGroup | NgxFwControl;
+
+export type HideStrategy = 'keep' | 'remove';
+export type ValueStrategy = 'last' | 'default' | 'reset';
