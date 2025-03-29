@@ -2,12 +2,13 @@
 
 import { formworkProviders } from '../shared/provide-formwork';
 import { ControlIntegrationHostComponent } from './integration-host/control-integration-host.component';
+import { dummyControlContainer } from '../shared/control-container';
 
 describe('Control', () => {
   describe('content', () => {
     it('should have access to all properties specific to the control type', () => {
       cy.mount(ControlIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             id: 'first',
@@ -28,7 +29,7 @@ describe('Control', () => {
 
     it('should work without default value', () => {
       cy.mount(ControlIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             id: 'first',
@@ -50,7 +51,7 @@ describe('Control', () => {
   describe('validation', () => {
     it('should use single validator', () => {
       cy.mount(ControlIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             id: 'first',
@@ -73,7 +74,7 @@ describe('Control', () => {
 
     it('should use multiple validators (custom, async)', () => {
       cy.mount(ControlIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             id: 'first',
@@ -114,7 +115,7 @@ describe('Control', () => {
 
     it('should use combined validators', () => {
       cy.mount(ControlIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             id: 'first',
