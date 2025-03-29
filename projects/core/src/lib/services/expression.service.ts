@@ -113,9 +113,12 @@ export class ExpressionService {
   /**
    * Parses an expression string into an abstract syntax tree (AST)
    * @param expressionString - The expression to parse
-   * @returns The parsed AST
+   * @returns The parsed AST or null
    */
-  parseExpressionToAst(expressionString: string): Program {
+  parseExpressionToAst(expressionString?: string): Program | null {
+    if (!expressionString) {
+      return null;
+    }
     const cachedAst = this.astCache.get(expressionString);
     if (cachedAst) {
       return cachedAst;

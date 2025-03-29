@@ -1,11 +1,12 @@
 import { formworkProviders } from '../shared/provide-formwork';
 import { GroupIntegrationHostComponent } from './integration-host/group-integration-host.component';
+import { dummyControlContainer } from '../shared/control-container';
 
 describe('Group', () => {
   describe('content', () => {
     it('should have access to all properties specific to the group type and render all content', () => {
       cy.mount(GroupIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             type: 'test-group',
@@ -48,7 +49,7 @@ describe('Group', () => {
   describe('validation', () => {
     it('should use multiple validators (custom, async)', () => {
       cy.mount(GroupIntegrationHostComponent, {
-        providers: [formworkProviders],
+        providers: [formworkProviders, dummyControlContainer],
         componentProperties: {
           content: {
             type: 'test-group',

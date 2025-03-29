@@ -20,8 +20,9 @@ export class TestTextControlComponent {
 
   readonly content: Signal<TestTextControl> = this.control.content;
   readonly testId: Signal<string> = this.control.testId;
+  readonly isHidden: Signal<unknown> = this.control.isHidden;
 
-  get controlInstance() {
-    return this.control.control;
+  get formControl() {
+    return this.control.formControl;
   }
 }

@@ -14,6 +14,7 @@ import {
   ValidatorKey,
 } from '../types/validation.type';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
+import { ExpressionService } from '../services/expression.service';
 
 export function provideFormwork<
   S extends RegistrationRecord,
@@ -37,6 +38,7 @@ export function provideFormwork<
         asyncValidatorRegistrations,
       ),
     },
+    ExpressionService,
   ]);
 }
 

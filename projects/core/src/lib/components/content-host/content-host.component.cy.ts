@@ -7,6 +7,7 @@ import { TestGroup } from '../../../test/types/group.type';
 import { registrations } from '../../../test/helper/registrations';
 import { dummyControlContainer } from '../../../test/integration/shared/control-container';
 import { formworkProviders } from '../../../test/integration/shared/provide-formwork';
+import { FormService } from '../../services/form.service';
 
 describe('Content Host Component', () => {
   it('should create the component', () => {
@@ -17,7 +18,7 @@ describe('Content Host Component', () => {
     };
 
     cy.mount(ContentHostComponent, {
-      providers: [dummyControlContainer, formworkProviders],
+      providers: [dummyControlContainer, formworkProviders, FormService],
       componentProperties: {
         content,
         registrations,
@@ -34,7 +35,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(ContentHostComponent, {
-        providers: [dummyControlContainer, formworkProviders],
+        providers: [dummyControlContainer, formworkProviders, FormService],
         componentProperties: {
           content,
           registrations,
@@ -51,7 +52,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(ContentHostComponent, {
-        providers: [dummyControlContainer, formworkProviders],
+        providers: [dummyControlContainer, formworkProviders, FormService],
         componentProperties: {
           content,
           registrations,
