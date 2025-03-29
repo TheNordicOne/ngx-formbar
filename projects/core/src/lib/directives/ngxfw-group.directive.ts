@@ -5,11 +5,16 @@ import {
   inject,
   input,
   OnDestroy,
+  Signal,
+  untracked,
 } from '@angular/core';
-import { NgxFwFormGroup } from '../types/content.type';
+import { NgxFwFormGroup, ValueStrategy } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { ComponentRegistrationService } from '../services/component-registration.service';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
+import { Program } from 'acorn';
+import { ExpressionService } from '../services/expression.service';
+import { FormService } from '../services/form.service';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -18,6 +23,8 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+  private expressionService = inject(ExpressionService);
+  private formService = inject(FormService);
   private readonly contentRegistrationService = inject(
     ComponentRegistrationService,
   );
@@ -29,38 +36,101 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   private asyncValidatorRegistrations =
     this.validatorRegistrationService.asyncRegistrations;
 
+  private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
+    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+      optional: true,
+      skipSelf: true,
+    });
+
   readonly content = input.required<T>();
   readonly testId = computed(() => this.content().id);
   readonly title = computed(() => this.content().title);
   readonly controls = computed(() => this.content().controls);
   readonly registrations = this.contentRegistrationService.registrations;
 
+  readonly visibilityAst = computed<Program | null>(() =>
+    this.expressionService.parseExpressionToAst(this.content().hide),
+  );
+  readonly hideStrategy = computed(() => this.content().hideStrategy);
+  readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
+    () => this.content().valueStrategy ?? this.parentValueStrategy(),
+  );
+
+  readonly parentGroupIsHidden: Signal<unknown> = computed<unknown>(() => {
+    const parentGroup = this.parentGroupDirective;
+    if (!parentGroup) {
+      return false;
+    }
+
+    return parentGroup.isHidden();
+  });
+
+  readonly parentValueStrategy = computed(() =>
+    this.parentGroupDirective?.valueStrategy(),
+  );
+
+  readonly isHidden = computed<unknown>(() => {
+    const value = this.formService.formValue();
+    const ast = this.visibilityAst();
+    if (!ast) {
+      return this.parentGroupIsHidden();
+    }
+
+    const isHidden: unknown =
+      this.expressionService.evaluateExpression(ast, value) ?? false;
+    return isHidden || this.parentGroupIsHidden();
+  });
+
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
   }
 
-  get group() {
+  get formGroup() {
     return this.parentFormGroup?.get(this.content().id) as FormControl | null;
   }
+
+  private readonly groupInstance = computed(() => {
+    const content = this.content();
+
+    const validators = this.getValidators(content);
+    const asyncValidators = this.getAsyncValidators(content);
+
+    return new FormGroup([], validators, asyncValidators);
+  });
+
   constructor() {
     effect(() => {
-      const content = this.content();
-      this.parentFormGroup?.removeControl(content.id);
+      this.groupInstance();
+      const isHidden = this.isHidden();
+      const hideStrategy = this.hideStrategy();
+      const valueStrategy = this.valueStrategy() ?? this.parentValueStrategy();
+      const formGroup = untracked(() => this.formGroup);
 
-      const validators = this.getValidators(content);
-      const asyncValidators = this.getAsyncValidators(content);
+      // Re-attach control
+      if (!formGroup && !isHidden) {
+        untracked(() => {
+          this.setGroup();
+        });
+        return;
+      }
 
-      this.parentFormGroup?.addControl(
-        this.content().id,
-        new FormGroup([], validators, asyncValidators),
-        {
-          emitEvent: false,
-        },
-      );
+      // Control is already detached
+      if (hideStrategy === 'remove' && !formGroup) {
+        return;
+      }
+
+      // Remove control
+      if (hideStrategy === 'remove' && isHidden) {
+        untracked(() => {
+          this.removeGroup();
+        });
+      }
+
+      // Only thing left to check is value strategy
+      untracked(() => {
+        this.handleValue(valueStrategy);
+      });
     });
-  }
-  ngOnDestroy(): void {
-    this.parentFormGroup?.removeControl(this.content().id);
   }
 
   private getValidators(content: T) {
@@ -75,5 +145,47 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     return validatorKeys.flatMap(
       (key) => this.asyncValidatorRegistrations().get(key) ?? [],
     );
+  }
+
+  private setGroup() {
+    this.parentFormGroup?.setControl(this.content().id, this.groupInstance(), {
+      emitEvent: false,
+    });
+  }
+
+  private removeGroup() {
+    const id = this.content().id;
+    const formGroup = this.formGroup;
+    // Check if control exists immediately before attempting removal
+    if (formGroup) {
+      this.parentFormGroup?.removeControl(id, { emitEvent: false });
+    }
+  }
+
+  private handleValue(valueStrategy?: ValueStrategy) {
+    switch (valueStrategy) {
+      case 'last':
+        break;
+      case 'default':
+        break;
+      default:
+        // Instead of resetting  the group, we need to reset the controls individually
+        // to allow them to overwrite the value strategy
+        // If a control doesn't have a value strategy, we reset it
+        this.content().controls.forEach((control) => {
+          if (control.valueStrategy) {
+            return;
+          }
+          const formControl = this.formGroup?.get(control.id);
+          if (formControl) {
+            formControl.reset(undefined, { emitEvent: false });
+          }
+        });
+        break;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.removeGroup();
   }
 }
