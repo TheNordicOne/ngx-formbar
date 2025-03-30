@@ -5,6 +5,7 @@ import {
   inject,
   input,
   OnDestroy,
+  signal,
   Signal,
   untracked,
 } from '@angular/core';
@@ -19,9 +20,13 @@ import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
 import { FormService } from '../services/form.service';
 import { NgxfwGroupDirective } from './ngxfw-group.directive';
+import { VisibilityHandling } from '../types/registration.type';
 
 @Directive({
   selector: '[ngxfwControl]',
+  host: {
+    '[attr.hidden]': 'hiddenAttribute()',
+  },
 })
 export class NgxfwControlDirective<T extends NgxFwControl>
   implements OnDestroy
@@ -42,6 +47,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   readonly content = input.required<T>();
 
+  private readonly visibilityHandling = signal<VisibilityHandling>('auto');
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
@@ -86,6 +92,15 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     const isHidden: unknown =
       this.expressionService.evaluateExpression(ast, value) ?? false;
     return isHidden || this.parentGroupIsHidden();
+  });
+
+  readonly hiddenAttribute = computed(() => {
+    const isHidden = this.isHidden();
+    const visibilityHandling = this.visibilityHandling();
+    if (visibilityHandling !== 'auto') {
+      return null;
+    }
+    return isHidden ? true : null;
   });
 
   get parentFormGroup() {
@@ -134,6 +149,10 @@ export class NgxfwControlDirective<T extends NgxFwControl>
         this.handleValue(valueStrategy);
       });
     });
+  }
+
+  setVisibilityHandling(visibilityHandling: VisibilityHandling) {
+    this.visibilityHandling.set(visibilityHandling);
   }
 
   private getValidators(content: T) {
