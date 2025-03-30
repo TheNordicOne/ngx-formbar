@@ -5,6 +5,7 @@ import {
   inject,
   input,
   OnDestroy,
+  signal,
   Signal,
   untracked,
 } from '@angular/core';
@@ -15,9 +16,13 @@ import { ValidatorRegistrationService } from '../services/validator-registration
 import { Program } from 'acorn';
 import { ExpressionService } from '../services/expression.service';
 import { FormService } from '../services/form.service';
+import { VisibilityHandling } from '../types/registration.type';
 
 @Directive({
   selector: '[ngxfwGroup]',
+  host: {
+    '[attr.hidden]': 'hiddenAttribute()',
+  },
 })
 export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   implements OnDestroy
@@ -43,6 +48,8 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     });
 
   readonly content = input.required<T>();
+
+  private readonly visibilityHandling = signal<VisibilityHandling>('auto');
   readonly testId = computed(() => this.content().id);
   readonly title = computed(() => this.content().title);
   readonly controls = computed(() => this.content().controls);
@@ -51,6 +58,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   readonly visibilityAst = computed<Program | null>(() =>
     this.expressionService.parseExpressionToAst(this.content().hide),
   );
+
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
@@ -81,12 +89,25 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     return isHidden || this.parentGroupIsHidden();
   });
 
+  readonly hiddenAttribute = computed(() => {
+    const isHidden = this.isHidden();
+    const visibilityHandling = this.visibilityHandling();
+    if (visibilityHandling !== 'auto') {
+      return null;
+    }
+    return isHidden ? true : null;
+  });
+
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
   }
 
   get formGroup() {
     return this.parentFormGroup?.get(this.content().id) as FormControl | null;
+  }
+
+  setVisibilityHandling(visibilityHandling: VisibilityHandling) {
+    this.visibilityHandling.set(visibilityHandling);
   }
 
   private readonly groupInstance = computed(() => {
