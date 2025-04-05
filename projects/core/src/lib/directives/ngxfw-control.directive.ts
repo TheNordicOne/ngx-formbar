@@ -69,6 +69,22 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
 
+  readonly disabledAst = computed<Program | null>(() => {
+    const disabledOption = this.content().disabled;
+    if (typeof disabledOption === 'boolean') {
+      return null;
+    }
+    return this.expressionService.parseExpressionToAst(disabledOption);
+  });
+
+  readonly disabledBool = computed(() => {
+    const disabledOption = this.content().disabled;
+    if (typeof disabledOption !== 'boolean') {
+      return null;
+    }
+    return disabledOption;
+  });
+
   readonly parentGroupIsHidden: Signal<unknown> = computed<unknown>(() => {
     const parentGroup = this.parentGroupDirective;
     if (!parentGroup) {
@@ -101,6 +117,33 @@ export class NgxfwControlDirective<T extends NgxFwControl>
       return null;
     }
     return isHidden ? true : null;
+  });
+
+  readonly disabled = computed<boolean>(() => {
+    const disabledBool = this.disabledBool();
+
+    if (disabledBool !== null) {
+      return disabledBool;
+    }
+
+    const value = this.formService.formValue();
+    const ast = this.disabledAst();
+    if (!ast) {
+      return this.parentGroupIsDisabled();
+    }
+
+    const disabled =
+      this.expressionService.evaluateExpression(ast, value) ?? false;
+    return disabled as boolean;
+  });
+
+  readonly parentGroupIsDisabled: Signal<boolean> = computed<boolean>(() => {
+    const parentGroup = this.parentGroupDirective;
+    if (!parentGroup) {
+      return false;
+    }
+
+    return parentGroup.disabled();
   });
 
   get parentFormGroup() {
@@ -149,6 +192,19 @@ export class NgxfwControlDirective<T extends NgxFwControl>
         this.handleValue(valueStrategy);
       });
     });
+
+    effect(() => {
+      const disabled = this.disabled();
+      if (!disabled) {
+        untracked(() => {
+          this.enableControl();
+        });
+        return;
+      }
+      untracked(() => {
+        this.disableControl();
+      });
+    });
   }
 
   setVisibilityHandling(visibilityHandling: VisibilityHandling) {
@@ -186,6 +242,16 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     if (formControl) {
       this.parentFormGroup?.removeControl(id, { emitEvent: false });
     }
+  }
+
+  private enableControl() {
+    const formControl = this.controlInstance();
+    formControl.enable({ emitEvent: false });
+  }
+  private disableControl() {
+    const formControl = this.controlInstance();
+
+    formControl.disable({ emitEvent: false });
   }
 
   private handleValue(valueStrategy?: ValueStrategy) {

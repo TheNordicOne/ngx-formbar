@@ -5,6 +5,7 @@ type NgxFwBaseContent = {
   hide?: string;
   hideStrategy?: HideStrategy;
   valueStrategy?: ValueStrategy;
+  disabled?: string | boolean;
 };
 
 export type NgxFwFormGroup = NgxFwBaseContent & {
