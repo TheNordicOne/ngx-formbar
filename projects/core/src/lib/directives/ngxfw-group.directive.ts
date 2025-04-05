@@ -59,6 +59,22 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     this.expressionService.parseExpressionToAst(this.content().hide),
   );
 
+  readonly disabledAst = computed<Program | null>(() => {
+    const disabledOption = this.content().disabled;
+    if (typeof disabledOption === 'boolean') {
+      return null;
+    }
+    return this.expressionService.parseExpressionToAst(disabledOption);
+  });
+
+  readonly disabledBool = computed(() => {
+    const disabledOption = this.content().disabled;
+    if (typeof disabledOption !== 'boolean') {
+      return null;
+    }
+    return disabledOption;
+  });
+
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
@@ -96,6 +112,33 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
       return null;
     }
     return isHidden ? true : null;
+  });
+
+  readonly disabled = computed<boolean>(() => {
+    const disabledBool = this.disabledBool();
+
+    if (disabledBool !== null) {
+      return disabledBool;
+    }
+
+    const value = this.formService.formValue();
+    const ast = this.disabledAst();
+    if (!ast) {
+      return this.parentGroupIsDisabled();
+    }
+
+    const disabled =
+      this.expressionService.evaluateExpression(ast, value) ?? false;
+    return disabled as boolean;
+  });
+
+  readonly parentGroupIsDisabled: Signal<boolean> = computed<boolean>(() => {
+    const parentGroup = this.parentGroupDirective;
+    if (!parentGroup) {
+      return false;
+    }
+
+    return parentGroup.disabled();
   });
 
   get parentFormGroup() {
@@ -152,6 +195,19 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
         this.handleValue(valueStrategy);
       });
     });
+
+    effect(() => {
+      const disabled = this.disabled();
+      if (!disabled) {
+        untracked(() => {
+          this.enableGroup();
+        });
+        return;
+      }
+      untracked(() => {
+        this.disableGroup();
+      });
+    });
   }
 
   private getValidators(content: T) {
@@ -181,6 +237,17 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     if (formGroup) {
       this.parentFormGroup?.removeControl(id, { emitEvent: false });
     }
+  }
+
+  private enableGroup() {
+    const formGroup = this.groupInstance();
+
+    formGroup.enable({ emitEvent: false });
+  }
+  private disableGroup() {
+    const formGroup = this.groupInstance();
+
+    formGroup.disable({ emitEvent: false });
   }
 
   private handleValue(valueStrategy?: ValueStrategy) {
