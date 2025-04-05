@@ -26,22 +26,22 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom keep & last value';
 
         // Fill the field with custom value
-        fillInput('keepLastField', customValue);
+        cy.getByTestId('keepLastField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden but value is preserved
         cy.getByTestId('keepLastField-input').should('not.exist');
-        submitForm();
-        verifyFieldValue('keepLastField', customValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepLastField-value').should('have.text', customValue);
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with the last value
-        submitForm();
-        verifyFieldValue('keepLastField', customValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepLastField-value').should('have.text', customValue);
       });
     });
 
@@ -69,22 +69,25 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom remove & last value';
 
         // Fill the field with custom value
-        fillInput('removeLastField', customValue);
+        cy.getByTestId('removeLastField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden and not in the form value when hidden
         cy.getByTestId('removeLastField-input').should('not.exist');
-        submitForm();
-        verifyFieldNotExist('removeLastField');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeLastField-value').should('not.exist');
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with the last value
-        submitForm();
-        verifyFieldValue('removeLastField', customValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeLastField-value').should(
+          'have.text',
+          customValue,
+        );
       });
     });
 
@@ -114,22 +117,28 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom keep & default value';
 
         // Fill the field with custom value
-        fillInput('keepDefaultField', customValue);
+        cy.getByTestId('keepDefaultField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden but value reverts to default
         cy.getByTestId('keepDefaultField-input').should('not.exist');
-        submitForm();
-        verifyFieldValue('keepDefaultField', defaultValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepDefaultField-value').should(
+          'have.text',
+          defaultValue,
+        );
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with default value
-        submitForm();
-        verifyFieldValue('keepDefaultField', defaultValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepDefaultField-value').should(
+          'have.text',
+          defaultValue,
+        );
       });
     });
 
@@ -159,22 +168,25 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom remove & default value';
 
         // Fill the field with custom value
-        fillInput('removeDefaultField', customValue);
+        cy.getByTestId('removeDefaultField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden and not in form value
         cy.getByTestId('removeDefaultField-input').should('not.exist');
-        submitForm();
-        verifyFieldNotExist('removeDefaultField');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeDefaultField-value').should('not.exist');
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with default value
-        submitForm();
-        verifyFieldValue('removeDefaultField', defaultValue);
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeDefaultField-value').should(
+          'have.text',
+          defaultValue,
+        );
       });
     });
 
@@ -202,22 +214,22 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom keep & reset value';
 
         // Fill the field with custom value
-        fillInput('keepResetField', customValue);
+        cy.getByTestId('keepResetField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden but value is reset to empty
         cy.getByTestId('keepResetField-input').should('not.exist');
-        submitForm();
-        verifyFieldValue('keepResetField', '');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepResetField-value').should('have.text', '');
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with empty value
-        submitForm();
-        verifyFieldValue('keepResetField', '');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepResetField-value').should('have.text', '');
       });
     });
 
@@ -245,22 +257,22 @@ describe('Form Visibility Strategies', () => {
         const customValue = 'Custom remove & reset value';
 
         // Fill the field with custom value
-        fillInput('removeResetField', customValue);
+        cy.getByTestId('removeResetField-input').clear().type(customValue);
 
         // Hide the field
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify field is hidden and not in form value
         cy.getByTestId('removeResetField-input').should('not.exist');
-        submitForm();
-        verifyFieldNotExist('removeResetField');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeResetField-value').should('not.exist');
 
         // Show field again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify field appears with empty value
-        submitForm();
-        verifyFieldValue('removeResetField', '');
+        cy.getByTestId('submit').click();
+        cy.getByTestId('removeResetField-value').should('have.text', '');
       });
     });
   });
@@ -309,40 +321,56 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with keep & last strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childDefaultField', 'Custom child default value');
-        fillInput('childResetField', 'Custom child reset value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childDefaultField-input')
+          .clear()
+          .type('Custom child default value');
+        cy.getByTestId('childResetField-input')
+          .clear()
+          .type('Custom child reset value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden but values are handled according to their strategies
         cy.getByTestId('keepLastGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's last value strategy
-        verifyFieldValue('keepLastGroup.childField', 'Custom child value');
+        cy.getByTestId('keepLastGroup.childField-value').should(
+          'have.text',
+          'Custom child value',
+        );
 
         // Child with default strategy overrides parent
-        verifyFieldValue(
-          'keepLastGroup.childDefaultField',
+        cy.getByTestId('keepLastGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
 
         // Child with reset strategy overrides parent
-        verifyFieldValue('keepLastGroup.childResetField', '');
+        cy.getByTestId('keepLastGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are maintained after showing
-        submitForm();
-        verifyFieldValue('keepLastGroup.childField', 'Custom child value');
-        verifyFieldValue(
-          'keepLastGroup.childDefaultField',
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepLastGroup.childField-value').should(
+          'have.text',
+          'Custom child value',
+        );
+        cy.getByTestId('keepLastGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
-        verifyFieldValue('keepLastGroup.childResetField', '');
+        cy.getByTestId('keepLastGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
       });
     });
 
@@ -389,39 +417,53 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with remove & last strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childDefaultField', 'Custom child default value');
-        fillInput('childResetField', 'Custom child reset value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childDefaultField-input')
+          .clear()
+          .type('Custom child default value');
+        cy.getByTestId('childResetField-input')
+          .clear()
+          .type('Custom child reset value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden and not in form value
         cy.getByTestId('removeLastGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Group and all child values are not in the form value when hidden
-        verifyFieldNotExist('removeLastGroup.childField');
-        verifyFieldNotExist('removeLastGroup.childDefaultField');
-        verifyFieldNotExist('removeLastGroup.childResetField');
+        cy.getByTestId('removeLastGroup.childField-value').should('not.exist');
+        cy.getByTestId('removeLastGroup.childDefaultField-value').should(
+          'not.exist',
+        );
+        cy.getByTestId('removeLastGroup.childResetField-value').should(
+          'not.exist',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are handled according to their strategies after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's last value strategy
-        verifyFieldValue('removeLastGroup.childField', 'Custom child value');
+        cy.getByTestId('removeLastGroup.childField-value').should(
+          'have.text',
+          'Custom child value',
+        );
 
         // Child with default strategy overrides parent
-        verifyFieldValue(
-          'removeLastGroup.childDefaultField',
+        cy.getByTestId('removeLastGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
 
         // Child with reset strategy overrides parent
-        verifyFieldValue('removeLastGroup.childResetField', '');
+        cy.getByTestId('removeLastGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
       });
     });
 
@@ -468,40 +510,56 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with keep & default strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childLastField', 'Custom child last value');
-        fillInput('childResetField', 'Custom child reset value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childLastField-input')
+          .clear()
+          .type('Custom child last value');
+        cy.getByTestId('childResetField-input')
+          .clear()
+          .type('Custom child reset value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden but values are handled according to strategies
         cy.getByTestId('keepDefaultGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's default value strategy
-        verifyFieldValue('keepDefaultGroup.childField', 'default-child');
+        cy.getByTestId('keepDefaultGroup.childField-value').should(
+          'have.text',
+          'default-child',
+        );
 
         // Child with last strategy overrides parent
-        verifyFieldValue(
-          'keepDefaultGroup.childLastField',
+        cy.getByTestId('keepDefaultGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
 
         // Child with reset strategy overrides parent
-        verifyFieldValue('keepDefaultGroup.childResetField', '');
+        cy.getByTestId('keepDefaultGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are maintained after showing
-        submitForm();
-        verifyFieldValue('keepDefaultGroup.childField', 'default-child');
-        verifyFieldValue(
-          'keepDefaultGroup.childLastField',
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepDefaultGroup.childField-value').should(
+          'have.text',
+          'default-child',
+        );
+        cy.getByTestId('keepDefaultGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
-        verifyFieldValue('keepDefaultGroup.childResetField', '');
+        cy.getByTestId('keepDefaultGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
       });
     });
 
@@ -548,39 +606,55 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with remove & default strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childLastField', 'Custom child last value');
-        fillInput('childResetField', 'Custom child reset value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childLastField-input')
+          .clear()
+          .type('Custom child last value');
+        cy.getByTestId('childResetField-input')
+          .clear()
+          .type('Custom child reset value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden and not in form value
         cy.getByTestId('removeDefaultGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Group and all child values are not in the form value when hidden
-        verifyFieldNotExist('removeDefaultGroup.childField');
-        verifyFieldNotExist('removeDefaultGroup.childLastField');
-        verifyFieldNotExist('removeDefaultGroup.childResetField');
+        cy.getByTestId('removeDefaultGroup.childField-value').should(
+          'not.exist',
+        );
+        cy.getByTestId('removeDefaultGroup.childLastField-value').should(
+          'not.exist',
+        );
+        cy.getByTestId('removeDefaultGroup.childResetField-value').should(
+          'not.exist',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are handled according to strategies after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's default value strategy
-        verifyFieldValue('removeDefaultGroup.childField', 'default-child');
+        cy.getByTestId('removeDefaultGroup.childField-value').should(
+          'have.text',
+          'default-child',
+        );
 
         // Child with last strategy overrides parent
-        verifyFieldValue(
-          'removeDefaultGroup.childLastField',
+        cy.getByTestId('removeDefaultGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
 
         // Child with reset strategy overrides parent
-        verifyFieldValue('removeDefaultGroup.childResetField', '');
+        cy.getByTestId('removeDefaultGroup.childResetField-value').should(
+          'have.text',
+          '',
+        );
       });
     });
 
@@ -627,44 +701,54 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with keep & reset strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childLastField', 'Custom child last value');
-        fillInput('childDefaultField', 'Custom child default value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childLastField-input')
+          .clear()
+          .type('Custom child last value');
+        cy.getByTestId('childDefaultField-input')
+          .clear()
+          .type('Custom child default value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden but values are handled according to strategies
         cy.getByTestId('keepResetGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's reset value strategy
-        verifyFieldValue('keepResetGroup.childField', '');
+        cy.getByTestId('keepResetGroup.childField-value').should(
+          'have.text',
+          '',
+        );
 
         // Child with last strategy overrides parent
-        verifyFieldValue(
-          'keepResetGroup.childLastField',
+        cy.getByTestId('keepResetGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
 
         // Child with default strategy overrides parent
-        verifyFieldValue(
-          'keepResetGroup.childDefaultField',
+        cy.getByTestId('keepResetGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are maintained after showing
-        submitForm();
-        verifyFieldValue('keepResetGroup.childField', '');
-        verifyFieldValue(
-          'keepResetGroup.childLastField',
+        cy.getByTestId('submit').click();
+        cy.getByTestId('keepResetGroup.childField-value').should(
+          'have.text',
+          '',
+        );
+        cy.getByTestId('keepResetGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
-        verifyFieldValue(
-          'keepResetGroup.childDefaultField',
+        cy.getByTestId('keepResetGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
       });
@@ -713,40 +797,51 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle group with remove & reset strategy correctly', () => {
         // Fill fields with custom values
-        fillInput('childField', 'Custom child value');
-        fillInput('childLastField', 'Custom child last value');
-        fillInput('childDefaultField', 'Custom child default value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childLastField-input')
+          .clear()
+          .type('Custom child last value');
+        cy.getByTestId('childDefaultField-input')
+          .clear()
+          .type('Custom child default value');
 
         // Hide the group
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify group is hidden and not in form value
         cy.getByTestId('removeResetGroup-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Group and all child values are not in the form value when hidden
-        verifyFieldNotExist('removeResetGroup.childField');
-        verifyFieldNotExist('removeResetGroup.childLastField');
-        verifyFieldNotExist('removeResetGroup.childDefaultField');
+        cy.getByTestId('removeResetGroup.childField-value').should('not.exist');
+        cy.getByTestId('removeResetGroup.childLastField-value').should(
+          'not.exist',
+        );
+        cy.getByTestId('removeResetGroup.childDefaultField-value').should(
+          'not.exist',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Verify values are handled according to strategies after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Child inherits parent's reset value strategy
-        verifyFieldValue('removeResetGroup.childField', '');
+        cy.getByTestId('removeResetGroup.childField-value').should(
+          'have.text',
+          '',
+        );
 
         // Child with last strategy overrides parent
-        verifyFieldValue(
-          'removeResetGroup.childLastField',
+        cy.getByTestId('removeResetGroup.childLastField-value').should(
+          'have.text',
           'Custom child last value',
         );
 
         // Child with default strategy overrides parent
-        verifyFieldValue(
-          'removeResetGroup.childDefaultField',
+        cy.getByTestId('removeResetGroup.childDefaultField-value').should(
+          'have.text',
           'default-child-default',
         );
       });
@@ -798,33 +893,41 @@ describe('Form Visibility Strategies', () => {
 
       it('should remove child group even if it has keep strategy when parent has remove', () => {
         // Fill fields with custom values
-        fillInput('parentRemoveField', 'Custom parent value');
-        fillInput('childKeepField', 'Custom child value');
+        cy.getByTestId('parentRemoveField-input')
+          .clear()
+          .type('Custom parent value');
+        cy.getByTestId('childKeepField-input')
+          .clear()
+          .type('Custom child value');
 
         // Hide the groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Verify all fields are removed from DOM and values
         cy.getByTestId('parentRemove-title').should('not.be.visible');
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Parent group is removed
-        verifyFieldNotExist('parentRemove.parentRemoveField');
+        cy.getByTestId('parentRemove.parentRemoveField-value').should(
+          'not.exist',
+        );
 
         // Child group is also removed despite its keep strategy
-        verifyFieldNotExist('parentRemove.childKeep.childKeepField');
+        cy.getByTestId('parentRemove.childKeep.childKeepField-value').should(
+          'not.exist',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Values should be restored according to valueStrategy (both use last)
-        submitForm();
-        verifyFieldValue(
-          'parentRemove.parentRemoveField',
+        cy.getByTestId('submit').click();
+        cy.getByTestId('parentRemove.parentRemoveField-value').should(
+          'have.text',
           'Custom parent value',
         );
-        verifyFieldValue(
-          'parentRemove.childKeep.childKeepField',
+        cy.getByTestId('parentRemove.childKeep.childKeepField-value').should(
+          'have.text',
           'Custom child value',
         );
       });
@@ -871,32 +974,38 @@ describe('Form Visibility Strategies', () => {
 
       it('should inherit parent group strategies when not specified', () => {
         // Fill fields with custom values
-        fillInput('parentField', 'Custom parent value');
-        fillInput('childField', 'Custom child value');
+        cy.getByTestId('parentField-input').clear().type('Custom parent value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
 
         // Hide the groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Submit to check values
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Both fields should keep their last values since child inherits from parent
-        verifyFieldValue('parentGroup.parentField', 'Custom parent value');
-        verifyFieldValue(
-          'parentGroup.childGroup.childField',
+        cy.getByTestId('parentGroup.parentField-value').should(
+          'have.text',
+          'Custom parent value',
+        );
+        cy.getByTestId('parentGroup.childGroup.childField-value').should(
+          'have.text',
           'Custom child value',
         );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Submit to check values after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Values should remain the same
-        verifyFieldValue('parentGroup.parentField', 'Custom parent value');
-        verifyFieldValue(
-          'parentGroup.childGroup.childField',
+        cy.getByTestId('parentGroup.parentField-value').should(
+          'have.text',
+          'Custom parent value',
+        );
+        cy.getByTestId('parentGroup.childGroup.childField-value').should(
+          'have.text',
           'Custom child value',
         );
       });
@@ -945,28 +1054,40 @@ describe('Form Visibility Strategies', () => {
 
       it('should override parent strategy when specified in child group', () => {
         // Fill fields with custom values
-        fillInput('parentField', 'Custom parent value');
-        fillInput('childField', 'Custom child value');
+        cy.getByTestId('parentField-input').clear().type('Custom parent value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
 
         // Hide the groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Submit to check values
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Parent field keeps last value, child reverts to default
-        verifyFieldValue('parentGroup.parentField', 'Custom parent value');
-        verifyFieldValue('parentGroup.childGroup.childField', 'default-child');
+        cy.getByTestId('parentGroup.parentField-value').should(
+          'have.text',
+          'Custom parent value',
+        );
+        cy.getByTestId('parentGroup.childGroup.childField-value').should(
+          'have.text',
+          'default-child',
+        );
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Submit to check values after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Values should remain the same
-        verifyFieldValue('parentGroup.parentField', 'Custom parent value');
-        verifyFieldValue('parentGroup.childGroup.childField', 'default-child');
+        cy.getByTestId('parentGroup.parentField-value').should(
+          'have.text',
+          'Custom parent value',
+        );
+        cy.getByTestId('parentGroup.childGroup.childField-value').should(
+          'have.text',
+          'default-child',
+        );
       });
     });
 
@@ -1040,64 +1161,64 @@ describe('Form Visibility Strategies', () => {
 
       it('should correctly handle valueStrategy inheritance through 3 levels', () => {
         // Fill fields with custom values
-        fillInput('grandparentField', 'Custom grandparent value');
-        fillInput('parentField', 'Custom parent value');
-        fillInput('childField', 'Custom child value');
-        fillInput('childOverrideField', 'Custom child override value');
+        cy.getByTestId('grandparentField-input')
+          .clear()
+          .type('Custom grandparent value');
+        cy.getByTestId('parentField-input').clear().type('Custom parent value');
+        cy.getByTestId('childField-input').clear().type('Custom child value');
+        cy.getByTestId('childOverrideField-input')
+          .clear()
+          .type('Custom child override value');
 
         // Hide all groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Submit to check values
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Grandparent uses default strategy
-        verifyFieldValue(
-          'grandparentGroup.grandparentField',
+        cy.getByTestId('grandparentGroup.grandparentField-value').should(
+          'have.text',
           'default-grandparent',
         );
 
         // Parent overrides to last strategy
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.parentField',
+        cy.getByTestId('grandparentGroup.parentGroup.parentField-value').should(
+          'have.text',
           'Custom parent value',
         );
 
         // Child inherits parent's last strategy
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.childGroup.childField',
-          'Custom child value',
-        );
+        cy.getByTestId(
+          'grandparentGroup.parentGroup.childGroup.childField-value',
+        ).should('have.text', 'Custom child value');
 
         // Child with override uses reset strategy
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField',
-          '',
-        );
+        cy.getByTestId(
+          'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField-value',
+        ).should('have.text', '');
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Submit to check values after showing
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Values should remain the same
-        verifyFieldValue(
-          'grandparentGroup.grandparentField',
+        cy.getByTestId('grandparentGroup.grandparentField-value').should(
+          'have.text',
           'default-grandparent',
         );
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.parentField',
+        cy.getByTestId('grandparentGroup.parentGroup.parentField-value').should(
+          'have.text',
           'Custom parent value',
         );
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.childGroup.childField',
-          'Custom child value',
-        );
-        verifyFieldValue(
-          'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField',
-          '',
-        );
+        cy.getByTestId(
+          'grandparentGroup.parentGroup.childGroup.childField-value',
+        ).should('have.text', 'Custom child value');
+        cy.getByTestId(
+          'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField-value',
+        ).should('have.text', '');
       });
     });
 
@@ -1166,49 +1287,58 @@ describe('Form Visibility Strategies', () => {
 
       it('should remove all nested content when parent group is removed', () => {
         // Fill fields with custom values
-        fillInput('outerField', 'Custom outer value');
-        fillInput('middleField', 'Custom middle value');
-        fillInput('innerField', 'Custom inner value');
-        fillInput('middleOverrideField', 'Custom middle override value');
+        cy.getByTestId('outerField-input').clear().type('Custom outer value');
+        cy.getByTestId('middleField-input').clear().type('Custom middle value');
+        cy.getByTestId('innerField-input').clear().type('Custom inner value');
+        cy.getByTestId('middleOverrideField-input')
+          .clear()
+          .type('Custom middle override value');
 
         // Hide all groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Submit to check values
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Outer group is hidden with remove strategy, so all nested content is also removed
-        verifyFieldNotExist('outerGroup.outerField');
-        verifyFieldNotExist('outerGroup.middleGroup.middleField');
-        verifyFieldNotExist('outerGroup.middleGroup.innerGroup.innerField');
-        verifyFieldNotExist('outerGroup.middleGroup.middleOverrideField');
+        cy.getByTestId('outerGroup.outerField-value').should('not.exist');
+        cy.getByTestId('outerGroup.middleGroup.middleField-value').should(
+          'not.exist',
+        );
+        cy.getByTestId(
+          'outerGroup.middleGroup.innerGroup.innerField-value',
+        ).should('not.exist');
+        cy.getByTestId(
+          'outerGroup.middleGroup.middleOverrideField-value',
+        ).should('not.exist');
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Submit to check values after showing - they should follow valueStrategy
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Outer group uses last strategy
-        verifyFieldValue('outerGroup.outerField', 'Custom outer value');
+        cy.getByTestId('outerGroup.outerField-value').should(
+          'have.text',
+          'Custom outer value',
+        );
 
         // Middle group inherits last strategy from outer group
-        verifyFieldValue(
-          'outerGroup.middleGroup.middleField',
+        cy.getByTestId('outerGroup.middleGroup.middleField-value').should(
+          'have.text',
           'Custom middle value',
         );
 
         // Inner group inherits last strategy from middle group
-        verifyFieldValue(
-          'outerGroup.middleGroup.innerGroup.innerField',
-          'Custom inner value',
-        );
+        cy.getByTestId(
+          'outerGroup.middleGroup.innerGroup.innerField-value',
+        ).should('have.text', 'Custom inner value');
 
         // Field with value strategy override uses default
-        verifyFieldValue(
-          'outerGroup.middleGroup.middleOverrideField',
-          'default-middle-override',
-        );
+        cy.getByTestId(
+          'outerGroup.middleGroup.middleOverrideField-value',
+        ).should('have.text', 'default-middle-override');
       });
     });
 
@@ -1309,73 +1439,107 @@ describe('Form Visibility Strategies', () => {
 
       it('should correctly handle complex inheritance patterns', () => {
         // Fill all fields with custom values
-        fillInput('level1Field', 'Custom level1 value');
-        fillInput('level1FieldOverride', 'Custom level1 override value');
-        fillInput('level2AField', 'Custom level2A value');
-        fillInput('level2BField', 'Custom level2B value');
-        fillInput('level3AField', 'Custom level3A value');
-        fillInput('level3BField', 'Custom level3B value');
-        fillInput('level3BFieldOverride', 'Custom level3B override value');
+        cy.getByTestId('level1Field-input').clear().type('Custom level1 value');
+        cy.getByTestId('level1FieldOverride-input')
+          .clear()
+          .type('Custom level1 override value');
+        cy.getByTestId('level2AField-input')
+          .clear()
+          .type('Custom level2A value');
+        cy.getByTestId('level2BField-input')
+          .clear()
+          .type('Custom level2B value');
+        cy.getByTestId('level3AField-input')
+          .clear()
+          .type('Custom level3A value');
+        cy.getByTestId('level3BField-input')
+          .clear()
+          .type('Custom level3B value');
+        cy.getByTestId('level3BFieldOverride-input')
+          .clear()
+          .type('Custom level3B override value');
 
         // Hide all groups
-        hideControls();
+        cy.getByTestId('hideControl-input').clear().type('hide');
 
         // Submit to check values
-        submitForm();
+        cy.getByTestId('submit').click();
 
         // Level 1 group is hidden with keep strategy
         // Level 1 uses default strategy
-        verifyFieldValue('level1.level1Field', 'default-level1');
+        cy.getByTestId('level1.level1Field-value').should(
+          'have.text',
+          'default-level1',
+        );
 
         // Level 1 field with override uses last
-        verifyFieldValue(
-          'level1.level1FieldOverride',
+        cy.getByTestId('level1.level1FieldOverride-value').should(
+          'have.text',
           'Custom level1 override value',
         );
 
         // Level 2A inherits keep & default from Level 1
-        verifyFieldValue('level1.level2A.level2AField', 'default-level2A');
+        cy.getByTestId('level1.level2A.level2AField-value').should(
+          'have.text',
+          'default-level2A',
+        );
 
         // Level 2B inherits keep from Level 1 but overrides value to last
-        verifyFieldValue('level1.level2B.level2BField', 'Custom level2B value');
+        cy.getByTestId('level1.level2B.level2BField-value').should(
+          'have.text',
+          'Custom level2B value',
+        );
 
         // Level 3A inherits keep & last from Level 2B
-        verifyFieldValue(
-          'level1.level2B.level3A.level3AField',
+        cy.getByTestId('level1.level2B.level3A.level3AField-value').should(
+          'have.text',
           'Custom level3A value',
         );
 
         // Level 3B inherits keep from 2B but overrides value to reset
-        verifyFieldValue('level1.level2B.level3B.level3BField', '');
+        cy.getByTestId('level1.level2B.level3B.level3BField-value').should(
+          'have.text',
+          '',
+        );
 
         // Field in Level 3B overrides to default
-        verifyFieldValue(
-          'level1.level2B.level3B.level3BFieldOverride',
-          'default-level3B-override',
-        );
+        cy.getByTestId(
+          'level1.level2B.level3B.level3BFieldOverride-value',
+        ).should('have.text', 'default-level3B-override');
 
         // Show fields again
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Submit to check values after showing - should be the same
-        submitForm();
+        cy.getByTestId('submit').click();
 
-        verifyFieldValue('level1.level1Field', 'default-level1');
-        verifyFieldValue(
-          'level1.level1FieldOverride',
+        cy.getByTestId('level1.level1Field-value').should(
+          'have.text',
+          'default-level1',
+        );
+        cy.getByTestId('level1.level1FieldOverride-value').should(
+          'have.text',
           'Custom level1 override value',
         );
-        verifyFieldValue('level1.level2A.level2AField', 'default-level2A');
-        verifyFieldValue('level1.level2B.level2BField', 'Custom level2B value');
-        verifyFieldValue(
-          'level1.level2B.level3A.level3AField',
+        cy.getByTestId('level1.level2A.level2AField-value').should(
+          'have.text',
+          'default-level2A',
+        );
+        cy.getByTestId('level1.level2B.level2BField-value').should(
+          'have.text',
+          'Custom level2B value',
+        );
+        cy.getByTestId('level1.level2B.level3A.level3AField-value').should(
+          'have.text',
           'Custom level3A value',
         );
-        verifyFieldValue('level1.level2B.level3B.level3BField', '');
-        verifyFieldValue(
-          'level1.level2B.level3B.level3BFieldOverride',
-          'default-level3B-override',
+        cy.getByTestId('level1.level2B.level3B.level3BField-value').should(
+          'have.text',
+          '',
         );
+        cy.getByTestId(
+          'level1.level2B.level3B.level3BFieldOverride-value',
+        ).should('have.text', 'default-level3B-override');
       });
     });
   });
@@ -1421,44 +1585,53 @@ describe('Form Visibility Strategies', () => {
 
       it('should maintain correct values through multiple hide/show cycles', () => {
         // First cycle - set initial values
-        fillInput('lastField', 'custom-last-1');
-        fillInput('defaultField', 'custom-default-1');
-        fillInput('resetField', 'custom-reset-1');
+        cy.getByTestId('lastField-input').clear().type('custom-last-1');
+        cy.getByTestId('defaultField-input').clear().type('custom-default-1');
+        cy.getByTestId('resetField-input').clear().type('custom-reset-1');
 
         // First hide
-        hideControls();
-        submitForm();
+        cy.getByTestId('hideControl-input').clear().type('hide');
+        cy.getByTestId('submit').click();
 
         // Verify values during first hide
-        verifyFieldValue('lastField', 'custom-last-1');
-        verifyFieldValue('defaultField', 'default-default');
-        verifyFieldValue('resetField', '');
+        cy.getByTestId('lastField-value').should('have.text', 'custom-last-1');
+        cy.getByTestId('defaultField-value').should(
+          'have.text',
+          'default-default',
+        );
+        cy.getByTestId('resetField-value').should('have.text', '');
 
         // First show
-        showControls();
+        cy.getByTestId('hideControl-input').clear();
 
         // Set new values for second cycle
-        fillInput('lastField', 'custom-last-2');
-        fillInput('defaultField', 'custom-default-2');
-        fillInput('resetField', 'custom-reset-2');
+        cy.getByTestId('lastField-input').clear().type('custom-last-2');
+        cy.getByTestId('defaultField-input').clear().type('custom-default-2');
+        cy.getByTestId('resetField-input').clear().type('custom-reset-2');
 
         // Second hide
-        hideControls();
-        submitForm();
+        cy.getByTestId('hideControl-input').clear().type('hide');
+        cy.getByTestId('submit').click();
 
         // Verify values during second hide
-        verifyFieldValue('lastField', 'custom-last-2');
-        verifyFieldValue('defaultField', 'default-default');
-        verifyFieldValue('resetField', '');
+        cy.getByTestId('lastField-value').should('have.text', 'custom-last-2');
+        cy.getByTestId('defaultField-value').should(
+          'have.text',
+          'default-default',
+        );
+        cy.getByTestId('resetField-value').should('have.text', '');
 
         // Second show
-        showControls();
-        submitForm();
+        cy.getByTestId('hideControl-input').clear();
+        cy.getByTestId('submit').click();
 
         // Verify values after second show
-        verifyFieldValue('lastField', 'custom-last-2');
-        verifyFieldValue('defaultField', 'default-default');
-        verifyFieldValue('resetField', '');
+        cy.getByTestId('lastField-value').should('have.text', 'custom-last-2');
+        cy.getByTestId('defaultField-value').should(
+          'have.text',
+          'default-default',
+        );
+        cy.getByTestId('resetField-value').should('have.text', '');
       });
     });
 
@@ -1492,67 +1665,29 @@ describe('Form Visibility Strategies', () => {
 
       it('should handle empty or undefined default values correctly', () => {
         // Set custom values
-        fillInput('noDefaultField', 'custom-no-default');
-        fillInput('emptyDefaultField', 'custom-empty-default');
+        cy.getByTestId('noDefaultField-input')
+          .clear()
+          .type('custom-no-default');
+        cy.getByTestId('emptyDefaultField-input')
+          .clear()
+          .type('custom-empty-default');
 
         // Hide fields
-        hideControls();
-        submitForm();
+        cy.getByTestId('hideControl-input').clear().type('hide');
+        cy.getByTestId('submit').click();
 
         // Verify fields revert to empty string when default is empty or undefined
-        verifyFieldValue('noDefaultField', '');
-        verifyFieldValue('emptyDefaultField', '');
+        cy.getByTestId('noDefaultField-value').should('have.text', '');
+        cy.getByTestId('emptyDefaultField-value').should('have.text', '');
 
         // Show fields again
-        showControls();
-        submitForm();
+        cy.getByTestId('hideControl-input').clear();
+        cy.getByTestId('submit').click();
 
         // Verify fields remain empty
-        verifyFieldValue('noDefaultField', '');
-        verifyFieldValue('emptyDefaultField', '');
+        cy.getByTestId('noDefaultField-value').should('have.text', '');
+        cy.getByTestId('emptyDefaultField-value').should('have.text', '');
       });
     });
   });
 });
-
-/**
- * Helper to verify field value
- */
-export function verifyFieldValue(fieldId: string, expectedValue: string) {
-  cy.getByTestId(`${fieldId}-value`).should('have.text', expectedValue);
-}
-
-/**
- * Helper to verify field doesn't exist
- */
-export function verifyFieldNotExist(fieldId: string) {
-  cy.getByTestId(`${fieldId}-value`).should('not.exist');
-}
-
-/**
- * Helper to fill an input field with a specific value
- */
-export function fillInput(testId: string, value: string) {
-  cy.getByTestId(`${testId}-input`).clear().type(value);
-}
-
-/**
- * Helper to hide all controls
- */
-export function hideControls() {
-  fillInput('hideControl', 'hide');
-}
-
-/**
- * Helper to show all controls
- */
-export function showControls() {
-  cy.getByTestId('hideControl-input').clear();
-}
-
-/**
- * Helper to submit the form
- */
-export function submitForm() {
-  cy.getByTestId('submit').click();
-}
