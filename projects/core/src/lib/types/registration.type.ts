@@ -5,4 +5,4 @@ export type ComponentRegistrationConfig = {
   component: Type<unknown>;
 };
 
-export type VisibilityHandling = 'auto' | 'manual';
+export type StateHandling = 'auto' | 'manual';
