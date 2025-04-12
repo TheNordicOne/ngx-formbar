@@ -1,3 +1,5 @@
+import { OneOf } from './helper.type';
+
 /**
  * Base configuration for Ngx Formwork components
  *
@@ -117,7 +119,7 @@ export type NgxFwControl = NgxFwBaseContent & {
 /**
  * Union type representing either a form group or individual control
  */
-export type NgxFwContent = NgxFwFormGroup | NgxFwControl;
+export type NgxFwContent = OneOf<[NgxFwFormGroup, NgxFwControl]>;
 
 /**
  * Strategy for handling hidden form elements
