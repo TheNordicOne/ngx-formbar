@@ -17,6 +17,10 @@ import { Program } from 'acorn';
 import { ExpressionService } from '../services/expression.service';
 import { FormService } from '../services/form.service';
 import { StateHandling } from '../types/registration.type';
+import {
+  disabledEffect,
+  withDisabledState,
+} from '../composables/disabled.state';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -51,6 +55,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
+
   readonly testId = computed(() => this.content().id);
   readonly title = computed(() => this.content().title);
   readonly controls = computed(() => this.content().controls);
@@ -59,22 +64,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   readonly visibilityAst = computed<Program | null>(() =>
     this.expressionService.parseExpressionToAst(this.content().hidden),
   );
-
-  readonly disabledAst = computed<Program | null>(() => {
-    const disabledOption = this.content().disabled;
-    if (typeof disabledOption === 'boolean') {
-      return null;
-    }
-    return this.expressionService.parseExpressionToAst(disabledOption);
-  });
-
-  readonly disabledBool = computed(() => {
-    const disabledOption = this.content().disabled;
-    if (typeof disabledOption !== 'boolean') {
-      return null;
-    }
-    return disabledOption;
-  });
 
   readonly readonlyAst = computed<Program | null>(() => {
     const readonlyOption = this.content().readonly;
@@ -131,32 +120,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     return isHidden ? true : null;
   });
 
-  readonly disabled = computed<boolean>(() => {
-    const disabledBool = this.disabledBool();
-
-    if (disabledBool !== null) {
-      return disabledBool;
-    }
-
-    const value = this.formService.formValue();
-    const ast = this.disabledAst();
-    if (!ast) {
-      return this.parentGroupIsDisabled();
-    }
-
-    const disabled =
-      this.expressionService.evaluateExpression(ast, value) ?? false;
-    return disabled as boolean;
-  });
-
-  readonly parentGroupIsDisabled: Signal<boolean> = computed<boolean>(() => {
-    const parentGroup = this.parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.disabled();
-  });
+  readonly disabled = withDisabledState(this.content);
 
   readonly readonly = computed<boolean>(() => {
     const readonlyBool = this.readonlyBool();
@@ -244,23 +208,11 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
       });
     });
 
-    effect(() => {
-      const disabled = this.disabled();
-      const disabledHandling = this.disabledHandling();
-
-      if (disabledHandling === 'manual') {
-        return;
-      }
-
-      if (!disabled) {
-        untracked(() => {
-          this.enableGroup();
-        });
-        return;
-      }
-      untracked(() => {
-        this.disableGroup();
-      });
+    disabledEffect({
+      disabledSignal: this.disabled,
+      disabledHandlingSignal: this.disabledHandling,
+      enableFunction: this.enableGroup.bind(this),
+      disableFunction: this.disableGroup.bind(this),
     });
   }
 
