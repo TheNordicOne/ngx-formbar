@@ -22,6 +22,7 @@ import {
   withHiddenAttribute,
   withHiddenState,
 } from '../composables/hidden.state';
+import { withAsyncValidators, withValidators } from '../composables/validators';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -36,12 +37,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     ComponentRegistrationService,
   );
   private parentContainer = inject(ControlContainer);
-
-  private validatorRegistrationService = inject(ValidatorRegistrationService);
-  private validatorRegistrations =
-    this.validatorRegistrationService.registrations;
-  private asyncValidatorRegistrations =
-    this.validatorRegistrationService.asyncRegistrations;
 
   private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
     inject(NgxfwGroupDirective<NgxFwFormGroup>, {
@@ -72,12 +67,13 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   readonly disabled = withDisabledState(this.content);
   readonly readonly = withReadonlyState(this.content);
+
+  readonly validators = withValidators(this.content);
+  readonly asyncValidators = withAsyncValidators(this.content);
+
   private readonly groupInstance = computed(() => {
-    const content = this.content();
-
-    const validators = this.getValidators(content);
-    const asyncValidators = this.getAsyncValidators(content);
-
+    const validators = this.validators();
+    const asyncValidators = this.asyncValidators();
     return new FormGroup([], validators, asyncValidators);
   });
 
@@ -120,20 +116,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
-  }
-
-  private getValidators(content: T) {
-    const validatorKeys = content.validators ?? [];
-    return validatorKeys.flatMap(
-      (key) => this.validatorRegistrations().get(key) ?? [],
-    );
-  }
-
-  private getAsyncValidators(content: T) {
-    const validatorKeys = content.asyncValidators ?? [];
-    return validatorKeys.flatMap(
-      (key) => this.asyncValidatorRegistrations().get(key) ?? [],
-    );
   }
 
   private setGroup() {
