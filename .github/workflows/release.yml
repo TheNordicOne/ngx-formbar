@@ -22,6 +22,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Replace README.md
+        run: cp README.md dist/core/
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
