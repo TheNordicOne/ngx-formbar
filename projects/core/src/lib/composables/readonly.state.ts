@@ -5,6 +5,22 @@ import { ExpressionService } from '../services/expression.service';
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { Program } from 'acorn';
 
+/**
+ * Computes a reactive readonly state based on control content
+ *
+ * The readonly state is determined using the following priority:
+ * 1. If content.readonly is a boolean, that value is used directly
+ * 2. If content.readonly is an expression string, it's parsed to AST and evaluated
+ *    against the current form values
+ * 3. If no readonly property is defined, the control inherits the readonly state
+ *    from its parent group
+ *
+ * This hierarchical inheritance ensures that child controls are automatically
+ * set to readonly when their parent group is readonly, unless explicitly overridden.
+ *
+ * @param content Signal containing control configuration with potential readonly property
+ * @returns Computed signal that resolves to boolean readonly state
+ */
 export function withReadonlyState(content: Signal<NgxFwContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);

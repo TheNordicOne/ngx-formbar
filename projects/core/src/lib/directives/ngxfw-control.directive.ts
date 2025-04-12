@@ -26,6 +26,26 @@ import {
 } from '../composables/hidden.state';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 
+/**
+ * Control Directive for Ngx Formwork
+ *
+ * This directive manages form controls within Ngx Formwork, handling:
+ * - Control registration with parent form groups
+ * - Visibility states and DOM representation
+ * - Disabled states with inheritance from parent groups
+ * - Readonly states with inheritance from parent groups
+ * - Validation setup and registration
+ * - Value management based on configured strategies
+ *
+ * The directive automatically:
+ * - Creates and registers form controls with the parent form group
+ * - Evaluates conditions for hidden/disabled/readonly states
+ * - Manages the control lifecycle based on visibility
+ * - Applies validators to the control
+ * - Handles control values according to the specified strategy when visibility changes
+ *
+ * @template T Type extending NgxFwControl containing control configuration
+ */
 @Directive({
   selector: '[ngxfwControl]',
   host: {
@@ -42,32 +62,81 @@ export class NgxfwControlDirective<T extends NgxFwControl>
       optional: true,
     });
 
+  /**
+   * Required input containing the control configuration
+   * Defines properties like ID, default value, validation, and state expressions
+   */
   readonly content = input.required<T>();
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
 
+  /**
+   * Computed test ID derived from the control's ID
+   * Used for automated testing identification
+   */
   readonly testId = computed(() => this.content().id);
 
+  /**
+   * Computed signal for the control's hide strategy
+   * Determines how the control behaves when hidden (keep or remove from form)
+   */
   readonly hideStrategy = computed(() => this.content().hideStrategy);
+
+  /**
+   * Computed signal for the control's value strategy
+   * Determines how the control's value is managed when visibility changes
+   */
   readonly valueStrategy = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
+
+  /**
+   * Computed signal for the parent's value strategy
+   * Used when control doesn't define its own strategy
+   */
   readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
 
+  /**
+   * Computed signal for the hidden state
+   * True when the control should be hidden
+   */
   readonly isHidden = withHiddenState(this.content);
+
+  /**
+   * Computed signal for the hidden attribute
+   * Used in DOM binding to show/hide the control element
+   */
   readonly hiddenAttribute = withHiddenAttribute({
     hiddenSignal: this.isHidden,
     hiddenHandlingSignal: this.visibilityHandling,
   });
 
+  /**
+   * Computed signal for the disabled state
+   * True when the control should be disabled
+   */
   readonly disabled = withDisabledState(this.content);
+
+  /**
+   * Computed signal for the readonly state
+   * True when the control should be readonly
+   */
   readonly readonly = withReadonlyState(this.content);
 
-  readonly validators = withValidators(this.content);
-  readonly asyncValidators = withAsyncValidators(this.content);
+  /**
+   * Computed signal for the validators
+   * Contains validator functions derived from configuration keys
+   */
+  private readonly validators = withValidators(this.content);
+
+  /**
+   * Computed signal for the async validators
+   * Contains async validator functions derived from configuration keys
+   */
+  private readonly asyncValidators = withAsyncValidators(this.content);
 
   private readonly controlInstance = computed(() => {
     const content = this.content();
@@ -115,10 +184,22 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     });
   }
 
+  /**
+   * Sets the visibility handling strategy
+   * Determines if visibility should be managed by the component (manual) or by Formwork (auto)
+   *
+   * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
+   */
   setVisibilityHandling(visibilityHandling: StateHandling) {
     this.visibilityHandling.set(visibilityHandling);
   }
 
+  /**
+   * Sets the disabled handling strategy
+   * Determines if disabled state should be managed by the component (manual) or by Formwork (auto)
+   *
+   * @param disabledHandling Strategy for handling disabled state ('auto' or 'manual')
+   */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
   }

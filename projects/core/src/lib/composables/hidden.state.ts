@@ -13,6 +13,20 @@ import { SimpleFunction, ValueHandleFunction } from '../types/functions.type';
 import { Program } from 'acorn';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
 
+/**
+ * Computes a reactive hidden state based on control content
+ *
+ * The hidden state is determined using the following priority:
+ * 1. If content.hidden is an expression string, it's parsed to AST and evaluated
+ *    against the current form values
+ * 2. If no hidden expression is defined, the control inherits the hidden state
+ *    from its parent group
+ * 3. Both conditions can be combined - a control is hidden if either its own
+ *    condition evaluates to true OR its parent group is hidden
+ *
+ * @param content Signal containing control configuration with potential hidden expression
+ * @returns Computed signal that resolves to boolean hidden state
+ */
 export function withHiddenState(content: Signal<NgxFwContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
@@ -50,6 +64,18 @@ export function withHiddenState(content: Signal<NgxFwContent>) {
   });
 }
 
+/**
+ * Creates a computed attribute value for hidden DOM elements
+ *
+ * When visibilityHandling is set to 'auto', this returns a boolean attribute value
+ * that can be used with Angular's [attr.hidden] binding. When set to 'manual',
+ * it returns null so the attribute is not applied.
+ *
+ * @param options Configuration object for hidden attribute
+ * @param options.hiddenSignal Signal that indicates if the control should be hidden
+ * @param options.hiddenHandlingSignal Signal that determines how visibility is managed
+ * @returns Computed signal that resolves to attribute value (true or null)
+ */
 export function withHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;
   hiddenHandlingSignal: Signal<StateHandling>;
@@ -64,6 +90,25 @@ export function withHiddenAttribute(options: {
   });
 }
 
+/**
+ * Creates an effect that manages control visibility in forms
+ *
+ * Based on visibility state and hide strategy, this effect:
+ * 1. Attaches the control to the form when visible
+ * 2. Detaches the control from the form when hidden and strategy is 'remove'
+ * 3. Manages control values based on the specified valueStrategy when visibility changes
+ *
+ * @param options Configuration object for hidden effect
+ * @param options.content Signal containing control configuration
+ * @param options.controlInstance Signal with the form control instance
+ * @param options.hiddenSignal Signal that indicates if the control should be hidden
+ * @param options.hideStrategySignal Signal with the strategy for handling hidden controls
+ * @param options.valueStrategySignal Signal with the strategy for handling control values
+ * @param options.parentValueStrategySignal Signal with the parent's value strategy
+ * @param options.attachFunction Function to call when control should be attached
+ * @param options.detachFunction Function to call when control should be detached
+ * @param options.valueHandleFunction Function to handle control value based on strategy
+ */
 export function hiddenEffect(options: {
   content: Signal<NgxFwContent>;
   controlInstance: Signal<AbstractControl>;
