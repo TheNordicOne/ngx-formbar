@@ -600,9 +600,11 @@ As you can see the configuration is just an array of controls and/or groups. Eve
 
 ### Create helper type
 
-To get better type information when writing a form configuration in TypeScript you can construct a union type like this
+For better type safety, when writing a form configuration in TypeScript, _ngx-formwork_ provides a helper type *OneOf*.
+With this you can construct a union type like this.
+
 ```ts
-export type MyAppControls = TestTextControl | TestGroup;
+export type MyAppControls = OneOf<[TestTextControl, TestGroup]>;
 ```
 and use it like this
 ```ts
