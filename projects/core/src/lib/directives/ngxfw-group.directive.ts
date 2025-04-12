@@ -10,7 +10,6 @@ import {
 import { NgxFwFormGroup, ValueStrategy } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { ComponentRegistrationService } from '../services/component-registration.service';
-import { ValidatorRegistrationService } from '../services/validator-registration.service';
 import { StateHandling } from '../types/registration.type';
 import {
   disabledEffect,
@@ -24,6 +23,26 @@ import {
 } from '../composables/hidden.state';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 
+/**
+ * Group Directive for Ngx Formwork
+ *
+ * This directive manages form groups within Ngx Formwork, handling:
+ * - Group registration with parent form groups
+ * - Visibility states and DOM representation
+ * - Disabled states with inheritance from parent groups
+ * - Readonly states with inheritance from parent groups
+ * - Validation setup and registration
+ * - Value management based on configured strategies
+ *
+ * The directive automatically:
+ * - Creates and registers form groups with the parent form group
+ * - Evaluates conditions for hidden/disabled/readonly states
+ * - Manages the group lifecycle based on visibility
+ * - Applies validators to the group
+ * - Handles group values according to the specified strategy when visibility changes
+ *
+ * @template T Type extending NgxFwFormGroup containing group configuration
+ */
 @Directive({
   selector: '[ngxfwGroup]',
   host: {
@@ -44,32 +63,81 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
       skipSelf: true,
     });
 
+  /**
+   * Required input containing the group configuration
+   * Defines properties like ID, controls, validation, and state expressions
+   */
   readonly content = input.required<T>();
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
 
+  /**
+   * Computed test ID derived from the group's ID
+   * Used for automated testing identification
+   */
   readonly testId = computed(() => this.content().id);
 
+  /**
+   * Computed signal for the group's hide strategy
+   * Determines how the group behaves when hidden (keep or remove from form)
+   */
   readonly hideStrategy = computed(() => this.content().hideStrategy);
+
+  /**
+   * Computed signal for the group's value strategy
+   * Determines how the group's value is managed when visibility changes
+   */
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
+
+  /**
+   * Computed signal for the parent's value strategy
+   * Used when group doesn't define its own strategy
+   */
   readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
 
+  /**
+   * Computed signal for the hidden state
+   * True when the group should be hidden
+   */
   readonly isHidden = withHiddenState(this.content);
+
+  /**
+   * Computed signal for the hidden attribute
+   * Used in DOM binding to show/hide the group element
+   */
   readonly hiddenAttribute = withHiddenAttribute({
     hiddenSignal: this.isHidden,
     hiddenHandlingSignal: this.visibilityHandling,
   });
 
+  /**
+   * Computed signal for the disabled state
+   * True when the group should be disabled
+   */
   readonly disabled = withDisabledState(this.content);
+
+  /**
+   * Computed signal for the readonly state
+   * True when the group should be readonly
+   */
   readonly readonly = withReadonlyState(this.content);
 
-  readonly validators = withValidators(this.content);
-  readonly asyncValidators = withAsyncValidators(this.content);
+  /**
+   * Computed signal for the validators
+   * Contains validator functions derived from configuration keys
+   */
+  private readonly validators = withValidators(this.content);
+
+  /**
+   * Computed signal for the async validators
+   * Contains async validator functions derived from configuration keys
+   */
+  private readonly asyncValidators = withAsyncValidators(this.content);
 
   private readonly groupInstance = computed(() => {
     const validators = this.validators();
@@ -78,7 +146,15 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   });
 
   readonly registrations = this.contentRegistrationService.registrations;
+
+  /**
+   * Computed signal for the title of the group
+   */
   readonly title = computed(() => this.content().title);
+
+  /**
+   * Computed signal for the child controls of the group
+   */
   readonly controls = computed(() => this.content().controls);
 
   get parentFormGroup() {
@@ -110,10 +186,22 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     });
   }
 
+  /**
+   * Sets the visibility handling strategy
+   * Determines if visibility should be managed by the component (manual) or by Formwork (auto)
+   *
+   * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
+   */
   setVisibilityHandling(visibilityHandling: StateHandling) {
     this.visibilityHandling.set(visibilityHandling);
   }
 
+  /**
+   * Sets the disabled handling strategy
+   * Determines if disabled state should be managed by the component (manual) or by Formwork (auto)
+   *
+   * @param disabledHandling Strategy for handling disabled state ('auto' or 'manual')
+   */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
   }

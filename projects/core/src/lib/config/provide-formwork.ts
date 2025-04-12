@@ -16,6 +16,17 @@ import {
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
 import { ExpressionService } from '../services/expression.service';
 
+/**
+ * Configures and provides Formwork services to an Angular application
+ *
+ * Sets up all required services for Formwork based on the provided configuration:
+ * - Component registry for dynamic control rendering
+ * - Validator registry for form validation rules
+ * - Expression service for dynamic form behavior
+ *
+ * @param config Configuration object with component and validator registrations
+ * @returns Angular environment providers that can be used in application bootstrapping
+ */
 export function provideFormwork<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
@@ -42,6 +53,12 @@ export function provideFormwork<
   ]);
 }
 
+/**
+ * Creates a ComponentRegistrationService with registered form components
+ *
+ * @param componentRegistrations Array of component registration configurations
+ * @returns Configured ComponentRegistrationService instance
+ */
 function createComponentRegistrationService(
   componentRegistrations: ComponentRegistrationConfig[],
 ) {
@@ -49,6 +66,12 @@ function createComponentRegistrationService(
   return new ComponentRegistrationService(registrations);
 }
 
+/**
+ * Converts component registration array to a lookup map
+ *
+ * @param componentRegistrations Array of component registration configurations
+ * @returns Map of component types to component implementations
+ */
 function toComponentRegistrationMap(
   componentRegistrations: ComponentRegistrationConfig[],
 ) {
@@ -59,6 +82,13 @@ function toComponentRegistrationMap(
   return registrations;
 }
 
+/**
+ * Creates a ValidatorRegistrationService with registered validators
+ *
+ * @param config Configuration object for synchronous validators
+ * @param asyncConfig Configuration object for asynchronous validators
+ * @returns Configured ValidatorRegistrationService instance
+ */
 function createValidatorRegistrationService<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
@@ -67,6 +97,13 @@ function createValidatorRegistrationService<
   return new ValidatorRegistrationService(...registrations);
 }
 
+/**
+ * Converts validator configurations to registration maps
+ *
+ * @param config Configuration object for synchronous validators
+ * @param asyncConfig Configuration object for asynchronous validators
+ * @returns Tuple of [validatorMap, asyncValidatorMap]
+ */
 function toValidatorRegistrationMap<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
@@ -87,6 +124,13 @@ function toValidatorRegistrationMap<
   return [registrations, asyncRegistrations];
 }
 
+/**
+ * Converts validator configuration to a map of validator functions
+ * Resolves validator keys to actual validator functions
+ *
+ * @param config Configuration object for validators
+ * @returns Map of validator keys to validator function arrays
+ */
 function toValidatorMap<S extends RegistrationRecord>(
   config?: ValidatorConfig<S>,
 ) {
@@ -105,6 +149,15 @@ function toValidatorMap<S extends RegistrationRecord>(
   return registrations;
 }
 
+/**
+ * Resolves validator references to actual validator functions
+ * Supports recursive validator references and memoization
+ *
+ * @param validators Array of validator functions or validator keys
+ * @param registrations Map of all registered validators
+ * @param memo Memoization cache to avoid circular references
+ * @returns Flattened array of validator functions
+ */
 function toValidatorFn<T extends RegistrationRecord, V>(
   validators: (V | ValidatorKey<T>)[],
   registrations: Map<string, (V | ValidatorKey<T>)[]>,
@@ -131,6 +184,12 @@ function toValidatorFn<T extends RegistrationRecord, V>(
   });
 }
 
+/**
+ * Converts async validator configuration to a map of async validator functions
+ *
+ * @param config Configuration object for async validators
+ * @returns Map of validator keys to async validator function arrays
+ */
 function toAsyncValidatorMap<A extends RegistrationRecord>(
   config?: AsyncValidatorConfig<A>,
 ) {
@@ -151,6 +210,12 @@ function toAsyncValidatorMap<A extends RegistrationRecord>(
   return registrations;
 }
 
+/**
+ * Returns a map of default Angular validators
+ * Provides built-in validators like required, email, etc.
+ *
+ * @returns Map of validator keys to validator function arrays
+ */
 function getDefaultRegistrations() {
   return new Map<string, ValidatorFn[]>([
     ['required', [Validators.required]],
