@@ -28,6 +28,7 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 - Hide controls based on an expression and the form state
   - Decide how the value of hidden controls behave (keep last, reset, default)
 - Disable controls based on an expression and the form state or set it statically
+- Compute a controls readonly based on an expression and the form state or set it statically
 - Mark a control as required or add other validators
 - Combine commonly used validator combinations into a single key
 - Expression syntax is like JavaScript
@@ -118,7 +119,7 @@ provideFormwork({
 })
 ```
 
-## How to setup
+## How to set up
 
 Registering controls and validators is easy and declarative. Below are examples for creation and registration.
 

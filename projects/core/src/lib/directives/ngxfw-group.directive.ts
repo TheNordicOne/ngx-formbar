@@ -75,6 +75,22 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     return disabledOption;
   });
 
+  readonly readonlyAst = computed<Program | null>(() => {
+    const readonlyOption = this.content().readonly;
+    if (typeof readonlyOption === 'boolean') {
+      return null;
+    }
+    return this.expressionService.parseExpressionToAst(readonlyOption);
+  });
+
+  readonly readonlyBool = computed(() => {
+    const readonlyOption = this.content().readonly;
+    if (typeof readonlyOption !== 'boolean') {
+      return null;
+    }
+    return readonlyOption;
+  });
+
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
@@ -139,6 +155,33 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     }
 
     return parentGroup.disabled();
+  });
+
+  readonly readonly = computed<boolean>(() => {
+    const readonlyBool = this.readonlyBool();
+
+    if (readonlyBool !== null) {
+      return readonlyBool;
+    }
+
+    const value = this.formService.formValue();
+    const ast = this.readonlyAst();
+    if (!ast) {
+      return this.parentGroupIsReadonly();
+    }
+
+    const readonly =
+      this.expressionService.evaluateExpression(ast, value) ?? false;
+    return readonly as boolean;
+  });
+
+  readonly parentGroupIsReadonly: Signal<boolean> = computed<boolean>(() => {
+    const parentGroup = this.parentGroupDirective;
+    if (!parentGroup) {
+      return false;
+    }
+
+    return parentGroup.readonly();
   });
 
   get parentFormGroup() {
