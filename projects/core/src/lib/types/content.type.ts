@@ -2,7 +2,7 @@ type NgxFwBaseContent = {
   type: string;
   validators?: string[];
   asyncValidators?: string[];
-  hide?: string;
+  hidden?: string;
   hideStrategy?: HideStrategy;
   valueStrategy?: ValueStrategy;
   disabled?: string | boolean;

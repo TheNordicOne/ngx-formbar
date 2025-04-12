@@ -63,7 +63,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   readonly testId = computed(() => this.content().id);
   readonly visibilityAst = computed<Program | null>(() =>
-    this.expressionService.parseExpressionToAst(this.content().hide),
+    this.expressionService.parseExpressionToAst(this.content().hidden),
   );
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy = computed(
