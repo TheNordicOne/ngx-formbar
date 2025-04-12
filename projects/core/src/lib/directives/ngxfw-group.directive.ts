@@ -32,15 +32,14 @@ import {
 export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   implements OnDestroy
 {
-  private parentContainer = inject(ControlContainer);
   private readonly contentRegistrationService = inject(
     ComponentRegistrationService,
   );
+  private parentContainer = inject(ControlContainer);
 
   private validatorRegistrationService = inject(ValidatorRegistrationService);
   private validatorRegistrations =
     this.validatorRegistrationService.registrations;
-
   private asyncValidatorRegistrations =
     this.validatorRegistrationService.asyncRegistrations;
 
@@ -56,15 +55,11 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   private readonly disabledHandling = signal<StateHandling>('auto');
 
   readonly testId = computed(() => this.content().id);
-  readonly title = computed(() => this.content().title);
-  readonly controls = computed(() => this.content().controls);
-  readonly registrations = this.contentRegistrationService.registrations;
 
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
-
   readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
@@ -77,23 +72,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   readonly disabled = withDisabledState(this.content);
   readonly readonly = withReadonlyState(this.content);
-
-  get parentFormGroup() {
-    return this.parentContainer.control as FormGroup | null;
-  }
-
-  get formGroup() {
-    return this.parentFormGroup?.get(this.content().id) as FormControl | null;
-  }
-
-  setVisibilityHandling(visibilityHandling: StateHandling) {
-    this.visibilityHandling.set(visibilityHandling);
-  }
-
-  setDisabledHandling(disabledHandling: StateHandling) {
-    this.disabledHandling.set(disabledHandling);
-  }
-
   private readonly groupInstance = computed(() => {
     const content = this.content();
 
@@ -102,6 +80,18 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
     return new FormGroup([], validators, asyncValidators);
   });
+
+  readonly registrations = this.contentRegistrationService.registrations;
+  readonly title = computed(() => this.content().title);
+  readonly controls = computed(() => this.content().controls);
+
+  get parentFormGroup() {
+    return this.parentContainer.control as FormGroup | null;
+  }
+
+  get formGroup() {
+    return this.parentFormGroup?.get(this.content().id) as FormControl | null;
+  }
 
   constructor() {
     hiddenEffect({
@@ -122,6 +112,14 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
       enableFunction: this.enableGroup.bind(this),
       disableFunction: this.disableGroup.bind(this),
     });
+  }
+
+  setVisibilityHandling(visibilityHandling: StateHandling) {
+    this.visibilityHandling.set(visibilityHandling);
+  }
+
+  setDisabledHandling(disabledHandling: StateHandling) {
+    this.disabledHandling.set(disabledHandling);
   }
 
   private getValidators(content: T) {
