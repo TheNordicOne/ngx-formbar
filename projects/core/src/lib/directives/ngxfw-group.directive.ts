@@ -16,7 +16,7 @@ import { ValidatorRegistrationService } from '../services/validator-registration
 import { Program } from 'acorn';
 import { ExpressionService } from '../services/expression.service';
 import { FormService } from '../services/form.service';
-import { VisibilityHandling } from '../types/registration.type';
+import { StateHandling } from '../types/registration.type';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -49,7 +49,8 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   readonly content = input.required<T>();
 
-  private readonly visibilityHandling = signal<VisibilityHandling>('auto');
+  private readonly visibilityHandling = signal<StateHandling>('auto');
+  private readonly disabledHandling = signal<StateHandling>('auto');
   readonly testId = computed(() => this.content().id);
   readonly title = computed(() => this.content().title);
   readonly controls = computed(() => this.content().controls);
@@ -192,8 +193,12 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     return this.parentFormGroup?.get(this.content().id) as FormControl | null;
   }
 
-  setVisibilityHandling(visibilityHandling: VisibilityHandling) {
+  setVisibilityHandling(visibilityHandling: StateHandling) {
     this.visibilityHandling.set(visibilityHandling);
+  }
+
+  setDisabledHandling(disabledHandling: StateHandling) {
+    this.disabledHandling.set(disabledHandling);
   }
 
   private readonly groupInstance = computed(() => {
@@ -241,6 +246,12 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
     effect(() => {
       const disabled = this.disabled();
+      const disabledHandling = this.disabledHandling();
+
+      if (disabledHandling === 'manual') {
+        return;
+      }
+
       if (!disabled) {
         untracked(() => {
           this.enableGroup();

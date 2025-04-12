@@ -20,7 +20,7 @@ import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
 import { FormService } from '../services/form.service';
 import { NgxfwGroupDirective } from './ngxfw-group.directive';
-import { VisibilityHandling } from '../types/registration.type';
+import { StateHandling } from '../types/registration.type';
 
 @Directive({
   selector: '[ngxfwControl]',
@@ -47,7 +47,8 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   readonly content = input.required<T>();
 
-  private readonly visibilityHandling = signal<VisibilityHandling>('auto');
+  private readonly visibilityHandling = signal<StateHandling>('auto');
+  private readonly disabledHandling = signal<StateHandling>('auto');
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
@@ -238,6 +239,12 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
     effect(() => {
       const disabled = this.disabled();
+      const disabledHandling = this.disabledHandling();
+
+      if (disabledHandling === 'manual') {
+        return;
+      }
+
       if (!disabled) {
         untracked(() => {
           this.enableControl();
@@ -250,8 +257,12 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     });
   }
 
-  setVisibilityHandling(visibilityHandling: VisibilityHandling) {
+  setVisibilityHandling(visibilityHandling: StateHandling) {
     this.visibilityHandling.set(visibilityHandling);
+  }
+
+  setDisabledHandling(disabledHandling: StateHandling) {
+    this.disabledHandling.set(disabledHandling);
   }
 
   private getValidators(content: T) {

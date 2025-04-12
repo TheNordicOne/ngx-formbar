@@ -181,7 +181,12 @@ export class TestTextControlComponent {
     // Optional
     // Set visibility handling to manual if you want handle it yourself
     // By default it is set to auto and will apply the "hidden" attribute if the control is hidden
-    this.control.setVisibilityHandling('manual')
+    this.control.setVisibilityHandling('manual');
+
+    // Optional
+    // Set disabled handling to manual if you want handle it yourself
+    // By default it is set to auto
+    this.control.setDisabledHandling('manual');
   }
 }
 ```
@@ -264,8 +269,13 @@ export class TestGroupComponent {
   constructor() {
     // Optional
     // Set visibility handling to manual if you want handle it yourself
-    // By default it is set to auto and will apply the "hidden" attribute if the control is hidden
+    // By default it is set to auto and will apply the "hidden" attribute if the group is hidden
     this.control.setVisibilityHandling('manual');
+
+    // Optional
+    // Set disabled handling to manual if you want handle it yourself
+    // By default it is set to auto
+    this.control.setDisabledHandling('manual');
   }
 }
 ```
