@@ -2,6 +2,7 @@
  * Base configuration for Ngx Formwork components
  *
  * @property type - Component type identifier
+ * @property id - Unique identifier for the group
  * @property validators - Array of validator identifiers to apply
  * @property asyncValidators - Array of asynchronous validator identifiers
  * @property hidden - Expression that evaluates to determine visibility
@@ -12,6 +13,7 @@
  */
 type NgxFwBaseContent = {
   type: string;
+  id: string;
   validators?: string[];
   asyncValidators?: string[];
   hidden?: string;
@@ -27,7 +29,6 @@ type NgxFwBaseContent = {
  * Form groups contain and organize multiple controls or nested groups.
  * They inherit all properties from NgxFwBaseContent and add group-specific properties.
  *
- * @property id - Unique identifier for the group
  * @property title - Optional display title for the group
  * @property controls - Array of child controls and groups
  *
@@ -70,7 +71,6 @@ type NgxFwBaseContent = {
  * };
  */
 export type NgxFwFormGroup = NgxFwBaseContent & {
-  id: string;
   title?: string;
   controls: NgxFwContent[];
 };
@@ -81,11 +81,9 @@ export type NgxFwFormGroup = NgxFwBaseContent & {
  * Form controls represent individual input elements that capture user data.
  * They inherit all properties from NgxFwBaseContent and add control-specific properties.
  *
- * @property id - Unique identifier for the control
  * @property label - Display label for the control
  * @property defaultValue - Initial value for the control
  * @property nonNullable - Whether the control should be treated as non-nullable
- * @property [key: string] - Additional properties specific to the control type
  *
  * @example
  * // Define a custom dropdown control type
@@ -111,11 +109,9 @@ export type NgxFwFormGroup = NgxFwBaseContent & {
  * };
  */
 export type NgxFwControl = NgxFwBaseContent & {
-  id: string;
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
-  [key: string]: unknown;
 };
 
 /**
