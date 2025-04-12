@@ -25,6 +25,7 @@ import {
   withHiddenState,
 } from '../composables/hidden.state';
 import { withAsyncValidators, withValidators } from '../composables/validators';
+import { withTestId } from '../composables/testId';
 
 /**
  * Control Directive for Ngx Formwork
@@ -75,7 +76,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    * Computed test ID derived from the control's ID
    * Used for automated testing identification
    */
-  readonly testId = computed(() => this.content().id);
+  readonly testId = withTestId(this.content);
 
   /**
    * Computed signal for the control's hide strategy
