@@ -36,21 +36,42 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+
   private validatorRegistrationService = inject(ValidatorRegistrationService);
   private validatorRegistrations =
     this.validatorRegistrationService.registrations;
+  private asyncValidatorRegistrations =
+    this.validatorRegistrationService.asyncRegistrations;
+
   private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
     inject(NgxfwGroupDirective<NgxFwFormGroup>, {
       optional: true,
     });
 
-  private asyncValidatorRegistrations =
-    this.validatorRegistrationService.asyncRegistrations;
-
   readonly content = input.required<T>();
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
+
+  readonly testId = computed(() => this.content().id);
+
+  readonly hideStrategy = computed(() => this.content().hideStrategy);
+  readonly valueStrategy = computed(
+    () => this.content().valueStrategy ?? this.parentValueStrategy(),
+  );
+  readonly parentValueStrategy = computed(() =>
+    this.parentGroupDirective?.valueStrategy(),
+  );
+
+  readonly isHidden = withHiddenState(this.content);
+  readonly hiddenAttribute = withHiddenAttribute({
+    hiddenSignal: this.isHidden,
+    hiddenHandlingSignal: this.visibilityHandling,
+  });
+
+  readonly disabled = withDisabledState(this.content);
+  readonly readonly = withReadonlyState(this.content);
+
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
@@ -62,27 +83,6 @@ export class NgxfwControlDirective<T extends NgxFwControl>
       asyncValidators,
     });
   });
-
-  readonly testId = computed(() => this.content().id);
-
-  readonly hideStrategy = computed(() => this.content().hideStrategy);
-  readonly valueStrategy = computed(
-    () => this.content().valueStrategy ?? this.parentValueStrategy(),
-  );
-
-  readonly parentValueStrategy = computed(() =>
-    this.parentGroupDirective?.valueStrategy(),
-  );
-
-  readonly isHidden = withHiddenState(this.content);
-
-  readonly hiddenAttribute = withHiddenAttribute({
-    hiddenSignal: this.isHidden,
-    hiddenHandlingSignal: this.visibilityHandling,
-  });
-
-  readonly disabled = withDisabledState(this.content);
-  readonly readonly = withReadonlyState(this.content);
 
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
