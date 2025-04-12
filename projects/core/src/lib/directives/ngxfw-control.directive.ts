@@ -25,6 +25,7 @@ import {
   disabledEffect,
   withDisabledState,
 } from '../composables/disabled.state';
+import { withReadonlyState } from '../composables/readonly.state';
 
 @Directive({
   selector: '[ngxfwControl]',
@@ -74,22 +75,6 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
 
-  readonly readonlyAst = computed<Program | null>(() => {
-    const readonlyOption = this.content().readonly;
-    if (typeof readonlyOption === 'boolean') {
-      return null;
-    }
-    return this.expressionService.parseExpressionToAst(readonlyOption);
-  });
-
-  readonly readonlyBool = computed(() => {
-    const readonlyOption = this.content().readonly;
-    if (typeof readonlyOption !== 'boolean') {
-      return null;
-    }
-    return readonlyOption;
-  });
-
   readonly parentGroupIsHidden: Signal<unknown> = computed<unknown>(() => {
     const parentGroup = this.parentGroupDirective;
     if (!parentGroup) {
@@ -125,33 +110,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   });
 
   readonly disabled = withDisabledState(this.content);
-
-  readonly readonly = computed<boolean>(() => {
-    const readonlyBool = this.readonlyBool();
-
-    if (readonlyBool !== null) {
-      return readonlyBool;
-    }
-
-    const value = this.formService.formValue();
-    const ast = this.readonlyAst();
-    if (!ast) {
-      return this.parentGroupIsReadonly();
-    }
-
-    const readonly =
-      this.expressionService.evaluateExpression(ast, value) ?? false;
-    return readonly as boolean;
-  });
-
-  readonly parentGroupIsReadonly: Signal<boolean> = computed<boolean>(() => {
-    const parentGroup = this.parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.readonly();
-  });
+  readonly readonly = withReadonlyState(this.content);
 
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;

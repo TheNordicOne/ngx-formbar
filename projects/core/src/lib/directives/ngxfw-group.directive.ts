@@ -21,6 +21,7 @@ import {
   disabledEffect,
   withDisabledState,
 } from '../composables/disabled.state';
+import { withReadonlyState } from '../composables/readonly.state';
 
 @Directive({
   selector: '[ngxfwGroup]',
@@ -65,22 +66,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
     this.expressionService.parseExpressionToAst(this.content().hidden),
   );
 
-  readonly readonlyAst = computed<Program | null>(() => {
-    const readonlyOption = this.content().readonly;
-    if (typeof readonlyOption === 'boolean') {
-      return null;
-    }
-    return this.expressionService.parseExpressionToAst(readonlyOption);
-  });
-
-  readonly readonlyBool = computed(() => {
-    const readonlyOption = this.content().readonly;
-    if (typeof readonlyOption !== 'boolean') {
-      return null;
-    }
-    return readonlyOption;
-  });
-
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
@@ -121,33 +106,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   });
 
   readonly disabled = withDisabledState(this.content);
-
-  readonly readonly = computed<boolean>(() => {
-    const readonlyBool = this.readonlyBool();
-
-    if (readonlyBool !== null) {
-      return readonlyBool;
-    }
-
-    const value = this.formService.formValue();
-    const ast = this.readonlyAst();
-    if (!ast) {
-      return this.parentGroupIsReadonly();
-    }
-
-    const readonly =
-      this.expressionService.evaluateExpression(ast, value) ?? false;
-    return readonly as boolean;
-  });
-
-  readonly parentGroupIsReadonly: Signal<boolean> = computed<boolean>(() => {
-    const parentGroup = this.parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.readonly();
-  });
+  readonly readonly = withReadonlyState(this.content);
 
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
