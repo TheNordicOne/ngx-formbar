@@ -5,14 +5,8 @@ import { Type } from '@angular/core';
  *
  * Used to map string type identifiers to component implementations
  * for dynamic rendering.
- *
- * @property type String identifier for the component type
- * @property component Angular component class to be used
  */
-export type ComponentRegistrationConfig = {
-  type: string;
-  component: Type<unknown>;
-};
+export type ComponentRegistrationConfig = Record<string, Type<unknown>>;
 
 /**
  * Strategy for handling component states

@@ -11,16 +11,10 @@ import {
 } from '../../validator/test.validator';
 
 export const formworkProviders = provideFormwork({
-  componentRegistrations: [
-    {
-      type: 'test-text-control',
-      component: TestTextControlComponent,
-    },
-    {
-      type: 'test-group',
-      component: TestGroupComponent,
-    },
-  ],
+  componentRegistrations: {
+    'test-text-control': TestTextControlComponent,
+    'test-group': TestGroupComponent,
+  },
   validatorRegistrations: {
     'min-chars': [Validators.minLength(3)],
     letter: [letterValidator],

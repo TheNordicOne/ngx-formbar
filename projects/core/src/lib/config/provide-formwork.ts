@@ -60,7 +60,7 @@ export function provideFormwork<
  * @returns Configured ComponentRegistrationService instance
  */
 function createComponentRegistrationService(
-  componentRegistrations: ComponentRegistrationConfig[],
+  componentRegistrations: ComponentRegistrationConfig,
 ) {
   const registrations = toComponentRegistrationMap(componentRegistrations);
   return new ComponentRegistrationService(registrations);
@@ -73,13 +73,9 @@ function createComponentRegistrationService(
  * @returns Map of component types to component implementations
  */
 function toComponentRegistrationMap(
-  componentRegistrations: ComponentRegistrationConfig[],
+  componentRegistrations: ComponentRegistrationConfig,
 ) {
-  const registrations = new Map<string, Type<unknown>>();
-  componentRegistrations.forEach((reg) => {
-    registrations.set(reg.type, reg.component);
-  });
-  return registrations;
+  return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
 }
 
 /**
