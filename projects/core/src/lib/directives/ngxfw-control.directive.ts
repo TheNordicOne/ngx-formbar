@@ -12,7 +12,6 @@ import {
   ValueStrategy,
 } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
-import { ValidatorRegistrationService } from '../services/validator-registration.service';
 import { NgxfwGroupDirective } from './ngxfw-group.directive';
 import { StateHandling } from '../types/registration.type';
 import {
@@ -25,6 +24,7 @@ import {
   withHiddenAttribute,
   withHiddenState,
 } from '../composables/hidden.state';
+import { withAsyncValidators, withValidators } from '../composables/validators';
 
 @Directive({
   selector: '[ngxfwControl]',
@@ -36,12 +36,6 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
-
-  private validatorRegistrationService = inject(ValidatorRegistrationService);
-  private validatorRegistrations =
-    this.validatorRegistrationService.registrations;
-  private asyncValidatorRegistrations =
-    this.validatorRegistrationService.asyncRegistrations;
 
   private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
     inject(NgxfwGroupDirective<NgxFwFormGroup>, {
@@ -72,11 +66,14 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   readonly disabled = withDisabledState(this.content);
   readonly readonly = withReadonlyState(this.content);
 
+  readonly validators = withValidators(this.content);
+  readonly asyncValidators = withAsyncValidators(this.content);
+
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
-    const validators = this.getValidators(content);
-    const asyncValidators = this.getAsyncValidators(content);
+    const validators = this.validators();
+    const asyncValidators = this.asyncValidators();
     return new FormControl(content.defaultValue, {
       nonNullable: content.nonNullable,
       validators,
@@ -124,20 +121,6 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
-  }
-
-  private getValidators(content: T) {
-    const validatorKeys = content.validators ?? [];
-    return validatorKeys.flatMap(
-      (key) => this.validatorRegistrations().get(key) ?? [],
-    );
-  }
-
-  private getAsyncValidators(content: T) {
-    const validatorKeys = content.asyncValidators ?? [];
-    return validatorKeys.flatMap(
-      (key) => this.asyncValidatorRegistrations().get(key) ?? [],
-    );
   }
 
   private setControl() {
