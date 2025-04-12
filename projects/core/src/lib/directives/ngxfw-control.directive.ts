@@ -1,13 +1,10 @@
 import {
   computed,
   Directive,
-  effect,
   inject,
   input,
   OnDestroy,
   signal,
-  Signal,
-  untracked,
 } from '@angular/core';
 import {
   NgxFwControl,
@@ -16,9 +13,6 @@ import {
 } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
-import { ExpressionService } from '../services/expression.service';
-import { Program } from 'acorn';
-import { FormService } from '../services/form.service';
 import { NgxfwGroupDirective } from './ngxfw-group.directive';
 import { StateHandling } from '../types/registration.type';
 import {
@@ -26,6 +20,11 @@ import {
   withDisabledState,
 } from '../composables/disabled.state';
 import { withReadonlyState } from '../composables/readonly.state';
+import {
+  hiddenEffect,
+  withHiddenAttribute,
+  withHiddenState,
+} from '../composables/hidden.state';
 
 @Directive({
   selector: '[ngxfwControl]',
@@ -37,8 +36,6 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
-  private expressionService = inject(ExpressionService);
-  private formService = inject(FormService);
   private validatorRegistrationService = inject(ValidatorRegistrationService);
   private validatorRegistrations =
     this.validatorRegistrationService.registrations;
@@ -67,46 +64,21 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   });
 
   readonly testId = computed(() => this.content().id);
-  readonly visibilityAst = computed<Program | null>(() =>
-    this.expressionService.parseExpressionToAst(this.content().hidden),
-  );
+
   readonly hideStrategy = computed(() => this.content().hideStrategy);
   readonly valueStrategy = computed(
     () => this.content().valueStrategy ?? this.parentValueStrategy(),
   );
 
-  readonly parentGroupIsHidden: Signal<unknown> = computed<unknown>(() => {
-    const parentGroup = this.parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.isHidden();
-  });
-
   readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
 
-  readonly isHidden = computed<unknown>(() => {
-    const value = this.formService.formValue();
-    const ast = this.visibilityAst();
-    if (!ast) {
-      return this.parentGroupIsHidden();
-    }
+  readonly isHidden = withHiddenState(this.content);
 
-    const isHidden: unknown =
-      this.expressionService.evaluateExpression(ast, value) ?? false;
-    return isHidden || this.parentGroupIsHidden();
-  });
-
-  readonly hiddenAttribute = computed(() => {
-    const isHidden = this.isHidden();
-    const visibilityHandling = this.visibilityHandling();
-    if (visibilityHandling !== 'auto') {
-      return null;
-    }
-    return isHidden ? true : null;
+  readonly hiddenAttribute = withHiddenAttribute({
+    hiddenSignal: this.isHidden,
+    hiddenHandlingSignal: this.visibilityHandling,
   });
 
   readonly disabled = withDisabledState(this.content);
@@ -126,37 +98,16 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   }
 
   constructor() {
-    effect(() => {
-      this.controlInstance();
-      const isHidden = this.isHidden();
-      const hideStrategy = this.hideStrategy();
-      const valueStrategy = this.valueStrategy();
-      const formControl = untracked(() => this.formControl);
-
-      // Re-attach control
-      if (!formControl && !isHidden) {
-        untracked(() => {
-          this.setControl();
-        });
-        return;
-      }
-
-      // Control is already detached
-      if (hideStrategy === 'remove' && !formControl) {
-        return;
-      }
-
-      // Remove control
-      if (hideStrategy === 'remove' && isHidden) {
-        untracked(() => {
-          this.removeControl();
-        });
-      }
-
-      // Only thing left to check is value strategy
-      untracked(() => {
-        this.handleValue(valueStrategy);
-      });
+    hiddenEffect({
+      content: this.content,
+      controlInstance: this.controlInstance,
+      hiddenSignal: this.isHidden,
+      hideStrategySignal: this.hideStrategy,
+      valueStrategySignal: this.valueStrategy,
+      parentValueStrategySignal: this.parentValueStrategy,
+      attachFunction: this.setControl.bind(this),
+      detachFunction: this.removeControl.bind(this),
+      valueHandleFunction: this.handleValue.bind(this),
     });
 
     disabledEffect({
