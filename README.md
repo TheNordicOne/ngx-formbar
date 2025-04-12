@@ -49,6 +49,12 @@ The following are some ideas that are interesting. There is no guarantee that th
 - Use expressions for dynamic labels
 
 
+## Usage notes
+
+A few things to know about when using _ngx-formwork_
+
+- The `readonly` property itself only provides you with the (dynamic) value. How and if this is handled has to be implemented in the component
+
 ## Getting started
 
 Install _ngx-formwork_
@@ -658,3 +664,5 @@ export class FormIntegrationHostComponent {
 
 <button type="button" (click)="reset()">Reset</button>
 ```
+
+
