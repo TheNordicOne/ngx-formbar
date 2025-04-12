@@ -70,9 +70,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormwork({
-      componentRegistrations: [
+      componentRegistrations: {
         // Component registrations go here
-      ],
+      },
       
       // validatorRegistrations are optional
       validatorRegistrations: {
@@ -97,9 +97,9 @@ To avoid bloating your config, put your registrations in a separate file
 
 **Component Registrations**
 ```ts
-export const componentRegistrations: ComponentRegistrationConfig[] = [
+export const componentRegistrations: ComponentRegistrationConfig = {
   // Component registrations go here
-]
+}
 ```
 
 **Validator Registrations**
@@ -213,12 +213,10 @@ export class TestTextControlComponent {
 Finally, register the control in _app.config.ts_
 
 ```ts
-  componentRegistrations: [
+  componentRegistrations: 
     {
-      type: 'test-text-control',
-      component: TestTextControlComponent,
-    },
-  ]
+      'test-text-control': TestTextControlComponent
+    }
 ```
 
 ### Groups
@@ -299,12 +297,10 @@ export class TestGroupComponent {
 Finally, register the group in _app.config.ts_
 
 ```ts
-  componentRegistrations: [
+  componentRegistrations:
   {
-    type: 'test-group',
-    component: TestGroupComponent,
-  },
-  ]
+    'test-group': TestGroupComponent
+  }
 ```
 
 

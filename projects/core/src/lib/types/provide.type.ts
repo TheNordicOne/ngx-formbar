@@ -18,16 +18,11 @@ import {
  * @example
  * // Define custom form components and validators
  * const formworkConfig: FormworkConfig<SyncValidators, AsyncValidators> = {
- *   componentRegistrations: [
- *     {
- *       type: 'text-input',
- *       component: TextInputComponent
- *     },
- *     {
- *       type: 'address-group',
- *       component: AddressGroupComponent
- *     }
- *   ],
+ *   componentRegistrations:
+ *   {
+ *      'text-input': TextInputComponent
+ *      'address-group': AddressGroupComponent
+ *   },
  *   validatorRegistrations: {
  *      'min-chars': [Validators.minLength(3)],
  *       letter: [letterValidator],
@@ -43,7 +38,7 @@ export type FormworkConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
 > = {
-  componentRegistrations: ComponentRegistrationConfig[];
+  componentRegistrations: ComponentRegistrationConfig;
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
 };
