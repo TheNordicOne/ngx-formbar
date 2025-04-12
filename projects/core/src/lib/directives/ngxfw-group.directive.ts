@@ -22,6 +22,7 @@ import {
   withHiddenState,
 } from '../composables/hidden.state';
 import { withAsyncValidators, withValidators } from '../composables/validators';
+import { withTestId } from '../composables/testId';
 
 /**
  * Group Directive for Ngx Formwork
@@ -76,7 +77,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
    * Computed test ID derived from the group's ID
    * Used for automated testing identification
    */
-  readonly testId = computed(() => this.content().id);
+  readonly testId = withTestId(this.content);
 
   /**
    * Computed signal for the group's hide strategy
