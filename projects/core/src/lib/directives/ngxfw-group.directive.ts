@@ -57,7 +57,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   readonly registrations = this.contentRegistrationService.registrations;
 
   readonly visibilityAst = computed<Program | null>(() =>
-    this.expressionService.parseExpressionToAst(this.content().hide),
+    this.expressionService.parseExpressionToAst(this.content().hidden),
   );
 
   readonly disabledAst = computed<Program | null>(() => {
