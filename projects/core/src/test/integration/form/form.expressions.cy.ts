@@ -18,7 +18,7 @@ describe('Form Expressions', () => {
         {
           id: 'level1',
           type: 'test-group',
-          label: 'Level 1',
+          title: 'Level 1',
           controls: [
             {
               id: 'level1Field',
@@ -29,14 +29,14 @@ describe('Form Expressions', () => {
             {
               id: 'level2A',
               type: 'test-group',
-              label: 'Level 2A',
+              title: 'Level 2A',
               controls: [
                 {
                   id: 'level2AField',
                   type: 'test-text-control',
                   label: 'Level 2A Field',
                   hidden: 'toggleControl === "hide"',
-                  hideStrategy: 'keep',
+                  hideStrategy: 'remove',
                   defaultValue: 'level 2A value',
                 },
               ],
@@ -44,7 +44,7 @@ describe('Form Expressions', () => {
             {
               id: 'level2B',
               type: 'test-group',
-              label: 'Level 2B',
+              title: 'Level 2B',
               controls: [
                 {
                   id: 'level2BField',
@@ -55,7 +55,7 @@ describe('Form Expressions', () => {
                 {
                   id: 'level3A',
                   type: 'test-group',
-                  label: 'Level 3A',
+                  title: 'Level 3A',
                   controls: [
                     {
                       id: 'level3AField',
@@ -70,7 +70,7 @@ describe('Form Expressions', () => {
                 {
                   id: 'level3B',
                   type: 'test-group',
-                  label: 'Level 3B',
+                  title: 'Level 3B',
                   hidden: 'toggleControl === "hide"',
                   controls: [
                     {
@@ -226,7 +226,7 @@ describe('Form Expressions', () => {
         {
           id: 'branchA',
           type: 'test-group',
-          label: 'Branch A',
+          title: 'Branch A',
           controls: [
             {
               id: 'toggleField',
@@ -239,12 +239,12 @@ describe('Form Expressions', () => {
         {
           id: 'branchB',
           type: 'test-group',
-          label: 'Branch B',
+          title: 'Branch B',
           controls: [
             {
               id: 'nestedGroup',
               type: 'test-group',
-              label: 'Nested Group',
+              title: 'Nested Group',
               controls: [
                 {
                   id: 'dependentField',
