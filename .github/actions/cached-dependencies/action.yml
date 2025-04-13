@@ -25,13 +25,13 @@ runs:
 
     - name: Cache Cypress binary
       if: inputs.caching == 'true'
-      id: cache-node-modules
+      id: cache-cypress
       uses: actions/cache@v4
       with:
         path: /home/runner/.cache/Cypress
         key: ${{ env.CACHE_KEY }}
 
     - name: Install dependencies
-      if: steps.cache-node-modules.outputs.cache-hit != 'true' || inputs.caching == 'false'
+      if: steps.cache-node-modules.outputs.cache-hit != 'true' || steps.cache-cypress.outputs.cache-hit != 'true'  || inputs.caching == 'false'
       shell: bash
       run: npm ci
