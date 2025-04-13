@@ -4,6 +4,7 @@ import {
   RegistrationRecord,
   ValidatorConfig,
 } from './validation.type';
+import { UpdateStrategy } from './content.type';
 
 /**
  * Configuration for registering and providing components and validators in Ngx Formwork
@@ -41,4 +42,5 @@ export type FormworkConfig<
   componentRegistrations: ComponentRegistrationConfig;
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
+  updateOn?: UpdateStrategy;
 };

@@ -8,6 +8,7 @@
 
 @for (entry of formValues(); track entry.path) {
   <div>
+    <span [attr.data-testId]="entry.path + '-path'">{{ entry.path }}: </span>
     <span [attr.data-testId]="entry.path + '-value'">{{ entry.value }}</span>
   </div>
 }

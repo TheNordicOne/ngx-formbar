@@ -26,6 +26,7 @@ import {
 } from '../composables/hidden.state';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withTestId } from '../composables/testId';
+import { withUpdateStrategy } from '../composables/update-strategy';
 
 /**
  * Control Directive for Ngx Formwork
@@ -127,6 +128,8 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    */
   readonly readonly = withReadonlyState(this.content);
 
+  readonly updateStrategy = withUpdateStrategy(this.content);
+
   /**
    * Computed signal for the validators
    * Contains validator functions derived from configuration keys
@@ -144,10 +147,12 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
     const validators = this.validators();
     const asyncValidators = this.asyncValidators();
+    const updateOn = this.updateStrategy();
     return new FormControl(content.defaultValue, {
       nonNullable: content.nonNullable,
       validators,
       asyncValidators,
+      updateOn,
     });
   });
 
