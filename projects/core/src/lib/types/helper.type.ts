@@ -1,5 +1,3 @@
-type OnlyFirst<F, S> = F & { [Key in keyof Omit<S, keyof F>]?: never };
-
 /**
  * Creates a discriminated union type where each member has properties of exactly one type
  * from the provided array plus any shared properties, but none of the unique properties from other types
@@ -41,6 +39,11 @@ type OnlyFirst<F, S> = F & { [Key in keyof Omit<S, keyof F>]?: never };
  *   },
  * ];
  */
-export type OneOf<T extends unknown[]> = {
-  [K in keyof T]: OnlyFirst<T[K], Exclude<T[number], T[K]>>;
+export type OneOf<T extends readonly unknown[]> = {
+  [K in keyof T]: T[K] extends { type: unknown }
+    ? T[K] &
+        Partial<
+          Record<Exclude<keyof Exclude<T[number], T[K]>, keyof T[K]>, never>
+        >
+    : never;
 }[number];
