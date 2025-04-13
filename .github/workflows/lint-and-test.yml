@@ -10,22 +10,8 @@ on:
   workflow_call:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-
-      - name: Get and cache dependencies
-        uses: ./.github/actions/cached-dependencies
-
-      - name: Run tests
-        run: npm run test
-
-  lint:
+  lint_and_test:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,3 +25,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Run tests
+        run: npm run test
