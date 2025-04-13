@@ -18,7 +18,7 @@ describe('Content Host Component', () => {
     };
 
     cy.mount(ContentHostComponent, {
-      providers: [dummyControlContainer, formworkProviders, FormService],
+      providers: [dummyControlContainer, formworkProviders(), FormService],
       componentProperties: {
         content,
         registrations,
@@ -35,7 +35,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(ContentHostComponent, {
-        providers: [dummyControlContainer, formworkProviders, FormService],
+        providers: [dummyControlContainer, formworkProviders(), FormService],
         componentProperties: {
           content,
           registrations,
@@ -52,7 +52,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(ContentHostComponent, {
-        providers: [dummyControlContainer, formworkProviders, FormService],
+        providers: [dummyControlContainer, formworkProviders(), FormService],
         componentProperties: {
           content,
           registrations,

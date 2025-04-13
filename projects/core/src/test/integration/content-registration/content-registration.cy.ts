@@ -5,7 +5,7 @@ import { dummyControlContainer } from '../shared/control-container';
 describe('Content Registration', () => {
   it('should show registered content', () => {
     cy.mount(RegistrationIntegrationHostComponent, {
-      providers: [formworkProviders, dummyControlContainer],
+      providers: [formworkProviders(), dummyControlContainer],
       componentProperties: {
         content: {
           type: 'test-text-control',
