@@ -12,5 +12,5 @@ import { NgxFwContent } from '../types/content.type';
  * @returns Computed signal that resolves to the element's ID for testing
  */
 export function withTestId(content: Signal<NgxFwContent>) {
-  return computed(() => content());
+  return computed(() => content().id);
 }
