@@ -9,13 +9,27 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Compute cache key
+      id: compute-cache-key
+      shell: bash
+      run: |
+        echo "CACHE_KEY=deps-node-modules-${{ hashFiles('**/package-lock.json', './projects/core/package.json', '.github/workflows/*.yml', '.github/actions/cached-dependencies/action.yml') }}" >> $GITHUB_ENV
+
     - name: Cache dependencies
       if: inputs.caching == 'true'
       id: cache-node-modules
       uses: actions/cache@v4
       with:
         path: node_modules
-        key: deps-node-modules-${{ hashFiles('**/package-lock.json', './projects/core/package.json', '.github/workflows/*.yml', '.github/actions/cached-dependencies/action.yml') }}
+        key: ${{ env.CACHE_KEY }}
+
+    - name: Cache Cypress binary
+      if: inputs.caching == 'true'
+      id: cache-node-modules
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/.cache/Cypress
+        key: ${{ env.CACHE_KEY }}
 
     - name: Install dependencies
       if: steps.cache-node-modules.outputs.cache-hit != 'true' || inputs.caching == 'false'
