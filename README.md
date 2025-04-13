@@ -3,7 +3,7 @@
 ![NPM Version](https://img.shields.io/npm/v/ngx-formwork?logo=npm&label=NPM%20Version)
 ![NPM Downloads](https://img.shields.io/npm/dw/ngx-formwork?label=Downloads)
 
-[![Test and Lint](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/test-and-lint.yml)
+[![Test and Lint](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml)
 
 
 A highly flexible framework for generating declarative reactive forms, based on a configuration.
