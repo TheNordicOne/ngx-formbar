@@ -12,6 +12,7 @@ import { OneOf } from './helper.type';
  * @property valueStrategy - How values are handled during visibility changes
  * @property disabled - Expression or boolean determining disabled state
  * @property readonly - Expression or boolean determining readonly state
+ * @property updateOn - Update strategy for the control
  */
 type NgxFwBaseContent = {
   type: string;
@@ -23,7 +24,10 @@ type NgxFwBaseContent = {
   valueStrategy?: ValueStrategy;
   disabled?: string | boolean;
   readonly?: string | boolean;
+  updateOn?: UpdateStrategy;
 };
+
+export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
 
 /**
  * Base Configuration for a form group in Ngx Formwork

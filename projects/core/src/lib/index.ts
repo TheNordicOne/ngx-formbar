@@ -8,3 +8,4 @@ export * from './directives/ngxfw-group.directive';
 export * from './helper/control-container-view-providers';
 export * from './helper/ngxfw-control-host-directive';
 export * from './helper/ngxfw-group-host-directive';
+export * from './tokens/default-update-strategy';

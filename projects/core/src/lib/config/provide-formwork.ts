@@ -15,6 +15,7 @@ import {
 } from '../types/validation.type';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
 import { ExpressionService } from '../services/expression.service';
+import { DefaultUpdateStrategy } from '../tokens/default-update-strategy';
 
 /**
  * Configures and provides Formwork services to an Angular application
@@ -35,6 +36,7 @@ export function provideFormwork<
     componentRegistrations,
     validatorRegistrations,
     asyncValidatorRegistrations,
+    updateOn,
   } = config;
 
   return makeEnvironmentProviders([
@@ -48,6 +50,10 @@ export function provideFormwork<
         validatorRegistrations,
         asyncValidatorRegistrations,
       ),
+    },
+    {
+      provide: DefaultUpdateStrategy,
+      useValue: updateOn,
     },
     ExpressionService,
   ]);

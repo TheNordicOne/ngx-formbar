@@ -2,6 +2,7 @@ import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFwContent, NgxFwFormComponent } from '../../../../lib';
 import { FormService } from '../../../../lib/services/form.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'ngxfw-form-integration-host',
@@ -12,9 +13,19 @@ import { FormService } from '../../../../lib/services/form.service';
 export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
   readonly formContent = input.required<NgxFwContent[]>();
+  readonly autoUpdate = input<boolean>(false);
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 
   form = this.formBuilder.group({});
+
+  constructor() {
+    this.form.statusChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      if (!this.autoUpdate()) {
+        return;
+      }
+      this.onSubmit();
+    });
+  }
 
   reset() {
     this.form.reset();
