@@ -1,9 +1,9 @@
 import { Component, inject, input } from '@angular/core';
 import { NgxFwContent } from '../../types/content.type';
-import { ContentHostComponent } from '../content-host/content-host.component';
 import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
+import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-control.directive';
 
 /**
  * Ngx Formwork Form Component
@@ -20,7 +20,7 @@ import { controlContainerViewProviders } from '../../helper/control-container-vi
  */
 @Component({
   selector: 'ngxfw-form',
-  imports: [ContentHostComponent],
+  imports: [NgxfwAbstractControlDirective],
   templateUrl: './ngx-fw-form.component.html',
   providers: [FormService],
   viewProviders: [controlContainerViewProviders],
