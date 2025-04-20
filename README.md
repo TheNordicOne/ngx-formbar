@@ -243,7 +243,7 @@ Then implement the component
 ```ts
 @Component({
   selector: 'ngxfw-test-group',
-  imports: [ContentHostComponent, ReactiveFormsModule],
+  imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
   templateUrl: './test-group.component.html', // The markup is up to you
   viewProviders: controlContainerViewProviders,
   // Convenience declaration equal to
@@ -287,11 +287,7 @@ export class TestGroupComponent {
 <!-- Just an example -->
 <div [formGroupName]="content().id">
   @for (control of content()?.controls; track control.id) {
-  <!-- 
-    Note that we need to pass registrations from the directive as an input
-    ngxfw-content-host handles which components to render based on their type
-  -->
-  <ngxfw-content-host [content]="control" [registrations]="registrations()" />
+    <ng-template *ngxfwNgxfwAbstractControl="control" />
   }
 </div>
 ```
