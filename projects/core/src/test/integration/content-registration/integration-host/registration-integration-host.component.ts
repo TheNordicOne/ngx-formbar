@@ -1,12 +1,12 @@
 import { Component, inject, input } from '@angular/core';
-import { ContentHostComponent } from '../../../../lib/components/content-host/content-host.component';
 import { TestTextControl } from '../../../types/controls.type';
 import { ComponentRegistrationService } from '../../../../lib/services/component-registration.service';
 import { FormService } from '../../../../lib/services/form.service';
+import { NgxfwAbstractControlDirective } from '../../../../lib/directives/ngxfw-abstract-control.directive';
 
 @Component({
   selector: 'ngxfw-integration-host',
-  imports: [ContentHostComponent],
+  imports: [NgxfwAbstractControlDirective, NgxfwAbstractControlDirective],
   templateUrl: './registration-integration-host.component.html',
   providers: [FormService],
 })
