@@ -11,7 +11,7 @@ import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-c
  * This component serves as the main container for Ngx Formwork forms:
  * - Takes an array of form content configuration objects
  * - Establishes the form context through FormService provider
- * - Renders each content item using ContentHostComponent
+ * - Renders each content item using NgxfwAbstractControlDirective
  * - Handles component registration and dependency injection
  *
  * The component acts as the root element for declarative form creation,
