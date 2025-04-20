@@ -1,5 +1,4 @@
 import { Component, inject, Signal, Type } from '@angular/core';
-import { ContentHostComponent } from '../../../lib/components/content-host/content-host.component';
 import {
   controlContainerViewProviders,
   NgxFwContent,
@@ -8,10 +7,11 @@ import {
 } from '../../../lib';
 import { TestGroup } from '../../types/group.type';
 import { ReactiveFormsModule } from '@angular/forms';
+import { NgxfwAbstractControlDirective } from '../../../lib/directives/ngxfw-abstract-control.directive';
 
 @Component({
   selector: 'ngxfw-test-group',
-  imports: [ContentHostComponent, ReactiveFormsModule],
+  imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
   templateUrl: './test-group.component.html',
   viewProviders: controlContainerViewProviders,
   hostDirectives: [ngxfwGroupHostDirective],

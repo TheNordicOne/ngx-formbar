@@ -2,7 +2,7 @@
 <span [attr.data-testId]="testId() + '-title'">{{ content()?.title }}</span>
 <div [formGroupName]="content().id">
   @for (control of content()?.controls; track control.id) {
-    <ngxfw-content-host [content]="control" [registrations]="registrations()" />
+    <ng-template *ngxfwNgxfwAbstractControl="control" />
   }
 </div>
 
