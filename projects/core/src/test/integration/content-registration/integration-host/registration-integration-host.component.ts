@@ -6,7 +6,7 @@ import { NgxfwAbstractControlDirective } from '../../../../lib/directives/ngxfw-
 
 @Component({
   selector: 'ngxfw-integration-host',
-  imports: [NgxfwAbstractControlDirective, NgxfwAbstractControlDirective],
+  imports: [NgxfwAbstractControlDirective],
   templateUrl: './registration-integration-host.component.html',
   providers: [FormService],
 })
