@@ -137,10 +137,10 @@ _ngx-formwork_ comes with no pre-built components by design. This gives all flex
 
 Here is an example of a simple text control.
 
-First create a type for your control
+First create an interface for your control
 
 ```ts
-export type TestTextControl = NgxFwControl & {
+export interface TestTextControl extends NgxFwControl {
   // Unique Key of your control that is used for differentiating controls
   // This can be descriptive like "email-control"
   type: 'test-text-control';
@@ -151,7 +151,7 @@ export type TestTextControl = NgxFwControl & {
 
   // Additional options only applicable to this control
   hint?: string;
-};
+}
 ```
 
 Then implement the component
@@ -177,7 +177,7 @@ export class TestTextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TestTextControl>);
 
   // Extract all things you are interested
-  // Explicitly setting a type definition is not required, but some ideas work better if they are present
+  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<TestTextControl> = this.control.content; // The configuration object of the control instance
   readonly testId: Signal<string> = this.control.testId;
   readonly isHidden: Signal<unknown> = this.control.isHidden; // Really only should ever be a boolean return value, but an expression could also return a number, string or object
@@ -226,16 +226,16 @@ Finally, register the control in _app.config.ts_
 
 Here is an example of a simple group.
 
-First create a type for your group
+First create an interface for your group
 
 ```ts
   // Unique Key of your group that is used for differentiating groups
   // This can be descriptive like "email-control"
-export type TestGroup = NgxFwFormGroup & {
+export interface TestGroup extends NgxFwFormGroup {
   type: 'test-group';
 
   // Additional options only applicable to this group if you want
-};
+}
 ```
 
 Then implement the component
@@ -259,7 +259,7 @@ export class TestGroupComponent {
   private readonly control = inject(NgxfwGroupDirective<TestGroup>);
 
   // Extract all things you are interested
-  // Explicitly setting a type definition is not required, but some ideas work better if they are present
+  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<TestGroup> = this.control.content;  // The configuration object of the group instance
   readonly testId: Signal<string> = this.control.testId;
   readonly controls: Signal<NgxFwContent[]> = this.control.controls;

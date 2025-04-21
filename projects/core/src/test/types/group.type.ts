@@ -1,5 +1,5 @@
 import { NgxFwFormGroup } from '../../lib';
 
-export type TestGroup = NgxFwFormGroup & {
+export interface TestGroup extends NgxFwFormGroup {
   type: 'test-group';
-};
+}

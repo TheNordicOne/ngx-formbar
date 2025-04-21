@@ -1,9 +1,11 @@
 import { NgxFwControl } from '../../lib';
 
-export type TestTextControl = NgxFwControl & {
+export interface TestTextControl extends NgxFwControl {
   type: 'test-text-control';
   hint?: string;
   defaultValue?: string;
-};
+}
 
-export type UnknownContent = { type: 'unknown' } & NgxFwControl;
+export interface UnknownContent extends NgxFwControl {
+  type: 'unknown';
+}
