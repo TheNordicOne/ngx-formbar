@@ -1,20 +1,6 @@
 import { OneOf } from './helper.type';
 
-/**
- * Base configuration for Ngx Formwork components
- *
- * @property type - Component type identifier
- * @property id - Unique identifier for the group
- * @property validators - Array of validator identifiers to apply
- * @property asyncValidators - Array of asynchronous validator identifiers
- * @property hidden - Expression that evaluates to determine visibility
- * @property hideStrategy - How the component behaves when hidden
- * @property valueStrategy - How values are handled during visibility changes
- * @property disabled - Expression or boolean determining disabled state
- * @property readonly - Expression or boolean determining readonly state
- * @property updateOn - Update strategy for the control
- */
-type NgxFwBaseContent = {
+interface NgxFwBaseContent {
   type: string;
   id: string;
   validators?: string[];
@@ -25,7 +11,7 @@ type NgxFwBaseContent = {
   disabled?: string | boolean;
   readonly?: string | boolean;
   updateOn?: UpdateStrategy;
-};
+}
 
 export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
 
@@ -40,11 +26,11 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  *
  * @example
  * // Define a custom address group type
- * type AddressGroup = NgxFwFormGroup & {
+ * interface AddressGroup extends NgxFwFormGroup {
  *   type: 'address-group';
  *   collapsible?: boolean;
  *   addressFormat?: 'US' | 'EU';
- * };
+ * }
  *
  * // Usage in a form definition
  * const addressSection: AddressGroup = {
@@ -76,10 +62,10 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  *   ]
  * };
  */
-export type NgxFwFormGroup = NgxFwBaseContent & {
+export interface NgxFwFormGroup extends NgxFwBaseContent {
   title?: string;
   controls: NgxFwContent[];
-};
+}
 
 /**
  * Base Configuration for an individual form control in Ngx Formwork
@@ -93,12 +79,12 @@ export type NgxFwFormGroup = NgxFwBaseContent & {
  *
  * @example
  * // Define a custom dropdown control type
- * type DropdownControl = NgxFwControl & {
+ * interface DropdownControl extends NgxFwControl {
  *   type: 'dropdown';
  *   options: Array<{value: string, label: string}>;
  *   allowMultiple?: boolean;
  *   searchable?: boolean;
- * };
+ * }
  *
  * // Usage in a form definition
  * const countrySelector: DropdownControl = {
@@ -114,11 +100,11 @@ export type NgxFwFormGroup = NgxFwBaseContent & {
  *   disabled: false
  * };
  */
-export type NgxFwControl = NgxFwBaseContent & {
+export interface NgxFwControl extends NgxFwBaseContent {
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
-};
+}
 
 /**
  * Union type representing either a form group or individual control

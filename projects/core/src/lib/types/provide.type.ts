@@ -35,12 +35,12 @@ import { UpdateStrategy } from './content.type';
  *   },
  * };
  */
-export type FormworkConfig<
+export interface FormworkConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
-> = {
+> {
   componentRegistrations: ComponentRegistrationConfig;
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
   updateOn?: UpdateStrategy;
-};
+}
