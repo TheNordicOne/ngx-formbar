@@ -609,6 +609,111 @@ and use it like this
 export const exampleForm: MyAppControls[] = [ ... ]
 ```
 
+### Basic Options
+
+The `NgxFwBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
+
+- **type** (`string`)
+  - Specifies the kind of the form control. It determines what control is used and what additional properties may be available.
+
+- **id** (`string`)
+  - Unique identifier for the control. This is used to link configuration with runtime behavior and maintain state consistency.
+
+- **validators** (`string[]` - optional)
+  - An array of strings representing the names of synchronous validators that apply to the control.
+  - Validators can be registered globally with a validator registration object. (see [Adding Custom Validators](#adding-custom-validator))
+
+- **asyncValidators** (`string[]` - optional)
+  - Similar to `validators`, but for asynchronous validation logic. (see [Adding Custom Async Validators](#adding-custom-async-validator))
+
+- **hidden** (`string` - optional)
+  - A string expression that determines when the control should be hidden.
+  - This condition is evaluated at runtime to control the visibility of the control.
+  - The expression is evaluated against the whole form object.
+
+- **hideStrategy** (`'keep'` \| `'remove'` - optional)
+  - Specifies the strategy for handling the control when the `hidden` expression evaluates to true.
+    - `keep`: The control remains part of the form model (its value and state are retained), despite being hidden.
+    - `remove`: The control is removed from the form model. This is useful when a hidden value should not be submitted or processed further.
+
+- **valueStrategy** (`'last'` \| `'default'` \| `'reset'` - optional)
+  - Determines how the control’s value is handled when its visibility changes.
+    - `last`: Preserves the last entered value when the control is hidden and shown again.
+    - `default`: Reverts the control to its default value upon re-display.
+    - `reset`: Clears the control's value when it becomes visible.
+
+- **disabled** (`string` \| `boolean` - optional)
+  - Defines whether the control should be disabled.
+  - Can be a boolean value or a string expression that resolves to a boolean at runtime.
+  - The expression is evaluated against the whole form object.
+
+- **readonly** (`string` \| `boolean` - optional)
+  - Indicates if the control is read-only, meaning the value is displayed but cannot be modified.
+  - Accepts either a boolean value or a string expression for dynamic evaluation.
+  - The expression is evaluated against the whole form object.
+
+- **updateOn** (`'change'` \| `'blur'` \| `'submit'` \| `undefined` - optional)
+  - Specifies the event that triggers an update to the control’s value.
+    - `change`: Updates the value as the user types (default behavior).
+    - `blur`: Updates the value when the control loses focus.
+    - `submit`: Defers the update until the form is submitted.
+  - If not specified, the default is typically `change`.
+
+
+## Expressions
+
+This documentation explains how expressions are parsed, evaluated, and what features are supported.
+
+### Overview
+
+Expressions are JavaScript snippets provided as strings. They are parsed into an Abstract Syntax Tree (AST) using the Acorn parser. The AST is then evaluated in a controlled environment against the forms value (onValueChange).
+
+### Parsing and Caching
+
+- **Parsing:**  
+  An expression string is parsed to generate an AST. The parser uses a modern ECMAScript version (2022) to support recent JavaScript syntax.
+
+- **Caching:**  
+  Parsed ASTs are cached to avoid re-parsing the same expression multiple times. This improves performance when evaluating expressions repeatedly.
+
+### Evaluation Process
+
+1. **Supported Node Types:**
+   - The evaluator supports a range of node types including:
+     - `Identifier`
+     - `Literal`
+     - `ArrayExpression`
+     - `UnaryExpression`
+     - `BinaryExpression`
+     - `LogicalExpression` (supports `&&`, `||`, and nullish coalescing `??`)
+     - `MemberExpression` (property access with safety checks for null or undefined objects)
+     - `ConditionalExpression` (ternary operator)
+     - `ObjectExpression`
+     - `SequenceExpression`
+     - `TemplateLiteral`
+     - `CallExpression` for invoking safe methods
+     - `ArrowFunctionExpression` for simple arrow functions with expression bodies
+
+2. **Evaluation of Operators:**
+  - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `**`
+  - **Comparison Operators:** `<`, `>`, `<=`, `>=`
+  - **Equality Operators:** `==`, `!=`, `===`, `!==` (follow JavaScript behavior)
+  - **Bitwise Operators:** `|`, `&`, `^`, `<<`, `>>`, `>>>`
+  - **Logical Operations:** `&&`, `||`, `??`
+  - **Safe Method Calls:** When calling methods on objects, the evaluator checks against a whitelist of safe methods (provided for strings, numbers, booleans, and arrays). This ensures that only approved operations are executed.
+
+### Limitations
+
+- **Restricted Syntax:**  
+  Complex function bodies or block statements in arrow functions are not supported. Only simple expression-based arrow functions are allowed.
+
+- **Restricted Node Types:**  
+  Some JavaScript features are not supported to maintain security and simplicity, such as update expressions, assignments, and using `this` or `super`.
+
+- **Controlled Context:**  
+  The evaluation runs only in the context of the form object, avoiding global access and potential security vulnerabilities.
+
+
 ## Rendering a form
 
 Now that everything is set up, you can now render the form.
