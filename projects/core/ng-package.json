@@ -4,7 +4,6 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "assets": [
-    "LICENSE"
-  ]
+  "allowedNonPeerDependencies": ["acorn", "eval-estree-expression"],
+  "assets": ["LICENSE"]
 }

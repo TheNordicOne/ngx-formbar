@@ -6,8 +6,11 @@
     "@angular/core": "^19.2.1"
   },
   "dependencies": {
+    "acorn": "^8.14.1",
+    "eval-estree-expression": "^3.0.0",
     "tslib": "^2.3.0"
   },
+
   "private": false,
   "publishConfig": {
     "access": "public"

@@ -24,8 +24,7 @@
     "@angular/platform-browser-dynamic": "^19.2.1",
     "@angular/router": "^19.2.1",
     "acorn": "^8.14.1",
-    "acorn-walk": "^8.3.4",
-    "eval-estree-expression": "^2.1.1",
+    "eval-estree-expression": "^3.0.0",
     "rxjs": "~7.8.2",
     "tslib": "^2.8.1",
     "zone.js": "~0.15.0"
