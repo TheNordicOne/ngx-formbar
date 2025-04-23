@@ -3,7 +3,7 @@ import { NgxfwControlDirective } from '../directives/ngxfw-control.directive';
 /**
  * Configuration for exposing NgxfwControlDirective in standalone components
  *
- * This function provides a standardized way to include the NgxfwControlDirective
+ * This object provides a standardized way to include the NgxfwControlDirective
  * in Angular standalone components using the hostDirectives feature.
  *
  * @property directive - Reference to the NgxfwControlDirective class
@@ -15,16 +15,14 @@ import { NgxfwControlDirective } from '../directives/ngxfw-control.directive';
  *   selector: 'app-custom-control',
  *   standalone: true,
  *   template: '...',
- *   hostDirectives: [{...withNgxFwControl()}]
+ *   hostDirectives: [ngxfwControlHostDirective]
  * })
  * export class CustomControlComponent {
  *   // The component now has access to the NgxfwControlDirective functionality
  *   // with the 'content' input exposed automatically
  * }
  */
-export function withNgxFwControl() {
-  return {
-    directive: NgxfwControlDirective,
-    inputs: ['content'],
-  };
-}
+export const ngxfwControlHostDirective = {
+  directive: NgxfwControlDirective,
+  inputs: ['content'],
+};
