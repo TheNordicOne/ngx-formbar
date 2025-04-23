@@ -158,6 +158,15 @@ export interface TestTextControl extends NgxFwControl {
 }
 ```
 
+If you haven't already, create a convenience helper that declares the proper host directive. This is highly recommended to easily update inputs or names, in case anything changes.
+
+```ts
+export const ngxfwControlHostDirective = {
+  directive: NgxfwControlDirective,
+  inputs: ['content'],
+};
+```
+
 Then implement the component
 
 ```ts
@@ -167,11 +176,7 @@ Then implement the component
   templateUrl: './test-text-control.component.html', // The template is up to you
   viewProviders: controlContainerViewProviders,
   hostDirectives: [
-    // Convenience declaration equal to
-    // {
-    //   directive: NgxfwControlDirective,
-    //   inputs: ['content'],
-    // }
+    // Convenience declaration
     ngxfwControlHostDirective
   ],
 })
@@ -242,19 +247,24 @@ export interface TestGroup extends NgxFwFormGroup {
 }
 ```
 
+If you haven't already, create a convenience helper that declares the proper host directive. This is highly recommended to easily update inputs or names, in case anything changes.
+
+```ts
+export const ngxfwGroupHostDirective = {
+  directive: NgxfwGroupDirective,
+  inputs: ['content'],
+};
+```
+
 Then implement the component
 
 ```ts
 @Component({
   selector: 'ngxfw-test-group',
   imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
-  templateUrl: './test-group.component.html', // The markup is up to you
+  templateUrl: './test-group.component.html',
   viewProviders: controlContainerViewProviders,
-  // Convenience declaration equal to
-  // {
-  //   directive: NgxfwGroupDirective,
-  //   inputs: ['content'],
-  // }
+  // Convenience declaration
   hostDirectives: [ngxfwGroupHostDirective],
 })
 export class TestGroupComponent {
