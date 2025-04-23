@@ -1,14 +1,12 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFwContent, NgxFwFormComponent } from '../../../../lib';
-import { FormService } from '../../../../lib/services/form.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'ngxfw-form-integration-host',
   imports: [ReactiveFormsModule, NgxFwFormComponent],
   templateUrl: './form-integration-host.component.html',
-  providers: [FormService],
 })
 export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
