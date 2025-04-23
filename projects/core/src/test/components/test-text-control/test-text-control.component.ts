@@ -3,7 +3,7 @@ import { Component, inject, Signal } from '@angular/core';
 import {
   controlContainerViewProviders,
   NgxfwControlDirective,
-  ngxfwControlHostDirective,
+  withNgxFwControl,
 } from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -13,7 +13,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html',
   viewProviders: controlContainerViewProviders,
-  hostDirectives: [ngxfwControlHostDirective],
+  hostDirectives: [{ ...withNgxFwControl() }],
 })
 export class TestTextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TestTextControl>);

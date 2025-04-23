@@ -166,14 +166,12 @@ Then implement the component
   imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html', // The template is up to you
   viewProviders: controlContainerViewProviders,
-  hostDirectives: [
-    // Convenience declaration equal to
-    // {
-    //   directive: NgxfwControlDirective,
-    //   inputs: ['content'],
-    // }
-    ngxfwControlHostDirective
-  ],
+  // Convenience declaration equal to
+  // {
+  //   directive: NgxfwControlDirective,
+  //   inputs: ['content'],
+  // }
+  hostDirectives: [{...withNgxFwControl()}],
 })
 export class TestTextControlComponent {
   // Inject the Directive to gain access to all public properties
@@ -255,7 +253,7 @@ Then implement the component
   //   directive: NgxfwGroupDirective,
   //   inputs: ['content'],
   // }
-  hostDirectives: [ngxfwGroupHostDirective],
+  hostDirectives: [{ ...withNgxFwGroup() }],
 })
 export class TestGroupComponent {
   // Inject the Directive to gain access to all public properties
