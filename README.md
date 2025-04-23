@@ -265,9 +265,6 @@ export class TestGroupComponent {
   readonly controls: Signal<NgxFwContent[]> = this.control.controls;
   readonly isHidden: Signal<unknown> = this.control.isHidden; // Really only should ever be a boolean return value, but an expression could also return a number, string or object
 
-  // Registration object needed in the template
-  readonly registrations: Signal<Map<string, Type<unknown>>> = this.control.registrations;
-
   // Getter to easily get access to the underlying form control
   // Helpful to check for validation errors
   get formGroup() {
