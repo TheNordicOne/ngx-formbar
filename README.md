@@ -15,6 +15,9 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 > [!WARNING]
 > This project is still in the making and not ready to be used in production!
 
+## Compatibility
+
+At this time this package is only compatible with Angular 19.2.1 or above.
 
 ## Feature Overview
 
