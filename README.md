@@ -722,8 +722,7 @@ You build the form as usual. This gives you full access to the underlying form a
 @Component({
   selector: 'app-some-form',
   imports: [ReactiveFormsModule, NgxFwFormComponent],
-  templateUrl: './form-integration-host.component.html',
-  providers: [FormService],
+  templateUrl: './form-integration-host.component.html'
 })
 export class FormIntegrationHostComponent {
   // Construct the reactive form as usual
