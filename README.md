@@ -195,11 +195,14 @@ export interface TestTextControl extends NgxFwControl {
 
 Then implement the component. See [Helper](#helper) for how to set up `controlContainerViewProviders` and `ngxfwControlHostDirective`.
 
+> [!IMPORTANT]  
+> Be sure to bind to `[formControlName]` on the actual input element
+
 ```ts
 @Component({
   selector: 'app-test-text-control',
   imports: [ReactiveFormsModule],
-  templateUrl: './test-text-control.component.html', // The template is up to you
+  templateUrl: './test-text-control.component.html',
   // Important: You always need view providers
   viewProviders: controlContainerViewProviders,
   hostDirectives: [
@@ -220,7 +223,9 @@ export class TestTextControlComponent {
   readonly disabled: Signal<boolean> = this.control.disabled;
 
   // We get proper type information when accessing this.content()
-  readonly hint = computed(() => this.content().hint)
+  readonly hint = computed(() => this.content().hint);
+  readonly label = computed(() => this.content().label);
+  readonly id = computed(() => this.content().id);
 
   // Getter to easily get access to the underlying form control
   // Helpful to check for validation errors
@@ -239,12 +244,12 @@ export class TestTextControlComponent {
 
 ```html
 <!-- Just an example -->
-<label [htmlFor]="content()?.id" [attr.data-testId]="testId() + '-label'">
-{{ content()?.label }}</label>
+<label [htmlFor]="id()" [attr.data-testId]="testId() + '-label'">
+{{ label() }}</label>
 <input
   [attr.data-testId]="testId() + '-input'"
-  [id]="content()?.id"
-  [formControlName]="content().id"
+  [id]="id()"
+  [formControlName]="id()"
 />
 ```
 
@@ -275,6 +280,10 @@ export interface TestGroup extends NgxFwFormGroup {
 ```
 
 Then implement the component. See [Helper](#helper) for how to set up `controlContainerViewProviders` and `ngxfwGroupHostDirective`.
+
+> [!IMPORTANT]  
+> Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
+
 
 ```ts
 @Component({
