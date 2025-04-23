@@ -3,7 +3,7 @@ import {
   controlContainerViewProviders,
   NgxFwContent,
   NgxfwGroupDirective,
-  withNgxFwGroup,
+  ngxfwGroupHostDirective,
 } from '../../../lib';
 import { TestGroup } from '../../types/group.type';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -14,7 +14,7 @@ import { NgxfwAbstractControlDirective } from '../../../lib/directives/ngxfw-abs
   imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
   templateUrl: './test-group.component.html',
   viewProviders: controlContainerViewProviders,
-  hostDirectives: [{ ...withNgxFwGroup() }],
+  hostDirectives: [ngxfwGroupHostDirective],
 })
 export class TestGroupComponent {
   private readonly control = inject(NgxfwGroupDirective<TestGroup>);
