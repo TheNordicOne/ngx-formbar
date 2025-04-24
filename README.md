@@ -300,6 +300,28 @@ Finally, register the control in _app.config.ts_
     }
 ```
 
+#### Showing Errors
+
+Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+
+In TypeScript set up a getter
+```ts
+// inject the instance of the directive
+private readonly control = inject(NgxfwControlDirective<TestTextControl>);
+
+// Get access to the underlying form control
+get formControl() {
+  return this.control.formControl;
+}
+```
+
+Then, in your template you can do something like this
+```angular181html
+@if (formControl?.hasError('required')) {
+  <span>Required</span>
+}
+```
+
 ### Groups
 
 
@@ -376,6 +398,28 @@ Finally, register the group in _app.config.ts_
   {
     'test-group': TestGroupComponent
   }
+```
+
+#### Showing Errors
+
+Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+
+In TypeScript set up a getter
+```ts
+// inject the instance of the directive
+private readonly control = inject(NgxfwGroupDirective<TestGroup>);
+
+// Get access to the underlying form group
+get formGroup() {
+  return this.control.formGroup;
+}
+```
+
+Then, in your template you can do something like this
+```angular181html
+@if (formGroup?.hasError('duplicates')) {
+  <span>No duplicate values</span>
+}
 ```
 
 
