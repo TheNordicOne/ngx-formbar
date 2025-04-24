@@ -5,6 +5,7 @@ const WhatIsNgxFormworkPage: NgDocPage = {
   title: `What is ngx-formwork?`,
   mdFile: './index.md',
   category: AboutCategory,
+  order: 0,
 };
 
 export default WhatIsNgxFormworkPage;
