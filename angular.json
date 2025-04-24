@@ -172,7 +172,12 @@
             "scripts": [],
             "allowedCommonJsDependencies": [
               "@ng-doc/core"
-            ]
+            ],
+            "server": "projects/docs/src/main.server.ts",
+            "prerender": true,
+            "ssr": {
+              "entry": "projects/docs/src/server.ts"
+            }
           },
           "configurations": {
             "production": {
