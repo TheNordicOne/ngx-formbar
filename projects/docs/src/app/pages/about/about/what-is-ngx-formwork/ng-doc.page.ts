@@ -1,10 +1,10 @@
 import { NgDocPage } from '@ng-doc/core';
-import GettingStartedCategory from '../ng-doc.category';
+import AboutCategory from '../ng-doc.category';
 
 const WhatIsNgxFormworkPage: NgDocPage = {
   title: `What is ngx-formwork?`,
   mdFile: './index.md',
-  category: GettingStartedCategory,
+  category: AboutCategory,
 };
 
 export default WhatIsNgxFormworkPage;
