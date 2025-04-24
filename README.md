@@ -193,6 +193,7 @@ export const controlContainerViewProviders = [
 ```
 
 #### Control Host Directive
+
 This is a convenience helper to apply the `NgxfwControlDirective`.
 ```ts
 export const ngxfwControlHostDirective = {
@@ -316,7 +317,8 @@ get formControl() {
 ```
 
 Then, in your template you can do something like this
-```angular181html
+
+```html
 @if (formControl?.hasError('required')) {
   <span>Required</span>
 }
@@ -385,17 +387,16 @@ export class TestGroupComponent {
 ```html
 <!-- Just an example -->
 <div [formGroupName]="content().id">
-  @for (control of controls(); track control.id) {
+@for (control of controls(); track control.id) {
   <ng-template *ngxfwNgxfwAbstractControl="control" />
-  }
+}
 </div>
 ```
 
 Finally, register the group in _app.config.ts_
 
 ```ts
-  componentRegistrations:
-  {
+componentRegistrations: {
     'test-group': TestGroupComponent
   }
 ```
@@ -416,7 +417,7 @@ get formGroup() {
 ```
 
 Then, in your template you can do something like this
-```angular181html
+```html
 @if (formGroup?.hasError('duplicates')) {
   <span>No duplicate values</span>
 }
