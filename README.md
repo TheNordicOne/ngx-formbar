@@ -19,67 +19,6 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 
 At this time this package is only compatible with Angular 19.2.1 or above.
 
-_ngx-formwork_ is provided and configured in _app.config.ts_.
-
-```ts
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // other providers
-    provideFormwork({
-      componentRegistrations: {
-        // Component registrations go here
-      },
-      
-      // validatorRegistrations are optional
-      validatorRegistrations: {
-        // Validator registrations go here
-        // Following Angular validators are registered by default
-        // Validators.required
-        // Validators.requiredTrue
-        // Validators.email
-        // Validators.nullValidator
-      },
-      
-      // asyncValidatorRegistrations are optional
-      asyncValidatorRegistrations: {
-        // Async Validator registrations go here
-      },
-    })
-  ]
-};
-```
-
-To avoid bloating your config, put your registrations in a separate file
-
-**Component Registrations**
-```ts
-export const componentRegistrations: ComponentRegistrationConfig = {
-  // Component registrations go here
-}
-```
-
-**Validator Registrations**
-```ts
-export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
-  // Validator registrations go here
-}
-```
-
-**Async Validator Registrations**
-```ts
-export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
-  // Async Validator registrations go here
-}
-```
-
-**App Config**
-```ts
-provideFormwork({
-  componentRegistrations,
-  validatorRegistrations,
-  asyncValidatorRegistrations
-})
-```
 
 ## How to set up
 
