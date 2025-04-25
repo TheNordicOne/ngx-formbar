@@ -1,7 +1,6 @@
 ---
 keyword: ControlsPage
 ---
-
 {% import "../../../shared/showing-errors.md" as showingErrors %}
 
 A control can be whatever you need it to be. It can be as generic as a `TextControl`. be more specific like an `EMailControl`, just wrap existing controls like a `DateRangeControl` or have custom logic like a `SearchableDropdownControl`.
@@ -11,6 +10,19 @@ A control can be whatever you need it to be. It can be as generic as a `TextCont
 > Checkout `*HelperPage` to see how to set up helpers.
 
 {% include "../../../shared/control-setup.md" %}
+
+## Base Configuration
+
+{% include "../../../shared/base-configuration.md" %} 
+
+The following configurations options are only applicable to controls.
+
+| Name         | Type      | Required | Description                                                                                              |
+|--------------|-----------|----------|----------------------------------------------------------------------------------------------------------|
+| label        | `string`  | Yes      | Specifies the label for the control                                                                      |
+| defaultValue | `unkown`  | No       | Should be overwritten with the proper value type of the control                                          |
+| nonNullable  | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API |
+
 
 ## Hidden
 
