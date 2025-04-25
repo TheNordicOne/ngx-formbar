@@ -27,30 +27,6 @@ Registering controls and validators is easy and declarative. Below are examples 
 _ngx-formwork_ comes with no pre-built components by design. This gives all flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
 
 
-#### Showing Errors (Control)
-
-Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
-
-In TypeScript set up a getter
-```ts
-// inject the instance of the directive
-private readonly control = inject(NgxfwControlDirective<TestTextControl>);
-
-// Get access to the underlying form control
-get formControl() {
-  return this.control.formControl;
-}
-```
-
-Then, in your template you can do something like this
-
-```html
-@if (formControl?.hasError('required')) {
-  <span>Required</span>
-}
-```
-
-
 #### Showing Errors (Group)
 
 Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
