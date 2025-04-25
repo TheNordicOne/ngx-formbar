@@ -14,18 +14,9 @@ Most of the time you will only need one or two different group types. Where they
 
 {% include "../../../shared/group-setup.md" %}
 
-## Base Configuration
+## Configuration
 
-{% include "../../../shared/base-configuration.md" %}
-
-The following configurations options are only applicable to groups.
-
-| Name     | Type             | Required | Description                                                              |
-|----------|------------------|----------|--------------------------------------------------------------------------|
-| title    | `string`         | No       | Specifies a title for the group                                          |
-| controls | `NgxFwContent[]` | Yes      | Array of `NgxFwContent` objects that configure the controls of the group |
-
-
+Checkout `*ConfigurationPage` for how to configure a group.
 
 ## Hidden
 

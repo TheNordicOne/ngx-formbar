@@ -11,18 +11,9 @@ A control can be whatever you need it to be. It can be as generic as a `TextCont
 
 {% include "../../../shared/control-setup.md" %}
 
-## Base Configuration
+## Configuration
 
-{% include "../../../shared/base-configuration.md" %} 
-
-The following configurations options are only applicable to controls.
-
-| Name         | Type      | Required | Description                                                                                              |
-|--------------|-----------|----------|----------------------------------------------------------------------------------------------------------|
-| label        | `string`  | Yes      | Specifies the label for the control                                                                      |
-| defaultValue | `unkown`  | No       | Should be overwritten with the proper value type of the control                                          |
-| nonNullable  | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API |
-
+Checkout `*ConfigurationPage` for how to configure a control.
 
 ## Hidden
 
@@ -31,7 +22,7 @@ The following configurations options are only applicable to controls.
 ```ts name="text-control.component.ts" group="visibility"
 @Component({
   // ...
-})
+}) 
 export class TextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TextControl>);
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
