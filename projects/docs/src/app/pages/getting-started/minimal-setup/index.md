@@ -4,7 +4,7 @@ keyword: MinimalSetupPage
 
 To get started quickly follow this minimal setup.
 > **Note**
-> Checkout `Optimization` to see how to set up helpers.
+> Checkout `*HelperPage` to see how to set up helpers.
 
 
 _ngx-formwork_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
