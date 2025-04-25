@@ -122,57 +122,6 @@ validatorRegistrations: {
 }
 ```
 
-### Basic Options
-
-The `NgxFwBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
-
-- **type** (`string`)
-  - Specifies the kind of the form control. It determines what control is used and what additional properties may be available.
-
-- **id** (`string`)
-  - Unique identifier for the control. This is used to link configuration with runtime behavior and maintain state consistency.
-
-- **validators** (`string[]` - optional)
-  - An array of strings representing the names of synchronous validators that apply to the control.
-  - Validators can be registered globally with a validator registration object. (see [Adding Custom Validators](#adding-custom-validator))
-
-- **asyncValidators** (`string[]` - optional)
-  - Similar to `validators`, but for asynchronous validation logic. (see [Adding Custom Async Validators](#adding-custom-async-validator))
-
-- **hidden** (`string` - optional)
-  - A string expression that determines when the control should be hidden.
-  - This condition is evaluated at runtime to control the visibility of the control.
-  - The expression is evaluated against the whole form object.
-
-- **hideStrategy** (`'keep'` \| `'remove'` - optional)
-  - Specifies the strategy for handling the control when the `hidden` expression evaluates to true.
-    - `keep`: The control remains part of the form model (its value and state are retained), despite being hidden.
-    - `remove`: The control is removed from the form model. This is useful when a hidden value should not be submitted or processed further.
-
-- **valueStrategy** (`'last'` \| `'default'` \| `'reset'` - optional)
-  - Determines how the control’s value is handled when its visibility changes.
-    - `last`: Preserves the last entered value when the control is hidden and shown again.
-    - `default`: Reverts the control to its default value upon re-display.
-    - `reset`: Clears the control's value when it becomes visible.
-
-- **disabled** (`string` \| `boolean` - optional)
-  - Defines whether the control should be disabled.
-  - Can be a boolean value or a string expression that resolves to a boolean at runtime.
-  - The expression is evaluated against the whole form object.
-
-- **readonly** (`string` \| `boolean` - optional)
-  - Indicates if the control is read-only, meaning the value is displayed but cannot be modified.
-  - Accepts either a boolean value or a string expression for dynamic evaluation.
-  - The expression is evaluated against the whole form object.
-
-- **updateOn** (`'change'` \| `'blur'` \| `'submit'` \| `undefined` - optional)
-  - Specifies the event that triggers an update to the control’s value.
-    - `change`: Updates the value as the user types (default behavior).
-    - `blur`: Updates the value when the control loses focus.
-    - `submit`: Defers the update until the form is submitted.
-  - If not specified, the default is typically `change`.
-
-
 ## Expressions
 
 This documentation explains how expressions are parsed, evaluated, and what features are supported.
