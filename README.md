@@ -26,41 +26,6 @@ Registering controls and validators is easy and declarative. Below are examples 
 
 _ngx-formwork_ comes with no pre-built components by design. This gives all flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
 
-### Helper
-
-For an easier setup and maintenance of controls and groups, it is highly recommended to set up the following helpers. Using the helpers provides you with a singular place to edit, in case anything changes. The rest of the guide assumes that you did this. The exact naming of each helper really is up to you.
-
-#### Control Container View Providers
-
-`ControlContainer` is required for all controls and groups that will be used within _ngx-formwork_. To avoid repetition, set up and use this helper. Injection the control container allows the components to use reactive forms stuff, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
-
-```ts
-export const controlContainerViewProviders = [
-  {
-    provide: ControlContainer,
-    useFactory: () => inject(ControlContainer, { skipSelf: true }),
-  },
-];
-```
-
-#### Control Host Directive
-
-This is a convenience helper to apply the `NgxfwControlDirective`.
-```ts
-export const ngxfwControlHostDirective = {
-  directive: NgxfwControlDirective,
-  inputs: ['content'],
-};
-```
-
-####  Group Host Directive
-This is a convenience helper to apply the `NgxfwGroupDirective`.
-```ts
-export const ngxfwGroupHostDirective = {
-  directive: NgxfwGroupDirective,
-  inputs: ['content'],
-};
-```
 
 #### Showing Errors (Control)
 
@@ -402,19 +367,6 @@ export const exampleForm: NgxFwContent[] = [
 
 As you can see the configuration is just an array of controls and/or groups. Every item in that array will be registered on the top-level of the form.
 
-
-### Create helper type
-
-For better type safety, when writing a form configuration in TypeScript, _ngx-formwork_ provides a helper type *OneOf*.
-With this you can construct a union type like this.
-
-```ts
-export type MyAppControls = OneOf<[TestTextControl, TestGroup]>;
-```
-and use it like this
-```ts
-export const exampleForm: MyAppControls[] = [ ... ]
-```
 
 ### Basic Options
 
