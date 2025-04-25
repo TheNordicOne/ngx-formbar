@@ -16,11 +16,11 @@ Here is an example of a simple text control.
 
 First create an interface for your control.
 
-```ts name="test-text-control.type.ts"
-export interface TestTextControl extends NgxFwControl {
+```ts name="text-control.type.ts"
+export interface TextControl extends NgxFwControl {
   // Unique Key of your control that is used for differentiating controls
   // This can be descriptive like "email-control"
-  type: 'test-text-control';
+  type: 'text-control';
 
   // Overwrite defaultValue with correct value type
   // the default value type is "unknown"
@@ -33,11 +33,11 @@ export interface TestTextControl extends NgxFwControl {
 
 Then implement the component.
 
-```ts name="test-text-control.component.ts"
+```ts name="text-control.component.ts"
 @Component({
-  selector: 'app-test-text-control',
+  selector: 'app-text-control',
   imports: [ReactiveFormsModule],
-  templateUrl: './test-text-control.component.html',
+  templateUrl: './text-control.component.html',
   viewProviders: [
     {
       provide: ControlContainer,
@@ -51,14 +51,14 @@ Then implement the component.
     }
   ],
 })
-export class TestTextControlComponent {
+export class TextControlComponent {
   // Inject the Directive to gain access to all public properties
   // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfwControlDirective<TestTextControl>);
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
 
   // Extract all things you are interested
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<TestTextControl> = this.control.content; // The configuration object of the control instance
+  readonly content: Signal<TextControl> = this.control.content; // The configuration object of the control instance
   readonly testId: Signal<string> = this.control.testId;
   readonly isHidden: Signal<unknown> = this.control.isHidden; // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly disabled: Signal<boolean> = this.control.disabled;
@@ -85,7 +85,7 @@ export class TestTextControlComponent {
 
 > **Warning** Be sure to bind to `[formControlName]` on the actual input element
 
-```html name="test-text-control.component.html"
+```html name="text-control.component.html"
 {% raw %}<!-- Just an example -->
 <label [htmlFor]="id()" [attr.data-testId]="testId() + '-label'">{{ label() }}</label>
 <input
@@ -99,7 +99,7 @@ Finally, register the control in _app.config.ts_
 
 ```ts name="app.config.ts"
 componentRegistrations: {
-  text: TestTextControlComponent
+  text: TextControlComponent
 }
 ```
 
@@ -109,10 +109,10 @@ Here is an example of a simple group. Most likely you will only set up one or tw
 
 First create an interface for your group.
 
-```ts name="test-group.type.ts"
-export interface TestGroup extends NgxFwFormGroup {
+```ts name="group.type.ts"
+export interface Group extends NgxFwFormGroup {
   // Unique Key of your group that is used for differentiating groups
-  type: 'test-group';
+  type: 'group';
 
   // Additional options only applicable to this group if you want
 }
@@ -122,11 +122,11 @@ Then implement the component.
 
 > **Warning** Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 
-```ts name="test-group.component.ts"
+```ts name="group.component.ts"
 @Component({
-  selector: 'ngxfw-test-group',
+  selector: 'ngxfw-group',
   imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
-  templateUrl: './test-group.component.html',
+  templateUrl: './group.component.html',
   viewProviders: [
     {
       provide: ControlContainer,
@@ -140,14 +140,14 @@ Then implement the component.
     }
   ],
 })
-export class TestGroupComponent {
+export class GroupComponent {
   // Inject the Directive to gain access to all public properties
   // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfwGroupDirective<TestGroup>);
+  private readonly control = inject(NgxfwGroupDirective<Group>);
 
   // Extract all things you are interested
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<TestGroup> = this.control.content;  // The configuration object of the group instance
+  readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
   readonly testId: Signal<string> = this.control.testId;
   readonly controls: Signal<NgxFwContent[]> = this.control.controls;
   readonly isHidden: Signal<unknown> = this.control.isHidden; // Really only should ever be a boolean return value, but an expression could also return a number, string or object
@@ -167,7 +167,7 @@ export class TestGroupComponent {
 }
 ```
 
-```html name="test-group.component.html"
+```html name="group.component.html"
 {% raw %}<!-- Just an example -->
 <div [formGroupName]="content().id">
 @for (control of controls(); track control.id) {
@@ -180,7 +180,7 @@ Finally, register the group in _app.config.ts_
 
 ```ts
 componentRegistrations: {
-    group: TestGroupComponent
+    group: GroupComponent
   }
 ```
 
