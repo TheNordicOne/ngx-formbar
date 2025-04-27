@@ -19,60 +19,6 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 
 At this time this package is only compatible with Angular 19.2.1 or above.
 
-## Expressions
-
-This documentation explains how expressions are parsed, evaluated, and what features are supported.
-
-### Overview
-
-Expressions are JavaScript snippets provided as strings. They are parsed into an Abstract Syntax Tree (AST) using the Acorn parser. The AST is then evaluated in a controlled environment against the forms value (onValueChange).
-
-### Parsing and Caching
-
-- **Parsing:**  
-  An expression string is parsed to generate an AST. The parser uses a modern ECMAScript version (2022) to support recent JavaScript syntax.
-
-- **Caching:**  
-  Parsed ASTs are cached to avoid re-parsing the same expression multiple times. This improves performance when evaluating expressions repeatedly.
-
-### Evaluation Process
-
-1. **Supported Node Types:**
-   - The evaluator supports a range of node types including:
-     - `Identifier`
-     - `Literal`
-     - `ArrayExpression`
-     - `UnaryExpression`
-     - `BinaryExpression`
-     - `LogicalExpression` (supports `&&`, `||`, and nullish coalescing `??`)
-     - `MemberExpression` (property access with safety checks for null or undefined objects)
-     - `ConditionalExpression` (ternary operator)
-     - `ObjectExpression`
-     - `SequenceExpression`
-     - `TemplateLiteral`
-     - `CallExpression` for invoking safe methods
-     - `ArrowFunctionExpression` for simple arrow functions with expression bodies
-
-2. **Evaluation of Operators:**
-  - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `**`
-  - **Comparison Operators:** `<`, `>`, `<=`, `>=`
-  - **Equality Operators:** `==`, `!=`, `===`, `!==` (follow JavaScript behavior)
-  - **Bitwise Operators:** `|`, `&`, `^`, `<<`, `>>`, `>>>`
-  - **Logical Operations:** `&&`, `||`, `??`
-  - **Safe Method Calls:** When calling methods on objects, the evaluator checks against a whitelist of safe methods (provided for strings, numbers, booleans, and arrays). This ensures that only approved operations are executed.
-
-### Limitations
-
-- **Restricted Syntax:**  
-  Complex function bodies or block statements in arrow functions are not supported. Only simple expression-based arrow functions are allowed.
-
-- **Restricted Node Types:**  
-  Some JavaScript features are not supported to maintain security and simplicity, such as update expressions, assignments, and using `this` or `super`.
-
-- **Controlled Context:**  
-  The evaluation runs only in the context of the form object, avoiding global access and potential security vulnerabilities.
-
-
 ## Rendering a form
 
 Now that everything is set up, you can now render the form.
