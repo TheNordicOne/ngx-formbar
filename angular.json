@@ -162,7 +162,8 @@
               },
               {
                 "glob": "**/*",
-                "input": "projects/docs/public"
+                "input": "projects/docs/public",
+                "output": "assets"
               }
             ],
             "styles": [
@@ -185,7 +186,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",

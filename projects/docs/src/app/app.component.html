@@ -1,6 +1,18 @@
 <ng-doc-root>
   <ng-doc-navbar>
-    <h3 ngDocNavbarLeft>ngx-formwork</h3>
+    <a ngDocNavbarLeft routerLink="/" class="brand">
+      <h3>ngx-formwork</h3>
+    </a>
+    <a
+      ngDocNavbarRight
+      ng-doc-button-icon
+      size="large"
+      href="https://github.com/TheNordicOne/ngx-formwork"
+      target="_blank"
+      ngDocTooltip="Link to repository "
+    >
+      <ng-doc-icon customIcon="github" [size]="24" />
+    </a>
   </ng-doc-navbar>
   <ng-doc-sidebar />
   <router-outlet />
