@@ -50,6 +50,8 @@ The following configurations options are only applicable to groups.
 
 As you can see the configuration is just an array of controls and/or groups. Every item in that array will be registered on the top-level of the form.
 
+Checkout `*ValidationPage` to see how to register validators.
+
 > **Note**
 > This example assumes that additional control types have been registered
 
