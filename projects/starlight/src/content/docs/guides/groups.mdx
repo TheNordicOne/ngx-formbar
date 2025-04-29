@@ -1,0 +1,170 @@
+---
+title: Groups
+keyword: GroupsPage
+sidebar:
+  order: 1
+---
+
+import GroupSetup from './src/content/shared/group-setup.md';
+import HiddenExplanation from './src/content/shared/hidden-explanation.md';
+import HideStrategyExplanation from './src/content/shared/hide-strategy-explanation.md';
+import ValueStrategyExplanation from './src/content/shared/value-strategy-explanation.md';
+import DisabledExplanation from './src/content/shared/disabled-explanation.md';
+import ReadonlyExplanation from './src/content/shared/readonly-explanation.md';
+import TestId from './src/content/shared/test-id.md';
+
+
+A group is used to group controls together. It results in an Angular `FormGroup` instance.
+
+Most of the time you will only need one or two different group types. Where they really are handy though, is if you need different behaviors. For example one that does not do anything special visually and one that is collapsible.
+
+
+## Minimal Setup
+:::note
+Checkout [Helper](/guides/helper) to see how to set up helpers.
+:::
+
+<GroupSetup/>
+
+## Configuration
+
+Checkout [Configuration](/guides/configuration) for how to configure a group.
+
+## Hidden
+
+<HiddenExplanation/>
+
+```ts title="group.component.ts"  group="group-visibility"
+@Component({
+  // ...
+})
+export class GroupComponent {
+  private readonly control = inject(NgxfwGroupDirective<Group>);
+  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+  readonly isHidden: Signal<unknown> = this.control.isHidden;
+
+  constructor() {
+    // Let formwork know, that you take care of handling visibility
+    this.control.setVisibilityHandling('manual')
+  }
+}
+```
+
+```html title="group.component.html" group="group-visibility"
+@if(isHidden()){
+  <span>Some placeholder you want to use</span>
+}
+@if(!isHidden()){
+  <div [formGroupName]="id">
+    @for (control of controls(); track control.id) {
+      <ng-template *ngxfwNgxfwAbstractControl="control" />
+    }
+  </div>
+}
+```
+
+### Hide Strategy
+
+<HideStrategyExplanation/>
+
+### Value Strategy
+
+<ValueStrategyExplanation/>
+
+## Disabled
+
+<DisabledExplanation/>
+
+```ts title="group.component.ts"  group="group-disabled"
+@Component({
+  // ...
+})
+export class GroupComponent {
+  private readonly control = inject(NgxfwGroupDirective<Group>);
+  readonly disabled: Signal<boolean> = this.control.disabled;
+}
+```
+
+```html title="group.component.html" group="group-disabled"
+<div [formGroupName]="id">
+  @for (control of controls(); track control.id) {
+    <ng-template *ngxfwNgxfwAbstractControl="control" />
+  }
+</div>
+<!-- Only show hint when group is disabled -->
+@if(disabled()){
+  <span>This is no longer relevant</span>
+}
+```
+
+## Readonly
+
+<ReadonlyExplanation/>
+
+```ts title="group.component.ts"  group="group-readonly"
+@Component({
+  // ...
+})
+export class GroupComponent {
+  private readonly control = inject(NgxfwGroupDirective<Group>);
+  readonly readonly: Signal<boolean> = this.control.readonly;
+}
+```
+
+```html title="group.component.html" group="group-readonly"
+<div [formGroupName]="id">
+  @for (control of controls(); track control.id) {
+    <ng-template *ngxfwNgxfwAbstractControl="control" />
+  }
+</div>
+@if(readonly()){
+  <span>This cannot be edited</span>
+}
+```
+
+## Test ID
+
+<TestId/>
+
+```ts title="group.component.ts"  group="group-testid"
+@Component({
+  // ...
+})
+export class GroupComponent {
+  private readonly control = inject(NgxfwGroupDirective<Group>);
+  readonly testId: Signal<string> = this.control.testId;
+}
+```
+
+```html title="group.component.html" group="group-testid"
+<div [formGroupName]="id"  [attr.data-testId]="testId() + '-wrapper'">
+  @for (control of controls(); track control.id) {
+    <ng-template *ngxfwNgxfwAbstractControl="control" />
+  }
+</div>
+```
+
+## Showing Errors
+
+Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+
+In TypeScript set up a getter
+
+```ts
+// inject the instance of the directive
+private readonly group = inject(NgxfwGroupDirective<Group>);
+
+// Get access to the underlying form group}
+get group() {
+  return this.group.formControl
+}
+```
+
+Then, in your template you can do something like this
+
+```html
+@if(group?.hasError('required')) {
+  <span>Required</span>
+}
+```
+
