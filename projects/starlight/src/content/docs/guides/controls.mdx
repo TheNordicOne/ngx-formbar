@@ -1,0 +1,168 @@
+---
+title: Controls
+keyword: ControlsPage
+sidebar:
+  order: 0
+---
+
+import ControlSetup from './src/content/shared/control-setup.md';
+import HiddenExplanation from './src/content/shared/hidden-explanation.md';
+import HideStrategyExplanation from './src/content/shared/hide-strategy-explanation.md';
+import ValueStrategyExplanation from './src/content/shared/value-strategy-explanation.md';
+import DisabledExplanation from './src/content/shared/disabled-explanation.md';
+import ReadonlyExplanation from './src/content/shared/readonly-explanation.md';
+import TestId from './src/content/shared/test-id.md';
+
+A control can be whatever you need it to be. It can be as generic as a `TextControl`. be more specific like an `EMailControl`, just wrap existing controls like a `DateRangeControl` or have custom logic like a `SearchableDropdownControl`.
+
+## Minimal Setup
+
+:::note
+Checkout [Helper](/guides/helper) to see how to set up helpers.
+:::
+
+<ControlSetup/>
+
+## Configuration
+
+Checkout [Configuration](/guides/configuration) for how to configure a control.
+
+## Hidden
+
+<HiddenExplanation/>
+
+```ts title="text-control.component.ts" group="visibility"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+  readonly isHidden: Signal<unknown> = this.control.isHidden;
+
+constructor() {
+// Let formwork know, that you take care of handling visibility
+this.control.setVisibilityHandling('manual')
+}
+}
+
+````
+
+```html title="text-control.component.html" group="visibility"
+@if(isHidden()){
+  <span>Some placeholder you want to use</span>
+}
+@if(!isHidden()){
+  <label [htmlFor]="id()">{{ label() }}</label>
+  <input
+    [id]="id()"
+    [formControlName]="id()"
+  />
+  <span>{{hint()}}</span>
+}
+````
+
+### Hide Strategy
+
+<HideStrategyExplanation/>
+
+### Value Strategy
+
+<ValueStrategyExplanation/>
+
+## Disabled
+
+<DisabledExplanation/>
+
+```ts title="text-control.component.ts" group="disabled"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  readonly disabled: Signal<boolean> = this.control.disabled;
+}
+```
+
+```html title="text-control.component.html" group="disabled"
+<label [htmlFor]="id()">{{ label() }}</label>
+<input [id]="id()" [formControlName]="id()" />
+<!-- Only show hint when control is disabled -->
+@if(disabled()){
+  <span>{{hint()}}</span>
+}
+```
+
+## Readonly
+
+<ReadonlyExplanation/>
+
+```ts title="text-control.component.ts" group="readonly"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  readonly readonly: Signal<boolean> = this.control.readonly;
+}
+```
+
+```html title="text-control.component.html" group="readonly"
+<label [htmlFor]="id()">{{ label() }}</label>
+<input
+  [id]="id()"
+  [formControlName]="id()"
+  [attr.readonly]="readonly() || null"
+/>
+<span>{{hint()}}</span>
+```
+
+## Test ID
+
+<TestId/>
+
+```ts title="text-control.component.ts" group="testid"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  readonly testId: Signal<string> = this.control.testId;
+}
+```
+
+```html title="text-control.component.html" group="testid"
+
+<label [htmlFor]="id()" [attr.data-testId]="testId() + '-label'"
+  >{{ label() }}</label
+>
+<input
+  [attr.data-testId]="testId() + '-input'"
+  [id]="id()"
+  [formControlName]="id()"
+/>
+```
+
+## Showing Errors
+
+Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+
+In TypeScript set up a getter
+
+```ts
+// inject the instance of the directive
+private readonly textControl = inject(NgxfwControlDirective<Control>);
+
+// Get access to the underlying form textControl}
+get formControl() {
+  return this.textControl.formControl
+}
+```
+
+Then, in your template you can do something like this
+
+```html
+@if(formControl?.hasError('required')) {
+  <span>Required</span>
+}
+```
