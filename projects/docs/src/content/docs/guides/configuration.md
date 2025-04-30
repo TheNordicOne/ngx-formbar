@@ -35,7 +35,7 @@ The following configurations options are only applicable to controls.
 | Name         | Type      | Required | Description                                                                                              |
 |--------------|-----------|----------|----------------------------------------------------------------------------------------------------------|
 | label        | `string`  | Yes      | Specifies the label for the control                                                                      |
-| defaultValue | `unkown`  | No       | Should be overwritten with the proper value type of the control                                          |
+| defaultValue | `unknown` | No       | Should be overwritten with the proper value type of the control                                          |
 | nonNullable  | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API |
 
 
