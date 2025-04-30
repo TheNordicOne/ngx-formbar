@@ -5,10 +5,12 @@
 
 [![Test and Lint](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml)
 
-
 A highly flexible framework for generating declarative reactive forms, based on a configuration.
 
-This package provides a framework for creating Angular Reactive Forms, based on a configuration. This configuration can come from a server in the form of JSON or directly from an object written in TypeScript. It is as close to Angular as possible, to give you the most flexibility, while still taking care of the heavy lifting. 
+This package provides a framework for creating Angular Reactive Forms, based on a configuration. This configuration can come from a server in the form of JSON or directly from an object written in TypeScript. It is as close to Angular as possible, to give you the most flexibility, while still taking care of the heavy lifting.
+
+> [!TIP]
+> The full documentation can be found on [ngx-formwork.net](https://ngx-formwork.net)
 
 ## Current State
 
@@ -18,3 +20,4 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 ## Compatibility
 
 At this time this package is only compatible with Angular 19.2.1 or above.
+
