@@ -7,7 +7,7 @@
     "build": "ng build core",
     "watch": "ng build core --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint core",
+    "lint": "ng lint",
     "prepare": "husky",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --component"
