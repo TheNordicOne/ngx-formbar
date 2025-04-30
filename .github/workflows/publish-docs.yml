@@ -1,0 +1,43 @@
+name: Deploy Docs Website
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'projects/docs/**'
+
+jobs:
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: projects/docs
+
+      - name: Build Documentation
+        run: npm run build
+        working-directory: projects/docs
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: Deploy to FTP
+        run: |
+          # Create .netrc file for secure authentication
+          echo "machine ${{ secrets.DOCS_FTP_SERVER }}" > ~/.netrc
+          echo "login ${{ secrets.DOCS_FTP_USERNAME }}" >> ~/.netrc
+          echo "password ${{ secrets.DOCS_FTP_PASSWORD }}" >> ~/.netrc
+          chmod 600 ~/.netrc
+
+          # Deploy using lftp mirror command
+          lftp -c "set ssl:verify-certificate no; \
+                  open ${{ secrets.DOCS_FTP_SERVER }}; \
+                  lcd ./projects/docs/dist/; \
+                  mirror --reverse --delete --verbose . /"
