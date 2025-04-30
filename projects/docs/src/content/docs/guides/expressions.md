@@ -31,7 +31,7 @@ The evaluator supports a range of node types:
 - `CallExpression` for invoking safe methods
 - `ArrowFunctionExpression` for simple arrow functions with expression bodies
 
-## ESupported Operators
+## Supported Operators
 - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`
 - **Comparison Operators:** `<`, `>`, `<=`, `>=`
 - **Equality Operators:** `==`, `!=`, `===`, `!==` (follow JavaScript behavior)
