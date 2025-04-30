@@ -1,9 +1,6 @@
 name: Deploy Docs Website
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'projects/docs/**'
 
 jobs:
   deploy-docs:
