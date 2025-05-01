@@ -68,7 +68,9 @@ export class TextControlComponent {
 Finally, register the control in _app.config.ts_
 
 ```ts title="app.config.ts"
-componentRegistrations: {
-  text: TextControlComponent
-}
+provideFormwork({
+  componentRegistrations: {
+    text: TextControlComponent
+  }
+})
 ```
