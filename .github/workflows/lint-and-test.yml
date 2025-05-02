@@ -6,6 +6,8 @@ on:
       - main
       - develop
       - 'release/**'
+    paths:
+      - 'projects/core'
   workflow_dispatch:
   workflow_call:
 
