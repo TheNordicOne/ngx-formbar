@@ -1,14 +1,17 @@
 import { OneOf } from './helper.type';
 
-interface NgxFwBaseContent {
+export interface NgxFwBaseContent {
   type: string;
   id: string;
+  hidden?: string;
+}
+
+interface NgxFwAbstractControl extends NgxFwBaseContent {
   validators?: string[];
   asyncValidators?: string[];
-  hidden?: string;
+  disabled?: string | boolean;
   hideStrategy?: HideStrategy;
   valueStrategy?: ValueStrategy;
-  disabled?: string | boolean;
   readonly?: string | boolean;
   updateOn?: UpdateStrategy;
 }
@@ -62,7 +65,7 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  *   ]
  * };
  */
-export interface NgxFwFormGroup extends NgxFwBaseContent {
+export interface NgxFwFormGroup extends NgxFwAbstractControl {
   title?: string;
   controls: NgxFwContent[];
 }
@@ -100,7 +103,7 @@ export interface NgxFwFormGroup extends NgxFwBaseContent {
  *   disabled: false
  * };
  */
-export interface NgxFwControl extends NgxFwBaseContent {
+export interface NgxFwControl extends NgxFwAbstractControl {
   label: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
@@ -109,7 +112,9 @@ export interface NgxFwControl extends NgxFwBaseContent {
 /**
  * Union type representing either a form group or individual control
  */
-export type NgxFwContent = OneOf<[NgxFwFormGroup, NgxFwControl]>;
+export type NgxFwContent = OneOf<
+  [NgxFwFormGroup, NgxFwControl, NgxFwBaseContent]
+>;
 
 /**
  * Strategy for handling hidden form elements

@@ -36,6 +36,11 @@ describe('Form content', () => {
         nonNullable: true,
       },
       {
+        id: 'block',
+        type: 'test-block',
+        message: 'This is an information',
+      },
+      {
         type: 'test-group',
         id: 'first-group',
         title: 'First Group',
@@ -70,6 +75,8 @@ describe('Form content', () => {
     cy.getByTestId('third-input').should('have.value', 'default-third');
     cy.getByTestId('fourth-input').should('have.value', 'default-fourth');
     cy.getByTestId('fifth-input').should('have.value', 'default-fifth');
+
+    cy.getByTestId('block').should('contain', 'This is an information');
 
     cy.getByTestId('first-group-title').should('have.text', 'First Group');
     cy.getByTestId('grouped-first-input').should(
