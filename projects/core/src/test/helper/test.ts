@@ -1,18 +1,21 @@
-import { NgxFwContent, UpdateStrategy } from '../../lib';
+import { NgxFwContent, OneOf, UpdateStrategy } from '../../lib';
 import { FormIntegrationHostComponent } from '../integration/form/integration-host/form-integration-host.component';
 import { formworkProviders } from '../integration/shared/provide-formwork';
+import { TestTextControl } from '../types/controls.type';
+import { TestGroup } from '../types/group.type';
+import { InfoBlock } from '../types/block.type';
 
 /**
  * Base setup function for mounting the form component
  */
 export function setupForm(
-  formContent: NgxFwContent[],
+  formContent: OneOf<[TestTextControl, TestGroup, InfoBlock]>[],
   options?: { defaultUpdateOnStrategy?: UpdateStrategy; autoUpdate?: boolean },
 ) {
   cy.mount(FormIntegrationHostComponent, {
     providers: [formworkProviders(options?.defaultUpdateOnStrategy)],
     componentProperties: {
-      formContent,
+      formContent: formContent as NgxFwContent[],
       autoUpdate: options?.autoUpdate,
     },
   });

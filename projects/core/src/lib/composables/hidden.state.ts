@@ -1,6 +1,7 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
   HideStrategy,
+  NgxFwBaseContent,
   NgxFwContent,
   NgxFwFormGroup,
   ValueStrategy,
@@ -27,7 +28,7 @@ import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
  * @param content Signal containing control configuration with potential hidden expression
  * @returns Computed signal that resolves to boolean hidden state
  */
-export function withHiddenState(content: Signal<NgxFwContent>) {
+export function withHiddenState(content: Signal<NgxFwBaseContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
   const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
