@@ -1,5 +1,5 @@
 import { computed, Signal } from '@angular/core';
-import { NgxFwContent } from '../types/content.type';
+import { NgxFwBaseContent } from '../types/content.type';
 
 /**
  * Creates a computed signal that extracts the ID for testing purposes
@@ -7,10 +7,10 @@ import { NgxFwContent } from '../types/content.type';
  * This utility function derives a test identifier from a form control's content,
  * which can be used for targeting elements in automated tests.
  *
- * @template T - Type extending NgxFwContent
+ * @template T - Type extending NgxFwBaseContent
  * @param content - Signal containing the control or group content configuration
  * @returns Computed signal that resolves to the element's ID for testing
  */
-export function withTestId(content: Signal<NgxFwContent>) {
+export function withTestId(content: Signal<NgxFwBaseContent>) {
   return computed(() => content().id);
 }
