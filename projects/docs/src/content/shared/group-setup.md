@@ -13,7 +13,9 @@ export interface Group extends NgxFwFormGroup {
 
 Then implement the component.
 
-> **Warning** Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
+:::caution
+Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
+:::
 
 ```ts title="group.component.ts"  group="group-minimal"
 @Component({
