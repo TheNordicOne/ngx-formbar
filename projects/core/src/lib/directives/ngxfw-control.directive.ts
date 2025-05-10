@@ -27,6 +27,10 @@ import {
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withTestId } from '../composables/testId';
 import { withUpdateStrategy } from '../composables/update-strategy';
+import {
+  setComputedValueEffect,
+  withComputedValue,
+} from '../composables/computed-value';
 
 /**
  * Control Directive for Ngx Formwork
@@ -142,6 +146,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    */
   private readonly asyncValidators = withAsyncValidators(this.content);
 
+  /**
+   * Computed signal for the computed value
+   */
+  private readonly computedValue = withComputedValue(this.content);
+
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
@@ -187,6 +196,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
       disabledHandlingSignal: this.disabledHandling,
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
+    });
+
+    setComputedValueEffect({
+      controlInstance: this.controlInstance,
+      computeValueSignal: this.computedValue,
     });
   }
 
