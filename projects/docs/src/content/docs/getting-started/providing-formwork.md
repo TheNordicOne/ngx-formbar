@@ -35,33 +35,6 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## Splitting configuration
+## Splitting Configuration
 
-To avoid bloating your config, put your registrations in a separate file
-
-### Registrations
-```ts title="component.registrations.ts"
-export const componentRegistrations: ComponentRegistrationConfig = {
-  // Component registrations go here
-}
-```
-
-```ts title="validator.registrations.ts"
-export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
-  // Validator registrations go here
-}
-
-export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
-  // Async Validator registrations go here
-}
-```
-
-### Usage
-
-```ts title="app.config.ts"
-provideFormwork({
-  componentRegistrations,
-  validatorRegistrations,
-  asyncValidatorRegistrations
-})
-```
+To avoid bloating your config, put your registrations in a separate file. Checkout the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
