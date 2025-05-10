@@ -14,6 +14,7 @@ interface NgxFwAbstractControl extends NgxFwBaseContent {
   valueStrategy?: ValueStrategy;
   readonly?: string | boolean;
   updateOn?: UpdateStrategy;
+  computedValue?: string;
 }
 
 export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
