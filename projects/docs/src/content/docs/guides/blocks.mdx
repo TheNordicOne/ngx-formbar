@@ -1,0 +1,146 @@
+---
+title: Blocks
+keyword: BlocksPage
+sidebar:
+  order: 2
+---
+
+
+
+import HiddenExplanation from '../../shared/hidden-explanation.md';
+import TestId from '../../shared/test-id.md';
+
+Sometimes you need additional information or functionality within a form. This could be the case for example if you need to add an information block, images or anything that does not contribute to the forms value.
+
+In this case you can define a Block.
+
+## Minimal Setup
+
+Here is an example of a simple information block.
+
+First create an interface for your block.
+
+:::caution
+Your interface must define at least one additional property!
+:::
+```ts title="info-block.type.ts"
+export interface InfoBlock extends NgxFwBaseContent {
+  message: string;
+}
+```
+
+Then implement the component.
+
+```ts title="info-block.component.ts"
+@Component({
+  selector: 'app-info-block',
+  imports: [],
+  templateUrl: './info-block.component.html',
+  viewProviders: [
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ],
+  hostDirectives: [
+    {
+      directive: NgxfwBlockDirective,
+      inputs: ['content'],
+    },
+  ],
+})
+export class InfoBlockComponent {
+  // Inject the Directive to gain access to all public properties
+  // Make sure to pass the correct type parameter to get proper type information
+  private readonly control = inject(NgxfwBlockDirective<InfoBlock>);
+
+  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
+  readonly content: Signal<InfoBlock> = this.control.content;
+
+  // You also have access to the underlying form
+  readonly rootForm = this.control.rootForm;
+
+  // We get proper type information when accessing this.content()
+  readonly message = computed(() => this.content().message); // <- This is the custom property for your block
+}
+```
+
+```html title="info-block.component.html"
+<p>{{ message() }}</p>
+```
+
+Finally, register the block in app.config.ts
+
+```ts title="app.config.ts"
+provideFormwork({
+  componentRegistrations: {
+    info: InfoBlockComponent
+  }
+})
+```
+
+## Configuration
+
+Checkout [Configuration](/guides/configuration) for how to configure a Block. A Block only has access to the base properties.
+
+## Hidden
+
+<HiddenExplanation/>
+
+```ts title="info-block.component.ts"
+@Component({
+   // ...
+})
+export class InfoBlockComponent {
+  private readonly control = inject(NgxfwBlockDirective<InfoBlock>);
+
+  readonly message = computed(() => this.content().message);
+
+   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+  readonly isHidden: Signal<unknown> = this.control.isHidden;
+
+  constructor() {
+    // Let formwork know, that you take care of handling visibility
+    this.control.setVisibilityHandling('manual')
+  }
+}
+```
+
+```html title="info-block.component.html"
+@if(!isHidden()){
+  <p>{{ message() }}</p>
+}
+```
+
+## Test ID
+
+<TestId/>
+
+```ts title="info-block.component.ts"
+@Component({
+  selector: 'app-info-block',
+  imports: [],
+  templateUrl: './info-block.component.html',
+  viewProviders: [
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ],
+  hostDirectives: [
+    {
+      directive: NgxfwBlockDirective,
+      inputs: ['content'],
+    },
+  ],
+})
+export class InfoBlockComponent {
+  private readonly control = inject(NgxfwBlockDirective<InfoBlock>);
+  readonly testId: Signal<string> = this.control.testId;
+  readonly message = computed(() => this.content().message);
+}
+```
+
+```html title="info-block.component.html"
+<p [attr.data-testId]="testId()">{{ message() }}</p>
+```
