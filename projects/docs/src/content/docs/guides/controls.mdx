@@ -6,6 +6,7 @@ sidebar:
 ---
 
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -41,10 +42,10 @@ export class TextControlComponent {
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
 
-constructor() {
-// Let formwork know, that you take care of handling visibility
-this.control.setVisibilityHandling('manual')
-}
+  constructor() {
+    // Let formwork know, that you take care of handling visibility
+    this.control.setVisibilityHandling('manual')
+  }
 }
 
 ````
