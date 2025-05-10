@@ -21,6 +21,7 @@ First create an interface for your block.
 :::caution
 Your interface must define at least one additional property!
 :::
+
 ```ts title="info-block.type.ts"
 export interface InfoBlock extends NgxFwBaseContent {
   message: string;
@@ -38,7 +39,7 @@ Then implement the component.
     {
       provide: ControlContainer,
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    }
+    },
   ],
   hostDirectives: [
     {
@@ -70,11 +71,16 @@ export class InfoBlockComponent {
 Finally, register the block in app.config.ts
 
 ```ts title="app.config.ts"
-provideFormwork({
-  componentRegistrations: {
-    info: InfoBlockComponent
-  }
-})
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      componentRegistrations: {
+        info: InfoBlockComponent,
+      },
+    }),
+  ],
+};
 ```
 
 ## Configuration
@@ -83,36 +89,36 @@ Checkout [Configuration](/guides/configuration) for how to configure a Block. A 
 
 ## Hidden
 
-<HiddenExplanation/>
+<HiddenExplanation />
 
 ```ts title="info-block.component.ts"
 @Component({
-   // ...
+  // ...
 })
 export class InfoBlockComponent {
   private readonly control = inject(NgxfwBlockDirective<InfoBlock>);
 
   readonly message = computed(() => this.content().message);
 
-   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
 
   constructor() {
     // Let formwork know, that you take care of handling visibility
-    this.control.setVisibilityHandling('manual')
+    this.control.setVisibilityHandling('manual');
   }
 }
 ```
 
 ```html title="info-block.component.html"
 @if(!isHidden()){
-  <p>{{ message() }}</p>
+<p>{{ message() }}</p>
 }
 ```
 
 ## Test ID
 
-<TestId/>
+<TestId />
 
 ```ts title="info-block.component.ts"
 @Component({
@@ -123,7 +129,7 @@ export class InfoBlockComponent {
     {
       provide: ControlContainer,
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    }
+    },
   ],
   hostDirectives: [
     {
