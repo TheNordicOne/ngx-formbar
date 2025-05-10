@@ -22,7 +22,7 @@ keyword: FeaturePage
 - [x] Expression syntax is like JavaScript
   - [x] Expressions only run against the form value
 - [x] Support for non-control blocks (pure informational components like a callout, paragraphs, etc.)
-- [ ] Derive a value based on form state (dynamic readonly controls)
+- [x] Derive a value based on form state (dynamic readonly controls)
 - [ ] Support for full TypeScript-only configurations, meaning you can use actual functions for the expressions
 - [ ] Dynamic labels based on form state
 - [ ] Configuration of test id (attribute name and how value is build)
@@ -35,3 +35,4 @@ The following are some ideas that are interesting. There is no guarantee that th
 
 - UI for creating valid configurations in JSON
 - Optionally allow a form to be handled entirely self-contained
+- Allow defining expression functions in TS but reference them by name
