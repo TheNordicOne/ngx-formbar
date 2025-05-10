@@ -5,6 +5,7 @@ sidebar:
   order: 0
 ---
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -116,6 +117,12 @@ export class TextControlComponent {
 />
 <span>{{hint()}}</span>
 ```
+
+## Computed Values
+
+In some cases it is desirable to (pre)-fill certain inputs with a value based on other controls. This can be done by utilizing the `computedValue` property. It will automatically set the value based on the provided expression. If the control can be edited by the user, it will only overwrite the value if a dependency changes. Usually you will want to make it readonly though.
+
+See [Expressions](/guides/expressions) for details on how expressions work and [Configuration](/guides/configuration#control) for other configuration options.
 
 ## Test ID
 
