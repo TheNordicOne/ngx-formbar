@@ -19,7 +19,9 @@ export interface TextControl extends NgxFwControl {
 
 Then implement the component.
 
-> **Warning** Be sure to bind to `[formControlName]` on the actual input element
+:::caution
+Be sure to bind to `[formControlName]` on the actual input element
+:::
 
 
 ```ts title="text-control.component.ts" group="minimal"
