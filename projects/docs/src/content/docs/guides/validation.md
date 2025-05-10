@@ -50,14 +50,19 @@ You can use an existing validator registration by referring to it via its key.
 :::
 
 ```ts title="app.config.ts"
-provideFormwork({
-  //...
-  validatorRegistrations: {
-    'min-chars': [Validators.minLength(3)],
-    letter: [letterValidator],
-    combined: ['min-chars', Validators.required, 'letter'],
-  }
-})
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      //...
+      validatorRegistrations: {
+        'min-chars': [Validators.minLength(3)],
+        letter: [letterValidator],
+        combined: ['min-chars', Validators.required, 'letter'],
+      }
+    })
+  ],
+};
 ```
 
 ## Using a validator

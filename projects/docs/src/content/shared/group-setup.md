@@ -59,9 +59,14 @@ export class GroupComponent {
 Finally, register the group in _app.config.ts_
 
 ```ts title="app.config.ts"
-provideFormwork({
-  componentRegistrations: {
-    group: GroupComponent
-  }
-})
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      componentRegistrations: {
+        group: GroupComponent
+      }
+    })
+  ],
+};
 ```

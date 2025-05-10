@@ -114,9 +114,14 @@ In `app.config.ts` use it like this
 ```ts title="app.config.ts"
 import { componentRegistrations } from './controls.registerations.ts';
 
-provideFormwork({
-  componentRegistrations,
-});
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      componentRegistrations
+    })
+  ]
+};
 ```
 
 ### Validators Registration
@@ -143,10 +148,15 @@ In `app.config.ts` use it like this
 ```ts title="app.config.ts"
 import { validatorRegistrations, asyncValidatorRegistrations } from './validators.registerations.ts';
 
-provideFormwork({
-  validatorRegistrations,
-  asyncValidatorRegistrations,
-});
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      validatorRegistrations,
+      asyncValidatorRegistrations,
+    })
+  ],
+};
 ```
 
 :::caution
