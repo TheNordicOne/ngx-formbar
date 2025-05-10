@@ -10,7 +10,7 @@ Once you've registered [Controls](/guides/controls), [Groups](/guides/groups) an
 ## Options
 Following are configuration options that are supported out of the box. When setting up [Controls](/guides/controls) or [Groups](/guides/groups) you can add more options.
 
-### Shared
+### Base
 
 The `NgxFwBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
 
@@ -18,12 +18,20 @@ The `NgxFwBaseContent` interface is the foundation for all form controls and gro
 |-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | type            | `string`            | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                      |
 | id              | `string`            | Yes      | Unique identifier for the control. Used to link configuration with runtime behavior and maintain state consistency.<br/>This is also used and the controls name.       |
+| hidden          | `string`            | No       | A string expression that determines when the control should be hidden. This condition is evaluated at runtime against the whole form object.                           |
+
+
+### Abstract Control
+
+Controls and Groups extend the `NgxFwAbstractControl` interface and therefore both have access to these options.
+
+| Name            | Type                | Required | Description                                                                                                                                                            |
+|-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | validators      | `string[]`          | No       | Array of strings representing names of synchronous validators that apply to the control. These can be registered globally with a validator registration object.        |
 | asyncValidators | `string[]`          | No       | Similar to validators, but for asynchronous validation logic that may involve API calls or other deferred operations.                                                  |
-| hidden          | `string`            | No       | A string expression that determines when the control should be hidden. This condition is evaluated at runtime against the whole form object.                           |
+| disabled        | `string \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean value or a string expression that evaluates against the form object.                                  |
 | hideStrategy    | `HideStrategy`      | No       | Specifies how to handle the control when hidden: 'keep' (remains in form model) or 'remove' (removed from form model).                                                 |
 | valueStrategy   | `ValueStrategy`     | No       | Determines how the control's value is handled when visibility changes: 'last' (preserves last value), 'default' (reverts to default value), or 'reset' (clears value). |
-| disabled        | `string \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean value or a string expression that evaluates against the form object.                                  |
 | readonly        | `string \| boolean` | No       | Indicates if the control is read-only (displayed but not modifiable). Accepts either a boolean value or a string expression for dynamic evaluation.                    |
 | updateOn        | `UpdateStrategy`    | No       | Specifies when to update the control's value: 'change' (as user types, default), 'blur' (when control loses focus), or 'submit' (when form is submitted).              |
 

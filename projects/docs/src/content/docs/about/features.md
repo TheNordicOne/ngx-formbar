@@ -21,7 +21,7 @@ keyword: FeaturePage
 - [x] Combine commonly used validator combinations into a single key
 - [x] Expression syntax is like JavaScript
   - [x] Expressions only run against the form value
-- [ ] Support for non-control blocks (pure informational components like a callout, paragraphs, etc.)
+- [x] Support for non-control blocks (pure informational components like a callout, paragraphs, etc.)
 - [ ] Derive a value based on form state (dynamic readonly controls)
 - [ ] Support for full TypeScript-only configurations, meaning you can use actual functions for the expressions
 - [ ] Dynamic labels based on form state
