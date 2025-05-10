@@ -40,11 +40,12 @@ Controls and Groups extend the `NgxFwAbstractControl` interface and therefore bo
 
 The following configurations options are only applicable to controls.
 
-| Name         | Type      | Required | Description                                                                                              |
-|--------------|-----------|----------|----------------------------------------------------------------------------------------------------------|
-| label        | `string`  | Yes      | Specifies the label for the control                                                                      |
-| defaultValue | `unknown` | No       | Should be overwritten with the proper value type of the control                                          |
-| nonNullable  | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API |
+| Name          | Type      | Required | Description                                                                                                                     |
+|---------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------|
+| label         | `string`  | Yes      | Specifies the label for the control                                                                                             |
+| defaultValue  | `unknown` | No       | Should be overwritten with the proper value type of the control                                                                 |
+| nonNullable   | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API                        |
+| computedValue | `string`  | No       | A value that is automatically derived and set for the control. It will overwrite user input if one of its dependencies changes. |
 
 
 ### Group
