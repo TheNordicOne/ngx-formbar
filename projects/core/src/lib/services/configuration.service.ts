@@ -6,13 +6,13 @@ import { NgxFwGlobalConfiguration } from '../types/global-configuration.type';
   providedIn: 'root',
 })
 export class NgxFwConfigurationService {
-  private readonly _testIdBuilderFn: TestIdBuilderFn | undefined;
+  private _testIdBuilderFn: TestIdBuilderFn | undefined;
 
   get testIdBuilder() {
     return this._testIdBuilderFn;
   }
 
-  constructor(config: NgxFwGlobalConfiguration) {
+  configure(config: NgxFwGlobalConfiguration) {
     this._testIdBuilderFn = config.testIdBuilderFn;
   }
 }

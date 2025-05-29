@@ -59,7 +59,11 @@ export function provideFormwork<
     },
     {
       provide: NgxFwConfigurationService,
-      useValue: new NgxFwConfigurationService(globalConfig),
+      useFactory: () => {
+        const service = new NgxFwConfigurationService();
+        service.configure(globalConfig);
+        return service;
+      },
     },
     ExpressionService,
   ]);
