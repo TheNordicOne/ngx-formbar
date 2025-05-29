@@ -12,7 +12,6 @@ export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
   readonly formContent = input.required<NgxFwContent[]>();
   readonly autoUpdate = input<boolean>(false);
-  readonly useDefaultTestIds = input<boolean>(false);
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 
   form = this.formBuilder.group({});

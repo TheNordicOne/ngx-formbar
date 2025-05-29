@@ -2,6 +2,7 @@ import { computed, inject, Signal } from '@angular/core';
 import { NgxFwBaseContent, NgxFwFormGroup } from '../types/content.type';
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { TestIdBuilderFn } from '../types/functions.type';
+import { NgxFwConfigurationService } from '../services/configuration.service';
 
 /**
  * Creates a computed signal that extracts the ID for testing purposes
@@ -24,6 +25,9 @@ export function withTestId(
       skipSelf: true,
     });
 
+  const globalConfig = inject(NgxFwConfigurationService);
+  const globalTestIdBuilder = globalConfig.testIdBuilder;
+
   return computed(() => {
     const contentValue = content();
     const id = contentValue.id;
@@ -32,6 +36,10 @@ export function withTestId(
 
     if (builderFn) {
       return builderFn(contentValue, parentGroupTestId);
+    }
+
+    if (globalTestIdBuilder) {
+      return globalTestIdBuilder(contentValue, parentGroupTestId);
     }
 
     if (!parentGroupTestId) {

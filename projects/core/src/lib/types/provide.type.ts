@@ -5,6 +5,7 @@ import {
   ValidatorConfig,
 } from './validation.type';
 import { UpdateStrategy } from './content.type';
+import { NgxFwGlobalConfiguration } from './global-configuration.type';
 
 /**
  * Configuration for registering and providing components and validators in Ngx Formwork
@@ -43,4 +44,5 @@ export interface FormworkConfig<
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
   updateOn?: UpdateStrategy;
+  globalConfig: NgxFwGlobalConfiguration;
 }
