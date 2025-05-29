@@ -7,6 +7,7 @@ import {
   withHiddenState,
 } from '../composables/hidden.state';
 import { StateHandling } from '../types/registration.type';
+import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
  * Block Directive for Ngx Formwork
@@ -44,11 +45,15 @@ export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
    */
   private readonly visibilityHandling = signal<StateHandling>('auto');
 
+  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
+    undefined,
+  );
+
   /**
    * Computed test ID derived from the block's ID.
    * Used for automated testing identification.
    */
-  readonly testId = withTestId(this.content);
+  readonly testId = withTestId(this.content, this.testIdBuilder);
 
   /**
    * Computed signal for the hidden state.
@@ -80,5 +85,14 @@ export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
    */
   setVisibilityHandling(visibilityHandling: StateHandling) {
     this.visibilityHandling.set(visibilityHandling);
+  }
+
+  /**
+   * Sets the function to use for building a test id.
+   *
+   * @param builderFn Function that returns the test id
+   */
+  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
+    this.testIdBuilder.set(builderFn);
   }
 }
