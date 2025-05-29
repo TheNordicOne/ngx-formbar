@@ -169,4 +169,59 @@ describe('Form disabling', () => {
       'disabled',
     );
   });
+
+  it('should start with the correct value', () => {
+    setupForm([
+      {
+        id: 'disableControl',
+        type: 'test-text-control',
+        label: 'Type "disable" to disable everything',
+        defaultValue: 'disable',
+      },
+      {
+        id: 'first',
+        type: 'test-text-control',
+        label: 'First',
+        defaultValue: 'default-first',
+        disabled: 'disableControl === "disable"',
+      },
+      {
+        type: 'test-group',
+        id: 'first-group',
+        title: 'First Group',
+        disabled: 'disableControl === "disable"',
+        controls: [
+          {
+            id: 'grouped-first',
+            type: 'test-text-control',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          {
+            type: 'test-group',
+            id: 'nested-group',
+            title: 'Nested Group',
+            controls: [
+              {
+                id: 'nested-second',
+                type: 'test-text-control',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    cy.getByTestId('first-input').should('have.attr', 'disabled');
+    cy.getByTestId('grouped-first-input').should('have.attr', 'disabled');
+    cy.getByTestId('nested-second-input').should('have.attr', 'disabled');
+
+    cy.getByTestId('disableControl-input').clear();
+
+    cy.getByTestId('first-input').should('not.have.attr', 'disabled');
+    cy.getByTestId('grouped-first-input').should('not.have.attr', 'disabled');
+    cy.getByTestId('nested-second-input').should('not.have.attr', 'disabled');
+  });
 });
