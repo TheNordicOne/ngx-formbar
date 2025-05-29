@@ -24,8 +24,8 @@ keyword: FeaturePage
 - [x] Support for non-control blocks (pure informational components like a callout, paragraphs, etc.)
 - [x] Derive a value based on form state (dynamic readonly controls)
 - [x] Dynamic labels/titles based on form state
+- [x] Configuration of test id (attribute name and how value is build)
 - [ ] Support for full TypeScript-only configurations, meaning you can use actual functions for the expressions
-- [ ] Configuration of test id (attribute name and how value is build)
 - [ ] Schematic for adding formwork and scaffolding new controls
 
 
