@@ -3,6 +3,7 @@ import { NgxFwControl } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
+import { FormContext } from '../types/expression.type';
 
 /**
  * Computes a dynamic label for a form control based on expression evaluation
@@ -20,13 +21,18 @@ export function withDynamicLabel(content: Signal<NgxFwControl>) {
   });
 
   return computed<string | undefined>(() => {
-    const value = formService.formValue();
+    const reactiveFormValues = formService.formValue();
+    const currentSynchronousFormValues = formService.formGroup
+      .value as FormContext;
+    const evaluationContext =
+      reactiveFormValues ?? currentSynchronousFormValues;
+
     const ast = dynamicLabelAst();
 
     if (!ast) {
       return undefined;
     }
-    const label = expressionService.evaluateExpression(ast, value);
+    const label = expressionService.evaluateExpression(ast, evaluationContext);
     return label as string | undefined;
   });
 }

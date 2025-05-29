@@ -6,6 +6,7 @@ import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { FormService } from '../services/form.service';
 import { StateHandling } from '../types/registration.type';
 import { SimpleFunction } from '../types/functions.type';
+import { FormContext } from '../types/expression.type';
 
 /**
  * Computes a reactive disabled state based on control content
@@ -64,13 +65,19 @@ export function withDisabledState(content: Signal<NgxFwContent>) {
       return disabledStatic;
     }
 
-    const value = formService.formValue();
+    const reactiveFormValues = formService.formValue();
+    const currentSynchronousFormValues = formService.formGroup
+      .value as FormContext;
+    const evaluationContext =
+      reactiveFormValues ?? currentSynchronousFormValues;
+
     const ast = disabledAst();
     if (!ast) {
       return parentGroupIsDisabled();
     }
 
-    const disabled = expressionService.evaluateExpression(ast, value) ?? false;
+    const disabled =
+      expressionService.evaluateExpression(ast, evaluationContext) ?? false;
     return disabled as boolean;
   });
 }
