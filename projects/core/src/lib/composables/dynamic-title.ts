@@ -3,6 +3,7 @@ import { NgxFwFormGroup } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
+import { FormContext } from '../types/expression.type';
 
 /**
  * Computes a dynamic title for a form control based on expression evaluation
@@ -20,13 +21,18 @@ export function withDynamicTitle(content: Signal<NgxFwFormGroup>) {
   });
 
   return computed<string | undefined>(() => {
-    const value = formService.formValue();
+    const reactiveFormValues = formService.formValue();
+    const currentSynchronousFormValues = formService.formGroup
+      .value as FormContext;
+    const evaluationContext =
+      reactiveFormValues ?? currentSynchronousFormValues;
+
     const ast = dynamicTitleAst();
     if (!ast) {
       return undefined;
     }
 
-    const title = expressionService.evaluateExpression(ast, value);
+    const title = expressionService.evaluateExpression(ast, evaluationContext);
     return title as string | undefined;
   });
 }

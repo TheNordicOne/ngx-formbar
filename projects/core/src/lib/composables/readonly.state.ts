@@ -4,6 +4,7 @@ import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { Program } from 'acorn';
+import { FormContext } from '../types/expression.type';
 
 /**
  * Computes a reactive readonly state based on control content
@@ -62,13 +63,19 @@ export function withReadonlyState(content: Signal<NgxFwContent>) {
       return readonlyStatic;
     }
 
-    const value = formService.formValue();
+    const reactiveFormValues = formService.formValue();
+    const currentSynchronousFormValues = formService.formGroup
+      .value as FormContext;
+    const evaluationContext =
+      reactiveFormValues ?? currentSynchronousFormValues;
+
     const ast = readonlyAst();
     if (!ast) {
       return parentGroupIsReadonly();
     }
 
-    const readonly = expressionService.evaluateExpression(ast, value) ?? false;
+    const readonly =
+      expressionService.evaluateExpression(ast, evaluationContext) ?? false;
     return readonly as boolean;
   });
 }

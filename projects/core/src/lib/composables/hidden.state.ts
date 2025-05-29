@@ -13,6 +13,7 @@ import { StateHandling } from '../types/registration.type';
 import { SimpleFunction, ValueHandleFunction } from '../types/functions.type';
 import { Program } from 'acorn';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
+import { FormContext } from '../types/expression.type';
 
 /**
  * Computes a reactive hidden state based on control content
@@ -51,14 +52,19 @@ export function withHiddenState(content: Signal<NgxFwBaseContent>) {
   );
 
   return computed<boolean>(() => {
-    const value = formService.formValue();
+    const reactiveFormValues = formService.formValue();
+    const currentSynchronousFormValues = formService.formGroup
+      .value as FormContext;
+    const evaluationContext =
+      reactiveFormValues ?? currentSynchronousFormValues;
+
     const ast = visibilityAst();
     if (!ast) {
       return parentGroupIsHidden();
     }
 
     const isHidden: boolean =
-      (expressionService.evaluateExpression(ast, value) as
+      (expressionService.evaluateExpression(ast, evaluationContext) as
         | boolean
         | undefined) ?? false;
     return isHidden || parentGroupIsHidden();
