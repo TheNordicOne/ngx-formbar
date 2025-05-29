@@ -10,13 +10,18 @@ import { InfoBlock } from '../types/block.type';
  */
 export function setupForm(
   formContent: OneOf<[TestTextControl, TestGroup, InfoBlock]>[],
-  options?: { defaultUpdateOnStrategy?: UpdateStrategy; autoUpdate?: boolean },
+  options?: {
+    defaultUpdateOnStrategy?: UpdateStrategy;
+    autoUpdate?: boolean;
+    useDefaultTestIds: boolean;
+  },
 ) {
   cy.mount(FormIntegrationHostComponent, {
     providers: [formworkProviders(options?.defaultUpdateOnStrategy)],
     componentProperties: {
       formContent: formContent as NgxFwContent[],
       autoUpdate: options?.autoUpdate,
+      useDefaultTestIds: options?.useDefaultTestIds,
     },
   });
 }

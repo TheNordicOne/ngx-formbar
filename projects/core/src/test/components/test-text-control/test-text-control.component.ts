@@ -1,10 +1,11 @@
-import { Component, inject, Signal } from '@angular/core';
+import { Component, effect, inject, Signal } from '@angular/core';
 
 import { NgxfwControlDirective } from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { ngxfwControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
+import { simpleTestIdBuilder } from '../../helper/test-id-builder';
 
 @Component({
   selector: 'ngxfw-test-text-control',
@@ -25,5 +26,14 @@ export class TestTextControlComponent {
 
   get formControl() {
     return this.control.formControl;
+  }
+
+  constructor() {
+    effect(() => {
+      const useDefaultTestId = this.control.content().useDefaultTestId;
+      this.control.setTestIdBuilderFn(
+        useDefaultTestId ? undefined : simpleTestIdBuilder,
+      );
+    });
   }
 }
