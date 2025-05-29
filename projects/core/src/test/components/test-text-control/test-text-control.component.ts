@@ -21,6 +21,7 @@ export class TestTextControlComponent {
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly disabled: Signal<boolean> = this.control.disabled;
   readonly readonly: Signal<boolean> = this.control.readonly;
+  readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
 
   get formControl() {
     return this.control.formControl;

@@ -22,6 +22,7 @@ export class TestGroupComponent {
   readonly registrations: Signal<Map<string, Type<unknown>>> =
     this.control.registrations;
   readonly isHidden: Signal<unknown> = this.control.isHidden;
+  readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
 
   get formGroup() {
     return this.control.formGroup;

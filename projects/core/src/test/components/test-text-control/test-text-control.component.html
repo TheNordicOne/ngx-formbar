@@ -1,7 +1,7 @@
 @if (!isHidden()) {
   <span [attr.data-testId]="testId()">Control</span>
   <label [htmlFor]="content()?.id" [attr.data-testId]="testId() + '-label'">{{
-    content()?.label
+    dynamicLabel() ?? content()?.label
   }}</label>
   <input
     [attr.data-testId]="testId() + '-input'"

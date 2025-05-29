@@ -31,6 +31,7 @@ import {
   setComputedValueEffect,
   withComputedValue,
 } from '../composables/computed-value';
+import { withDynamicLabel } from '../composables/dynamic-label';
 
 /**
  * Control Directive for Ngx Formwork
@@ -133,6 +134,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   readonly readonly = withReadonlyState(this.content);
 
   readonly updateStrategy = withUpdateStrategy(this.content);
+
+  /**
+   * Computed signal for the dynamic label
+   */
+  readonly dynamicLabel = withDynamicLabel(this.content);
 
   /**
    * Computed signal for the validators
