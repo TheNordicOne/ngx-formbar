@@ -10,8 +10,12 @@ import {
   noDuplicateValuesValidator,
 } from '../../validator/test.validator';
 import { TestBlockComponent } from '../../components/test-block/test-block.component';
+import { TestIdBuilderFn } from '../../../lib/types/functions.type';
 
-export const formworkProviders = (updateOn?: UpdateStrategy) =>
+export const formworkProviders = (
+  updateOn?: UpdateStrategy,
+  testIdBuilderFn?: TestIdBuilderFn,
+) =>
   provideFormwork({
     componentRegistrations: {
       'test-text-control': TestTextControlComponent,
@@ -30,4 +34,7 @@ export const formworkProviders = (updateOn?: UpdateStrategy) =>
       'async-group': [asyncGroupValidator],
     },
     updateOn,
+    globalConfig: {
+      testIdBuilderFn,
+    },
   });
