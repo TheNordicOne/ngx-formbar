@@ -5,6 +5,7 @@ sidebar:
   order: 1
 ---
 
+
 import GroupSetup from '../../shared/group-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -120,6 +121,42 @@ export class GroupComponent {
 @if(readonly()){
   <span>This cannot be edited</span>
 }
+```
+
+## Dynamic Title
+
+A group's title can be made responsive to other form data by using the `dynamicTitle` configuration property. You provide an expression string to dynamicTitle (e.g., 'Hello, ' + user.name), and the control's title text will then be computed based on this expression.
+
+Your component can access this computed dynamic title via a signal (e.g., this.control.dynamicTitle). Typically, you'd use this dynamic title if it's available and evaluates to a meaningful string; otherwise, you might fall back to a statically configured title (e.g., this.control.title).
+
+See [Expressions](/guides/expressions) for details on how expressions work and [Configuration](/guides/configuration#control) for other configuration options.
+
+```ts title="group.component.ts" group="dynamic-title"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwGroupDirective<Group>);
+
+  // Access the computed dynamic title from the directive.
+  // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
+  readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
+
+  readonly staticConfigTitle: Signal<string> = this.control.title;
+
+  readonly displayTitle = computed(() => {
+    const dynamic = this.dynamicTitle();
+    if (dynamic && dynamic.trim() !== '') {
+      return dynamic;
+    }
+
+    return this.staticConfigTitle() || '';
+  });
+}
+```
+
+```html title="group.component.html" group="dynamic-title"
+<span> {{ displayTitle() }} </span>
 ```
 
 ## Test ID
