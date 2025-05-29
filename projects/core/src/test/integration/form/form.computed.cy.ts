@@ -311,4 +311,156 @@ describe('Form computedValue expressions (full coverage)', () => {
     cy.getByTestId('toggle-input').clear();
     cy.getByTestId('compReset-input').should('have.value', '');
   });
+
+  describe.only('Cascading Computed Values', () => {
+    it('should correctly update through 5 levels of cascading dependencies', () => {
+      setupForm([
+        {
+          id: 'level0',
+          type: 'test-text-control',
+          label: 'Level 0 Input',
+          defaultValue: 'Start',
+        },
+        {
+          id: 'level1',
+          type: 'test-text-control',
+          label: 'Level 1 Computed',
+          computedValue: 'level0 + "-L1"',
+        },
+        {
+          id: 'level2',
+          type: 'test-text-control',
+          label: 'Level 2 Computed',
+          computedValue: 'level1 + "-L2"',
+        },
+        {
+          id: 'level3',
+          type: 'test-text-control',
+          label: 'Level 3 Computed',
+          computedValue: 'level2 + "-L3"',
+        },
+        {
+          id: 'level4',
+          type: 'test-text-control',
+          label: 'Level 4 Computed',
+          computedValue: 'level3 + "-L4"',
+        },
+        {
+          id: 'level5',
+          type: 'test-text-control',
+          label: 'Level 5 Computed',
+          computedValue: 'level4 + "-L5"',
+        },
+      ]);
+
+      // Verify initial values
+      cy.getByTestId('level0-input').should('have.value', 'Start');
+      cy.getByTestId('level1-input').should('have.value', 'Start-L1');
+      cy.getByTestId('level2-input').should('have.value', 'Start-L1-L2');
+      cy.getByTestId('level3-input').should('have.value', 'Start-L1-L2-L3');
+      cy.getByTestId('level4-input').should('have.value', 'Start-L1-L2-L3-L4');
+      cy.getByTestId('level5-input').should(
+        'have.value',
+        'Start-L1-L2-L3-L4-L5',
+      );
+
+      // Update the base value
+      cy.getByTestId('level0-input').clear().type('Updated');
+
+      // Verify all dependent values are updated
+      cy.getByTestId('level1-input').should('have.value', 'Updated-L1');
+      cy.getByTestId('level2-input').should('have.value', 'Updated-L1-L2');
+      cy.getByTestId('level3-input').should('have.value', 'Updated-L1-L2-L3');
+      cy.getByTestId('level4-input').should(
+        'have.value',
+        'Updated-L1-L2-L3-L4',
+      );
+      cy.getByTestId('level5-input').should(
+        'have.value',
+        'Updated-L1-L2-L3-L4-L5',
+      );
+    });
+
+    it('should handle manual override and then revert on dependency change in a 5-level cascade', () => {
+      setupForm([
+        {
+          id: 'level0_override',
+          type: 'test-text-control',
+          label: 'Level 0 Input Override',
+          defaultValue: 'Initial',
+        },
+        {
+          id: 'level1_override',
+          type: 'test-text-control',
+          label: 'Level 1 Computed Override',
+          computedValue: 'level0_override + "-L1"',
+        },
+        {
+          id: 'level2_override',
+          type: 'test-text-control',
+          label: 'Level 2 Computed Override',
+          computedValue: 'level1_override + "-L2"',
+        },
+        {
+          id: 'level3_override',
+          type: 'test-text-control',
+          label: 'Level 3 Computed Override',
+          computedValue: 'level2_override + "-L3"',
+        },
+        {
+          id: 'level4_override',
+          type: 'test-text-control',
+          label: 'Level 4 Computed Override',
+          computedValue: 'level3_override + "-L4"',
+        },
+        {
+          id: 'level5_override',
+          type: 'test-text-control',
+          label: 'Level 5 Computed Override',
+          computedValue: 'level4_override + "-L5"',
+        },
+      ]);
+
+      // Verify initial value of the last level
+      cy.getByTestId('level5_override-input').should(
+        'have.value',
+        'Initial-L1-L2-L3-L4-L5',
+      );
+
+      // Manually override the last level
+      cy.getByTestId('level5_override-input').clear().type('ManualOverride');
+      cy.getByTestId('level5_override-input').blur(); // Ensure change is registered if updateOn is blur/submit
+      cy.getByTestId('level5_override-input').should(
+        'have.value',
+        'ManualOverride',
+      );
+
+      // Change the base value (level0_override)
+      cy.getByTestId('level0_override-input').clear().type('ChangedBase');
+
+      // Verify the last level reverts to its computed value based on the new base
+      cy.getByTestId('level5_override-input').should(
+        'have.value',
+        'ChangedBase-L1-L2-L3-L4-L5',
+      );
+
+      // Verify intermediate levels also updated
+      cy.getByTestId('level1_override-input').should(
+        'have.value',
+        'ChangedBase-L1',
+      );
+      cy.getByTestId('level2_override-input').should(
+        'have.value',
+        'ChangedBase-L1-L2',
+      );
+      cy.getByTestId('level3_override-input').should(
+        'have.value',
+        'ChangedBase-L1-L2-L3',
+      );
+      cy.getByTestId('level4_override-input').should(
+        'have.value',
+        'ChangedBase-L1-L2-L3-L4',
+      );
+    });
+  });
 });
