@@ -4,6 +4,7 @@ import { formworkProviders } from '../integration/shared/provide-formwork';
 import { TestTextControl } from '../types/controls.type';
 import { TestGroup } from '../types/group.type';
 import { InfoBlock } from '../types/block.type';
+import { TestIdBuilderFn } from '../../lib/types/functions.type';
 
 /**
  * Base setup function for mounting the form component
@@ -13,15 +14,19 @@ export function setupForm(
   options?: {
     defaultUpdateOnStrategy?: UpdateStrategy;
     autoUpdate?: boolean;
-    useDefaultTestIds: boolean;
+    testIdBuilderFn?: TestIdBuilderFn;
   },
 ) {
   cy.mount(FormIntegrationHostComponent, {
-    providers: [formworkProviders(options?.defaultUpdateOnStrategy)],
+    providers: [
+      formworkProviders(
+        options?.defaultUpdateOnStrategy,
+        options?.testIdBuilderFn,
+      ),
+    ],
     componentProperties: {
       formContent: formContent as NgxFwContent[],
       autoUpdate: options?.autoUpdate,
-      useDefaultTestIds: options?.useDefaultTestIds,
     },
   });
 }
