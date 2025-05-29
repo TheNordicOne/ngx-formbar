@@ -68,6 +68,7 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  */
 export interface NgxFwFormGroup extends NgxFwAbstractControl {
   title?: string;
+  dynamicTitle?: string;
   controls: NgxFwContent[];
 }
 
@@ -106,6 +107,7 @@ export interface NgxFwFormGroup extends NgxFwAbstractControl {
  */
 export interface NgxFwControl extends NgxFwAbstractControl {
   label: string;
+  dynamicLabel?: string;
   defaultValue?: unknown;
   nonNullable?: boolean;
 }
