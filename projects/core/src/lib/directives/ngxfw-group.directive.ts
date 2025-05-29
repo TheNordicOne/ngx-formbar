@@ -25,6 +25,7 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withTestId } from '../composables/testId';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withDynamicTitle } from '../composables/dynamic-title';
+import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
  * Group Directive for Ngx Formwork
@@ -74,12 +75,15 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
+  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
+    undefined,
+  );
 
   /**
    * Computed test ID derived from the group's ID
    * Used for automated testing identification
    */
-  readonly testId = withTestId(this.content);
+  readonly testId = withTestId(this.content, this.testIdBuilder);
 
   /**
    * Computed signal for the group's hide strategy
@@ -222,6 +226,15 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
    */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
+  }
+
+  /**
+   * Sets the function to use for building a test id.
+   *
+   * @param builderFn Function that returns the test id
+   */
+  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
+    this.testIdBuilder.set(builderFn);
   }
 
   private setGroup() {

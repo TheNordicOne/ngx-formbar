@@ -1,7 +1,8 @@
-import { Component, computed, inject, Signal } from '@angular/core';
+import { Component, computed, effect, inject, Signal } from '@angular/core';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { NgxfwBlockDirective } from '../../../lib/directives/ngxfw-block.directive';
 import { InfoBlock } from '../../types/block.type';
+import { simpleTestIdBuilder } from '../../helper/test-id-builder';
 
 @Component({
   selector: 'ngxfw-test-block',
@@ -23,4 +24,13 @@ export class TestBlockComponent {
   readonly rootForm = this.control.rootForm;
 
   readonly message = computed(() => this.content().message);
+
+  constructor() {
+    effect(() => {
+      const useDefaultTestId = this.control.content().useDefaultTestId;
+      this.control.setTestIdBuilderFn(
+        useDefaultTestId ? undefined : simpleTestIdBuilder,
+      );
+    });
+  }
 }

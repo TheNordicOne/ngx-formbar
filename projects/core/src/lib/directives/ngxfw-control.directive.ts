@@ -32,6 +32,7 @@ import {
   withComputedValue,
 } from '../composables/computed-value';
 import { withDynamicLabel } from '../composables/dynamic-label';
+import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
  * Control Directive for Ngx Formwork
@@ -77,12 +78,15 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
+  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
+    undefined,
+  );
 
   /**
    * Computed test ID derived from the control's ID
    * Used for automated testing identification
    */
-  readonly testId = withTestId(this.content);
+  readonly testId = withTestId(this.content, this.testIdBuilder);
 
   /**
    * Computed signal for the control's hide strategy
@@ -228,6 +232,15 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
+  }
+
+  /**
+   * Sets the function to use for building a test id.
+   *
+   * @param builderFn Function that returns the test id
+   */
+  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
+    this.testIdBuilder.set(builderFn);
   }
 
   private setControl() {
