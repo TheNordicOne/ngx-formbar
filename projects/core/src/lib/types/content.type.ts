@@ -1,20 +1,21 @@
 import { OneOf } from './helper.type';
+import { Expression } from './expression.type';
 
 export interface NgxFwBaseContent {
   type: string;
   id: string;
-  hidden?: string;
+  hidden?: Expression<boolean>;
 }
 
 interface NgxFwAbstractControl extends NgxFwBaseContent {
   validators?: string[];
   asyncValidators?: string[];
-  disabled?: string | boolean;
+  disabled?: Expression<boolean> | boolean;
   hideStrategy?: HideStrategy;
   valueStrategy?: ValueStrategy;
-  readonly?: string | boolean;
+  readonly?: Expression<boolean> | boolean;
   updateOn?: UpdateStrategy;
-  computedValue?: string;
+  computedValue?: Expression<unknown>;
 }
 
 export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
@@ -68,7 +69,7 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  */
 export interface NgxFwFormGroup extends NgxFwAbstractControl {
   title?: string;
-  dynamicTitle?: string;
+  dynamicTitle?: Expression<string>;
   controls: NgxFwContent[];
 }
 
@@ -107,7 +108,7 @@ export interface NgxFwFormGroup extends NgxFwAbstractControl {
  */
 export interface NgxFwControl extends NgxFwAbstractControl {
   label: string;
-  dynamicLabel?: string;
+  dynamicLabel?: Expression<string>;
   defaultValue?: unknown;
   nonNullable?: boolean;
 }
