@@ -22,7 +22,7 @@ A control can be whatever you need it to be. It can be as generic as a `TextCont
 Checkout [Helper](/guides/improvements#Helper) to see how to set up helpers.
 :::
 
-<ControlSetup/>
+<ControlSetup />
 
 ## Configuration
 
@@ -30,7 +30,7 @@ Checkout [Configuration](/guides/configuration) for how to configure a control.
 
 ## Hidden
 
-<HiddenExplanation/>
+<HiddenExplanation />
 
 ```ts title="text-control.component.ts" group="visibility"
 @Component({
@@ -43,37 +43,32 @@ export class TextControlComponent {
 
   constructor() {
     // Let formwork know, that you take care of handling visibility
-    this.control.setVisibilityHandling('manual')
+    this.control.setVisibilityHandling('manual');
   }
 }
-
-````
+```
 
 ```html title="text-control.component.html" group="visibility"
 @if(isHidden()){
-  <span>Some placeholder you want to use</span>
+<span>Some placeholder you want to use</span>
+} @if(!isHidden()){
+<label [htmlFor]="id()">{{ label() }}</label>
+<input [id]="id()" [formControlName]="id()" />
+<span>{{hint()}}</span>
 }
-@if(!isHidden()){
-  <label [htmlFor]="id()">{{ label() }}</label>
-  <input
-    [id]="id()"
-    [formControlName]="id()"
-  />
-  <span>{{hint()}}</span>
-}
-````
+```
 
 ### Hide Strategy
 
-<HideStrategyExplanation/>
+<HideStrategyExplanation />
 
 ### Value Strategy
 
-<ValueStrategyExplanation/>
+<ValueStrategyExplanation />
 
 ## Disabled
 
-<DisabledExplanation/>
+<DisabledExplanation />
 
 ```ts title="text-control.component.ts" group="disabled"
 @Component({
@@ -90,13 +85,13 @@ export class TextControlComponent {
 <input [id]="id()" [formControlName]="id()" />
 <!-- Only show hint when control is disabled -->
 @if(disabled()){
-  <span>{{hint()}}</span>
+<span>{{hint()}}</span>
 }
 ```
 
 ## Readonly
 
-<ReadonlyExplanation/>
+<ReadonlyExplanation />
 
 ```ts title="text-control.component.ts" group="readonly"
 @Component({
@@ -124,9 +119,46 @@ In some cases it is desirable to (pre)-fill certain inputs with a value based on
 
 See [Expressions](/guides/expressions) for details on how expressions work and [Configuration](/guides/configuration#control) for other configuration options.
 
+## Dynamic Label
+
+A control's label can be made responsive to other form data by using the `dynamicLabel` configuration property. You provide an expression string to dynamicLabel (e.g., 'Hello, ' + user.name), and the control's label text will then be computed based on this expression.
+
+Your component can access this computed dynamic label via a signal (e.g., this.control.dynamicLabel). Typically, you'd use this dynamic label if it's available and evaluates to a meaningful string; otherwise, you might fall back to a statically configured label (e.g., this.control.label).
+
+See [Expressions](/guides/expressions) for details on how expressions work and [Configuration](/guides/configuration#control) for other configuration options.
+
+```ts title="text-control.component.ts" group="dynamic-label"
+@Component({
+  // ...
+})
+export class TextControlComponent {
+  private readonly control = inject(NgxfwControlDirective<TextControl>);
+
+  // Access the computed dynamic label from the directive.
+  // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
+  readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
+
+  readonly staticConfigLabel: Signal<string> = this.control.label;
+
+  readonly displayLabel = computed(() => {
+    const dynamic = this.dynamicLabel();
+    if (dynamic && dynamic.trim() !== '') {
+      return dynamic;
+    }
+
+    return this.staticConfigLabel() || '';
+  });
+}
+```
+
+```html title="text-control.component.html" group="dynamic-label"
+<label [htmlFor]="id()"> {{ displayLabel() }} </label>
+<input [id]="id()" [formControlName]="id()" />
+```
+
 ## Test ID
 
-<TestId/>
+<TestId />
 
 ```ts title="text-control.component.ts" group="testid"
 @Component({
@@ -139,7 +171,6 @@ export class TextControlComponent {
 ```
 
 ```html title="text-control.component.html" group="testid"
-
 <label [htmlFor]="id()" [attr.data-testId]="testId() + '-label'"
   >{{ label() }}</label
 >
@@ -170,6 +201,6 @@ Then, in your template you can do something like this
 
 ```html
 @if(formControl?.hasError('required')) {
-  <span>Required</span>
+<span>Required</span>
 }
 ```
