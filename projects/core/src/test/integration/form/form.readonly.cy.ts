@@ -169,4 +169,59 @@ describe('Form readonly', () => {
       'readonly',
     );
   });
+
+  it('should start with the correct value', () => {
+    setupForm([
+      {
+        id: 'readonlyControl',
+        type: 'test-text-control',
+        label: 'Type "readonly" to readonly everything',
+        defaultValue: 'readonly',
+      },
+      {
+        id: 'first',
+        type: 'test-text-control',
+        label: 'First',
+        defaultValue: 'default-first',
+        readonly: 'readonlyControl === "readonly"',
+      },
+      {
+        type: 'test-group',
+        id: 'first-group',
+        title: 'First Group',
+        readonly: 'readonlyControl === "readonly"',
+        controls: [
+          {
+            id: 'grouped-first',
+            type: 'test-text-control',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          {
+            type: 'test-group',
+            id: 'nested-group',
+            title: 'Nested Group',
+            controls: [
+              {
+                id: 'nested-second',
+                type: 'test-text-control',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    cy.getByTestId('first-input').should('have.attr', 'readonly');
+    cy.getByTestId('grouped-first-input').should('have.attr', 'readonly');
+    cy.getByTestId('nested-second-input').should('have.attr', 'readonly');
+
+    cy.getByTestId('readonlyControl-input').clear();
+
+    cy.getByTestId('first-input').should('not.have.attr', 'readonly');
+    cy.getByTestId('grouped-first-input').should('not.have.attr', 'readonly');
+    cy.getByTestId('nested-second-input').should('not.have.attr', 'readonly');
+  });
 });
