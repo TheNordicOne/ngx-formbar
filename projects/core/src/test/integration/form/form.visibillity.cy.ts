@@ -1588,5 +1588,28 @@ describe('Form Visibility Strategies', () => {
       cy.getByTestId('noDefaultField-value').should('have.text', '');
       cy.getByTestId('emptyDefaultField-value').should('have.text', '');
     });
+
+    it('should start with correct state', () => {
+      setupForm([
+        {
+          id: 'hideControl',
+          type: 'test-text-control',
+          label: 'Type "hide" to hide everything',
+          defaultValue: 'hide',
+        },
+        {
+          id: 'initial',
+          type: 'test-text-control',
+          label: 'Field that is initially hidden',
+          hidden: 'hideControl === "hide"',
+        },
+      ]);
+
+      cy.getByTestId('hideControl-input').should('exist');
+      cy.getByTestId('initial-input').should('not.exist');
+
+      cy.getByTestId('hideControl-input').clear();
+      cy.getByTestId('initial-input').should('exist');
+    });
   });
 });
