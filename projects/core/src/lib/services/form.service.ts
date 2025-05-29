@@ -6,6 +6,6 @@ import { FormContext } from '../types/expression.type';
 @Injectable()
 export class FormService {
   private controlContainer = inject(ControlContainer);
-  private formGroup = this.controlContainer.control as FormGroup;
+  readonly formGroup = this.controlContainer.control as FormGroup;
   readonly formValue = toSignal<FormContext>(this.formGroup.valueChanges);
 }
