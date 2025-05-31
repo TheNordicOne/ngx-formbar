@@ -1,9 +1,10 @@
-import { Component, inject, input } from '@angular/core';
-import { NgxFwContent } from '../../types/content.type';
+import { Component, computed, inject, input } from '@angular/core';
 import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-control.directive';
+import { NgxFwForm } from '../../types/form.type';
+import { NgxFwBaseContent } from '../../types/content.type';
 
 /**
  * Ngx Formwork Form Component
@@ -25,7 +26,7 @@ import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-c
   providers: [FormService],
   viewProviders: [controlContainerViewProviders],
 })
-export class NgxFwFormComponent {
+export class NgxFwFormComponent<T extends NgxFwBaseContent> {
   /**
    * Service for component registration
    * Provides access to component type mappings
@@ -41,8 +42,13 @@ export class NgxFwFormComponent {
   readonly registrations = this.contentRegistrationService.registrations;
 
   /**
-   * Required input containing form content configuration
+   * Required input containing form configuration
+   */
+  readonly formConfig = input.required<NgxFwForm<T>>();
+
+  /**
+   * Computed value containing form content
    * An array of content objects defining the form structure
    */
-  readonly formContent = input.required<NgxFwContent[]>();
+  readonly formContent = computed(() => this.formConfig().content);
 }

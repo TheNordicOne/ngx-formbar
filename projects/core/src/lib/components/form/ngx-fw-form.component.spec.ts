@@ -4,10 +4,11 @@ import { NgxFwFormComponent } from './ngx-fw-form.component';
 import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { Type } from '@angular/core';
 import { ControlContainer, FormGroupDirective } from '@angular/forms';
+import { NgxFwBaseContent } from '../../types/content.type';
 
 describe('FormComponent', () => {
-  let component: NgxFwFormComponent;
-  let fixture: ComponentFixture<NgxFwFormComponent>;
+  let component: NgxFwFormComponent<NgxFwBaseContent>;
+  let fixture: ComponentFixture<NgxFwFormComponent<NgxFwBaseContent>>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -27,7 +28,7 @@ describe('FormComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(NgxFwFormComponent);
-    fixture.componentRef.setInput('formContent', []);
+    fixture.componentRef.setInput('formConfig', { content: [] });
     component = fixture.componentInstance;
 
     fixture.detectChanges();

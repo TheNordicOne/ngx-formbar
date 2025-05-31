@@ -2,39 +2,43 @@ import { setupForm } from '../../helper/test';
 
 describe('Form computedValue expressions (full coverage)', () => {
   it('sets a static computed string value', () => {
-    setupForm([
-      {
-        id: 'staticText',
-        type: 'test-text-control',
-        label: 'Static Text',
-        computedValue: '"Hello, World!"',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'staticText',
+          type: 'test-text-control',
+          label: 'Static Text',
+          computedValue: '"Hello, World!"',
+        },
+      ],
+    });
 
     cy.getByTestId('staticText-input').should('have.value', 'Hello, World!');
   });
 
   it('computes dynamic string based on other fields', () => {
-    setupForm([
-      {
-        id: 'firstName',
-        type: 'test-text-control',
-        label: 'First',
-        defaultValue: 'Jane',
-      },
-      {
-        id: 'lastName',
-        type: 'test-text-control',
-        label: 'Last',
-        defaultValue: 'Doe',
-      },
-      {
-        id: 'fullName',
-        type: 'test-text-control',
-        label: 'Full Name',
-        computedValue: 'firstName + " " + lastName',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'firstName',
+          type: 'test-text-control',
+          label: 'First',
+          defaultValue: 'Jane',
+        },
+        {
+          id: 'lastName',
+          type: 'test-text-control',
+          label: 'Last',
+          defaultValue: 'Doe',
+        },
+        {
+          id: 'fullName',
+          type: 'test-text-control',
+          label: 'Full Name',
+          computedValue: 'firstName + " " + lastName',
+        },
+      ],
+    });
 
     cy.getByTestId('fullName-input').should('have.value', 'Jane Doe');
 
@@ -46,20 +50,22 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('handles numeric computations', () => {
-    setupForm([
-      {
-        id: 'base',
-        type: 'test-text-control',
-        label: 'Base',
-        defaultValue: '5',
-      },
-      {
-        id: 'square',
-        type: 'test-text-control',
-        label: 'Square',
-        computedValue: '+base * +base',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'base',
+          type: 'test-text-control',
+          label: 'Base',
+          defaultValue: '5',
+        },
+        {
+          id: 'square',
+          type: 'test-text-control',
+          label: 'Square',
+          computedValue: '+base * +base',
+        },
+      ],
+    });
 
     cy.getByTestId('square-input').should('have.value', '25');
 
@@ -68,20 +74,22 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('falls back on defaults when dependencies are empty or undefined', () => {
-    setupForm([
-      {
-        id: 'maybeEmpty',
-        type: 'test-text-control',
-        label: 'Maybe',
-        defaultValue: '',
-      },
-      {
-        id: 'fallback',
-        type: 'test-text-control',
-        label: 'Fallback',
-        computedValue: 'maybeEmpty || "DEFAULT"',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'maybeEmpty',
+          type: 'test-text-control',
+          label: 'Maybe',
+          defaultValue: '',
+        },
+        {
+          id: 'fallback',
+          type: 'test-text-control',
+          label: 'Fallback',
+          computedValue: 'maybeEmpty || "DEFAULT"',
+        },
+      ],
+    });
 
     cy.getByTestId('fallback-input').should('have.value', 'DEFAULT');
 
@@ -90,60 +98,66 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('allows built-in function calls in expressions', () => {
-    setupForm([
-      {
-        id: 'raw',
-        type: 'test-text-control',
-        label: 'Raw',
-        defaultValue: 'mixedCase',
-      },
-      {
-        id: 'upper',
-        type: 'test-text-control',
-        label: 'Uppercase',
-        computedValue: 'raw.toUpperCase()',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'raw',
+          type: 'test-text-control',
+          label: 'Raw',
+          defaultValue: 'mixedCase',
+        },
+        {
+          id: 'upper',
+          type: 'test-text-control',
+          label: 'Uppercase',
+          computedValue: 'raw.toUpperCase()',
+        },
+      ],
+    });
 
     cy.getByTestId('upper-input').should('have.value', 'MIXEDCASE');
   });
 
   it('prioritizes computedValue over defaultValue on init', () => {
-    setupForm([
-      {
-        id: 'mix',
-        type: 'test-text-control',
-        label: 'Mix',
-        defaultValue: 'INIT',
-        computedValue: '"SHUTDOWN"',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'mix',
+          type: 'test-text-control',
+          label: 'Mix',
+          defaultValue: 'INIT',
+          computedValue: '"SHUTDOWN"',
+        },
+      ],
+    });
 
     // Even though defaultValue is 'INIT', computedValue = "" wins
     cy.getByTestId('mix-input').should('have.value', 'SHUTDOWN');
   });
 
   it('resets manual edits when dependencies change', () => {
-    setupForm([
-      {
-        id: 'part1',
-        type: 'test-text-control',
-        label: 'Part 1',
-        defaultValue: 'A',
-      },
-      {
-        id: 'part2',
-        type: 'test-text-control',
-        label: 'Part 2',
-        defaultValue: 'B',
-      },
-      {
-        id: 'combo',
-        type: 'test-text-control',
-        label: 'Combo',
-        computedValue: 'part1 + part2',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'part1',
+          type: 'test-text-control',
+          label: 'Part 1',
+          defaultValue: 'A',
+        },
+        {
+          id: 'part2',
+          type: 'test-text-control',
+          label: 'Part 2',
+          defaultValue: 'B',
+        },
+        {
+          id: 'combo',
+          type: 'test-text-control',
+          label: 'Combo',
+          computedValue: 'part1 + part2',
+        },
+      ],
+    });
 
     // Manual override
     cy.getByTestId('combo-input').clear().type('CUSTOM');
@@ -156,32 +170,34 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('allows user to overwrite computed value and retains it until a dependency changes', () => {
-    setupForm([
-      {
-        id: 'part1',
-        type: 'test-text-control',
-        label: 'Part 1',
-        defaultValue: 'A',
-      },
-      {
-        id: 'part2',
-        type: 'test-text-control',
-        label: 'Part 2',
-        defaultValue: 'B',
-      },
-      {
-        id: 'combo',
-        type: 'test-text-control',
-        label: 'Combo',
-        computedValue: 'part1 + part2',
-      },
+    setupForm({
+      content: [
+        {
+          id: 'part1',
+          type: 'test-text-control',
+          label: 'Part 1',
+          defaultValue: 'A',
+        },
+        {
+          id: 'part2',
+          type: 'test-text-control',
+          label: 'Part 2',
+          defaultValue: 'B',
+        },
+        {
+          id: 'combo',
+          type: 'test-text-control',
+          label: 'Combo',
+          computedValue: 'part1 + part2',
+        },
 
-      {
-        id: 'unrelated',
-        type: 'test-text-control',
-        label: 'Unrelated',
-      },
-    ]);
+        {
+          id: 'unrelated',
+          type: 'test-text-control',
+          label: 'Unrelated',
+        },
+      ],
+    });
 
     // Initial computed: "AB"
     cy.getByTestId('combo-input').should('have.value', 'AB');
@@ -202,26 +218,28 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('allows user to overwrite computed value and retains it until a dependency changes', () => {
-    setupForm([
-      {
-        id: 'part1',
-        type: 'test-text-control',
-        label: 'Part 1',
-        defaultValue: 'A',
-      },
-      {
-        id: 'part2',
-        type: 'test-text-control',
-        label: 'Part 2',
-        defaultValue: 'B',
-      },
-      {
-        id: 'combo',
-        type: 'test-text-control',
-        label: 'Combo',
-        computedValue: 'part1 + part2',
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'part1',
+          type: 'test-text-control',
+          label: 'Part 1',
+          defaultValue: 'A',
+        },
+        {
+          id: 'part2',
+          type: 'test-text-control',
+          label: 'Part 2',
+          defaultValue: 'B',
+        },
+        {
+          id: 'combo',
+          type: 'test-text-control',
+          label: 'Combo',
+          computedValue: 'part1 + part2',
+        },
+      ],
+    });
 
     // Initial computed: "AB"
     cy.getByTestId('combo-input').should('have.value', 'AB');
@@ -240,19 +258,26 @@ describe('Form computedValue expressions (full coverage)', () => {
 
   // Value strategy tests for computed controls
   it('should preserve computed value when hidden and shown again [keep & last]', () => {
-    setupForm([
-      { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
-      { id: 'dep', type: 'test-text-control', label: 'Dep', defaultValue: 'D' },
-      {
-        id: 'compLast',
-        type: 'test-text-control',
-        label: 'Comp Last',
-        computedValue: 'dep + "Z"',
-        hidden: 'toggle === "hide"',
-        hideStrategy: 'keep',
-        valueStrategy: 'last',
-      },
-    ]);
+    setupForm({
+      content: [
+        { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
+        {
+          id: 'dep',
+          type: 'test-text-control',
+          label: 'Dep',
+          defaultValue: 'D',
+        },
+        {
+          id: 'compLast',
+          type: 'test-text-control',
+          label: 'Comp Last',
+          computedValue: 'dep + "Z"',
+          hidden: 'toggle === "hide"',
+          hideStrategy: 'keep',
+          valueStrategy: 'last',
+        },
+      ],
+    });
 
     cy.getByTestId('compLast-input').should('have.value', 'DZ');
     cy.getByTestId('dep-input').clear().type('X');
@@ -264,20 +289,27 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('should reset to default value when hidden and shown again [keep & default]', () => {
-    setupForm([
-      { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
-      { id: 'dep', type: 'test-text-control', label: 'Dep', defaultValue: 'D' },
-      {
-        id: 'compDefault',
-        type: 'test-text-control',
-        label: 'Comp Default',
-        defaultValue: 'DEFAULT',
-        computedValue: 'dep + "Z"',
-        hidden: 'toggle === "hide"',
-        hideStrategy: 'keep',
-        valueStrategy: 'default',
-      },
-    ]);
+    setupForm({
+      content: [
+        { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
+        {
+          id: 'dep',
+          type: 'test-text-control',
+          label: 'Dep',
+          defaultValue: 'D',
+        },
+        {
+          id: 'compDefault',
+          type: 'test-text-control',
+          label: 'Comp Default',
+          defaultValue: 'DEFAULT',
+          computedValue: 'dep + "Z"',
+          hidden: 'toggle === "hide"',
+          hideStrategy: 'keep',
+          valueStrategy: 'default',
+        },
+      ],
+    });
 
     cy.getByTestId('compDefault-input').should('have.value', 'DZ');
     cy.getByTestId('dep-input').clear().type('X');
@@ -289,19 +321,26 @@ describe('Form computedValue expressions (full coverage)', () => {
   });
 
   it('should clear value when hidden and shown again [keep & reset]', () => {
-    setupForm([
-      { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
-      { id: 'dep', type: 'test-text-control', label: 'Dep', defaultValue: 'D' },
-      {
-        id: 'compReset',
-        type: 'test-text-control',
-        label: 'Comp Reset',
-        computedValue: 'dep + "Z"',
-        hidden: 'toggle === "hide"',
-        hideStrategy: 'keep',
-        valueStrategy: 'reset',
-      },
-    ]);
+    setupForm({
+      content: [
+        { id: 'toggle', type: 'test-text-control', label: 'Toggle' },
+        {
+          id: 'dep',
+          type: 'test-text-control',
+          label: 'Dep',
+          defaultValue: 'D',
+        },
+        {
+          id: 'compReset',
+          type: 'test-text-control',
+          label: 'Comp Reset',
+          computedValue: 'dep + "Z"',
+          hidden: 'toggle === "hide"',
+          hideStrategy: 'keep',
+          valueStrategy: 'reset',
+        },
+      ],
+    });
 
     cy.getByTestId('compReset-input').should('have.value', 'DZ');
     cy.getByTestId('dep-input').clear().type('X');
@@ -314,44 +353,46 @@ describe('Form computedValue expressions (full coverage)', () => {
 
   describe.only('Cascading Computed Values', () => {
     it('should correctly update through 5 levels of cascading dependencies', () => {
-      setupForm([
-        {
-          id: 'level0',
-          type: 'test-text-control',
-          label: 'Level 0 Input',
-          defaultValue: 'Start',
-        },
-        {
-          id: 'level1',
-          type: 'test-text-control',
-          label: 'Level 1 Computed',
-          computedValue: 'level0 + "-L1"',
-        },
-        {
-          id: 'level2',
-          type: 'test-text-control',
-          label: 'Level 2 Computed',
-          computedValue: 'level1 + "-L2"',
-        },
-        {
-          id: 'level3',
-          type: 'test-text-control',
-          label: 'Level 3 Computed',
-          computedValue: 'level2 + "-L3"',
-        },
-        {
-          id: 'level4',
-          type: 'test-text-control',
-          label: 'Level 4 Computed',
-          computedValue: 'level3 + "-L4"',
-        },
-        {
-          id: 'level5',
-          type: 'test-text-control',
-          label: 'Level 5 Computed',
-          computedValue: 'level4 + "-L5"',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'level0',
+            type: 'test-text-control',
+            label: 'Level 0 Input',
+            defaultValue: 'Start',
+          },
+          {
+            id: 'level1',
+            type: 'test-text-control',
+            label: 'Level 1 Computed',
+            computedValue: 'level0 + "-L1"',
+          },
+          {
+            id: 'level2',
+            type: 'test-text-control',
+            label: 'Level 2 Computed',
+            computedValue: 'level1 + "-L2"',
+          },
+          {
+            id: 'level3',
+            type: 'test-text-control',
+            label: 'Level 3 Computed',
+            computedValue: 'level2 + "-L3"',
+          },
+          {
+            id: 'level4',
+            type: 'test-text-control',
+            label: 'Level 4 Computed',
+            computedValue: 'level3 + "-L4"',
+          },
+          {
+            id: 'level5',
+            type: 'test-text-control',
+            label: 'Level 5 Computed',
+            computedValue: 'level4 + "-L5"',
+          },
+        ],
+      });
 
       // Verify initial values
       cy.getByTestId('level0-input').should('have.value', 'Start');
@@ -382,44 +423,46 @@ describe('Form computedValue expressions (full coverage)', () => {
     });
 
     it('should handle manual override and then revert on dependency change in a 5-level cascade', () => {
-      setupForm([
-        {
-          id: 'level0_override',
-          type: 'test-text-control',
-          label: 'Level 0 Input Override',
-          defaultValue: 'Initial',
-        },
-        {
-          id: 'level1_override',
-          type: 'test-text-control',
-          label: 'Level 1 Computed Override',
-          computedValue: 'level0_override + "-L1"',
-        },
-        {
-          id: 'level2_override',
-          type: 'test-text-control',
-          label: 'Level 2 Computed Override',
-          computedValue: 'level1_override + "-L2"',
-        },
-        {
-          id: 'level3_override',
-          type: 'test-text-control',
-          label: 'Level 3 Computed Override',
-          computedValue: 'level2_override + "-L3"',
-        },
-        {
-          id: 'level4_override',
-          type: 'test-text-control',
-          label: 'Level 4 Computed Override',
-          computedValue: 'level3_override + "-L4"',
-        },
-        {
-          id: 'level5_override',
-          type: 'test-text-control',
-          label: 'Level 5 Computed Override',
-          computedValue: 'level4_override + "-L5"',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'level0_override',
+            type: 'test-text-control',
+            label: 'Level 0 Input Override',
+            defaultValue: 'Initial',
+          },
+          {
+            id: 'level1_override',
+            type: 'test-text-control',
+            label: 'Level 1 Computed Override',
+            computedValue: 'level0_override + "-L1"',
+          },
+          {
+            id: 'level2_override',
+            type: 'test-text-control',
+            label: 'Level 2 Computed Override',
+            computedValue: 'level1_override + "-L2"',
+          },
+          {
+            id: 'level3_override',
+            type: 'test-text-control',
+            label: 'Level 3 Computed Override',
+            computedValue: 'level2_override + "-L3"',
+          },
+          {
+            id: 'level4_override',
+            type: 'test-text-control',
+            label: 'Level 4 Computed Override',
+            computedValue: 'level3_override + "-L4"',
+          },
+          {
+            id: 'level5_override',
+            type: 'test-text-control',
+            label: 'Level 5 Computed Override',
+            computedValue: 'level4_override + "-L5"',
+          },
+        ],
+      });
 
       // Verify initial value of the last level
       cy.getByTestId('level5_override-input').should(
