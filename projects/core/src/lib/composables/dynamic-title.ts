@@ -16,8 +16,19 @@ export function withDynamicTitle(content: Signal<NgxFwFormGroup>) {
   const expressionService = inject(ExpressionService);
 
   const dynamicTitleAst = computed<Program | null>(() => {
-    const readonlyOption = content().dynamicTitle;
-    return expressionService.parseExpressionToAst(readonlyOption);
+    const dynamicTitleOption = content().dynamicTitle;
+    if (typeof dynamicTitleOption !== 'string') {
+      return null;
+    }
+    return expressionService.parseExpressionToAst(dynamicTitleOption);
+  });
+
+  const dynamicTitleFunction = computed(() => {
+    const dynamicTitleOption = content().dynamicTitle;
+    if (typeof dynamicTitleOption !== 'function') {
+      return null;
+    }
+    return dynamicTitleOption;
   });
 
   return computed<string | undefined>(() => {
@@ -26,6 +37,12 @@ export function withDynamicTitle(content: Signal<NgxFwFormGroup>) {
       .value as FormContext;
     const evaluationContext =
       reactiveFormValues ?? currentSynchronousFormValues;
+
+    const dynamicTitleFn = dynamicTitleFunction();
+
+    if (dynamicTitleFn) {
+      return dynamicTitleFn(evaluationContext);
+    }
 
     const ast = dynamicTitleAst();
     if (!ast) {
