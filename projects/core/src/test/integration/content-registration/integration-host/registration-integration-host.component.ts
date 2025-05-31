@@ -2,7 +2,7 @@ import { Component, inject, input } from '@angular/core';
 import { TestTextControl } from '../../../types/controls.type';
 import { ComponentRegistrationService } from '../../../../lib/services/component-registration.service';
 import { FormService } from '../../../../lib/services/form.service';
-import { NgxfwAbstractControlDirective } from '../../../../lib/directives/ngxfw-abstract-control.directive';
+import { NgxfwAbstractControlDirective } from '../../../../lib';
 
 @Component({
   selector: 'ngxfw-integration-host',

@@ -16,7 +16,9 @@ describe('Form Component', () => {
         dummyControlContainer,
       ],
       componentProperties: {
-        formContent: [],
+        formConfig: {
+          content: [],
+        },
       },
     });
   });
