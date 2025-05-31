@@ -4,8 +4,6 @@ keyword: MinimalSetupPage
 ---
 
 
-
-
 import ControlSetup from '../../shared/control-setup.md';
 import GroupSetup from '../../shared/group-setup.md';
 
@@ -14,49 +12,50 @@ To get started quickly follow this minimal setup.
 Checkout [Helper](/guides/improvements) to see how to set up helpers.
 :::
 
-
 _ngx-formwork_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
-
 
 ## Controls
 
-<ControlSetup/>
+<ControlSetup />
 
 ## Groups
 
-<GroupSetup/>
+<GroupSetup />
 
 ## Configuring a form
 
 Once you've registered controls and optionally validators, you write a configuration for a form. You can either do this directly in JSON or in TypeScript, for better typing information.
 
 This example is written in TypeScript
+
 ```ts title="example.form.ts"
-export const exampleForm: NgxFwContent[] = [
-  {
-    type: 'text',
-    id: 'name',
-    label: 'First and Lastname',
-  },
-  {
-    type: 'text',
-    id: 'company',
-    label: 'Name of Company',
-    hint: 'If applicable',
-  },
-  {
-    type: 'group',
-    id: 'repo',
-    controls: [
-      {
-        type: 'text',
-        id: 'username',
-        label: 'Username',
-        default: 'UsernameSuggestion123',
-      },
-    ],
-  },
-];
+export const exampleForm: NgxFwForm = {
+  content: [
+    {
+      type: 'text',
+      id: 'name',
+      label: 'First and Lastname',
+    },
+    {
+      type: 'text',
+      id: 'company',
+      label: 'Name of Company',
+      hint: 'If applicable',
+    },
+    {
+      type: 'group',
+      id: 'repo',
+      controls: [
+        {
+          type: 'text',
+          id: 'username',
+          label: 'Username',
+          default: 'UsernameSuggestion123',
+        },
+      ],
+    },
+  ],
+};
 ```
 
 As you can see the configuration is just an array of controls and/or groups. Every item in that array will be registered on the top-level of the form.
@@ -68,17 +67,19 @@ Now that everything is set up, you can render the form.
 You build the form as usual. This gives you full access to the underlying form, and you can do everything you normally can too.
 
 ```ts title="example-form.component.ts"
+import { NgxFwForm } from './form.type';
+import { computed } from '@angular/core';
 @Component({
   selector: 'app-example-form',
   imports: [ReactiveFormsModule, NgxFwFormComponent],
-  templateUrl: './example-form.component.html'
+  templateUrl: './example-form.component.html',
 })
 export class ExampleFormComponent {
   // Construct the reactive form as usual
   private readonly formBuilder = inject(FormBuilder);
 
   // This is our form configuration. It doesn't have to be passed as an input. You could also have a service that gets this or just import it from a file.
-  readonly formContent = input.required<NgxFwContent[]>();
+  readonly formConfig = input.required<NgxFwForm>();
 
   // Building a form with an empty group. All controls and groups are self-registering
   // You can also add additional hardcoded control if you want
@@ -92,7 +93,7 @@ export class ExampleFormComponent {
   patchValue() {
     // Setting the value of the form is done the same way as you normally would
     this.form.patchValue({
-    //  Whatever value we want to patch
+      //  Whatever value we want to patch
     });
   }
 }
@@ -101,9 +102,8 @@ export class ExampleFormComponent {
 ```html title="example-form.component.ts"
 <!-- Just normal form binding -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-
   <!-- This component renders your form  -->
-  <ngxfw-form [formConfig]="formContent()" />
+  <ngxfw-form [formConfig]="formConfig()" />
 
   <!-- normal submit button -->
   <button type="submit">Submit</button>
