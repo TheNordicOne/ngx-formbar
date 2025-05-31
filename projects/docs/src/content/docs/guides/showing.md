@@ -43,7 +43,7 @@ export class FormIntegrationHostComponent {
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
    
   <!-- This component renders your form  -->
-  <ngxfw-form [formContent]="formContent()" />
+  <ngxfw-form [formConfig]="formContent()" />
   
   <!-- normal submit button -->
   <button type="submit">Submit</button>

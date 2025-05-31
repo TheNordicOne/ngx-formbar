@@ -5,6 +5,7 @@ keyword: MinimalSetupPage
 
 
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import GroupSetup from '../../shared/group-setup.md';
 
@@ -102,7 +103,7 @@ export class ExampleFormComponent {
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
   <!-- This component renders your form  -->
-  <ngxfw-form [formContent]="formContent()" />
+  <ngxfw-form [formConfig]="formContent()" />
 
   <!-- normal submit button -->
   <button type="submit">Submit</button>

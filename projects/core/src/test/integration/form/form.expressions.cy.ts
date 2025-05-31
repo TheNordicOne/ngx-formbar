@@ -4,89 +4,91 @@ import { FormContext } from '../../../lib/types/expression.type';
 describe('Form Expressions', () => {
   describe('Deep Hierarchy Visibility Conditions', () => {
     it('should control visibility of a deeply nested field based on a root level field [deep hierarchy]', () => {
-      setupForm([
-        {
-          id: 'toggleControl',
-          type: 'test-text-control',
-          label: 'Type "hide" to hide nested fields',
-        },
-        {
-          id: 'rootField',
-          type: 'test-text-control',
-          label: 'Root level field',
-          defaultValue: 'root value',
-        },
-        {
-          id: 'level1',
-          type: 'test-group',
-          title: 'Level 1',
-          controls: [
-            {
-              id: 'level1Field',
-              type: 'test-text-control',
-              label: 'Level 1 Field',
-              defaultValue: 'level 1 value',
-            },
-            {
-              id: 'level2A',
-              type: 'test-group',
-              title: 'Level 2A',
-              controls: [
-                {
-                  id: 'level2AField',
-                  type: 'test-text-control',
-                  label: 'Level 2A Field',
-                  hidden: 'toggleControl === "hide"',
-                  hideStrategy: 'remove',
-                  defaultValue: 'level 2A value',
-                },
-              ],
-            },
-            {
-              id: 'level2B',
-              type: 'test-group',
-              title: 'Level 2B',
-              controls: [
-                {
-                  id: 'level2BField',
-                  type: 'test-text-control',
-                  label: 'Level 2B Field',
-                  defaultValue: 'level 2B value',
-                },
-                {
-                  id: 'level3A',
-                  type: 'test-group',
-                  title: 'Level 3A',
-                  controls: [
-                    {
-                      id: 'level3AField',
-                      type: 'test-text-control',
-                      label: 'Level 3A Field',
-                      hidden: 'toggleControl === "hide"',
-                      hideStrategy: 'keep',
-                      defaultValue: 'level 3A value',
-                    },
-                  ],
-                },
-                {
-                  id: 'level3B',
-                  type: 'test-group',
-                  title: 'Level 3B',
-                  hidden: 'toggleControl === "hide"',
-                  controls: [
-                    {
-                      id: 'level3BField',
-                      type: 'test-text-control',
-                      label: 'Level 3B Field',
-                      defaultValue: 'level 3B value',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'toggleControl',
+            type: 'test-text-control',
+            label: 'Type "hide" to hide nested fields',
+          },
+          {
+            id: 'rootField',
+            type: 'test-text-control',
+            label: 'Root level field',
+            defaultValue: 'root value',
+          },
+          {
+            id: 'level1',
+            type: 'test-group',
+            title: 'Level 1',
+            controls: [
+              {
+                id: 'level1Field',
+                type: 'test-text-control',
+                label: 'Level 1 Field',
+                defaultValue: 'level 1 value',
+              },
+              {
+                id: 'level2A',
+                type: 'test-group',
+                title: 'Level 2A',
+                controls: [
+                  {
+                    id: 'level2AField',
+                    type: 'test-text-control',
+                    label: 'Level 2A Field',
+                    hidden: 'toggleControl === "hide"',
+                    hideStrategy: 'remove',
+                    defaultValue: 'level 2A value',
+                  },
+                ],
+              },
+              {
+                id: 'level2B',
+                type: 'test-group',
+                title: 'Level 2B',
+                controls: [
+                  {
+                    id: 'level2BField',
+                    type: 'test-text-control',
+                    label: 'Level 2B Field',
+                    defaultValue: 'level 2B value',
+                  },
+                  {
+                    id: 'level3A',
+                    type: 'test-group',
+                    title: 'Level 3A',
+                    controls: [
+                      {
+                        id: 'level3AField',
+                        type: 'test-text-control',
+                        label: 'Level 3A Field',
+                        hidden: 'toggleControl === "hide"',
+                        hideStrategy: 'keep',
+                        defaultValue: 'level 3A value',
+                      },
+                    ],
+                  },
+                  {
+                    id: 'level3B',
+                    type: 'test-group',
+                    title: 'Level 3B',
+                    hidden: 'toggleControl === "hide"',
+                    controls: [
+                      {
+                        id: 'level3BField',
+                        type: 'test-text-control',
+                        label: 'Level 3B Field',
+                        defaultValue: 'level 3B value',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
 
       // Initially all fields should be visible
       cy.getByTestId('level2AField-input').should('be.visible');
@@ -118,40 +120,42 @@ describe('Form Expressions', () => {
 
   describe('Complex Expression Conditions', () => {
     it('should evaluate complex expressions with multiple operators [complex expressions]', () => {
-      setupForm([
-        {
-          id: 'valueA',
-          type: 'test-text-control',
-          label: 'Value A',
-          defaultValue: '10',
-        },
-        {
-          id: 'valueB',
-          type: 'test-text-control',
-          label: 'Value B',
-          defaultValue: '20',
-        },
-        {
-          id: 'valueC',
-          type: 'test-text-control',
-          label: 'Value C',
-          defaultValue: '30',
-        },
-        {
-          id: 'hiddenByComplexExpression',
-          type: 'test-text-control',
-          label: 'Hidden by complex expression',
-          hidden: '+valueA + +valueB > +valueC',
-          defaultValue: 'Should be hidden initially',
-        },
-        {
-          id: 'visibleByComplexExpression',
-          type: 'test-text-control',
-          label: 'Visible by complex expression',
-          hidden: '+valueA * +valueB < +valueC',
-          defaultValue: 'Should be visible initially',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'valueA',
+            type: 'test-text-control',
+            label: 'Value A',
+            defaultValue: '10',
+          },
+          {
+            id: 'valueB',
+            type: 'test-text-control',
+            label: 'Value B',
+            defaultValue: '20',
+          },
+          {
+            id: 'valueC',
+            type: 'test-text-control',
+            label: 'Value C',
+            defaultValue: '30',
+          },
+          {
+            id: 'hiddenByComplexExpression',
+            type: 'test-text-control',
+            label: 'Hidden by complex expression',
+            hidden: '+valueA + +valueB > +valueC',
+            defaultValue: 'Should be hidden initially',
+          },
+          {
+            id: 'visibleByComplexExpression',
+            type: 'test-text-control',
+            label: 'Visible by complex expression',
+            hidden: '+valueA * +valueB < +valueC',
+            defaultValue: 'Should be visible initially',
+          },
+        ],
+      });
 
       // Check initial state: 10 + 20 > 30 is false, so the field should be visible
       cy.getByTestId('hiddenByComplexExpression-input').should('be.visible');
@@ -176,27 +180,29 @@ describe('Form Expressions', () => {
     });
 
     it('should handle conditional expressions with multiple field dependencies [multiple dependencies]', () => {
-      setupForm([
-        {
-          id: 'showCondition',
-          type: 'test-text-control',
-          label: 'Show Condition',
-          defaultValue: 'no',
-        },
-        {
-          id: 'secondCondition',
-          type: 'test-text-control',
-          label: 'Second Condition',
-          defaultValue: 'no',
-        },
-        {
-          id: 'conditionalField',
-          type: 'test-text-control',
-          label: 'Conditional Field',
-          hidden: 'showCondition !== "yes" || secondCondition !== "yes"',
-          defaultValue: 'Only visible when both conditions are "yes"',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'showCondition',
+            type: 'test-text-control',
+            label: 'Show Condition',
+            defaultValue: 'no',
+          },
+          {
+            id: 'secondCondition',
+            type: 'test-text-control',
+            label: 'Second Condition',
+            defaultValue: 'no',
+          },
+          {
+            id: 'conditionalField',
+            type: 'test-text-control',
+            label: 'Conditional Field',
+            hidden: 'showCondition !== "yes" || secondCondition !== "yes"',
+            defaultValue: 'Only visible when both conditions are "yes"',
+          },
+        ],
+      });
 
       cy.getByTestId('conditionalField-input').should('not.exist');
 
@@ -216,42 +222,44 @@ describe('Form Expressions', () => {
 
   describe('Cross-Group Dependencies', () => {
     it('should handle visibility conditions between fields in different branches of the form [cross-branch visibility]', () => {
-      setupForm([
-        {
-          id: 'branchA',
-          type: 'test-group',
-          title: 'Branch A',
-          controls: [
-            {
-              id: 'toggleField',
-              type: 'test-text-control',
-              label: 'Type "show" to reveal field in Branch B',
-              defaultValue: '',
-            },
-          ],
-        },
-        {
-          id: 'branchB',
-          type: 'test-group',
-          title: 'Branch B',
-          controls: [
-            {
-              id: 'nestedGroup',
-              type: 'test-group',
-              title: 'Nested Group',
-              controls: [
-                {
-                  id: 'dependentField',
-                  type: 'test-text-control',
-                  label: 'Dependent Field',
-                  hidden: 'branchA.toggleField !== "show"',
-                  defaultValue: 'I depend on Branch A field',
-                },
-              ],
-            },
-          ],
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'branchA',
+            type: 'test-group',
+            title: 'Branch A',
+            controls: [
+              {
+                id: 'toggleField',
+                type: 'test-text-control',
+                label: 'Type "show" to reveal field in Branch B',
+                defaultValue: '',
+              },
+            ],
+          },
+          {
+            id: 'branchB',
+            type: 'test-group',
+            title: 'Branch B',
+            controls: [
+              {
+                id: 'nestedGroup',
+                type: 'test-group',
+                title: 'Nested Group',
+                controls: [
+                  {
+                    id: 'dependentField',
+                    type: 'test-text-control',
+                    label: 'Dependent Field',
+                    hidden: 'branchA.toggleField !== "show"',
+                    defaultValue: 'I depend on Branch A field',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
 
       // Initially dependent field should be hidden
       cy.getByTestId('dependentField-input').should('not.exist');
@@ -272,22 +280,24 @@ describe('Form Expressions', () => {
 
   describe('Function-based Expressions', () => {
     it('should control visibility using a function for "hidden" with default hideStrategy', () => {
-      setupForm([
-        {
-          id: 'triggerFieldFunc',
-          type: 'test-text-control',
-          label: 'Type "hide" to hide target',
-          defaultValue: '',
-        },
-        {
-          id: 'targetFieldFunc',
-          type: 'test-text-control',
-          label: 'Target Field (Function Hidden)',
-          hidden: (formValue: FormContext) =>
-            formValue['triggerFieldFunc'] === 'hide',
-          defaultValue: 'I can be hidden by a function',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'triggerFieldFunc',
+            type: 'test-text-control',
+            label: 'Type "hide" to hide target',
+            defaultValue: '',
+          },
+          {
+            id: 'targetFieldFunc',
+            type: 'test-text-control',
+            label: 'Target Field (Function Hidden)',
+            hidden: (formValue: FormContext) =>
+              formValue['triggerFieldFunc'] === 'hide',
+            defaultValue: 'I can be hidden by a function',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldFunc-input').should('be.visible');
 
@@ -301,23 +311,25 @@ describe('Form Expressions', () => {
     });
 
     it('should control visibility using a function for "hidden" with "keep" hideStrategy', () => {
-      setupForm([
-        {
-          id: 'triggerFieldFuncKeep',
-          type: 'test-text-control',
-          label: 'Type "hide" to hide target (keep)',
-          defaultValue: '',
-        },
-        {
-          id: 'targetFieldFuncKeep',
-          type: 'test-text-control',
-          label: 'Target Field (Function Hidden, Keep)',
-          hidden: (formValue: FormContext) =>
-            formValue['triggerFieldFuncKeep'] === 'hide',
-          hideStrategy: 'keep',
-          defaultValue: 'I can be hidden by a function (kept in DOM)',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'triggerFieldFuncKeep',
+            type: 'test-text-control',
+            label: 'Type "hide" to hide target (keep)',
+            defaultValue: '',
+          },
+          {
+            id: 'targetFieldFuncKeep',
+            type: 'test-text-control',
+            label: 'Target Field (Function Hidden, Keep)',
+            hidden: (formValue: FormContext) =>
+              formValue['triggerFieldFuncKeep'] === 'hide',
+            hideStrategy: 'keep',
+            defaultValue: 'I can be hidden by a function (kept in DOM)',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldFuncKeep-input').should('be.visible');
 
@@ -331,22 +343,24 @@ describe('Form Expressions', () => {
     });
 
     it('should control "disabled" state using a function', () => {
-      setupForm([
-        {
-          id: 'triggerDisable',
-          type: 'test-text-control',
-          label: 'Type "disable" to disable target',
-          defaultValue: '',
-        },
-        {
-          id: 'targetFieldDisabled',
-          type: 'test-text-control',
-          label: 'Target Field (Function Disabled)',
-          disabled: (formValue: FormContext) =>
-            formValue['triggerDisable'] === 'disable',
-          defaultValue: 'I can be disabled',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'triggerDisable',
+            type: 'test-text-control',
+            label: 'Type "disable" to disable target',
+            defaultValue: '',
+          },
+          {
+            id: 'targetFieldDisabled',
+            type: 'test-text-control',
+            label: 'Target Field (Function Disabled)',
+            disabled: (formValue: FormContext) =>
+              formValue['triggerDisable'] === 'disable',
+            defaultValue: 'I can be disabled',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldDisabled-input').should('not.be.disabled');
       cy.getByTestId('triggerDisable-input').clear().type('disable');
@@ -356,22 +370,24 @@ describe('Form Expressions', () => {
     });
 
     it('should control "readonly" state using a function', () => {
-      setupForm([
-        {
-          id: 'triggerReadonly',
-          type: 'test-text-control',
-          label: 'Type "readonly" to make target readonly',
-          defaultValue: '',
-        },
-        {
-          id: 'targetFieldReadonly',
-          type: 'test-text-control',
-          label: 'Target Field (Function Readonly)',
-          readonly: (formValue: FormContext) =>
-            formValue['triggerReadonly'] === 'readonly',
-          defaultValue: 'I can be readonly',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'triggerReadonly',
+            type: 'test-text-control',
+            label: 'Type "readonly" to make target readonly',
+            defaultValue: '',
+          },
+          {
+            id: 'targetFieldReadonly',
+            type: 'test-text-control',
+            label: 'Target Field (Function Readonly)',
+            readonly: (formValue: FormContext) =>
+              formValue['triggerReadonly'] === 'readonly',
+            defaultValue: 'I can be readonly',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldReadonly-input').should(
         'not.have.attr',
@@ -390,28 +406,30 @@ describe('Form Expressions', () => {
     });
 
     it('should compute value using a function for "computedValue"', () => {
-      setupForm([
-        {
-          id: 'sourceFieldA',
-          type: 'test-text-control',
-          label: 'Source A',
-          defaultValue: 'Hello',
-        },
-        {
-          id: 'sourceFieldB',
-          type: 'test-text-control',
-          label: 'Source B',
-          defaultValue: 'World',
-        },
-        {
-          id: 'targetFieldComputedFunc',
-          type: 'test-text-control',
-          label: 'Target Field (Function Computed)',
-          computedValue: (formValue: FormContext): string =>
-            `${formValue['sourceFieldA']?.toString() ?? ''} ${formValue['sourceFieldB']?.toString() ?? ''}!`.trim(),
-          defaultValue: '',
-        },
-      ]);
+      setupForm({
+        content: [
+          {
+            id: 'sourceFieldA',
+            type: 'test-text-control',
+            label: 'Source A',
+            defaultValue: 'Hello',
+          },
+          {
+            id: 'sourceFieldB',
+            type: 'test-text-control',
+            label: 'Source B',
+            defaultValue: 'World',
+          },
+          {
+            id: 'targetFieldComputedFunc',
+            type: 'test-text-control',
+            label: 'Target Field (Function Computed)',
+            computedValue: (formValue: FormContext): string =>
+              `${formValue['sourceFieldA']?.toString() ?? ''} ${formValue['sourceFieldB']?.toString() ?? ''}!`.trim(),
+            defaultValue: '',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldComputedFunc-input').should(
         'have.value',
@@ -438,25 +456,27 @@ describe('Form Expressions', () => {
     });
 
     it('should update label using a function for "dynamicLabel"', () => {
-      setupForm([
-        {
-          id: 'nameForLabel',
-          type: 'test-text-control',
-          label: 'Name',
-          defaultValue: 'User',
-        },
-        {
-          id: 'targetFieldLabelFunc',
-          type: 'test-text-control',
-          label: 'Initial Static Label',
-          dynamicLabel: (formValue: FormContext): string => {
-            const name =
-              (formValue['nameForLabel'] as string | undefined) ?? '';
-            return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+      setupForm({
+        content: [
+          {
+            id: 'nameForLabel',
+            type: 'test-text-control',
+            label: 'Name',
+            defaultValue: 'User',
           },
-          defaultValue: 'Some value',
-        },
-      ]);
+          {
+            id: 'targetFieldLabelFunc',
+            type: 'test-text-control',
+            label: 'Initial Static Label',
+            dynamicLabel: (formValue: FormContext): string => {
+              const name =
+                (formValue['nameForLabel'] as string | undefined) ?? '';
+              return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+            },
+            defaultValue: 'Some value',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldLabelFunc-label').should(
         'contain.text',
@@ -477,25 +497,27 @@ describe('Form Expressions', () => {
     });
 
     it('should support any function', () => {
-      setupForm([
-        {
-          id: 'nameForLabel',
-          type: 'test-text-control',
-          label: 'Name',
-          defaultValue: 'User',
-        },
-        {
-          id: 'targetFieldLabelFunc',
-          type: 'test-text-control',
-          label: 'Initial Static Label',
-          dynamicLabel: (formValue: FormContext): string => {
-            const name =
-              (formValue['nameForLabel'] as string | undefined) ?? '';
-            return getGreeting(name);
+      setupForm({
+        content: [
+          {
+            id: 'nameForLabel',
+            type: 'test-text-control',
+            label: 'Name',
+            defaultValue: 'User',
           },
-          defaultValue: 'Some value',
-        },
-      ]);
+          {
+            id: 'targetFieldLabelFunc',
+            type: 'test-text-control',
+            label: 'Initial Static Label',
+            dynamicLabel: (formValue: FormContext): string => {
+              const name =
+                (formValue['nameForLabel'] as string | undefined) ?? '';
+              return getGreeting(name);
+            },
+            defaultValue: 'Some value',
+          },
+        ],
+      });
 
       cy.getByTestId('targetFieldLabelFunc-label').should(
         'contain.text',

@@ -2,71 +2,73 @@ import { setupForm } from '../../helper/test';
 
 describe('Form content', () => {
   beforeEach(() => {
-    setupForm([
-      {
-        id: 'first',
-        type: 'test-text-control',
-        label: 'First',
-        defaultValue: 'default-first',
-      },
-      {
-        id: 'second',
-        type: 'test-text-control',
-        label: 'Second',
-        defaultValue: 'default-second',
-      },
-      {
-        id: 'third',
-        type: 'test-text-control',
-        label: 'Third',
-        defaultValue: 'default-third',
-      },
-      {
-        id: 'fourth',
-        type: 'test-text-control',
-        label: 'Fourth',
-        defaultValue: 'default-fourth',
-        nonNullable: true,
-      },
-      {
-        id: 'fifth',
-        type: 'test-text-control',
-        label: 'Fifth',
-        defaultValue: 'default-fifth',
-        nonNullable: true,
-      },
-      {
-        id: 'block',
-        type: 'test-block',
-        message: 'This is an information',
-      },
-      {
-        type: 'test-group',
-        id: 'first-group',
-        title: 'First Group',
-        controls: [
-          {
-            id: 'grouped-first',
-            type: 'test-text-control',
-            label: 'Grouped First label',
-            defaultValue: 'default-grouped-first',
-          },
-          {
-            type: 'test-group',
-            id: 'nested-group',
-            title: 'Nested Group',
-            controls: [
-              {
-                id: 'nested-second',
-                type: 'test-text-control',
-                label: 'Nested Second label',
-                defaultValue: 'default-nested-second',
-              },
-            ],
-          },
-        ],
-      },
-    ]);
+    setupForm({
+      content: [
+        {
+          id: 'first',
+          type: 'test-text-control',
+          label: 'First',
+          defaultValue: 'default-first',
+        },
+        {
+          id: 'second',
+          type: 'test-text-control',
+          label: 'Second',
+          defaultValue: 'default-second',
+        },
+        {
+          id: 'third',
+          type: 'test-text-control',
+          label: 'Third',
+          defaultValue: 'default-third',
+        },
+        {
+          id: 'fourth',
+          type: 'test-text-control',
+          label: 'Fourth',
+          defaultValue: 'default-fourth',
+          nonNullable: true,
+        },
+        {
+          id: 'fifth',
+          type: 'test-text-control',
+          label: 'Fifth',
+          defaultValue: 'default-fifth',
+          nonNullable: true,
+        },
+        {
+          id: 'block',
+          type: 'test-block',
+          message: 'This is an information',
+        },
+        {
+          type: 'test-group',
+          id: 'first-group',
+          title: 'First Group',
+          controls: [
+            {
+              id: 'grouped-first',
+              type: 'test-text-control',
+              label: 'Grouped First label',
+              defaultValue: 'default-grouped-first',
+            },
+            {
+              type: 'test-group',
+              id: 'nested-group',
+              title: 'Nested Group',
+              controls: [
+                {
+                  id: 'nested-second',
+                  type: 'test-text-control',
+                  label: 'Nested Second label',
+                  defaultValue: 'default-nested-second',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it('should show all content based on the form config', () => {
