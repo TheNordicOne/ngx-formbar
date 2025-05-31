@@ -49,3 +49,53 @@ The evaluator supports a range of node types:
 
 - **Controlled Context:**  
   The evaluation runs only in the context of the form object, avoiding global access and potential security vulnerabilities.
+
+## Function-based Expressions
+
+In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`). This offers a more powerful and type-safe way to define dynamic behavior.
+
+### Signature
+
+These functions receive the current `formValue` (an object representing the entire form's data) as their single argument and are expected to return a value of the type appropriate for the property they are controlling.
+
+The general signature is:
+
+```typescript
+(formValue: FormContext) => T
+```
+
+Where:
+- `formValue: FormContext`: An object where keys are the ids of your form controls and values are their current values. FormContext is an alias for `Record<string, unknown>`.
+- `T`: The expected return type, which varies depending on the property.
+  - hidden: `boolean`
+  - disabled: `boolean`
+  - readonly: `boolean`
+  - computedValue: `unknow` (it should return the same type of value as your control uses)
+  - dynamicLabel: `string`
+
+
+### Advantages
+- Type Safety: When using TypeScript, function-based expressions provide better type checking for both the formValue and the return type.
+- Complex Logic: You can implement more complex logic directly within the function, without the limitations of the string-based expression parser.
+- No Parsing Overhead: Since it's already a function, there's no need for AST parsing.
+- Access to Outer Scope: These functions can use any other function from your app, allowing for more flexible and reusable logic.
+
+### Disadvantages
+- Non-Serializable: Function-based Expressions are not serializable to JSON and therefore should only be used if the form configuration is not stored in a database.
+- Can be verbose: For very simple expressions (e.g.: `!termsAgreed`, `username === 'admin'`) using a function-based expression may be overkill and decrease readability.
+
+
+### Example
+
+```ts
+// In your form configuration
+{
+  id: 'myField',
+  type: 'text',
+  label: 'My Field',
+  hidden: (formValue: FormContext): boolean => {
+    return formValue['someOtherField'] === 'specificValue' && formValue['anotherField'] > 10;
+  },
+  defaultValue: ''
+}
+```
