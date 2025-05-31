@@ -87,7 +87,9 @@ export type MyAppControls = OneOf<[TestTextControl, TestGroup]>;
 and use it like this
 
 ```ts
-export const exampleForm: MyAppControls[] = [ ... ]
+import { NgxFwForm } from './form.type';
+
+export const exampleForm: NgxFwForm<MyAppControls> = [...]
 ```
 
 ## Code Splitting
