@@ -9,16 +9,33 @@ import { FormContext } from '../types/expression.type';
 export function withComputedValue<T>(content: Signal<NgxFwContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
+  const parentContainer = inject(ControlContainer);
 
   const computedValueAst = computed<Program | null>(() => {
     const computedValueOption = content().computedValue;
+    if (typeof computedValueOption !== 'string') {
+      return null;
+    }
     return expressionService.parseExpressionToAst(computedValueOption);
   });
-  const parentContainer = inject(ControlContainer);
+
+  const computedValueFunction = computed(() => {
+    const computedValueOption = content().computedValue;
+    if (typeof computedValueOption !== 'function') {
+      return null;
+    }
+    return computedValueOption;
+  });
 
   return computed<T | undefined>(() => {
     const value =
       formService.formValue() ?? (parentContainer.value as FormContext);
+
+    const computedValueFn = computedValueFunction();
+    if (computedValueFn) {
+      return computedValueFn(value) as T;
+    }
+
     const ast = computedValueAst();
     if (!ast) {
       return undefined;

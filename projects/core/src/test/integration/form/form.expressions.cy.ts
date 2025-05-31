@@ -1,4 +1,5 @@
 import { setupForm } from '../../helper/test';
+import { FormContext } from '../../../lib/types/expression.type';
 
 describe('Form Expressions', () => {
   describe('Deep Hierarchy Visibility Conditions', () => {
@@ -197,25 +198,18 @@ describe('Form Expressions', () => {
         },
       ]);
 
-      // Initially field should be hidden (both conditions are "no")
       cy.getByTestId('conditionalField-input').should('not.exist');
 
-      // Set first condition to "yes"
       cy.getByTestId('showCondition-input').clear().type('yes');
 
-      // Field should still be hidden (second condition is still "no")
       cy.getByTestId('conditionalField-input').should('not.exist');
 
-      // Set second condition to "yes"
       cy.getByTestId('secondCondition-input').clear().type('yes');
 
-      // Now field should be visible (both conditions are "yes")
       cy.getByTestId('conditionalField-input').should('be.visible');
 
-      // Change first condition back to "no"
       cy.getByTestId('showCondition-input').clear().type('no');
 
-      // Field should be hidden again
       cy.getByTestId('conditionalField-input').should('not.exist');
     });
   });
@@ -275,4 +269,254 @@ describe('Form Expressions', () => {
       cy.getByTestId('dependentField-input').should('not.exist');
     });
   });
+
+  describe('Function-based Expressions', () => {
+    it('should control visibility using a function for "hidden" with default hideStrategy', () => {
+      setupForm([
+        {
+          id: 'triggerFieldFunc',
+          type: 'test-text-control',
+          label: 'Type "hide" to hide target',
+          defaultValue: '',
+        },
+        {
+          id: 'targetFieldFunc',
+          type: 'test-text-control',
+          label: 'Target Field (Function Hidden)',
+          hidden: (formValue: FormContext) =>
+            formValue['triggerFieldFunc'] === 'hide',
+          defaultValue: 'I can be hidden by a function',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldFunc-input').should('be.visible');
+
+      cy.getByTestId('triggerFieldFunc-input').clear().type('hide');
+
+      cy.getByTestId('targetFieldFunc-input').should('not.exist');
+
+      cy.getByTestId('triggerFieldFunc-input').clear();
+
+      cy.getByTestId('targetFieldFunc-input').should('be.visible');
+    });
+
+    it('should control visibility using a function for "hidden" with "keep" hideStrategy', () => {
+      setupForm([
+        {
+          id: 'triggerFieldFuncKeep',
+          type: 'test-text-control',
+          label: 'Type "hide" to hide target (keep)',
+          defaultValue: '',
+        },
+        {
+          id: 'targetFieldFuncKeep',
+          type: 'test-text-control',
+          label: 'Target Field (Function Hidden, Keep)',
+          hidden: (formValue: FormContext) =>
+            formValue['triggerFieldFuncKeep'] === 'hide',
+          hideStrategy: 'keep',
+          defaultValue: 'I can be hidden by a function (kept in DOM)',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldFuncKeep-input').should('be.visible');
+
+      cy.getByTestId('triggerFieldFuncKeep-input').clear().type('hide');
+
+      cy.getByTestId('targetFieldFuncKeep-input').should('not.exist');
+
+      cy.getByTestId('triggerFieldFuncKeep-input').clear();
+
+      cy.getByTestId('targetFieldFuncKeep-input').should('be.visible');
+    });
+
+    it('should control "disabled" state using a function', () => {
+      setupForm([
+        {
+          id: 'triggerDisable',
+          type: 'test-text-control',
+          label: 'Type "disable" to disable target',
+          defaultValue: '',
+        },
+        {
+          id: 'targetFieldDisabled',
+          type: 'test-text-control',
+          label: 'Target Field (Function Disabled)',
+          disabled: (formValue: FormContext) =>
+            formValue['triggerDisable'] === 'disable',
+          defaultValue: 'I can be disabled',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldDisabled-input').should('not.be.disabled');
+      cy.getByTestId('triggerDisable-input').clear().type('disable');
+      cy.getByTestId('targetFieldDisabled-input').should('be.disabled');
+      cy.getByTestId('triggerDisable-input').clear();
+      cy.getByTestId('targetFieldDisabled-input').should('not.be.disabled');
+    });
+
+    it('should control "readonly" state using a function', () => {
+      setupForm([
+        {
+          id: 'triggerReadonly',
+          type: 'test-text-control',
+          label: 'Type "readonly" to make target readonly',
+          defaultValue: '',
+        },
+        {
+          id: 'targetFieldReadonly',
+          type: 'test-text-control',
+          label: 'Target Field (Function Readonly)',
+          readonly: (formValue: FormContext) =>
+            formValue['triggerReadonly'] === 'readonly',
+          defaultValue: 'I can be readonly',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldReadonly-input').should(
+        'not.have.attr',
+        'readonly',
+      );
+      cy.getByTestId('triggerReadonly-input').clear().type('readonly');
+      cy.getByTestId('targetFieldReadonly-input').should(
+        'have.attr',
+        'readonly',
+      );
+      cy.getByTestId('triggerReadonly-input').clear();
+      cy.getByTestId('targetFieldReadonly-input').should(
+        'not.have.attr',
+        'readonly',
+      );
+    });
+
+    it('should compute value using a function for "computedValue"', () => {
+      setupForm([
+        {
+          id: 'sourceFieldA',
+          type: 'test-text-control',
+          label: 'Source A',
+          defaultValue: 'Hello',
+        },
+        {
+          id: 'sourceFieldB',
+          type: 'test-text-control',
+          label: 'Source B',
+          defaultValue: 'World',
+        },
+        {
+          id: 'targetFieldComputedFunc',
+          type: 'test-text-control',
+          label: 'Target Field (Function Computed)',
+          computedValue: (formValue: FormContext): string =>
+            `${formValue['sourceFieldA']?.toString() ?? ''} ${formValue['sourceFieldB']?.toString() ?? ''}!`.trim(),
+          defaultValue: '',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldComputedFunc-input').should(
+        'have.value',
+        'Hello World!',
+      );
+
+      cy.getByTestId('sourceFieldA-input').clear().type('Goodbye');
+      cy.getByTestId('targetFieldComputedFunc-input').should(
+        'have.value',
+        'Goodbye World!',
+      );
+
+      cy.getByTestId('sourceFieldB-input').clear().type('Universe');
+      cy.getByTestId('targetFieldComputedFunc-input').should(
+        'have.value',
+        'Goodbye Universe!',
+      );
+
+      cy.getByTestId('sourceFieldA-input').clear();
+      cy.getByTestId('targetFieldComputedFunc-input').should(
+        'have.value',
+        'Universe!',
+      );
+    });
+
+    it('should update label using a function for "dynamicLabel"', () => {
+      setupForm([
+        {
+          id: 'nameForLabel',
+          type: 'test-text-control',
+          label: 'Name',
+          defaultValue: 'User',
+        },
+        {
+          id: 'targetFieldLabelFunc',
+          type: 'test-text-control',
+          label: 'Initial Static Label',
+          dynamicLabel: (formValue: FormContext): string => {
+            const name =
+              (formValue['nameForLabel'] as string | undefined) ?? '';
+            return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+          },
+          defaultValue: 'Some value',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for User',
+      );
+
+      cy.getByTestId('nameForLabel-input').clear().type('Alice');
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for Alice',
+      );
+
+      cy.getByTestId('nameForLabel-input').clear();
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for Guest',
+      );
+    });
+
+    it('should support any function', () => {
+      setupForm([
+        {
+          id: 'nameForLabel',
+          type: 'test-text-control',
+          label: 'Name',
+          defaultValue: 'User',
+        },
+        {
+          id: 'targetFieldLabelFunc',
+          type: 'test-text-control',
+          label: 'Initial Static Label',
+          dynamicLabel: (formValue: FormContext): string => {
+            const name =
+              (formValue['nameForLabel'] as string | undefined) ?? '';
+            return getGreeting(name);
+          },
+          defaultValue: 'Some value',
+        },
+      ]);
+
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for User',
+      );
+
+      cy.getByTestId('nameForLabel-input').clear().type('Alice');
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for Alice',
+      );
+
+      cy.getByTestId('nameForLabel-input').clear();
+      cy.getByTestId('targetFieldLabelFunc-label').should(
+        'contain.text',
+        'Greeting for Guest',
+      );
+    });
+  });
 });
+
+function getGreeting(name: string) {
+  return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+}

@@ -47,9 +47,21 @@ export function withHiddenState(content: Signal<NgxFwBaseContent>) {
     return parentGroup.isHidden();
   });
 
-  const visibilityAst = computed<Program | null>(() =>
-    expressionService.parseExpressionToAst(content().hidden),
-  );
+  const visibilityAst = computed<Program | null>(() => {
+    const hiddenOption = content().hidden;
+    if (typeof hiddenOption !== 'string') {
+      return null;
+    }
+    return expressionService.parseExpressionToAst(hiddenOption);
+  });
+
+  const visibilityFunction = computed(() => {
+    const visibilityOption = content().hidden;
+    if (typeof visibilityOption !== 'function') {
+      return null;
+    }
+    return visibilityOption;
+  });
 
   return computed<boolean>(() => {
     const reactiveFormValues = formService.formValue();
@@ -57,6 +69,12 @@ export function withHiddenState(content: Signal<NgxFwBaseContent>) {
       .value as FormContext;
     const evaluationContext =
       reactiveFormValues ?? currentSynchronousFormValues;
+
+    const visibilityFn = visibilityFunction();
+
+    if (visibilityFn) {
+      return visibilityFn(evaluationContext);
+    }
 
     const ast = visibilityAst();
     if (!ast) {
