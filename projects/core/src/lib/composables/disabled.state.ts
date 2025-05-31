@@ -44,7 +44,7 @@ export function withDisabledState(content: Signal<NgxFwContent>) {
 
   const disabledAst = computed<Program | null>(() => {
     const disabledOption = content().disabled;
-    if (typeof disabledOption === 'boolean') {
+    if (typeof disabledOption !== 'string') {
       return null;
     }
     return expressionService.parseExpressionToAst(disabledOption);
@@ -53,6 +53,14 @@ export function withDisabledState(content: Signal<NgxFwContent>) {
   const disabledBool = computed(() => {
     const disabledOption = content().disabled;
     if (typeof disabledOption !== 'boolean') {
+      return null;
+    }
+    return disabledOption;
+  });
+
+  const disabledFunction = computed(() => {
+    const disabledOption = content().disabled;
+    if (typeof disabledOption !== 'function') {
       return null;
     }
     return disabledOption;
@@ -70,6 +78,11 @@ export function withDisabledState(content: Signal<NgxFwContent>) {
       .value as FormContext;
     const evaluationContext =
       reactiveFormValues ?? currentSynchronousFormValues;
+
+    const disableFn = disabledFunction();
+    if (disableFn) {
+      return disableFn(evaluationContext);
+    }
 
     const ast = disabledAst();
     if (!ast) {

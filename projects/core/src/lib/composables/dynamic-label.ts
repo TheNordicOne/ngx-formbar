@@ -16,8 +16,19 @@ export function withDynamicLabel(content: Signal<NgxFwControl>) {
   const expressionService = inject(ExpressionService);
 
   const dynamicLabelAst = computed<Program | null>(() => {
-    const readonlyOption = content().dynamicLabel;
-    return expressionService.parseExpressionToAst(readonlyOption);
+    const dynamicLabelOption = content().dynamicLabel;
+    if (typeof dynamicLabelOption !== 'string') {
+      return null;
+    }
+    return expressionService.parseExpressionToAst(dynamicLabelOption);
+  });
+
+  const dynamicLabelFunction = computed(() => {
+    const dynamicLabelOption = content().dynamicLabel;
+    if (typeof dynamicLabelOption !== 'function') {
+      return null;
+    }
+    return dynamicLabelOption;
   });
 
   return computed<string | undefined>(() => {
@@ -26,6 +37,12 @@ export function withDynamicLabel(content: Signal<NgxFwControl>) {
       .value as FormContext;
     const evaluationContext =
       reactiveFormValues ?? currentSynchronousFormValues;
+
+    const dynamicLabelFn = dynamicLabelFunction();
+
+    if (dynamicLabelFn) {
+      return dynamicLabelFn(evaluationContext);
+    }
 
     const ast = dynamicLabelAst();
 

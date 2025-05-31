@@ -42,7 +42,10 @@ export function withReadonlyState(content: Signal<NgxFwContent>) {
 
   const readonlyAst = computed<Program | null>(() => {
     const readonlyOption = content().readonly;
-    if (typeof readonlyOption === 'boolean') {
+    if (
+      typeof readonlyOption === 'boolean' ||
+      typeof readonlyOption === 'function'
+    ) {
       return null;
     }
     return expressionService.parseExpressionToAst(readonlyOption);
@@ -51,6 +54,14 @@ export function withReadonlyState(content: Signal<NgxFwContent>) {
   const readonlyBool = computed(() => {
     const readonlyOption = content().readonly;
     if (typeof readonlyOption !== 'boolean') {
+      return null;
+    }
+    return readonlyOption;
+  });
+
+  const readonlyFunction = computed(() => {
+    const readonlyOption = content().readonly;
+    if (typeof readonlyOption !== 'function') {
       return null;
     }
     return readonlyOption;
@@ -68,6 +79,12 @@ export function withReadonlyState(content: Signal<NgxFwContent>) {
       .value as FormContext;
     const evaluationContext =
       reactiveFormValues ?? currentSynchronousFormValues;
+
+    const readonlyFn = readonlyFunction();
+
+    if (readonlyFn) {
+      return readonlyFn(evaluationContext);
+    }
 
     const ast = readonlyAst();
     if (!ast) {
