@@ -75,11 +75,19 @@ Use it like this:
 })
 ```
 
+### Union Types
+
+For official documentation of Union Types checkout the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
+
+Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
+
+```ts
+export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
+```
+
 ## Code Splitting
 
 Registering all controls. validators, etc. directly in the `app.config.ts` is not ideal. Setup dedicated files for your registrations.
-
-Before you continue, it is recommended to set up the union type.
 
 ### Controls Registration
 
