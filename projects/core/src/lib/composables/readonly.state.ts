@@ -1,5 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFwContent, NgxFwFormGroup } from '../types/content.type';
+import { NgxFwAbstractControl, NgxFwFormGroup } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
@@ -22,7 +22,7 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with potential readonly property
  * @returns Computed signal that resolves to boolean readonly state
  */
-export function withReadonlyState(content: Signal<NgxFwContent>) {
+export function withReadonlyState(content: Signal<NgxFwAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
   const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
