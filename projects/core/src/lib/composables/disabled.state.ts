@@ -1,6 +1,6 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import { Program } from 'acorn';
-import { NgxFwContent, NgxFwFormGroup } from '../types/content.type';
+import { NgxFwAbstractControl, NgxFwFormGroup } from '../types/content.type';
 import { ExpressionService } from '../services/expression.service';
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { FormService } from '../services/form.service';
@@ -24,7 +24,7 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with potential disabled property
  * @returns Computed signal that resolves to boolean disabled state
  */
-export function withDisabledState(content: Signal<NgxFwContent>) {
+export function withDisabledState(content: Signal<NgxFwAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
   const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
