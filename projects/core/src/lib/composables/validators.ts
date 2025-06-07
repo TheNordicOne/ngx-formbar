@@ -1,5 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFwContent } from '../types/content.type';
+import { NgxFwAbstractControl } from '../types/content.type';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
 
 /**
@@ -11,7 +11,7 @@ import { ValidatorRegistrationService } from '../services/validator-registration
  * @param content Signal containing control configuration with validator keys
  * @returns Computed signal that resolves to an array of validator functions
  */
-export function withValidators(content: Signal<NgxFwContent>) {
+export function withValidators(content: Signal<NgxFwAbstractControl>) {
   const validatorRegistrations = inject(
     ValidatorRegistrationService,
   ).registrations;
@@ -32,7 +32,7 @@ export function withValidators(content: Signal<NgxFwContent>) {
  * @param content Signal containing control configuration with async validator keys
  * @returns Computed signal that resolves to an array of async validator functions
  */
-export function withAsyncValidators(content: Signal<NgxFwContent>) {
+export function withAsyncValidators(content: Signal<NgxFwAbstractControl>) {
   const asyncValidatorRegistrations = inject(
     ValidatorRegistrationService,
   ).asyncRegistrations;

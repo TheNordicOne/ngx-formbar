@@ -6,13 +6,13 @@ import {
   OnInit,
   ViewContainerRef,
 } from '@angular/core';
-import { NgxFwContent } from '../types/content.type';
+import { NgxFwBaseContent } from '../types/content.type';
 import { ComponentRegistrationService } from '../services/component-registration.service';
 
 @Directive({
   selector: '[ngxfwNgxfwAbstractControl]',
 })
-export class NgxfwAbstractControlDirective<T extends NgxFwContent>
+export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
   implements OnInit
 {
   private viewContainerRef = inject(ViewContainerRef);

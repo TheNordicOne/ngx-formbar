@@ -1,4 +1,3 @@
-import { OneOf } from './helper.type';
 import { Expression } from './expression.type';
 
 export interface NgxFwBaseContent {
@@ -7,7 +6,7 @@ export interface NgxFwBaseContent {
   hidden?: Expression<boolean>;
 }
 
-interface NgxFwAbstractControl extends NgxFwBaseContent {
+export interface NgxFwAbstractControl extends NgxFwBaseContent {
   validators?: string[];
   asyncValidators?: string[];
   disabled?: Expression<boolean> | boolean;
@@ -67,10 +66,11 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  *   ]
  * };
  */
-export interface NgxFwFormGroup extends NgxFwAbstractControl {
+export interface NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>
+  extends NgxFwAbstractControl {
   title?: string;
   dynamicTitle?: Expression<string>;
-  controls: NgxFwContent[];
+  controls: T[];
 }
 
 /**
@@ -114,11 +114,34 @@ export interface NgxFwControl extends NgxFwAbstractControl {
 }
 
 /**
- * Union type representing either a form group or individual control
+ * Base type for non-interactive content elements in Ngx Formwork, such as informational texts or decorative elements.
+ *
+ * Blocks extend `NgxFwBaseContent` (providing `id`, `type`, and `hidden` properties)
+ * and can include any other custom properties of `unknown` type. This allows for flexible and diverse
+ * content structures within the form that are not form controls or groups.
+ *
+ * @example
+ * // Define a custom informational block
+ * interface InfoBlock extends NgxFwBlock {
+ *   type: 'info-block';
+ *   message: string;
+ *   severity?: 'info' | 'warning' | 'error';
+ * }
+ *
+ * // Usage in a form definition
+ * const infoMessage: InfoBlock = {
+ *   id: 'welcome-info',
+ *   type: 'info-block',
+ *   message: 'Welcome to the form!',
+ *   severity: 'info'
+ * };
  */
-export type NgxFwContent = OneOf<
-  [NgxFwFormGroup, NgxFwControl, NgxFwBaseContent]
->;
+export type NgxFwBlock = NgxFwBaseContent & Record<string, unknown>;
+
+/**
+ * Union type representing either a form group, individual control or a block
+ */
+export type NgxFwContent = NgxFwFormGroup | NgxFwControl | NgxFwBlock;
 
 /**
  * Strategy for handling hidden form elements
@@ -136,3 +159,39 @@ export type HideStrategy = 'keep' | 'remove';
  * - 'reset': Clears the value when shown
  */
 export type ValueStrategy = 'last' | 'default' | 'reset';
+
+/**
+ * Type guard to check if a given content item is an NgxFwFormGroup.
+ * It verifies the presence of the `controls` array, a distinguishing property of form groups.
+ * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
+ * @returns True if the content is an NgxFwFormGroup, false otherwise.
+ * @template T The specific type of content expected within the group's controls, defaulting to NgxFwContent.
+ */
+export function isNgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>(
+  content: NgxFwBaseContent,
+): content is NgxFwFormGroup<T> {
+  return 'controls' in content;
+}
+
+/**
+ * Type guard to check if a given content item is an NgxFwControl.
+ * It verifies the presence of the `label` property, which is specific to NgxFwControl.
+ * This guard should typically be used after checking if the item is an NgxFwFormGroup.
+ * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
+ * @returns True if the content is an NgxFwControl, false otherwise.
+ */
+export function isNgxFwControl(
+  content: NgxFwBaseContent,
+): content is NgxFwControl {
+  return 'label' in content;
+}
+
+/**
+ * Type guard to check if a given content item is an NgxFwBlock.
+ * It identifies an item as a block if it's neither an NgxFwFormGroup nor an NgxFwControl.
+ * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
+ * @returns True if the content is an NgxFwBlock, false otherwise.
+ */
+export function isNgxFwBlock(content: NgxFwBaseContent): content is NgxFwBlock {
+  return !isNgxFwFormGroup(content) && !isNgxFwControl(content);
+}
