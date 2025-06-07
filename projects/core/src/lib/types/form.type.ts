@@ -1,7 +1,7 @@
-import { NgxFwBaseContent } from './content.type';
+import { NgxFwBaseContent, NgxFwContent } from './content.type';
 
 export interface NgxFwForm<
-  ContentType extends NgxFwBaseContent = NgxFwBaseContent,
+  ContentType extends NgxFwBaseContent = NgxFwContent,
 > {
   content: ContentType[];
 }

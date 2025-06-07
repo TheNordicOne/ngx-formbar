@@ -16,7 +16,6 @@ describe('Form content', () => {
           message: 'This is an information',
           useDefaultTestId: true,
         },
-        // @ts-expect-error: Typing is not resolved correctly
         {
           type: 'test-group',
           id: 'first-group',
@@ -74,7 +73,6 @@ describe('Form content', () => {
             message: 'This is an information',
             useDefaultTestId: true,
           },
-          // @ts-expect-error: Typing is not resolved correctly
           {
             type: 'test-group',
             id: 'first-group',
