@@ -274,6 +274,10 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
         // to allow them to overwrite the value strategy
         // If a control doesn't have a value strategy, we reset it
         this.content().controls.forEach((control) => {
+          if (!('valueStrategy' in control)) {
+            return;
+          }
+
           if (control.valueStrategy) {
             return;
           }
