@@ -14,7 +14,9 @@ describe('Type Safety', () => {
         {
           id: 'block',
           type: 'test-block',
+          // @ts-expect-error: Blocks always require custom union type
           message: 'This is an information',
+          isControl: false,
         },
         {
           type: 'test-group',
@@ -30,7 +32,9 @@ describe('Type Safety', () => {
             {
               id: 'grouped-block',
               type: 'test-block',
+              // @ts-expect-error: Blocks always require custom union type
               message: 'This is an information',
+              isControl: false,
             },
             {
               type: 'test-group',
@@ -46,7 +50,9 @@ describe('Type Safety', () => {
                 {
                   id: 'nested-block',
                   type: 'test-block',
+                  // @ts-expect-error: Blocks always require custom union type
                   message: 'This is an information',
+                  isControl: false,
                 },
               ],
             },
@@ -70,6 +76,7 @@ describe('Type Safety', () => {
           id: 'block',
           type: 'test-block',
           message: 'This is an information',
+          isControl: false,
         },
         {
           type: 'test-group',
@@ -85,6 +92,7 @@ describe('Type Safety', () => {
               id: 'grouped-block',
               type: 'test-block',
               message: 'This is an information',
+              isControl: false,
             },
             {
               type: 'test-group',
@@ -101,6 +109,7 @@ describe('Type Safety', () => {
                   id: 'nested-block',
                   type: 'test-block',
                   message: 'This is an information',
+                  isControl: false,
                 },
               ],
             },

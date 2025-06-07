@@ -134,9 +134,14 @@ export interface NgxFwControl extends NgxFwAbstractControl {
  *   type: 'info-block',
  *   message: 'Welcome to the form!',
  *   severity: 'info'
+ *   // Required property for TypeScript to properly do type narrowing
+ *   isControl: false;
  * };
  */
-export type NgxFwBlock = NgxFwBaseContent & Record<string, unknown>;
+export interface NgxFwBlock extends NgxFwBaseContent {
+  // Required property for TypeScript to properly do type narrowing
+  isControl: false;
+}
 
 /**
  * Union type representing either a form group, individual control or a block
