@@ -14,6 +14,7 @@ describe('Form content', () => {
           id: 'block',
           type: 'test-block',
           message: 'This is an information',
+          isControl: false,
           useDefaultTestId: true,
         },
         {
@@ -71,6 +72,7 @@ describe('Form content', () => {
             id: 'block',
             type: 'test-block',
             message: 'This is an information',
+            isControl: false,
             useDefaultTestId: true,
           },
           {
