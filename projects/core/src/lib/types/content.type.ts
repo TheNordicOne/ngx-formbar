@@ -159,39 +159,3 @@ export type HideStrategy = 'keep' | 'remove';
  * - 'reset': Clears the value when shown
  */
 export type ValueStrategy = 'last' | 'default' | 'reset';
-
-/**
- * Type guard to check if a given content item is an NgxFwFormGroup.
- * It verifies the presence of the `controls` array, a distinguishing property of form groups.
- * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
- * @returns True if the content is an NgxFwFormGroup, false otherwise.
- * @template T The specific type of content expected within the group's controls, defaulting to NgxFwContent.
- */
-export function isNgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>(
-  content: NgxFwBaseContent,
-): content is NgxFwFormGroup<T> {
-  return 'controls' in content;
-}
-
-/**
- * Type guard to check if a given content item is an NgxFwControl.
- * It verifies the presence of the `label` property, which is specific to NgxFwControl.
- * This guard should typically be used after checking if the item is an NgxFwFormGroup.
- * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
- * @returns True if the content is an NgxFwControl, false otherwise.
- */
-export function isNgxFwControl(
-  content: NgxFwBaseContent,
-): content is NgxFwControl {
-  return 'label' in content;
-}
-
-/**
- * Type guard to check if a given content item is an NgxFwBlock.
- * It identifies an item as a block if it's neither an NgxFwFormGroup nor an NgxFwControl.
- * @param content The content item to check, expected to be NgxFwBaseContent or its derivatives.
- * @returns True if the content is an NgxFwBlock, false otherwise.
- */
-export function isNgxFwBlock(content: NgxFwBaseContent): content is NgxFwBlock {
-  return !isNgxFwFormGroup(content) && !isNgxFwControl(content);
-}
