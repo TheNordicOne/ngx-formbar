@@ -17,8 +17,11 @@ The `NgxFwForm` interface defines these properties.
 
 ### Type Generic
 
-By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a union type, you can pass that to get better type support. 
+By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a [union type](/guides/improvements/#union-types), you can pass that to get better type support. 
 
+:::note
+If you want to use [Blocks](/guides/blocks) you must either use a [union type](/guides/improvements/#union-types) of your own controls or handle TypeScript errors by other mean.
+:::
 
 ## Content
 
@@ -48,6 +51,12 @@ Controls and Groups extend the `NgxFwAbstractControl` interface and therefore bo
 | valueStrategy   | `ValueStrategy`     | No       | Determines how the control's value is handled when visibility changes: 'last' (preserves last value), 'default' (reverts to default value), or 'reset' (clears value). |
 | readonly        | `string \| boolean` | No       | Indicates if the control is read-only (displayed but not modifiable). Accepts either a boolean value or a string expression for dynamic evaluation.                    |
 | updateOn        | `UpdateStrategy`    | No       | Specifies when to update the control's value: 'change' (as user types, default), 'blur' (when control loses focus), or 'submit' (when form is submitted).              |
+
+### Block
+
+| Name      | Type    | Required | Description                                                    |
+|-----------|---------|----------|----------------------------------------------------------------|
+| isControl | `false` | Yes      | Required property for TypeScript to properly do type narrowing |
 
 
 ### Control

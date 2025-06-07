@@ -7,6 +7,7 @@ sidebar:
 
 
 
+
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import TestId from '../../shared/test-id.md';
 
@@ -19,6 +20,10 @@ In this case you can define a Block.
 Here is an example of a simple information block.
 
 First create an interface for your block by extending `NgxFwBlock`.
+
+:::caution
+`NgxFwBlock` has a required property `isControl` which typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types.
+:::
 
 ```ts title="info-block.type.ts"
 export interface InfoBlock extends NgxFwBlock {
