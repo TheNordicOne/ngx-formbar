@@ -40,6 +40,7 @@ describe('Form content', () => {
           id: 'block',
           type: 'test-block',
           message: 'This is an information',
+          isControl: false,
         },
         {
           type: 'test-group',
