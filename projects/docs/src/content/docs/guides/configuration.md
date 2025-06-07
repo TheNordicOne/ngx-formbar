@@ -17,7 +17,7 @@ The `NgxFwForm` interface defines these properties.
 
 ### Type Generic
 
-By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a `OneOf` [type helper](/guides/improvements/#helper-types) you can pass that to get better type support. 
+By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a union type, you can pass that to get better type support. 
 
 
 ## Content

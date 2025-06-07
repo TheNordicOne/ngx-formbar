@@ -75,28 +75,11 @@ Use it like this:
 })
 ```
 
-### Helper Types
-
-For better type safety, when writing a form configuration in TypeScript, _ngx-formwork_ provides a helper type _OneOf_.
-With this you can construct a union type like this.
-
-```ts
-export type MyAppControls = OneOf<[TestTextControl, TestGroup]>;
-```
-
-and use it like this
-
-```ts
-import { NgxFwForm } from './form.type';
-
-export const exampleForm: NgxFwForm<MyAppControls> = [...]
-```
-
 ## Code Splitting
 
 Registering all controls. validators, etc. directly in the `app.config.ts` is not ideal. Setup dedicated files for your registrations.
 
-Before you continue, be sure to set up the 'OneOf' helper type as described above. This is required if you use [Blocks](/guides/blocks). as otherwise TypeScript will miss type information.
+Before you continue, it is recommended to set up the union type.
 
 ### Controls Registration
 
