@@ -1,9 +1,8 @@
-import { OneOf } from '../../lib';
 import { TestTextControl } from './controls.type';
 import { TestGroup } from './group.type';
 
 // Playground for testing out types
-export type MyAppControls = OneOf<[TestTextControl, TestGroup]>;
+export type MyAppControls = TestTextControl | TestGroup;
 
 export const someControls: MyAppControls[] = [
   {
