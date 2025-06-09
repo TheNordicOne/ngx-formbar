@@ -125,6 +125,7 @@ export function withHiddenAttribute(options: {
  *
  * @param options Configuration object for hidden effect
  * @param options.content Signal containing control configuration
+ * @param options.name Signal containing the name of the control
  * @param options.controlInstance Signal with the form control instance
  * @param options.hiddenSignal Signal that indicates if the control should be hidden
  * @param options.hideStrategySignal Signal with the strategy for handling hidden controls
@@ -136,6 +137,7 @@ export function withHiddenAttribute(options: {
  */
 export function hiddenEffect(options: {
   content: Signal<NgxFwContent>;
+  name: Signal<string>;
   controlInstance: Signal<AbstractControl>;
   hiddenSignal: Signal<boolean>;
   hideStrategySignal: Signal<HideStrategy | undefined>;
@@ -153,9 +155,7 @@ export function hiddenEffect(options: {
     const hideStrategy = options.hideStrategySignal();
     const valueStrategy =
       options.valueStrategySignal() ?? options.parentValueStrategySignal();
-    const formGroup = untracked(() =>
-      parentFormGroup?.get(options.content().id),
-    );
+    const formGroup = untracked(() => parentFormGroup?.get(options.name()));
 
     // Re-attach control
     if (!formGroup && !isHidden) {

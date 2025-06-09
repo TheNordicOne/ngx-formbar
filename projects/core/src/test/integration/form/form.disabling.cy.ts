@@ -3,42 +3,37 @@ import { setupForm } from '../../helper/test';
 describe('Form disabling', () => {
   it('should disable all controls using a static value', () => {
     setupForm({
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
           disabled: true,
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
           disabled: true,
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
               defaultValue: 'default-grouped-first',
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-second',
+              controls: {
+                'nested-second': {
                   type: 'test-text-control',
                   label: 'Nested Second label',
                   defaultValue: 'default-nested-second',
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
     cy.getByTestId('first-input').should('have.attr', 'disabled');
     cy.getByTestId('grouped-first-input').should('have.attr', 'disabled');
@@ -47,47 +42,41 @@ describe('Form disabling', () => {
 
   it('should disable all controls based on a condition', () => {
     setupForm({
-      content: [
-        {
-          id: 'disableControl',
+      content: {
+        disableControl: {
           type: 'test-text-control',
           label: 'Type "disable" to disable everything',
         },
-        {
-          id: 'first',
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
           disabled: 'disableControl === "disable"',
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
           disabled: 'disableControl === "disable"',
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
               defaultValue: 'default-grouped-first',
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-second',
+              controls: {
+                'nested-second': {
                   type: 'test-text-control',
                   label: 'Nested Second label',
                   defaultValue: 'default-nested-second',
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
 
     cy.getByTestId('first-input').should('not.have.attr', 'disabled');
@@ -109,56 +98,49 @@ describe('Form disabling', () => {
 
   it('should disable all controls in a group, but allow overwriting', () => {
     setupForm({
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
           disabled: true,
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
           disabled: true,
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
               defaultValue: 'default-grouped-first',
             },
-            {
-              id: 'grouped-overwritten',
+            'grouped-overwritten': {
               type: 'test-text-control',
               label: 'Grouped Overwritten label',
               defaultValue: 'default-grouped-overwritten',
               disabled: false,
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-second',
+              controls: {
+                'nested-second': {
                   type: 'test-text-control',
                   label: 'Nested Second label',
                   defaultValue: 'default-nested-second',
                 },
-                {
-                  id: 'nested-overwritten',
+                'nested-overwritten': {
                   type: 'test-text-control',
                   label: 'Nested Overwritten label',
                   defaultValue: 'default-nested-overwritten',
                   disabled: false,
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
 
     cy.getByTestId('first-input').should('have.attr', 'disabled');
@@ -178,48 +160,42 @@ describe('Form disabling', () => {
 
   it('should start with the correct value', () => {
     setupForm({
-      content: [
-        {
-          id: 'disableControl',
+      content: {
+        disableControl: {
           type: 'test-text-control',
           label: 'Type "disable" to disable everything',
           defaultValue: 'disable',
         },
-        {
-          id: 'first',
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
           disabled: 'disableControl === "disable"',
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
           disabled: 'disableControl === "disable"',
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
               defaultValue: 'default-grouped-first',
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-second',
+              controls: {
+                'nested-second': {
                   type: 'test-text-control',
                   label: 'Nested Second label',
                   defaultValue: 'default-nested-second',
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
 
     cy.getByTestId('first-input').should('have.attr', 'disabled');

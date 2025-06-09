@@ -7,6 +7,7 @@ sidebar:
 
 
 
+
 import GroupSetup from '../../shared/group-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -59,7 +60,7 @@ export class GroupComponent {
 @if(!isHidden()){
   <div [formGroupName]="id">
     @for (control of controls(); track control.id) {
-      <ng-template *ngxfwNgxfwAbstractControl="control" />
+      <ng-template *ngxfwAbstractControl="control" />
     }
   </div>
 }
@@ -90,7 +91,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-disabled"
 <div [formGroupName]="id">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwNgxfwAbstractControl="control" />
+    <ng-template *ngxfwAbstractControl="control" />
   }
 </div>
 <!-- Only show hint when group is disabled -->
@@ -116,7 +117,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-readonly"
 <div [formGroupName]="id">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwNgxfwAbstractControl="control" />
+    <ng-template *ngxfwAbstractControl="control" />
   }
 </div>
 @if(readonly()){
@@ -179,7 +180,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-testid"
 <div [formGroupName]="id"  [attr.data-testId]="testId() + '-wrapper'">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwNgxfwAbstractControl="control" />
+    <ng-template *ngxfwAbstractControl="control" />
   }
 </div>
 ```

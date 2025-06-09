@@ -5,14 +5,13 @@ describe('Form updateOn strategies', () => {
     it('should use Angular default (change) when no strategy specified', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'default-control',
+          content: {
+            'default-control': {
               type: 'test-text-control',
               label: 'Default Strategy',
               defaultValue: '',
             },
-          ],
+          },
         },
         { autoUpdate: true },
       );
@@ -26,26 +25,23 @@ describe('Form updateOn strategies', () => {
     it('should respect explicit updateOn strategies on controls', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'change-control',
+          content: {
+            'change-control': {
               type: 'test-text-control',
               label: 'Change Control',
               updateOn: 'change',
             },
-            {
-              id: 'blur-control',
+            'blur-control': {
               type: 'test-text-control',
               label: 'Blur Control',
               updateOn: 'blur',
             },
-            {
-              id: 'submit-control',
+            'submit-control': {
               type: 'test-text-control',
               label: 'Submit Control',
               updateOn: 'submit',
             },
-          ],
+          },
         },
         { autoUpdate: true },
       );
@@ -76,13 +72,12 @@ describe('Form updateOn strategies', () => {
     it('should apply global default strategy when none specified', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'control',
+          content: {
+            control: {
               type: 'test-text-control',
               label: 'Control',
             },
-          ],
+          },
         },
         { defaultUpdateOnStrategy: 'blur', autoUpdate: true },
       );
@@ -97,19 +92,17 @@ describe('Form updateOn strategies', () => {
     it('should allow controls to override global default', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'default-control',
+          content: {
+            'default-control': {
               type: 'test-text-control',
               label: 'Default Control',
             },
-            {
-              id: 'override-control',
+            'override-control': {
               type: 'test-text-control',
               label: 'Override Control',
               updateOn: 'change',
             },
-          ],
+          },
         },
         { defaultUpdateOnStrategy: 'submit', autoUpdate: true },
       );
@@ -141,21 +134,19 @@ describe('Form updateOn strategies', () => {
     it('should apply parent group strategy to child controls', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'parent-group',
+          content: {
+            'parent-group': {
               type: 'test-group',
               updateOn: 'blur',
-              controls: [
-                {
-                  id: 'child-control',
+              controls: {
+                'child-control': {
                   type: 'test-text-control',
                   label: 'Child Control',
                   // Should inherit 'blur' from parent
                 },
-              ],
+              },
             },
-          ],
+          },
         },
         { autoUpdate: true },
       );
@@ -173,28 +164,25 @@ describe('Form updateOn strategies', () => {
     it('should allow controls to override parent group strategy', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'parent-group',
+          content: {
+            'parent-group': {
               type: 'test-group',
               updateOn: 'blur',
-              controls: [
-                {
-                  id: 'inherited-control',
+              controls: {
+                'inherited-control': {
                   type: 'test-text-control',
                   label: 'Inherited Control',
                   // Inherits 'blur'
                 },
-                {
-                  id: 'override-control',
+                'override-control': {
                   type: 'test-text-control',
                   label: 'Override Control',
                   updateOn: 'change',
                   // Explicitly overrides to 'change'
                 },
-              ],
+              },
             },
-          ],
+          },
         },
         { autoUpdate: true },
       );
@@ -223,42 +211,37 @@ describe('Form updateOn strategies', () => {
     it('should handle nested group inheritance', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'root-group',
+          content: {
+            'root-group': {
               type: 'test-group',
               updateOn: 'submit',
-              controls: [
-                {
-                  id: 'child-group',
+              controls: {
+                'child-group': {
                   type: 'test-group',
                   // Inherits 'submit'
-                  controls: [
-                    {
-                      id: 'grandchild-control',
+                  controls: {
+                    'grandchild-control': {
                       type: 'test-text-control',
                       label: 'Grandchild Control',
                       // Inherits 'submit' from parent chain
                     },
-                  ],
+                  },
                 },
-                {
-                  id: 'override-group',
+                'override-group': {
                   type: 'test-group',
                   updateOn: 'blur',
                   // Overrides to 'blur'
-                  controls: [
-                    {
-                      id: 'grandchild-override-control',
+                  controls: {
+                    'grandchild-override-control': {
                       type: 'test-text-control',
                       label: 'Grandchild Override Control',
                       // Inherits 'blur' from immediate parent
                     },
-                  ],
+                  },
                 },
-              ],
+              },
             },
-          ],
+          },
         },
         { autoUpdate: true },
       );
@@ -291,35 +274,31 @@ describe('Form updateOn strategies', () => {
     it('should respect global default with nested groups', () => {
       setupForm(
         {
-          content: [
-            {
-              id: 'root-group',
+          content: {
+            'root-group': {
               type: 'test-group',
               // Uses global default
-              controls: [
-                {
-                  id: 'child-control',
+              controls: {
+                'child-control': {
                   type: 'test-text-control',
                   label: 'Child Control',
                   // Inherits global default
                 },
-                {
-                  id: 'child-group',
+                'child-group': {
                   type: 'test-group',
                   updateOn: 'change',
                   // Overrides global default
-                  controls: [
-                    {
-                      id: 'grandchild-control',
+                  controls: {
+                    'grandchild-control': {
                       type: 'test-text-control',
                       label: 'Grandchild Control',
                       // Inherits 'change'
                     },
-                  ],
+                  },
                 },
-              ],
+              },
             },
-          ],
+          },
         },
         { defaultUpdateOnStrategy: 'blur', autoUpdate: true },
       );

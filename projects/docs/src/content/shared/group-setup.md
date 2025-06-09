@@ -51,7 +51,7 @@ export class GroupComponent {
 <!-- Just an example -->
 <div [formGroupName]="id">
 @for (control of controls(); track control.id) {
-  <ng-template *ngxfwNgxfwAbstractControl="control" />
+  <ng-template *ngxfwAbstractControl="control" />
 }
 </div>
 ```

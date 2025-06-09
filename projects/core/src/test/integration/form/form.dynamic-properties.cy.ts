@@ -4,20 +4,18 @@ describe('Form Dynamic Properties', () => {
   describe('Control dynamicLabel', () => {
     it('should display dynamic label based on expression and update it', () => {
       setupForm({
-        content: [
-          {
-            id: 'source',
+        content: {
+          source: {
             type: 'test-text-control',
             label: 'Source',
             defaultValue: 'Initial',
           },
-          {
-            id: 'target',
+          target: {
             type: 'test-text-control',
             label: 'Static Target Label',
             dynamicLabel: "source + ' Dynamic Label'",
           },
-        ],
+        },
       });
 
       cy.getByTestId('target-label').should(
@@ -33,13 +31,12 @@ describe('Form Dynamic Properties', () => {
 
     it('should use static label if dynamicLabel is not provided', () => {
       setupForm({
-        content: [
-          {
-            id: 'target',
+        content: {
+          target: {
             type: 'test-text-control',
             label: 'Purely Static Label',
           },
-        ],
+        },
       });
       cy.getByTestId('target-label').should('have.text', 'Purely Static Label');
     });
@@ -48,21 +45,19 @@ describe('Form Dynamic Properties', () => {
   describe('Group dynamicTitle', () => {
     it('should display dynamic title based on expression and update it', () => {
       setupForm({
-        content: [
-          {
-            id: 'source',
+        content: {
+          source: {
             type: 'test-text-control',
             label: 'Source',
             defaultValue: 'Initial',
           },
-          {
-            id: 'targetGroup',
+          targetGroup: {
             type: 'test-group',
             title: 'Static Group Title',
             dynamicTitle: "source + ' Dynamic Title'",
-            controls: [],
+            controls: {},
           },
-        ],
+        },
       });
 
       cy.getByTestId('targetGroup-title').should(
@@ -78,14 +73,13 @@ describe('Form Dynamic Properties', () => {
 
     it('should use static title if dynamicTitle is not provided', () => {
       setupForm({
-        content: [
-          {
-            id: 'targetGroup',
+        content: {
+          targetGroup: {
             type: 'test-group',
             title: 'Purely Static Title',
-            controls: [],
+            controls: {},
           },
-        ],
+        },
       });
       cy.getByTestId('targetGroup-title').should(
         'have.text',
@@ -97,30 +91,27 @@ describe('Form Dynamic Properties', () => {
   describe('Nested dynamic properties', () => {
     it('should handle dynamic title and label in nested structures', () => {
       setupForm({
-        content: [
-          {
-            id: 'source',
+        content: {
+          source: {
             type: 'test-text-control',
             label: 'Source',
             defaultValue: 'Test',
           },
-          {
-            id: 'parentGroup',
+          parentGroup: {
             type: 'test-group',
             title: 'Static Parent Title',
             dynamicTitle:
               "source === 'NullParent' ? null : 'Parent: ' + source",
-            controls: [
-              {
-                id: 'childControl',
+            controls: {
+              childControl: {
                 type: 'test-text-control',
                 label: 'Static Child Label',
                 dynamicLabel:
                   "source === 'NullChild' ? null : 'Child: ' + source",
               },
-            ],
+            },
           },
-        ],
+        },
       });
 
       // Initial state

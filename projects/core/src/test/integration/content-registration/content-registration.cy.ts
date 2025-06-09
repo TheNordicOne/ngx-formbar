@@ -7,9 +7,9 @@ describe('Content Registration', () => {
     cy.mount(RegistrationIntegrationHostComponent, {
       providers: [formworkProviders(), dummyControlContainer],
       componentProperties: {
+        name: 'control',
         content: {
           type: 'test-text-control',
-          id: 'control',
           label: 'Test',
         },
       },

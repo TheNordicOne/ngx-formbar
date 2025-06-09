@@ -48,7 +48,8 @@ export class NgxFwFormComponent<T extends NgxFwBaseContent = NgxFwContent> {
 
   /**
    * Computed value containing form content
-   * An array of content objects defining the form structure
    */
-  readonly formContent = computed(() => this.formConfig().content);
+  readonly formContent = computed(() =>
+    Object.entries(this.formConfig().content),
+  );
 }

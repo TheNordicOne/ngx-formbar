@@ -10,7 +10,7 @@ import { NgxFwBaseContent } from '../types/content.type';
 import { ComponentRegistrationService } from '../services/component-registration.service';
 
 @Directive({
-  selector: '[ngxfwNgxfwAbstractControl]',
+  selector: '[ngxfwAbstractControl]',
 })
 export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
   implements OnInit
@@ -27,11 +27,14 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
 
   /**
    * Required input for control configuration
-   * Defines properties like type, ID, validation, and other control-specific settings
+   * Defines properties like type, validation, and other control-specific settings
    */
-  readonly content = input.required<T>({
-    alias: 'ngxfwNgxfwAbstractControl',
+  readonly content = input.required<[string, T]>({
+    alias: 'ngxfwAbstractControl',
   });
+
+  readonly controlName = computed(() => this.content()[0]);
+  readonly controlConfig = computed(() => this.content()[1]);
 
   /**
    * Registration map of component types
@@ -45,7 +48,7 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
    */
   readonly component = computed(() => {
     const registrations = this.registrations();
-    const content = this.content();
+    const content = this.controlConfig();
 
     const component = registrations.get(content.type);
     return component ?? null;
@@ -55,7 +58,8 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
     const component = this.component();
     if (component) {
       const componentRef = this.viewContainerRef.createComponent(component);
-      componentRef.setInput('content', this.content());
+      componentRef.setInput('content', this.controlConfig());
+      componentRef.setInput('name', this.controlName());
     }
   }
 }

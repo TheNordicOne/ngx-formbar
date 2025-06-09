@@ -10,8 +10,8 @@ describe('Control', () => {
       cy.mount(ControlIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'first',
           content: {
-            id: 'first',
             type: 'test-text-control',
             label: 'First label',
             hint: 'This is a hint',
@@ -31,8 +31,8 @@ describe('Control', () => {
       cy.mount(ControlIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'first',
           content: {
-            id: 'first',
             type: 'test-text-control',
             label: 'First label',
             hint: 'This is a hint',
@@ -53,8 +53,8 @@ describe('Control', () => {
       cy.mount(ControlIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'first',
           content: {
-            id: 'first',
             type: 'test-text-control',
             label: 'First label',
             validators: ['required'],
@@ -76,8 +76,8 @@ describe('Control', () => {
       cy.mount(ControlIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'first',
           content: {
-            id: 'first',
             type: 'test-text-control',
             label: 'First label',
             validators: ['min-chars', 'letter'],
@@ -117,8 +117,8 @@ describe('Control', () => {
       cy.mount(ControlIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'first',
           content: {
-            id: 'first',
             type: 'test-text-control',
             label: 'First label',
             validators: ['combined'],
