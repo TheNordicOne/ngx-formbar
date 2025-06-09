@@ -24,7 +24,7 @@ import { TestIdBuilderFn } from '../types/functions.type';
  * @template T Type extending NgxFwBaseContent containing block configuration
  */
 @Directive({
-  selector: '[ngxfwNgxfwBlock]',
+  selector: '[ngxfwBlock]',
   host: {
     '[attr.hidden]': 'hiddenAttribute()',
   },
@@ -41,6 +41,11 @@ export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
   readonly content = input.required<T>();
 
   /**
+   * Required input for the blocks name
+   */
+  readonly name = input.required<string>();
+
+  /**
    * Signal for managing the visibility handling strategy ('auto' or 'manual').
    */
   private readonly visibilityHandling = signal<StateHandling>('auto');
@@ -53,7 +58,7 @@ export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
    * Computed test ID derived from the block's ID.
    * Used for automated testing identification.
    */
-  readonly testId = withTestId(this.content, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
 
   /**
    * Computed signal for the hidden state.

@@ -73,6 +73,11 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
    */
   readonly content = input.required<T>();
 
+  /**
+   * Required input for the controls name
+   */
+  readonly name = input.required<string>();
+
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
   private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
@@ -83,7 +88,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
    * Computed test ID derived from the group's ID
    * Used for automated testing identification
    */
-  readonly testId = withTestId(this.content, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
 
   /**
    * Computed signal for the group's hide strategy
@@ -177,19 +182,20 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   /**
    * Computed signal for the child controls of the group
    */
-  readonly controls = computed(() => this.content().controls);
+  readonly controls = computed(() => Object.entries(this.content().controls));
 
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
   }
 
   get formGroup() {
-    return this.parentFormGroup?.get(this.content().id) as FormControl | null;
+    return this.parentFormGroup?.get(this.name()) as FormControl | null;
   }
 
   constructor() {
     hiddenEffect({
       content: this.content,
+      name: this.name,
       controlInstance: this.groupInstance,
       hiddenSignal: this.isHidden,
       hideStrategySignal: this.hideStrategy,
@@ -238,13 +244,13 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   }
 
   private setGroup() {
-    this.parentFormGroup?.setControl(this.content().id, this.groupInstance(), {
+    this.parentFormGroup?.setControl(this.name(), this.groupInstance(), {
       emitEvent: false,
     });
   }
 
   private removeGroup() {
-    const id = this.content().id;
+    const id = this.name();
     const formGroup = this.formGroup;
     // Check if control exists immediately before attempting removal
     if (formGroup) {
@@ -273,7 +279,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
         // Instead of resetting  the group, we need to reset the controls individually
         // to allow them to overwrite the value strategy
         // If a control doesn't have a value strategy, we reset it
-        this.content().controls.forEach((control) => {
+        Object.entries(this.content().controls).forEach(([name, control]) => {
           if (!('valueStrategy' in control)) {
             return;
           }
@@ -281,7 +287,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
           if (control.valueStrategy) {
             return;
           }
-          const formControl = this.formGroup?.get(control.id);
+          const formControl = this.formGroup?.get(name);
           if (formControl) {
             formControl.reset(undefined, { emitEvent: false });
           }

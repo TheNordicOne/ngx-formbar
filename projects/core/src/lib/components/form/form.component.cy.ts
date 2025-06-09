@@ -17,7 +17,7 @@ describe('Form Component', () => {
       ],
       componentProperties: {
         formConfig: {
-          content: [],
+          content: {},
         },
       },
     });

@@ -18,6 +18,7 @@ export class TestTextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TestTextControl>);
 
   readonly content: Signal<TestTextControl> = this.control.content;
+  readonly name: Signal<string> = this.control.name;
   readonly testId: Signal<string> = this.control.testId;
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly disabled: Signal<boolean> = this.control.disabled;

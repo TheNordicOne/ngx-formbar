@@ -2,7 +2,6 @@ import { Expression } from './expression.type';
 
 export interface NgxFwBaseContent {
   type: string;
-  id: string;
   hidden?: Expression<boolean>;
 }
 
@@ -26,7 +25,7 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  * They inherit all properties from NgxFwBaseContent and add group-specific properties.
  *
  * @property title - Optional display title for the group
- * @property controls - Array of child controls and groups
+ * @property controls - Object containing child controls and groups
  *
  * @example
  * // Define a custom address group type
@@ -44,33 +43,30 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
  *   collapsible: true,
  *   addressFormat: 'US',
  *   hideStrategy: 'remove',
- *   controls: [
- *     {
- *       id: 'street',
+ *   controls: {
+ *     street: {
  *       type: 'text-input',
  *       label: 'Street Address',
  *       validators: ['required']
  *     },
- *     {
- *       id: 'city',
+ *     city: {
  *       type: 'text-input',
  *       label: 'City',
  *       validators: ['required']
  *     },
- *     {
- *       id: 'zipcode',
+ *     zipcode: {
  *       type: 'text-input',
  *       label: 'ZIP Code',
  *       validators: ['required', 'zipcode']
  *     }
- *   ]
+ *   }
  * };
  */
 export interface NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>
   extends NgxFwAbstractControl {
   title?: string;
   dynamicTitle?: Expression<string>;
-  controls: T[];
+  controls: Record<string, T>;
 }
 
 /**

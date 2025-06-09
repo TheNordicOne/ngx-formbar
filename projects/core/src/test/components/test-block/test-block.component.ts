@@ -12,7 +12,7 @@ import { simpleTestIdBuilder } from '../../helper/test-id-builder';
   hostDirectives: [
     {
       directive: NgxfwBlockDirective,
-      inputs: ['content'],
+      inputs: ['content', 'name'],
     },
   ],
 })

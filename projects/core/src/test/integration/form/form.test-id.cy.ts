@@ -3,49 +3,43 @@ import { setupForm } from '../../helper/test';
 describe('Form content', () => {
   it('should build the test id based on the form structure by default', () => {
     setupForm({
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           useDefaultTestId: true,
         },
-        {
-          id: 'block',
+        block: {
           type: 'test-block',
           message: 'This is an information',
           isControl: false,
           useDefaultTestId: true,
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
           useDefaultTestId: true,
-          controls: [
-            {
-              id: 'first',
+          controls: {
+            first: {
               type: 'test-text-control',
               label: 'Grouped First label',
               useDefaultTestId: true,
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
               useDefaultTestId: true,
-              controls: [
-                {
-                  id: 'first',
+              controls: {
+                first: {
                   type: 'test-text-control',
                   label: 'Nested First label',
                   useDefaultTestId: true,
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
 
     cy.getByTestId('first-input').should('exist');
@@ -61,59 +55,52 @@ describe('Form content', () => {
   it('should build the test id based on the globally provided function, but allow individual functions too', () => {
     setupForm(
       {
-        content: [
-          {
-            id: 'first',
+        content: {
+          first: {
             type: 'test-text-control',
             label: 'First',
             useDefaultTestId: true,
           },
-          {
-            id: 'block',
+          block: {
             type: 'test-block',
             message: 'This is an information',
             isControl: false,
             useDefaultTestId: true,
           },
-          {
+          'first-group': {
             type: 'test-group',
-            id: 'first-group',
             title: 'First Group',
             useDefaultTestId: true,
-            controls: [
-              {
-                id: 'first',
+            controls: {
+              first: {
                 type: 'test-text-control',
                 label: 'Grouped First label',
                 useDefaultTestId: true,
               },
-              {
+              'nested-group': {
                 type: 'test-group',
-                id: 'nested-group',
                 title: 'Nested Group',
                 useDefaultTestId: true,
-                controls: [
-                  {
-                    id: 'first',
+                controls: {
+                  first: {
                     type: 'test-text-control',
                     label: 'Nested First label',
                     useDefaultTestId: true,
                   },
-                  {
-                    id: 'second',
+                  second: {
                     type: 'test-text-control',
                     label: 'Nested Second label',
                     useDefaultTestId: false,
                   },
-                ],
+                },
               },
-            ],
+            },
           },
-        ],
+        },
       },
       {
-        testIdBuilderFn: (content, parentTestId) =>
-          `${parentTestId ?? 'root'}-${content.type}-${content.id}`,
+        testIdBuilderFn: (content, name, parentTestId) =>
+          `${parentTestId ?? 'root'}-${content.type}-${name}`,
       },
     );
 

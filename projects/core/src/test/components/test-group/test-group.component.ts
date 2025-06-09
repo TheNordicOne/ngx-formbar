@@ -21,8 +21,9 @@ export class TestGroupComponent {
   private readonly control = inject(NgxfwGroupDirective<TestGroup>);
 
   readonly content: Signal<TestGroup> = this.control.content;
+  readonly name: Signal<string> = this.control.name;
   readonly testId: Signal<string> = this.control.testId;
-  readonly controls: Signal<NgxFwContent[]> = this.control.controls;
+  readonly controls: Signal<[string, NgxFwContent][]> = this.control.controls;
   readonly registrations: Signal<Map<string, Type<unknown>>> =
     this.control.registrations;
   readonly isHidden: Signal<unknown> = this.control.isHidden;

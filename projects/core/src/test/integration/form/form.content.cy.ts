@@ -3,72 +3,62 @@ import { setupForm } from '../../helper/test';
 describe('Form content', () => {
   beforeEach(() => {
     setupForm({
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
         },
-        {
-          id: 'second',
+        second: {
           type: 'test-text-control',
           label: 'Second',
           defaultValue: 'default-second',
         },
-        {
-          id: 'third',
+        third: {
           type: 'test-text-control',
           label: 'Third',
           defaultValue: 'default-third',
         },
-        {
-          id: 'fourth',
+        fourth: {
           type: 'test-text-control',
           label: 'Fourth',
           defaultValue: 'default-fourth',
           nonNullable: true,
         },
-        {
-          id: 'fifth',
+        fifth: {
           type: 'test-text-control',
           label: 'Fifth',
           defaultValue: 'default-fifth',
           nonNullable: true,
         },
-        {
-          id: 'block',
+        block: {
           type: 'test-block',
           message: 'This is an information',
           isControl: false,
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
               defaultValue: 'default-grouped-first',
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-second',
+              controls: {
+                'nested-second': {
                   type: 'test-text-control',
                   label: 'Nested Second label',
                   defaultValue: 'default-nested-second',
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     });
   });
 

@@ -13,6 +13,7 @@ import { FormService } from '../../../../lib/services/form.service';
 export class GroupIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
   readonly content = input.required<TestGroup>();
+  readonly name = input.required<string>();
 
   form = this.formBuilder.group({});
 }

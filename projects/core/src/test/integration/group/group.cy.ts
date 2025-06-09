@@ -8,29 +8,26 @@ describe('Group', () => {
       cy.mount(GroupIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'test-group',
           content: {
             type: 'test-group',
-            id: 'test-group',
             title: 'First Group',
-            controls: [
-              {
-                id: 'first',
+            controls: {
+              first: {
                 type: 'test-text-control',
                 label: 'First label',
               },
-              {
+              'nested-group': {
                 type: 'test-group',
-                id: 'nested-group',
                 title: 'Nested Group',
-                controls: [
-                  {
-                    id: 'second',
+                controls: {
+                  second: {
                     type: 'test-text-control',
                     label: 'Second label',
                   },
-                ],
+                },
               },
-            ],
+            },
           },
         },
       });
@@ -51,22 +48,20 @@ describe('Group', () => {
       cy.mount(GroupIntegrationHostComponent, {
         providers: [formworkProviders(), dummyControlContainer],
         componentProperties: {
+          name: 'test-group',
           content: {
             type: 'test-group',
-            id: 'test-group',
             title: 'First Group',
-            controls: [
-              {
-                id: 'first',
+            controls: {
+              first: {
                 type: 'test-text-control',
                 label: 'First label',
               },
-              {
-                id: 'second',
+              second: {
                 type: 'test-text-control',
                 label: 'Second label',
               },
-            ],
+            },
             validators: ['no-duplicates', 'forbidden-letter-a'],
             asyncValidators: ['async-group'],
           },

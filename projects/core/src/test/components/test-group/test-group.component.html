@@ -2,9 +2,9 @@
 <span [attr.data-testId]="testId() + '-title'">{{
   dynamicTitle() ?? content()?.title
 }}</span>
-<div [formGroupName]="content().id">
-  @for (control of content()?.controls; track control.id) {
-    <ng-template *ngxfwNgxfwAbstractControl="control" />
+<div [formGroupName]="name()">
+  @for (content of controls(); track content[0]) {
+    <ng-template *ngxfwAbstractControl="content" />
   }
 </div>
 

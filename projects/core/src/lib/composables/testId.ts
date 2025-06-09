@@ -12,11 +12,13 @@ import { NgxFwConfigurationService } from '../services/configuration.service';
  *
  * @template T - Type extending NgxFwBaseContent
  * @param content - Signal containing the control or group content configuration
+ * @param name - Signal containing the name of the control
  * @param testIdBuilder - Signal holding a testIdBuilder function
  * @returns Computed signal that resolves to the element's ID for testing
  */
 export function withTestId(
   content: Signal<NgxFwBaseContent>,
+  name: Signal<string>,
   testIdBuilder: Signal<TestIdBuilderFn | undefined>,
 ): Signal<string> {
   const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
@@ -30,16 +32,16 @@ export function withTestId(
 
   return computed(() => {
     const contentValue = content();
-    const id = contentValue.id;
+    const id = name();
     const parentGroupTestId = parentGroupDirective?.testId();
     const builderFn = testIdBuilder();
 
     if (builderFn) {
-      return builderFn(contentValue, parentGroupTestId);
+      return builderFn(contentValue, id, parentGroupTestId);
     }
 
     if (globalTestIdBuilder) {
-      return globalTestIdBuilder(contentValue, parentGroupTestId);
+      return globalTestIdBuilder(contentValue, id, parentGroupTestId);
     }
 
     if (!parentGroupTestId) {

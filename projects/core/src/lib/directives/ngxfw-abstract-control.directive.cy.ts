@@ -13,16 +13,16 @@ import { NgxFwContent } from '../types/content.type';
 @Component({
   selector: 'ngxfw-host-component',
   imports: [NgxfwAbstractControlDirective],
-  template: `<ng-template [ngxfwNgxfwAbstractControl]="content()" />`,
+  template: ` <ng-template [ngxfwAbstractControl]="[name(), content()]" />`,
 })
 export class HostComponent<T extends NgxFwContent> {
   readonly content = input.required<T>();
+  readonly name = input.required<string>();
 }
 
 describe('Content Host Component', () => {
   it('should create the component', () => {
     const content: UnknownContent = {
-      id: 'some-group',
       type: 'unknown',
       label: 'Unkown',
     };
@@ -30,6 +30,7 @@ describe('Content Host Component', () => {
     cy.mount(HostComponent, {
       providers: [dummyControlContainer, formworkProviders(), FormService],
       componentProperties: {
+        name: 'some-group',
         content,
       },
     });
@@ -38,14 +39,14 @@ describe('Content Host Component', () => {
   describe('content types', () => {
     it('uses content type group', () => {
       const content: TestGroup = {
-        id: 'some-group',
         type: 'test-group',
-        controls: [],
+        controls: {},
       };
 
       cy.mount(HostComponent, {
         providers: [dummyControlContainer, formworkProviders(), FormService],
         componentProperties: {
+          name: 'some-group',
           content,
         },
       });
@@ -54,7 +55,6 @@ describe('Content Host Component', () => {
 
     it('uses content type control', () => {
       const content: TestTextControl = {
-        id: 'some-control',
         type: 'test-text-control',
         label: 'Some Control',
       };
@@ -62,6 +62,7 @@ describe('Content Host Component', () => {
       cy.mount(HostComponent, {
         providers: [dummyControlContainer, formworkProviders(), FormService],
         componentProperties: {
+          name: 'some-control',
           content,
         },
       });

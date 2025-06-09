@@ -17,4 +17,5 @@ export class RegistrationIntegrationHostComponent {
   readonly registrations = this.contentRegistrationService.registrations;
 
   readonly content = input.required<TestTextControl>();
+  readonly name = input.required<string>();
 }

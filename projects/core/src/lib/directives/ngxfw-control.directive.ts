@@ -76,6 +76,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    */
   readonly content = input.required<T>();
 
+  /**
+   * Required input for the controls name
+   */
+  readonly name = input.required<string>();
+
   private readonly visibilityHandling = signal<StateHandling>('auto');
   private readonly disabledHandling = signal<StateHandling>('auto');
   private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
@@ -86,7 +91,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    * Computed test ID derived from the control's ID
    * Used for automated testing identification
    */
-  readonly testId = withTestId(this.content, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
 
   /**
    * Computed signal for the control's hide strategy
@@ -180,7 +185,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   }
 
   get formControl() {
-    const id = this.content().id;
+    const id = this.name();
     if (!this.parentFormGroup?.contains(id)) {
       return null;
     }
@@ -191,6 +196,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   constructor() {
     hiddenEffect({
       content: this.content,
+      name: this.name,
       controlInstance: this.controlInstance,
       hiddenSignal: this.isHidden,
       hideStrategySignal: this.hideStrategy,
@@ -244,17 +250,13 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   }
 
   private setControl() {
-    this.parentFormGroup?.setControl(
-      this.content().id,
-      this.controlInstance(),
-      {
-        emitEvent: false,
-      },
-    );
+    this.parentFormGroup?.setControl(this.name(), this.controlInstance(), {
+      emitEvent: false,
+    });
   }
 
   private removeControl() {
-    const id = this.content().id;
+    const id = this.name();
     const formControl = this.formControl;
     // Check if control exists immediately before attempting removal
     if (formControl) {

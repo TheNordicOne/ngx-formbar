@@ -28,7 +28,7 @@ describe('FormComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(NgxFwFormComponent);
-    fixture.componentRef.setInput('formConfig', { content: [] });
+    fixture.componentRef.setInput('formConfig', { content: {} });
     component = fixture.componentInstance;
 
     fixture.detectChanges();
