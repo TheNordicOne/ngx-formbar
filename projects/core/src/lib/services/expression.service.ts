@@ -135,8 +135,8 @@ export class ExpressionService {
    * @param context - The context containing variables and objects referenced in the expression
    * @returns The result of evaluating the expression
    */
-  evaluateExpression(ast: Program, context?: FormContext): unknown {
-    if (!context) {
+  evaluateExpression(ast?: Program | null, context?: FormContext): unknown {
+    if (!context || !ast) {
       return null;
     }
 
