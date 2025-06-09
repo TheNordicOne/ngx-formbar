@@ -90,7 +90,6 @@ Where:
 ```ts
 // In your form configuration
 {
-  id: 'myField',
   type: 'text',
   label: 'My Field',
   hidden: (formValue: FormContext): boolean => {

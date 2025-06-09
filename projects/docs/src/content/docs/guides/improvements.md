@@ -36,7 +36,7 @@ This is a convenience helper to apply the `NgxfwControlDirective`.
 ```ts title="control.host-directive.ts"
 export const ngxfwControlHostDirective = {
   directive: NgxfwControlDirective,
-  inputs: ['content'],
+  inputs: ['content', 'name'],
 };
 ```
 
@@ -59,7 +59,7 @@ This is a convenience helper to apply the `NgxfwGroupDirective`.
 ```ts title="group.host-directive.ts"
 export const ngxfwGroupHostDirective = {
   directive: NgxfwGroupDirective,
-  inputs: ['content'],
+  inputs: ['content', 'name'],
 };
 ```
 

@@ -9,11 +9,11 @@ Once you've registered [Controls](/guides/controls), [Groups](/guides/groups) an
 
 ## Form
 
-The `NgxFwForm` interface defines these properties.
+The `NgxFwForm<ContentType extends NgxFwBaseContent = NgxFwContent>` interface defines these properties.
 
-| Name    | Type                 | Required | Description                                                 |
-|---------|----------------------|----------|-------------------------------------------------------------|
-| content | `NgxFwBaseContent[]` | Yes      | An array holding the content of the form (a.k.a. controls). |
+| Name    | Type                          | Required | Description                                                                                             |
+|---------|-------------------------------|----------|---------------------------------------------------------------------------------------------------------|
+| content | `Record<string, ContentType>` | Yes      | An object holding the content of the form (a.k.a. controls). The key will be used as the controls name. |
 
 ### Type Generic
 
@@ -34,7 +34,6 @@ The `NgxFwBaseContent` interface is the foundation for all form controls and gro
 | Name            | Type                | Required | Description                                                                                                                                                            |
 |-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | type            | `string`            | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                      |
-| id              | `string`            | Yes      | Unique identifier for the control. Used to link configuration with runtime behavior and maintain state consistency.<br/>This is also used and the controls name.       |
 | hidden          | `string`            | No       | A string expression that determines when the control should be hidden. This condition is evaluated at runtime against the whole form object.                           |
 
 
@@ -52,16 +51,9 @@ Controls and Groups extend the `NgxFwAbstractControl` interface and therefore bo
 | readonly        | `string \| boolean` | No       | Indicates if the control is read-only (displayed but not modifiable). Accepts either a boolean value or a string expression for dynamic evaluation.                    |
 | updateOn        | `UpdateStrategy`    | No       | Specifies when to update the control's value: 'change' (as user types, default), 'blur' (when control loses focus), or 'submit' (when form is submitted).              |
 
-### Block
-
-| Name      | Type    | Required | Description                                                    |
-|-----------|---------|----------|----------------------------------------------------------------|
-| isControl | `false` | Yes      | Required property for TypeScript to properly do type narrowing |
-
-
 ### Control
 
-The following configurations options are only applicable to controls.
+The following configurations options are only applicable to the interface `NgxFwControl`.
 
 | Name          | Type      | Required | Description                                                                                                                     |
 |---------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -73,12 +65,21 @@ The following configurations options are only applicable to controls.
 
 ### Group
 
-The following configurations options are only applicable to groups.
+The following configurations options are only applicable to the interface `NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>`.
 
-| Name     | Type             | Required | Description                                                              |
-|----------|------------------|----------|--------------------------------------------------------------------------|
-| title    | `string`         | No       | Specifies a title for the group                                          |
-| controls | `NgxFwContent[]` | Yes      | Array of `NgxFwContent` objects that configure the controls of the group |
+| Name     | Type                | Required | Description                                                                    |
+|----------|---------------------|----------|--------------------------------------------------------------------------------|
+| title    | `string`            | No       | Specifies a title for the group                                                |
+| controls | `Record<string, T>` | Yes      | Object mapping keys to `NgxFwContent` that configure the controls of the group |
+
+
+### Block
+
+The following configurations are only applicable to the interface `NgxFwBlock`.
+
+| Name      | Type    | Required | Description                                                    |
+|-----------|---------|----------|----------------------------------------------------------------|
+| isControl | `false` | Yes      | Required property for TypeScript to properly do type narrowing |
 
 
 ## Full Example
@@ -93,29 +94,25 @@ This example assumes that additional control types have been registered
 
 ```ts title="example.form.ts"
 export const exampleForm: NgxFwForm = {
-  content: [
+  content: {
     // Simple fields with no additional configuration
-    {
+    name: {
       type: 'text',
-      id: 'name',
       label: 'First and Lastname',
     },
-    {
+    company: {
       type: 'text',
-      id: 'company',
       label: 'Name of Company',
       hint: 'If applicable',
     },
-    {
+    licenses: {
       type: 'numeric',
-      id: 'licenses',
       label: 'Amount of Licenses',
       max: 3,
     },
     // Example how a configuration for a radio button group could look like
-    {
+    plan: {
       type: 'radio',
-      id: 'plan',
       label: 'Price Plan',
       options: [
         {
@@ -135,33 +132,28 @@ export const exampleForm: NgxFwForm = {
         },
       ],
     },
-    {
+    termsAccepted: {
       type: 'checkbox',
-      id: 'termsAccepted',
       label: 'I Accept Terms',
     },
-    {
+    repo: {
       type: 'group',
-      id: 'repo',
-      controls: [
-        {
+      controls: {
+        username: {
           type: 'text',
-          id: 'username',
           label: 'Username',
           default: 'UsernameSuggestion123',
           validators: ['min5Characters'],
           asyncValidators: ['usernameIsFreeValidator'],
         },
-        {
+        repositories: {
           type: 'numeric',
-          id: 'repositories',
           label: 'Repositories to create',
           default: 1,
         },
         // Example how a configuration for a dropdown could look like
-        {
+        repoTemplate: {
           type: 'dropdown',
-          id: 'repoTemplate',
           label: 'Template',
           default: 'none',
           options: [
@@ -181,61 +173,53 @@ export const exampleForm: NgxFwForm = {
               value: 'doc',
             },
             {
-              id: 'template-3',
+              id: 'template-3', // Note: Duplicate ID, consider fixing if intentional
               label: 'Note Management',
               value: 'note',
             },
           ],
         },
-        {
+        sendConfirmation: {
           type: 'checkbox',
-          id: 'sendConfirmation',
           label: 'Send confirmation mail',
           default: true,
         },
-        {
+        confirmationMailTarget: {
           type: 'email',
-          id: 'confirmationMailTarget',
           label: 'E-Mail',
           hidden: '!repo.sendConfirmation',
           hideStrategy: 'remove',
           valueStrategy: 'reset',
         },
-        {
+        editProjectId: {
           type: 'checkbox',
-          id: 'editProjectId',
           label: 'Edit Project ID',
           default: false,
         },
-        {
+        projectId: {
           type: 'text',
-          id: 'projectId',
           label: 'Project ID',
           default: '123456789',
           hidden: '!repo.editProjectId',
           hideStrategy: 'keep',
           valueStrategy: 'reset',
         },
-      ],
+      },
     },
-    {
+    docs: {
       type: 'group',
-      id: 'docs',
-      controls: [
-        {
+      controls: {
+        docAmount: {
           type: 'numeric',
-          id: 'docAmount',
           label: 'Documents to store',
         },
-        {
+        acceptedLimits: {
           type: 'checkbox',
-          id: 'acceptedLimits',
           label: 'I accept the limits for large volumes of documents',
           hidden: 'docs.docAmount > 1000',
         },
-        {
+        updateFrequency: {
           type: 'dropdown',
-          id: 'updateFrequency',
           label: 'Documentation Update Frequency',
           options: [
             {
@@ -260,18 +244,15 @@ export const exampleForm: NgxFwForm = {
             },
           ],
         },
-        {
+        frequency: {
           type: 'numeric',
-          id: 'frequency',
           label: 'Frequency (Sprint / Cycle Duration)',
           hidden: 'docs.docAmount > 2000 && (docs.updateFrequency === "spr" || docs.updateFrequency === "cyc")',
           hideStrategy: 'remove',
           valueStrategy: 'last',
         },
-      ],
+      },
     },
-  ]
+  }
 };
-
 ```
-

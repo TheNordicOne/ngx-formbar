@@ -7,6 +7,7 @@ sidebar:
 
 
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -41,6 +42,7 @@ export class TextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TextControl>);
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
+  readonly name: Signal<string> = this.control.name;
 
   constructor() {
     // Let formwork know, that you take care of handling visibility
@@ -53,8 +55,8 @@ export class TextControlComponent {
 @if(isHidden()){
 <span>Some placeholder you want to use</span>
 } @if(!isHidden()){
-<label [htmlFor]="id()">{{ label() }}</label>
-<input [id]="id()" [formControlName]="id()" />
+<label [htmlFor]="name()">{{ label() }}</label>
+<input [id]="name()" [formControlName]="name()" />
 <span>{{hint()}}</span>
 }
 ```
@@ -78,12 +80,13 @@ export class TextControlComponent {
 export class TextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TextControl>);
   readonly disabled: Signal<boolean> = this.control.disabled;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="text-control.component.html" group="disabled"
-<label [htmlFor]="id()">{{ label() }}</label>
-<input [id]="id()" [formControlName]="id()" />
+<label [htmlFor]="name()">{{ label() }}</label>
+<input [id]="name()" [formControlName]="name()" />
 <!-- Only show hint when control is disabled -->
 @if(disabled()){
 <span>{{hint()}}</span>
@@ -101,14 +104,15 @@ export class TextControlComponent {
 export class TextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TextControl>);
   readonly readonly: Signal<boolean> = this.control.readonly;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="text-control.component.html" group="readonly"
-<label [htmlFor]="id()">{{ label() }}</label>
+<label [htmlFor]="name()">{{ label() }}</label>
 <input
-  [id]="id()"
-  [formControlName]="id()"
+  [id]="name()"
+  [formControlName]="name()"
   [attr.readonly]="readonly() || null"
 />
 <span>{{hint()}}</span>
@@ -140,6 +144,7 @@ export class TextControlComponent {
   readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
 
   readonly staticConfigLabel: Signal<string> = this.control.label;
+  readonly name: Signal<string> = this.control.name;
 
   readonly displayLabel = computed(() => {
     const dynamic = this.dynamicLabel();
@@ -153,8 +158,8 @@ export class TextControlComponent {
 ```
 
 ```html title="text-control.component.html" group="dynamic-label"
-<label [htmlFor]="id()"> {{ displayLabel() }} </label>
-<input [id]="id()" [formControlName]="id()" />
+<label [htmlFor]="name()"> {{ displayLabel() }} </label>
+<input [id]="name()" [formControlName]="name()" />
 ```
 
 ## Test ID
@@ -170,17 +175,18 @@ Here is an example of how to access the test ID.
 export class TextControlComponent {
   private readonly control = inject(NgxfwControlDirective<TextControl>);
   readonly testId: Signal<string> = this.control.testId;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="text-control.component.html" group="testid"
-<label [htmlFor]="id()" [attr.data-testId]="testId() + '-label'"
+<label [htmlFor]="name()" [attr.data-testId]="testId() + '-label'"
   >{{ label() }}</label
 >
 <input
   [attr.data-testId]="testId() + '-input'"
-  [id]="id()"
-  [formControlName]="id()"
+  [id]="name()"
+  [formControlName]="name()"
 />
 ```
 

@@ -31,7 +31,7 @@ Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
   hostDirectives: [
     {
       directive: NgxfwGroupDirective,
-      inputs: ['content'],
+      inputs: ['content', 'name'],
     }
   ],
 })
@@ -42,17 +42,17 @@ export class GroupComponent {
   
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
-  readonly id = computed(() => this.content().id);
-  readonly controls: Signal<NgxFwContent[]> = this.control.controls;
+  readonly name: Signal<string> = this.control.name;
+  readonly controls: Signal<[string, NgxFwContent][]> = this.control.controls;
 }
 ```
 
 ```html title="group.component.html" group="group-minimal"
 <!-- Just an example -->
-<div [formGroupName]="id">
-@for (control of controls(); track control.id) {
-  <ng-template *ngxfwAbstractControl="control" />
-}
+<div [formGroupName]="name()">
+  @for (content of controls(); track content[0]) {
+    <ng-template *ngxfwAbstractControl="content" />
+  }
 </div>
 ```
 

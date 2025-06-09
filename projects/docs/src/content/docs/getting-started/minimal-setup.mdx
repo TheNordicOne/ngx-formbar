@@ -4,6 +4,7 @@ keyword: MinimalSetupPage
 ---
 
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import GroupSetup from '../../shared/group-setup.md';
 
@@ -30,31 +31,27 @@ This example is written in TypeScript
 
 ```ts title="example.form.ts"
 export const exampleForm: NgxFwForm = {
-  content: [
-    {
+  content: {
+    name: {
       type: 'text',
-      id: 'name',
       label: 'First and Lastname',
     },
-    {
+    company: {
       type: 'text',
-      id: 'company',
       label: 'Name of Company',
       hint: 'If applicable',
     },
-    {
+    repo: {
       type: 'group',
-      id: 'repo',
-      controls: [
-        {
+      controls: {
+        username: {
           type: 'text',
-          id: 'username',
           label: 'Username',
           default: 'UsernameSuggestion123',
         },
-      ],
+      },
     },
-  ],
+  },
 };
 ```
 
