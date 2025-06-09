@@ -8,6 +8,7 @@ sidebar:
 
 
 
+
 import GroupSetup from '../../shared/group-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -45,6 +46,7 @@ export class GroupComponent {
   private readonly control = inject(NgxfwGroupDirective<Group>);
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
+  readonly name: Signal<string> = this.control.name;
 
   constructor() {
     // Let formwork know, that you take care of handling visibility
@@ -58,7 +60,7 @@ export class GroupComponent {
   <span>Some placeholder you want to use</span>
 }
 @if(!isHidden()){
-  <div [formGroupName]="id">
+  <div [formGroupName]="name()">
     @for (control of controls(); track control.id) {
       <ng-template *ngxfwAbstractControl="control" />
     }
@@ -85,11 +87,12 @@ export class GroupComponent {
 export class GroupComponent {
   private readonly control = inject(NgxfwGroupDirective<Group>);
   readonly disabled: Signal<boolean> = this.control.disabled;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="group.component.html" group="group-disabled"
-<div [formGroupName]="id">
+<div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfwAbstractControl="control" />
   }
@@ -111,11 +114,12 @@ export class GroupComponent {
 export class GroupComponent {
   private readonly control = inject(NgxfwGroupDirective<Group>);
   readonly readonly: Signal<boolean> = this.control.readonly;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="group.component.html" group="group-readonly"
-<div [formGroupName]="id">
+<div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfwAbstractControl="control" />
   }
@@ -174,11 +178,12 @@ Here is an example of how to access the test ID.
 export class GroupComponent {
   private readonly control = inject(NgxfwGroupDirective<Group>);
   readonly testId: Signal<string> = this.control.testId;
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="group.component.html" group="group-testid"
-<div [formGroupName]="id"  [attr.data-testId]="testId() + '-wrapper'">
+<div [formGroupName]="name()"  [attr.data-testId]="testId() + '-wrapper'">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfwAbstractControl="control" />
   }

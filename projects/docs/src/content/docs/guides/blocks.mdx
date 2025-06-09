@@ -8,6 +8,8 @@ sidebar:
 
 
 
+
+
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import TestId from '../../shared/test-id.md';
 
@@ -48,7 +50,7 @@ Then implement the component.
   hostDirectives: [
     {
       directive: NgxfwBlockDirective,
-      inputs: ['content'],
+      inputs: ['content', 'name'],
     },
   ],
 })
@@ -140,7 +142,7 @@ Here is an example of how to access the test ID.
   hostDirectives: [
     {
       directive: NgxfwBlockDirective,
-      inputs: ['content'],
+      inputs: ['content', 'name'],
     },
   ],
 })

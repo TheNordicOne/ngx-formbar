@@ -38,7 +38,7 @@ Be sure to bind to `[formControlName]` on the actual input element
   hostDirectives: [
     {
       directive: NgxfwGroupDirective,
-      inputs: ['content'],
+      inputs: ['content', 'name'],
     }
   ],
 })
@@ -53,16 +53,16 @@ export class TextControlComponent {
   // We get proper type information when accessing this.content()
   readonly hint = computed(() => this.content().hint);
   readonly label = computed(() => this.content().label);
-  readonly id = computed(() => this.content().id);
+  readonly name: Signal<string> = this.control.name;
 }
 ```
 
 ```html title="text-control.component.html" group="minimal"
 <!-- Just an example -->
-<label [htmlFor]="id()">{{ label() }}</label>
+<label [htmlFor]="name()">{{ label() }}</label>
 <input
-  [id]="id()"
-  [formControlName]="id()"
+  [id]="name()"
+  [formControlName]="name()"
 />
 <span>{{hint()}}</span>
 ```
