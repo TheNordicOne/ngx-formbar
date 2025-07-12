@@ -12,7 +12,7 @@ export class NgxFwConfigurationService {
     return this._testIdBuilderFn;
   }
 
-  configure(config: NgxFwGlobalConfiguration) {
-    this._testIdBuilderFn = config.testIdBuilderFn;
+  configure(config: NgxFwGlobalConfiguration | undefined) {
+    this._testIdBuilderFn = config?.testIdBuilderFn;
   }
 }
