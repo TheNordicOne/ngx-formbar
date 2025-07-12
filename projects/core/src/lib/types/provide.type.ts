@@ -44,5 +44,5 @@ export interface FormworkConfig<
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
   updateOn?: UpdateStrategy;
-  globalConfig: NgxFwGlobalConfiguration;
+  globalConfig?: NgxFwGlobalConfiguration;
 }

@@ -87,9 +87,37 @@ export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
 
 ## Code Splitting
 
-Registering all controls. validators, etc. directly in the `app.config.ts` is not ideal. Setup dedicated files for your registrations.
+Registering all controls. validators, etc. directly in the _app.config.ts_ is not ideal. Set up a dedicated file for your registrations.
 
-### Controls Registration
+### defineFormworkConfig
+
+Create a file with this content to get started. The `defineFormworkConfig` function is a helper, to get type support when defining the configuration in a separate file.
+
+```ts title="formwork.config.ts"
+import { componentRegistrations } from './controls.registerations.ts';
+import { defineFormworkConfig } from './config';
+
+export const formworkConfig = defineFormworkConfig({
+  componentRegistrations: {
+    // Component registrations go here
+  },
+  // validatorRegistrations are optional
+  validatorRegistrations: {
+    // Validator registrations go here
+  },
+  // asyncValidatorRegistrations are optional
+  asyncValidatorRegistrations: {
+    // Async Validator registrations go here
+  },
+});
+```
+
+
+### Splitting Registrations
+
+You can further split up the configuration, by having files specifically for your control and validator registrations. While it is recommended to have everything withing _formwork.config.ts_, in some case further splitting can be beneficial for clarity.
+
+#### Controls Registration
 
 Create a file with the following content, at whatever location makes sense.
 
@@ -102,7 +130,7 @@ export const componentRegistrations: ComponentRegistrationConfig = {
 };
 ```
 
-In `app.config.ts` use it like this
+In _app.config.ts_ use it like this
 
 ```ts title="app.config.ts"
 import { componentRegistrations } from './controls.registerations.ts';
@@ -117,7 +145,20 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-### Validators Registration
+In _formwork.config.ts_ use it like this
+
+```ts title="app.config.ts"
+import { componentRegistrations } from './controls.registerations.ts';
+
+export const formworkConfig = defineFormworkConfig({
+  // other providers
+  componentRegistrations: {
+    componentRegistrations
+  },
+});
+```
+
+#### Validators Registration
 
 Create a file with the following content, at whatever location makes sense. You can also further split the files between sync and async validators
 
@@ -136,7 +177,7 @@ export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecor
 };
 ```
 
-In `app.config.ts` use it like this
+In _app.config.ts_ use it like this
 
 ```ts title="app.config.ts"
 import { validatorRegistrations, asyncValidatorRegistrations } from './validators.registerations.ts';
@@ -152,8 +193,22 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+In _formwork.config.ts_ use it like this
+
+```ts title="app.config.ts"
+import { componentRegistrations } from './controls.registerations.ts';
+
+export const formworkConfig = defineFormworkConfig({
+  // other providers
+  componentRegistrations: {
+    validatorRegistrations,
+    asyncValidatorRegistrations,
+  },
+});
+```
+
 :::caution
-Extracting the validator registrations means losing some of the type safety features. Specifically it won't be possible to get warnings when you misspell the key in a reference. It is therefore recommended to keep the validators directly in the `provideFormwork` function call.
+Extracting the validator registrations means losing some of the type safety features. Specifically it won't be possible to get warnings when you misspell the key in a reference. It is therefore recommended to keep the validators directly in `defineFormworkConfig` or `provideFormwork` function call.
 
 The following example shows the case where the reference to the `letter` validator is misspelled.
 :::

@@ -11,28 +11,33 @@ import {
 } from '../../validator/test.validator';
 import { TestBlockComponent } from '../../components/test-block/test-block.component';
 import { TestIdBuilderFn } from '../../../lib/types/functions.type';
+import { defineFormworkConfig } from '../../../lib/config/config';
+
+const formworkConfig = defineFormworkConfig({
+  componentRegistrations: {
+    'test-text-control': TestTextControlComponent,
+    'test-group': TestGroupComponent,
+    'test-block': TestBlockComponent,
+  },
+  validatorRegistrations: {
+    'min-chars': [Validators.minLength(3)],
+    letter: [letterValidator],
+    combined: ['min-chars', Validators.required, 'letter'],
+    'no-duplicates': [noDuplicateValuesValidator],
+    'forbidden-letter-a': [forbiddenLetterAValidator],
+  },
+  asyncValidatorRegistrations: {
+    async: [asyncValidator],
+    'async-group': [asyncGroupValidator],
+  },
+});
 
 export const formworkProviders = (
   updateOn?: UpdateStrategy,
   testIdBuilderFn?: TestIdBuilderFn,
 ) =>
   provideFormwork({
-    componentRegistrations: {
-      'test-text-control': TestTextControlComponent,
-      'test-group': TestGroupComponent,
-      'test-block': TestBlockComponent,
-    },
-    validatorRegistrations: {
-      'min-chars': [Validators.minLength(3)],
-      letter: [letterValidator],
-      combined: ['min-chars', Validators.required, 'letter'],
-      'no-duplicates': [noDuplicateValuesValidator],
-      'forbidden-letter-a': [forbiddenLetterAValidator],
-    },
-    asyncValidatorRegistrations: {
-      async: [asyncValidator],
-      'async-group': [asyncGroupValidator],
-    },
+    ...formworkConfig,
     updateOn,
     globalConfig: {
       testIdBuilderFn,

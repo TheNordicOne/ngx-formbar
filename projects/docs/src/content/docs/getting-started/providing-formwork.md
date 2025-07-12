@@ -37,4 +37,4 @@ export const appConfig: ApplicationConfig = {
 
 ## Splitting Configuration
 
-To avoid bloating your config, put your registrations in a separate file. Checkout the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
+To avoid bloating your _app.config.ts_, put your registrations in a separate file. Checkout the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
