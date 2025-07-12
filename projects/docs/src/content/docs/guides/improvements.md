@@ -91,11 +91,10 @@ Registering all controls. validators, etc. directly in the _app.config.ts_ is no
 
 ### defineFormworkConfig
 
-Create a file with this content to get started. The `defineFormworkConfig` function is a helper, to get type support when defining the configuration in a separate file.
+Create a file, next to your _app.config.ts_, with this content to get started. The `defineFormworkConfig` function is a helper, to get type support when defining the configuration in a separate file.
 
 ```ts title="formwork.config.ts"
-import { componentRegistrations } from './controls.registerations.ts';
-import { defineFormworkConfig } from './config';
+import { defineFormworkConfig } from 'ngx-formwork';
 
 export const formworkConfig = defineFormworkConfig({
   componentRegistrations: {
@@ -110,6 +109,19 @@ export const formworkConfig = defineFormworkConfig({
     // Async Validator registrations go here
   },
 });
+```
+
+In _app.config.ts_ use it like this
+
+```ts title="app.config.ts"
+import { formworkConfig } from './formwork.config.ts';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork(formworkConfig)
+  ]
+};
 ```
 
 
