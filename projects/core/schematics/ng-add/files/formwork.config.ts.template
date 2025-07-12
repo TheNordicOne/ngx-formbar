@@ -1,0 +1,7 @@
+import { defineFormworkConfig } from 'ngx-formwork';
+
+export const formworkConfig = defineFormworkConfig({
+  componentRegistrations: {
+    // Component registrations go here
+  },
+});
