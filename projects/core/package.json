@@ -1,7 +1,12 @@
 {
   "name": "ngx-formwork",
   "version": "0.6.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.schematics.json",
+    "postbuild": "copyfiles schematics/*/schema.json schematics/*/files/** schematics/collection.json ../../dist/core/"
+  },
   "peerDependencies": {
+    "@angular/cdk": "^19.2.1",
     "@angular/common": "^19.2.1",
     "@angular/core": "^19.2.1"
   },
@@ -9,6 +14,14 @@
     "acorn": "^8.14.1",
     "eval-estree-expression": "^3.0.0",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "copyfiles": "file:../../node_modules/copyfiles",
+    "typescript": "file:../../node_modules/typescript"
+  },
+  "schematics": "./schematics/collection.json",
+  "ng-add": {
+    "save": "dependencies"
   },
   "private": false,
   "publishConfig": {
