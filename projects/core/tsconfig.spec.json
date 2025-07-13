@@ -5,7 +5,7 @@
     "types": ["vitest/globals"],
     "target": "es2016"
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"],
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "schematics/**/*.spec.ts", "schematics/**/*.d.ts"],
   "exclude": [
     "../../cypress/**/*.ts",
     "../../cypress.config.ts"

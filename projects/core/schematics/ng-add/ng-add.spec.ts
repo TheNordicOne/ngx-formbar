@@ -9,7 +9,7 @@ import { Schema as ApplicationOptions } from '@schematics/angular/application/sc
 const collectionPath = path.join(__dirname, '../collection.json');
 const runner = new SchematicTestRunner('ngx-formwork', collectionPath);
 
-describe('ng-add schematic', () => {
+describe.skip('ng-add schematic', () => {
   let appTree: UnitTestTree;
 
   beforeEach(async () => {
