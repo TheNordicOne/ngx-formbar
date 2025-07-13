@@ -2,17 +2,18 @@ import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
 import { Schema as WorkspaceOptions } from '@schematics/angular/workspace/schema';
 import { Schema as ApplicationOptions } from '@schematics/angular/application/schema';
+import { COLLECTION_PATH } from '../paths';
 
-const collectionPath = path.join(__dirname, '../collection.json');
-const runner = new SchematicTestRunner('ngx-formwork', collectionPath);
-
+// ToDo: Find out how to properly set up this test
 describe.skip('ng-add schematic', () => {
+  const baseOptions = { project: 'app' };
   let appTree: UnitTestTree;
+  let runner: SchematicTestRunner;
 
   beforeEach(async () => {
+    runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     // Create a mock workspace + app
     const workspaceOptions: WorkspaceOptions = {
       name: 'workspace',
@@ -20,7 +21,7 @@ describe.skip('ng-add schematic', () => {
       newProjectRoot: 'projects',
     };
 
-    appTree = await runner.runExternalSchematic(
+    const workspaceTree = await runner.runExternalSchematic(
       '@schematics/angular',
       'workspace',
       workspaceOptions,
@@ -35,12 +36,12 @@ describe.skip('ng-add schematic', () => {
       '@schematics/angular',
       'application',
       appOptions,
-      appTree,
+      workspaceTree,
     );
   });
 
   it('should generate formwork.config.ts', async () => {
-    const tree = await runner.runSchematic('ng-add', {}, appTree);
+    const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
     expect(tree.files).toContain('/projects/app/src/app/formwork.config.ts');
 
     const configContent = tree.readContent(
@@ -53,7 +54,7 @@ describe.skip('ng-add schematic', () => {
   });
 
   it('should update app.config.ts', async () => {
-    const tree = await runner.runSchematic('ng-add', {}, appTree);
+    const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
     const content = tree.readContent('/projects/app/src/app/app.config.ts');
     expect(content).toContain('provideFormwork(formworkConfig)');
     expect(content).toContain(
