@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "NgxFormworkNgAdd",
+  "title": "Ngx-Formwork Installation Schema",
+  "type": "object",
+  "description": "Adds ngx-formwork to the application",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add ngx-formwork to.",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  }
+}

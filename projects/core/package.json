@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "scripts": {
     "build": "tsc -p tsconfig.schematics.json",
-    "postbuild": "copyfiles schematics/*/schema.json schematics/*/files/** schematics/collection.json ../../dist/core/"
+    "postbuild": "copyfiles schematics/*/schema.json schematics/*/files/** schematics/collection.json ../../dist/core/ && copyfiles -f schematics/ng-add/files/formwork.config.ts.template ../../dist/core/schematics/ng-add/files/"
   },
   "peerDependencies": {
     "@angular/cdk": "^19.2.1",
@@ -16,12 +16,14 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@angular-devkit/schematics": "^19.2.9",
+    "@schematics/angular": "^19.2.9",
     "copyfiles": "file:../../node_modules/copyfiles",
     "typescript": "file:../../node_modules/typescript"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {
-    "save": "dependencies"
+    "save": true
   },
   "private": false,
   "publishConfig": {
