@@ -4,6 +4,7 @@
     "ng-add": {
       "description": "Add ngx-formwork to the project.",
       "factory": "./ng-add/index#ngAdd",
+      "schema": "./ng-add/schema.json",
       "hidden": true
     }
   }
