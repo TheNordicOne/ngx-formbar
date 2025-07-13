@@ -154,13 +154,19 @@ function addDependencies(): Rule {
 
     if (!pkgJson.dependencies['ngx-formwork']) {
       pkgJson.dependencies['ngx-formwork'] = '^0.6.0';
+
+      pkgJson.dependencies = Object.keys(pkgJson.dependencies)
+        .sort()
+        .reduce<Record<string, string>>((sorted, key) => {
+          sorted[key] = pkgJson.dependencies[key];
+          return sorted;
+        }, {});
     }
 
     tree.overwrite(pkgPath, JSON.stringify(pkgJson, null, 2));
     return tree;
   };
 }
-
 export function ngAdd(options: NgAddOptions = {}): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
