@@ -36,3 +36,4 @@ Install _ngx-formwork_ manually if you prefer not to use the schematic:
 npm i ngx-formwork
 ```
 
+For manual setup and configuration, see the [Manual Setup guide](/getting-started/manuel-setup/).

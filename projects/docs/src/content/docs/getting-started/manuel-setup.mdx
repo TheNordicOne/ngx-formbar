@@ -2,10 +2,11 @@
 title: Manual Setup
 keyword: ManualSetupPage
 sidebar:
-  order: 1
+  order: 2
 ---
 
-# Manual Setup
+
+
 
 
 import ControlSetup from '../../shared/control-setup.md';
@@ -16,6 +17,49 @@ Checkout [Helper](/guides/improvements) to see how to set up helpers.
 :::
 
 _ngx-formwork_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
+
+## Installation
+
+Run this npm command.
+
+```bash
+npm install ngx-formwork
+```
+
+## Providing Formwork
+_ngx-formwork_ is provided and configured in _app.config.ts_.
+
+```ts title="app.config.ts"
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
+      componentRegistrations: {
+        // Component registrations go here
+      },
+
+      // validatorRegistrations are optional
+      validatorRegistrations: {
+        // Validator registrations go here
+        // Following Angular validators are registered by default
+        // Validators.required
+        // Validators.requiredTrue
+        // Validators.email
+        // Validators.nullValidator
+      },
+
+      // asyncValidatorRegistrations are optional
+      asyncValidatorRegistrations: {
+        // Async Validator registrations go here
+      },
+    })
+  ]
+};
+```
+
+### Splitting Configuration
+
+To avoid bloating your _app.config.ts_, put your registrations in a separate file. Checkout the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
 
 ## Controls
 
