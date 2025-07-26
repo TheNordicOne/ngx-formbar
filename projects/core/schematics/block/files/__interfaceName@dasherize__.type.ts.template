@@ -1,0 +1,6 @@
+import { NgxFwBlock } from 'ngx-formwork';
+
+export interface <%= classify(interfaceName) %> extends NgxFwBlock {
+  type: '<%= key %>';
+}
+

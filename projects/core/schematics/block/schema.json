@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NgxFormworkBlock",
+  "title": "Scaffold Block",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the component that this block will use. Defaults to the key if not provided.",
+      "type": "string"
+    },
+    "key": {
+      "description": "The name of the key that this block will be associated with.",
+      "type": "string"
+    },
+    "path": {
+      "type": "string",
+      "format": "path",
+      "description": "The path to create the component.",
+      "visible": false,
+      "$default": {
+        "$source": "workingDirectory"
+      }
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "interfaceSuffix": {
+      "type": "string",
+      "description": "The suffix of the interface. Defaults to 'Block'",
+      "default": "Block"
+    },
+    "componentSuffix": {
+      "type": "string",
+      "description": "The suffix of the component. Defaults to 'Block'",
+      "default": "Block"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}
+

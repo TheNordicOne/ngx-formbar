@@ -16,6 +16,11 @@
       "description": "Scaffolds a new group and registers it.",
       "factory": "./group/index#group",
       "schema": "./group/schema.json"
+    },
+    "block": {
+      "description": "Scaffolds a new block and registers it.",
+      "factory": "./block/index#block",
+      "schema": "./block/schema.json"
     }
   }
 }

@@ -1,0 +1,27 @@
+import { Component, Signal, inject } from '@angular/core';
+import { ControlContainer } from '@angular/forms';
+import { NgxfwBlockDirective } from 'ngx-formwork';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
+
+@Component({
+  selector: 'app-<%= dasherize(componentName) %>',
+  imports: [],
+  templateUrl: './<%= dasherize(componentName) %>.component.html',
+  viewProviders: [
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ],
+  hostDirectives: [
+    {
+      directive: NgxfwBlockDirective,
+      inputs: ['content', 'name'],
+    }
+  ],
+})
+export class <%= classify(componentClassName) %> {
+  private readonly block = inject(NgxfwBlockDirective<<%= classify(interfaceName) %>>);
+  readonly content: Signal<<%= classify(interfaceName) %>> = this.block.content;
+}
+
