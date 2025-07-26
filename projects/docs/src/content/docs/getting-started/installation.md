@@ -9,13 +9,30 @@ sidebar:
 This project is still in the making and not ready to be used in production!
 :::
 
-Install _ngx-formwork_
-
-```shell
-npm i ngx-formwork
-```
 
 ## Compatibility
 
 At this time this package is only compatible with Angular 19.2.1 or above.
+
+## Primary Installation via Angular Schematic (ng-add)
+
+Running the following command will install ngx-formwork, configure your application providers, and register the core schematics:
+
+```shell
+ng add ngx-formwork
+```
+
+This schematic will:
+- Install the `ngx-formwork` package from npm.
+- Update your `package.json` and `angular.json`.
+- Add the Formwork provider to your `app.config.ts` (or `AppModule`).
+- Register the default schematics for scaffolding new controls, groups, and blocks.
+
+## Manual Installation
+
+Install _ngx-formwork_ manually if you prefer not to use the schematic:
+
+```shell
+npm i ngx-formwork
+```
 

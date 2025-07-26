@@ -2,7 +2,7 @@
 title: Providing Formwork
 keyword: ProvidingFormworkPage
 sidebar:
-  order: 1
+  order: 2
 ---
 
 _ngx-formwork_ is provided and configured in _app.config.ts_.
