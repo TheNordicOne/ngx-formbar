@@ -2,7 +2,7 @@
 title: Schematics
 keyword: SchematicsPage
 sidebar:
-  order: 3
+  order: 1
 ---
 
 Use Angular schematics to scaffold and register new formwork controls, groups, or blocks.
@@ -50,6 +50,8 @@ This will:
 - Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwControlDirective`.
 - Register the new control in your Formwork configuration under `componentRegistrations` with the given key.
 
+For implementation details and advanced usage, see the [Controls Guide](/guides/controls).
+
 ## Generating a Group
 
 Run:
@@ -63,6 +65,8 @@ This will:
 - Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwGroupDirective`.
 - Register the new group in your Formwork configuration under `componentRegistrations` with the given key.
 
+For implementation details and advanced usage, see the [Groups Guide](/guides/groups).
+
 ## Generating a Block
 
 Run:
@@ -75,3 +79,5 @@ This will:
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwBlock`.
 - Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwBlockDirective`.
 - Register the new block in your Formwork configuration under `componentRegistrations` with the given key.
+
+For implementation details and advanced usage, see the [Blocks Guide](/guides/blocks).
