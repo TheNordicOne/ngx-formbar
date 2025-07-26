@@ -27,6 +27,11 @@
       "$default": {
         "$source": "projectName"
       }
+    },
+    "interfaceSuffix": {
+      "type": "string",
+      "description": "The suffix of the interface. Defaults to 'Control'",
+      "default": "Control"
     }
   },
   "required": [
