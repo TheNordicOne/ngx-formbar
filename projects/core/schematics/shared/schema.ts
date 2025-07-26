@@ -4,4 +4,5 @@ export interface Schema {
   path?: string;
   project?: string;
   interfaceSuffix: string;
+  componentSuffix: string;
 }

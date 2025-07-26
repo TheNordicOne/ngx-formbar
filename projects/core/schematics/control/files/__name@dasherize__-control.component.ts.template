@@ -1,12 +1,12 @@
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxfwAbstractControlDirective, NgxfwGroupDirective } from 'ngx-formwork';
+import { NgxfwGroupDirective } from 'ngx-formwork';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
 
 @Component({
-  selector: 'app-<%= dasherize(name) %>-control',
+  selector: 'app-<%= dasherize(componentName) %>',
   imports: [ReactiveFormsModule],
-  templateUrl: './<%= dasherize(name) %>-control.component.html',
+  templateUrl: './<%= dasherize(componentName) %>.component.html',
   viewProviders: [
     {
       provide: ControlContainer,
@@ -20,7 +20,7 @@ import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %
     }
   ],
 })
-export class <%= classify(name) %>ControlComponent {
+export class <%= classify(componentClassName) %> {
   private readonly control = inject(NgxfwControlDirective<<%= classify(interfaceName) %>>);
   readonly controls: Signal<[string, NgxFwContent][]> = this.control.controls;
 }
