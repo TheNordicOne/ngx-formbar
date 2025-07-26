@@ -17,7 +17,26 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 > [!WARNING]
 > This project is still in the making and not ready to be used in production!
 
+## Installation
+
+**Primary (recommended)**
+
+Install and configure via Angular schematic:
+
+```bash
+ng add ngx-formwork
+```
+
+This will install the package, update your project files, and configure the Formwork provider.
+
+**Manual**
+
+```bash
+npm install ngx-formwork
+```
+
+For manual setup, you must provide Formwork in your `app.config.ts` or `AppModule`.
+
 ## Compatibility
 
 At this time this package is only compatible with Angular 19.2.1 or above.
-

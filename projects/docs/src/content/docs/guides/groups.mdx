@@ -9,6 +9,7 @@ sidebar:
 
 
 
+
 import GroupSetup from '../../shared/group-setup.md';
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import HideStrategyExplanation from '../../shared/hide-strategy-explanation.md';
@@ -23,7 +24,17 @@ A group is used to group controls together. It results in an Angular `FormGroup`
 Most of the time you will only need one or two different group types. Where they really are handy though, is if you need different behaviors. For example one that does not do anything special visually and one that is collapsible.
 
 
-## Minimal Setup
+## Scaffolding via Schematics
+
+Run the Angular schematic to scaffold a new group and register it:
+
+```bash
+ng generate ngx-formwork:group --key <group-key> [--name <ComponentName>]
+```
+
+See the [Schematics Guide](/getting-started/schematics) for more details.
+
+## Manual Setup
 :::note
 Checkout [Helper](/guides/improvements#Helper) to see how to set up helpers.
 :::
@@ -213,4 +224,3 @@ Then, in your template you can do something like this
   <span>Required</span>
 }
 ```
-
