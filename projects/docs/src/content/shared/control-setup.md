@@ -37,7 +37,7 @@ Be sure to bind to `[formControlName]` on the actual input element
   ],
   hostDirectives: [
     {
-      directive: NgxfwGroupDirective,
+      directive: NgxfwControlDirective,
       inputs: ['content', 'name'],
     }
   ],
