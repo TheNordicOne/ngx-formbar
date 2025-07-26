@@ -1,12 +1,12 @@
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxfwGroupDirective } from 'ngx-formwork';
+import { NgxfwAbstractControlDirective, NgxfwGroupDirective } from 'ngx-formwork';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
 
 @Component({
-  selector: 'app-<%= dasherize(name) %>-group',
+  selector: 'app-<%= dasherize(componentName) %>',
   imports: [ReactiveFormsModule, NgxfwAbstractControlDirective],
-  templateUrl: './<%= dasherize(name) %>-group.component.html',
+  templateUrl: './<%= dasherize(componentName) %>.component.html',
   viewProviders: [
     {
       provide: ControlContainer,
@@ -20,7 +20,7 @@ import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %
     }
   ],
 })
-export class <%= classify(name) %>GroupComponent {
+export class <%= classify(componentClassName) %> {
   private readonly group = inject(NgxfwGroupDirective<<%= classify(interfaceName) %>>);
   readonly content: Signal<<%= classify(interfaceName) %>> = this.group.content;
 }
