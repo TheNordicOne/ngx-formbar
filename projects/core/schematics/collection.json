@@ -11,6 +11,11 @@
       "description": "Scaffolds a new control and registers it.",
       "factory": "./control/index#control",
       "schema": "./control/schema.json"
+    },
+    "group": {
+      "description": "Scaffolds a new group and registers it.",
+      "factory": "./group/index#group",
+      "schema": "./group/schema.json"
     }
   }
 }
