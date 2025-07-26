@@ -1,0 +1,77 @@
+---
+title: Schematics
+keyword: SchematicsPage
+sidebar:
+  order: 3
+---
+
+Use Angular schematics to scaffold and register new formwork controls, groups, or blocks.
+
+## Options
+
+All three schematics (`control`, `group`, `block`) support the same options:
+
+| Option               | Type   | Required | Default (control/group/block) | Description                                                        |
+|----------------------|--------|----------|-------------------------------|--------------------------------------------------------------------|
+| --key                | string | Yes      | —                             | Registration key used in the Formwork configuration.               |
+| --name               | string | No       | `key`                         | Base name for component and interface.                             |
+| --project            | string | No       | workspace default project     | Angular project name where files are generated.                    |
+| --path               | string | No       | current working directory     | Folder path for generating files.                                  |
+| --interface-suffix   | string | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                             |
+| --component-suffix   | string | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                       |
+
+### Example
+
+Scaffold a control with all options
+
+   Command:
+   ```bash
+   ng generate ngx-formwork:control --key rating --name StarRating --interface-suffix Props --component-suffix Widget
+   ```
+   Artifacts generated:
+   | Artifact          | Value                        |
+   |-------------------|------------------------------|
+   | interface file    | `star-rating-props.type.ts`         |
+   | interface name    | `StarRatingProps`            |
+   | component file    | `star-rating-widget.component.ts` |
+   | component class   | `StarRatingWidgetComponent`  |
+   | registration key  | `'rating'`                   |
+
+## Generating a Control
+
+Run:
+
+```bash
+ng generate ngx-formwork:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwControl`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwControlDirective`.
+- Register the new control in your Formwork configuration under `componentRegistrations` with the given key.
+
+## Generating a Group
+
+Run:
+
+```bash
+ng generate ngx-formwork:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwFormGroup`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwGroupDirective`.
+- Register the new group in your Formwork configuration under `componentRegistrations` with the given key.
+
+## Generating a Block
+
+Run:
+
+```bash
+ng generate ngx-formwork:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwBlock`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwBlockDirective`.
+- Register the new block in your Formwork configuration under `componentRegistrations` with the given key.

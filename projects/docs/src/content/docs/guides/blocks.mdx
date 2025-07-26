@@ -9,11 +9,19 @@ sidebar:
 import HiddenExplanation from '../../shared/hidden-explanation.md';
 import TestId from '../../shared/test-id.md';
 
-Sometimes you need additional information or functionality within a form. This could be the case for example if you need to add an information block, images or anything that does not contribute to the forms value.
+Sometimes you need additional information or functionality within a form. This could be the case for example if you need to add an information block, images or anything that does not contribute to the form's value.
 
-In this case you can define a Block.
+## Scaffolding via Schematics
 
-## Minimal Setup
+Run the Angular schematic to scaffold a new block and register it:
+
+```bash
+ng generate ngx-formwork:block --key <block-key> [--name <ComponentName>]
+```
+
+See the [Schematics Guide](/getting-started/schematics) for more details.
+
+## Manual Setup
 
 Here is an example of a simple information block.
 
