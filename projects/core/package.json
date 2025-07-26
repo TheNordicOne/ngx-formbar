@@ -19,7 +19,8 @@
     "@angular-devkit/schematics": "^19.0.0",
     "@schematics/angular": "^19.0.0",
     "copyfiles": "file:../../node_modules/copyfiles",
-    "typescript": "file:../../node_modules/typescript"
+    "typescript": "file:../../node_modules/typescript",
+    "ts-morph": "^26.0.0"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {
