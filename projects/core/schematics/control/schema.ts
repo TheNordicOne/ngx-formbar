@@ -3,4 +3,5 @@ export interface Schema {
   key: string;
   path?: string;
   project?: string;
+  interfaceSuffix: string;
 }
