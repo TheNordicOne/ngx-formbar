@@ -32,6 +32,11 @@
       "type": "string",
       "description": "The suffix of the interface. Defaults to 'Control'",
       "default": "Control"
+    },
+    "componentSuffix": {
+      "type": "string",
+      "description": "The suffix of the component. Defaults to 'Control'",
+      "default": "Control"
     }
   },
   "required": [
