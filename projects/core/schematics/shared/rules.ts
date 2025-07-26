@@ -55,7 +55,7 @@ export function scaffoldAndRegister(options: Schema): Rule {
         componentClassName,
         ...strings,
       }),
-      move(normalize(componentDir)),
+      move(normalize(strings.dasherize(componentDir))),
     ]);
 
     registerComponentInConfig(
