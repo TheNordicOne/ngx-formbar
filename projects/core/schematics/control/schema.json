@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NgxFormworkControl",
+  "title": "Scaffold Control",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the component that this control will use. Defaults to the key if not provided.",
+      "type": "string"
+    },
+    "key": {
+      "description": "The name of the key that this control will be associated with.",
+      "type": "string"
+    },
+    "path": {
+      "type": "string",
+      "format": "path",
+      "description": "The path to create the component.",
+      "visible": false,
+      "$default": {
+        "$source": "workingDirectory"
+      }
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  },
+  "required": [
+    "key"
+  ]
+}
