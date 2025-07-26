@@ -207,7 +207,7 @@ export const appConfig: ApplicationConfig = {
 
 In _formwork.config.ts_ use it like this
 
-```ts title="app.config.ts"
+```ts title="formwork.config.ts"
 import { componentRegistrations } from './controls.registerations.ts';
 
 export const formworkConfig = defineFormworkConfig({
