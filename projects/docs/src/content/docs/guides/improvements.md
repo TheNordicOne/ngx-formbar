@@ -164,9 +164,7 @@ import { componentRegistrations } from './controls.registerations.ts';
 
 export const formworkConfig = defineFormworkConfig({
   // other providers
-  componentRegistrations: {
-    componentRegistrations
-  },
+  componentRegistrations,
 });
 ```
 
