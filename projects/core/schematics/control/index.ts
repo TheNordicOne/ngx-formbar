@@ -195,7 +195,7 @@ export function control(options: Schema): Rule {
       : `${project.root}/src/app`;
 
     const name = options.name ?? options.key;
-    const interfaceName = `${options.name ?? options.key}Control`;
+    const interfaceName = `${options.name ?? options.key}${options.interfaceSuffix}`;
     const componentDir = `/${options.path ?? name}/${name}`;
 
     const templateSource = apply(url('./files'), [
