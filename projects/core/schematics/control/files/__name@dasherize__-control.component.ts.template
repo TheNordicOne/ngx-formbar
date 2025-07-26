@@ -1,0 +1,26 @@
+import { Component, Signal, inject } from '@angular/core';
+import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
+import { NgxfwControlDirective } from 'ngx-formwork';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
+
+@Component({
+  selector: 'app-<%= dasherize(name) %>-control',
+  imports: [ReactiveFormsModule],
+  templateUrl: './<%= dasherize(name) %>-control.component.html',
+  viewProviders: [
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ],
+  hostDirectives: [
+    {
+      directive: NgxfwControlDirective,
+      inputs: ['content', 'name'],
+    }
+  ],
+})
+export class <%= classify(name) %>ControlComponent {
+  private readonly control = inject(NgxfwControlDirective<<%= classify(interfaceName) %>>);
+  readonly content: Signal<<%= classify(interfaceName) %>> = this.control.content;
+}
