@@ -6,6 +6,11 @@
       "factory": "./ng-add/index#ngAdd",
       "schema": "./ng-add/schema.json",
       "hidden": true
+    },
+    "control": {
+      "description": "Scaffolds a new control and registers it.",
+      "factory": "./control/index#control",
+      "schema": "./control/schema.json"
     }
   }
 }
