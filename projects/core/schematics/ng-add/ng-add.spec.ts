@@ -17,7 +17,7 @@ const COLLECTION_PATH = join(
 );
 
 describe('ng-add schematic', () => {
-  const baseOptions = { project: 'app' };
+  const baseOptions = { project: 'test-app' };
   let appTree: UnitTestTree;
   let runner: SchematicTestRunner;
 
@@ -37,7 +37,7 @@ describe('ng-add schematic', () => {
     );
 
     const appOptions: ApplicationOptions = {
-      name: 'app',
+      name: 'test-app',
       standalone: true,
     };
 
@@ -51,10 +51,12 @@ describe('ng-add schematic', () => {
 
   it('should generate formwork.config.ts', async () => {
     const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
-    expect(tree.files).toContain('/projects/app/src/app/formwork.config.ts');
+    expect(tree.files).toContain(
+      '/projects/test-app/src/app/formwork.config.ts',
+    );
 
     const configContent = tree.readContent(
-      '/projects/app/src/app/formwork.config.ts',
+      '/projects/test-app/src/app/formwork.config.ts',
     );
     expect(configContent).toContain('import { defineFormworkConfig } from');
     expect(configContent).toContain(
@@ -64,7 +66,9 @@ describe('ng-add schematic', () => {
 
   it('should update app.config.ts', async () => {
     const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
-    const content = tree.readContent('/projects/app/src/app/app.config.ts');
+    const content = tree.readContent(
+      '/projects/test-app/src/app/app.config.ts',
+    );
     expect(content).toContain('provideFormwork(formworkConfig)');
     expect(content).toContain(
       "import { formworkConfig } from './formwork.config'",
@@ -73,7 +77,7 @@ describe('ng-add schematic', () => {
   });
 
   it('should generate helper files and configure schematic helperPath in angular.json', async () => {
-    const helperPath = 'projects/app/src/app/shared/helper';
+    const helperPath = 'projects/test-app/src/app/shared/helper';
     const absoluteHelperPath = `/${helperPath}`;
     const options = { ...baseOptions, helper: true };
     const tree = await runner.runSchematic('ng-add', options, appTree);
@@ -95,7 +99,7 @@ describe('ng-add schematic', () => {
 
     // Verify angular.json updated with helperPath for schematics using typed workspace
     const workspaceDef: WorkspaceDefinition = await getWorkspace(tree);
-    const projectDef = workspaceDef.projects.get('app');
+    const projectDef = workspaceDef.projects.get('test-app');
     expect(projectDef).toBeDefined();
     if (!projectDef) {
       throw new Error('Project definition should exist');
