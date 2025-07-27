@@ -79,6 +79,7 @@ describe('ng-add schematic', () => {
     const tree = await runner.runSchematic('ng-add', options, appTree);
 
     // Verify helper files generated
+    console.dir(tree.files);
     expect(tree.files).toContain(
       normalize(absoluteHelperPath + '/block.host-directive.ts'),
     );
