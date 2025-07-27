@@ -31,6 +31,12 @@ jobs:
       - name: Build (required for schematic tests)
         run: npm run build
 
+      - name: Show contents of schematics folder
+        run: |
+          echo "=== dist/core ==="
+          ls -lR dist/core/schematics
+        shell: bash
+
       - name: Run tests
         run: |
           npm run test
