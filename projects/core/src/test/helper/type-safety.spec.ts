@@ -4,118 +4,99 @@ import { TestContent } from './test';
 describe('Type Safety', () => {
   it('should not have any TS errors when using default type generic', () => {
     const form: NgxFwForm = {
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
         },
-        {
-          id: 'block',
+        block: {
           type: 'test-block',
-          // @ts-expect-error: Blocks always require custom union type
-          message: 'This is an information',
           isControl: false,
+          message: 'This is an information',
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
-              controls: [],
+              controls: {},
             },
-            {
-              id: 'grouped-block',
+            'grouped-block': {
               type: 'test-block',
-              // @ts-expect-error: Blocks always require custom union type
               message: 'This is an information',
               isControl: false,
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-first',
+              controls: {
+                'nested-first': {
                   type: 'test-text-control',
                   label: 'Nested First label',
                   defaultValue: 'default-nested-first',
                 },
-                {
-                  id: 'nested-block',
+                'nested-block': {
                   type: 'test-block',
-                  // @ts-expect-error: Blocks always require custom union type
                   message: 'This is an information',
                   isControl: false,
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     };
     expect(form).toBeTruthy();
   });
 
   it('should not have any TS errors when using default custom generic', () => {
     const form: NgxFwForm<TestContent> = {
-      content: [
-        {
-          id: 'first',
+      content: {
+        first: {
           type: 'test-text-control',
           label: 'First',
           defaultValue: 'default-first',
         },
-        {
-          id: 'block',
+        block: {
           type: 'test-block',
           message: 'This is an information',
           isControl: false,
         },
-        {
+        'first-group': {
           type: 'test-group',
-          id: 'first-group',
           title: 'First Group',
-          controls: [
-            {
-              id: 'grouped-first',
+          controls: {
+            'grouped-first': {
               type: 'test-text-control',
               label: 'Grouped First label',
             },
-            {
-              id: 'grouped-block',
+            'grouped-block': {
               type: 'test-block',
               message: 'This is an information',
               isControl: false,
             },
-            {
+            'nested-group': {
               type: 'test-group',
-              id: 'nested-group',
               title: 'Nested Group',
-              controls: [
-                {
-                  id: 'nested-first',
+              controls: {
+                'nested-first': {
                   type: 'test-text-control',
                   label: 'Nested First label',
                   defaultValue: 'default-nested-first',
                 },
-                {
-                  id: 'nested-block',
+                'nested-block': {
                   type: 'test-block',
                   message: 'This is an information',
                   isControl: false,
                 },
-              ],
+              },
             },
-          ],
+          },
         },
-      ],
+      },
     };
     expect(form).toBeTruthy();
   });
