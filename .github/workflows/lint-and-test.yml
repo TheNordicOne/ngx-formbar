@@ -29,7 +29,7 @@ jobs:
         run: npm run lint
 
       - name: Build (required for schematic tests)
-        run: npm run lint
+        run: npm run build
 
       - name: Run tests
         run: |
