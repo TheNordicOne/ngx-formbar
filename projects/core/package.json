@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "scripts": {
     "build": "tsc -p tsconfig.schematics.json",
-    "postbuild": "copyfiles schematics/*/schema.json schematics/*/files/** schematics/collection.json ../../dist/core/ && copyfiles -f schematics/ng-add/files/formwork.config.ts.template ../../dist/core/schematics/ng-add/files/"
+    "postbuild": "copyfiles schematics/*/schema.json schematics/**/files/**/*.* schematics/**/files/*.* schematics/collection.json ../../dist/core/"
   },
   "peerDependencies": {
     "@angular/cdk": "^19.0.0",
