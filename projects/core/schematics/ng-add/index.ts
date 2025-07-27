@@ -2,6 +2,7 @@ import {
   apply,
   applyTemplates,
   chain,
+  filter,
   mergeWith,
   move,
   Rule,
@@ -16,14 +17,19 @@ import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
 import * as ts from 'typescript';
 import { normalize } from '@angular-devkit/core';
+import { updateSchematicConfig } from '../shared/rules';
 
 interface NgAddOptions {
   project?: string;
+  helper?: boolean;
+  helperPath?: string;
 }
 
 function createFormworkConfig(projectRoot: string): Rule {
   return mergeWith(
     apply(url('./files'), [
+      // exclude helper templates
+      filter((path) => !path.includes('helper')),
       applyTemplates({}),
       move(normalize(`${projectRoot}/src/app`)),
     ]),
@@ -167,6 +173,51 @@ function addDependencies(): Rule {
     return tree;
   };
 }
+
+/**
+ * Optionally create helper files at specified helperPath
+ */
+function createHelperFiles(helperPath: string): Rule {
+  return mergeWith(
+    apply(url('./files/helper'), [
+      applyTemplates({}),
+      move(normalize(helperPath)),
+    ]),
+  );
+}
+
+/**
+ * Update angular.json with helperPath for ngx-formwork schematics
+ */
+function updateSchematicsHelperPath(
+  helperPath: string,
+  projectName: string,
+): Rule {
+  return chain([
+    updateSchematicConfig(
+      'control',
+      {
+        helperPath,
+      },
+      projectName,
+    ),
+    updateSchematicConfig(
+      'group',
+      {
+        helperPath,
+      },
+      projectName,
+    ),
+    updateSchematicConfig(
+      'block',
+      {
+        helperPath,
+      },
+      projectName,
+    ),
+  ]);
+}
+
 export function ngAdd(options: NgAddOptions = {}): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
@@ -192,15 +243,21 @@ export function ngAdd(options: NgAddOptions = {}): Rule {
       `📦 Setting up ngx-formwork in project "${projectName}"...`,
     );
 
-    return chain([
-      addDependencies(),
-      createFormworkConfig(projectRoot),
-      updateAppConfig(projectRoot),
-      () => {
-        context.addTask(new NodePackageInstallTask());
-        context.logger.info('✅ ngx-formwork has been set up successfully!');
-        return tree;
-      },
-    ]);
+    const rules: Rule[] = [];
+    rules.push(addDependencies());
+    rules.push(createFormworkConfig(projectRoot));
+    if (options.helper) {
+      const resolvedHelperPath =
+        options.helperPath ?? `${projectRoot}/src/app/shared/helper`;
+      rules.push(createHelperFiles(resolvedHelperPath));
+      rules.push(updateSchematicsHelperPath(resolvedHelperPath, projectName));
+    }
+    rules.push(updateAppConfig(projectRoot));
+    rules.push(() => {
+      context.addTask(new NodePackageInstallTask());
+      context.logger.info('✅ ngx-formwork has been set up successfully!');
+      return tree;
+    });
+    return chain(rules);
   };
 }
