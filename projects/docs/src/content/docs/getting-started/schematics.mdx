@@ -11,14 +11,16 @@ Use Angular schematics to scaffold and register new formwork controls, groups, o
 
 All three schematics (`control`, `group`, `block`) support the same options:
 
-| Option               | Type   | Required | Default (control/group/block) | Description                                                        |
-|----------------------|--------|----------|-------------------------------|--------------------------------------------------------------------|
-| --key                | string | Yes      | —                             | Registration key used in the Formwork configuration.               |
-| --name               | string | No       | `key`                         | Base name for component and interface.                             |
-| --project            | string | No       | workspace default project     | Angular project name where files are generated.                    |
-| --path               | string | No       | current working directory     | Folder path for generating files.                                  |
-| --interface-suffix   | string | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                             |
-| --component-suffix   | string | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                       |
+| Option             | Type    | Required | Default (control/group/block)         | Description                                                                                                                                       |
+|--------------------|---------|----------|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| --key              | string  | Yes      | —                                     | Registration key used in the Formwork configuration.                                                                                              |
+| --name             | string  | No       | `key`                                 | Base name for component and interface.                                                                                                            |
+| --project          | string  | No       | workspace default project             | Angular project name where files are generated.                                                                                                   |
+| --path             | string  | No       | current working directory             | Folder path for generating files.                                                                                                                 |
+| --interface-suffix | string  | No       | `Control` / `Group` / `Block`         | Suffix appended to the interface name.                                                                                                            |
+| --component-suffix | string  | No       | `Control` / `Group` / `Block`         | Suffix appended to the component class name.                                                                                                      |
+| --helper           | boolean | No       | `true`                                | Include helper files for view providers and host directives.                                                                                      |
+| --helperPath       | string  | No       | `[projectRoot]/src/app/shared/helper` | Absolute path where helper files are generated if `--helper` is enabled. If the files cannot be foundit will fallback to using the verbose syntax |
 
 ### Example
 
