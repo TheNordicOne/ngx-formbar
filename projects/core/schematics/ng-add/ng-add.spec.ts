@@ -5,6 +5,10 @@ import {
 import { Schema as WorkspaceOptions } from '@schematics/angular/workspace/schema';
 import { Schema as ApplicationOptions } from '@schematics/angular/application/schema';
 import { join } from 'path';
+import {
+  getWorkspace,
+  WorkspaceDefinition,
+} from '@schematics/angular/utility/workspace';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -65,5 +69,41 @@ describe('ng-add schematic', () => {
       "import { formworkConfig } from './formwork.config'",
     );
     expect(content).toContain("import { provideFormwork } from 'ngx-formwork'");
+  });
+
+  it('should generate helper files and configure schematic helperPath in angular.json', async () => {
+    const helperPath = 'projects/app/src/app/shared/helper';
+    const absoluteHelperPath = `/${helperPath}`;
+    const options = { ...baseOptions, helper: true };
+    const tree = await runner.runSchematic('ng-add', options, appTree);
+
+    // Verify helper files generated
+    expect(tree.files).toContain(
+      absoluteHelperPath + '/block.host-directive.ts',
+    );
+    expect(tree.files).toContain(
+      absoluteHelperPath + '/control.host-directive.ts',
+    );
+    expect(tree.files).toContain(
+      absoluteHelperPath + '/control-container.view-provider.ts',
+    );
+    expect(tree.files).toContain(
+      absoluteHelperPath + '/group.host-directive.ts',
+    );
+
+    // Verify angular.json updated with helperPath for schematics using typed workspace
+    const workspaceDef: WorkspaceDefinition = await getWorkspace(tree);
+    const projectDef = workspaceDef.projects.get('app');
+    expect(projectDef).toBeDefined();
+    if (!projectDef) {
+      throw new Error('Project definition should exist');
+    }
+    const schematicsConfig = (projectDef.extensions['schematics'] ??
+      {}) as Record<string, { helperPath: string }>;
+    expect(schematicsConfig['ngx-formwork:control'].helperPath).toBe(
+      helperPath,
+    );
+    expect(schematicsConfig['ngx-formwork:group'].helperPath).toBe(helperPath);
+    expect(schematicsConfig['ngx-formwork:block'].helperPath).toBe(helperPath);
   });
 });
