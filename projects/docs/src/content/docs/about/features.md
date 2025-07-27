@@ -26,7 +26,7 @@ keyword: FeaturePage
 - [x] Dynamic labels/titles based on form state
 - [x] Configuration of test id (attribute name and how value is build)
 - [x] Support for full TypeScript-only configurations, meaning you can use actual functions for the expressions
-- [ ] Schematic for adding formwork and scaffolding new controls
+- [x] Schematic for adding formwork and scaffolding new controls
 
 
 ### Open Feature Ideas

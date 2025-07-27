@@ -9,6 +9,9 @@ The first key focus is on compatibility with JSON, so that the whole form config
 
 The second key focus is to be as close to Angular as possible. Not just the whole wording, but also in terms of technologies used. You still have full control over the form and use it pretty much like any other form. No additional API to know, just to access the forms value.
 
+_ngx-formwork_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
+
+
 ## What is the motivation?
 
 There already are at least two popular solutions out there, that pretty much already provide you with "JSON forms". And I think overall they are fine. However. it has been more than enough times, where the requirements of the project made it practically impossible to use any of those. On one projects we needed much more complex conditions for showing and hiding, while also maintaining them in a database. This often was a hard requirement in projects I worked on.

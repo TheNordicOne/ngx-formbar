@@ -83,3 +83,28 @@ This will:
 - Register the new block in your Formwork configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Blocks Guide](/guides/blocks).
+
+## Overriding Default Options in angular.json
+
+You can set default values for any ngx-formwork schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults. For example:
+
+```json
+{
+  "projects": {
+    "my-app": {
+      "schematics": {
+        "ngx-formwork:control": {
+          "helper": false,
+          "helperPath": "src/app/shared/helpers"
+        },
+        "ngx-formwork:group": {
+          "helper": true
+        },
+        "ngx-formwork:block": {
+          "helperPath": "src/app/core/formwork/helpers"
+        }
+      }
+    }
+  }
+}
+```
