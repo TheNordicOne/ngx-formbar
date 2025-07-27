@@ -137,6 +137,7 @@ export interface NgxFwControl extends NgxFwAbstractControl {
 export interface NgxFwBlock extends NgxFwBaseContent {
   // Required property for TypeScript to properly do type narrowing
   isControl: false;
+  [key: string]: unknown;
 }
 
 /**
