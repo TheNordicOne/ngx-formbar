@@ -5,4 +5,5 @@ export interface Schema {
   project?: string;
   interfaceSuffix: string;
   componentSuffix: string;
+  helperPath?: string;
 }

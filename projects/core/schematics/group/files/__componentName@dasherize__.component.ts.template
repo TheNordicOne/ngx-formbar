@@ -1,24 +1,26 @@
 import { Component, Signal, inject } from '@angular/core';
-import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
+import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
 import { NgxfwAbstractControlDirective, NgxfwGroupDirective } from 'ngx-formwork';
-import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
+import { controlContainerViewProviders } from '<%= helperImportPath %>/control-container.view-provider';<% } %><% if (hasHostDirectiveHelper) { %>
+import { ngxfwGroupHostDirective } from '<%= helperImportPath %>/group.host-directive';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
   imports: [ReactiveFormsModule, NgxfwAbstractControlDirective],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
-  viewProviders: [
+  viewProviders: <% if (hasViewProviderHelper) { %>controlContainerViewProviders<% } else { %>[
     {
       provide: ControlContainer,
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
     }
-  ],
-  hostDirectives: [
+  ]<% } %>,
+  hostDirectives: <% if (hasHostDirectiveHelper) { %>[ngxfwGroupHostDirective]<% } else { %>[
     {
       directive: NgxfwGroupDirective,
       inputs: ['content', 'name'],
     }
-  ],
+  ]<% } %>,
 })
 export class <%= classify(componentClassName) %> {
   private readonly group = inject(NgxfwGroupDirective<<%= classify(interfaceName) %>>);

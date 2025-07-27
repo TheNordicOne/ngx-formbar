@@ -1,24 +1,26 @@
-import { Component, Signal, inject } from '@angular/core';
-import { ControlContainer } from '@angular/forms';
+import { Component, Signal, inject } from '@angular/core';<% if (!hasViewProviderHelper) { %>
+import { ControlContainer } from '@angular/forms';<% } %>
 import { NgxfwBlockDirective } from 'ngx-formwork';
-import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
+import { controlContainerViewProviders } from '<%= helperImportPath %>/control-container.view-provider';<% } %><% if (hasHostDirectiveHelper) { %>
+import { ngxfwBlockHostDirective } from '<%= helperImportPath %>/block.host-directive';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
   imports: [],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    }
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfwBlockDirective,
-      inputs: ['content', 'name'],
-    }
-  ],
+   viewProviders: <% if (hasViewProviderHelper) { %>controlContainerViewProviders<% } else { %>[
+      {
+        provide: ControlContainer,
+        useFactory: () => inject(ControlContainer, { skipSelf: true }),
+      }
+    ]<% } %>,
+   hostDirectives: <% if (hasHostDirectiveHelper) { %>[ngxfwBlockHostDirective]<% } else { %>[
+      {
+        directive: NgxfwBlockDirective,
+        inputs: ['content', 'name'],
+      }
+    ]<% } %>,
 })
 export class <%= classify(componentClassName) %> {
   private readonly block = inject(NgxfwBlockDirective<<%= classify(interfaceName) %>>);
