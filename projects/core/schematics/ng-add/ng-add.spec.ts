@@ -9,6 +9,7 @@ import {
   getWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
+import { normalize } from '@angular-devkit/core';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -79,16 +80,16 @@ describe('ng-add schematic', () => {
 
     // Verify helper files generated
     expect(tree.files).toContain(
-      absoluteHelperPath + '/block.host-directive.ts',
+      normalize(absoluteHelperPath + '/block.host-directive.ts'),
     );
     expect(tree.files).toContain(
-      absoluteHelperPath + '/control.host-directive.ts',
+      normalize(absoluteHelperPath + '/control.host-directive.ts'),
     );
     expect(tree.files).toContain(
-      absoluteHelperPath + '/control-container.view-provider.ts',
+      normalize(absoluteHelperPath + '/control-container.view-provider.ts'),
     );
     expect(tree.files).toContain(
-      absoluteHelperPath + '/group.host-directive.ts',
+      normalize(absoluteHelperPath + '/group.host-directive.ts'),
     );
 
     // Verify angular.json updated with helperPath for schematics using typed workspace
