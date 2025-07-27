@@ -4,10 +4,14 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { Schema as WorkspaceOptions } from '@schematics/angular/workspace/schema';
 import { Schema as ApplicationOptions } from '@schematics/angular/application/schema';
-import { COLLECTION_PATH } from '../paths';
+import { join } from 'path';
 
-// ToDo: Find out how to properly set up this test
-describe.skip('ng-add schematic', () => {
+const COLLECTION_PATH = join(
+  __dirname,
+  '../../../../dist/core/schematics/collection.json',
+);
+
+describe('ng-add schematic', () => {
   const baseOptions = { project: 'app' };
   let appTree: UnitTestTree;
   let runner: SchematicTestRunner;
