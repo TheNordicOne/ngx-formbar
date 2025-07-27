@@ -4,6 +4,6 @@ import { Schema } from '../shared/schema';
 
 export function block(options: Schema): Rule {
   return () => {
-    return chain([scaffoldAndRegister(options)]);
+    return chain([scaffoldAndRegister(options, 'block')]);
   };
 }
