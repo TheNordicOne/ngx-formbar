@@ -28,6 +28,13 @@ This schematic by default will set up most helper files as described on the [Imp
 The schematic will not create a union type! You will have to create this on your own once you got at least one control, group or block. See [Union Types Section on the Improvements & DRY Code Page](/guides/improvements/#union-types) for more details.
 :::
 
+
+:::caution
+Helper file names must exactly be `control-container.view-provider.ts` and `<type>.host-directive.ts`. Any deviation will result in the schematics not recognizing the files correctly and falling back to the verbose syntax.
+
+The declarations within these files also have to be exact, otherwise you will end up with a broken import that you need to fix manually.
+:::
+
 ### Options
 
 | Option       | Type    | Required | Default                               | Description                                                                                         |

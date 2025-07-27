@@ -7,7 +7,34 @@ keyword: HelperPage
 
 To reduce the amount of boilerplate needed with each component and to improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
 
-The exact naming of each helper really is up to you.
+:::caution
+Helper file names must exactly be `control-container.view-provider.ts` and `<type>.host-directive.ts`. Any deviation will result in the schematics not recognizing the files correctly and falling back to the verbose syntax.
+
+The declarations within these files also have to be exact, otherwise you will end up with a broken import that you need to fix manually.
+:::
+
+### Manual Helper File Integration
+
+- If you create helper files yourself, you can place them in any folder in your project.
+- Run schematics with the `--helper` flag and use `--helperPath <path>` to point to your helper directory (default: `src/app/shared/helper`).
+- The schematic will look in that path for files named exactly:
+  - `control-container.view-provider.ts`
+  - `control.host-directive.ts`
+  - `group.host-directive.ts`
+  - `block.host-directive.ts`
+
+When running schematics, pass the flags to use your files:
+
+```bash
+ng generate ngx-formwork:<schematic> --helper --helperPath src/app/shared/helper
+```
+
+Or set these defaults in `angular.json` under your project’s `schematics` section:
+
+```json
+"ngx-formwork:control": { "helper": true, "helperPath": "src/app/shared/helper" },
+```
+
 
 ### Control Container View Providers
 
