@@ -9,6 +9,29 @@ import {
 import { NgxFwBaseContent } from '../types/content.type';
 import { ComponentRegistrationService } from '../services/component-registration.service';
 
+/**
+ * Structural directive that renders the appropriate component based on the control's type.
+ *
+ * This directive acts as a dynamic renderer for form controls, blocks, and groups.
+ * It works by:
+ * 1. Receiving a content configuration and name
+ * 2. Looking up the registered component for the content's type
+ * 3. Creating an instance of that component and binding the content and name to it
+ *
+ * This allows forms to be composed declaratively through configuration objects
+ * rather than explicit templates.
+ *
+ * @example
+ * ```html
+ * <!-- Used with ngFor to render a list of controls -->
+ * @for (control of controls(); track control[0]) {
+ *   <ng-template *ngxfwAbstractControl="control" />
+ * }
+ *
+ * <!-- Used directly with a specific control -->
+ * <ng-template *ngxfwAbstractControl="['name', nameControlConfig]" />
+ * ```
+ */
 @Directive({
   selector: '[ngxfwAbstractControl]',
 })

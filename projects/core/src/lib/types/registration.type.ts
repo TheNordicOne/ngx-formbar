@@ -11,7 +11,7 @@ export type ComponentRegistrationConfig = Record<string, Type<unknown>>;
 /**
  * Strategy for handling component states
  *
- * Determines how visibility, disabled state, and other component states
+ * Determines how visibility, disabled, and other component states
  * are managed.
  *
  * - 'auto': Formwork automatically manages the state

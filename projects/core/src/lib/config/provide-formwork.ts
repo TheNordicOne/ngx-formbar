@@ -19,15 +19,38 @@ import { DefaultUpdateStrategy } from '../tokens/default-update-strategy';
 import { NgxFwConfigurationService } from '../services/configuration.service';
 
 /**
- * Configures and provides Formwork services to an Angular application
+ * Configures and provides ngx-formwork to your application.
  *
- * Sets up all required services for Formwork based on the provided configuration:
- * - Component registry for dynamic control rendering
- * - Validator registry for form validation rules
- * - Expression service for dynamic form behavior
+ * This function is used in app.config.ts to register form components, validators,
+ * and set global configuration for the formwork library.
  *
- * @param config Configuration object with component and validator registrations
- * @returns Angular environment providers that can be used in application bootstrapping
+ * @param config Configuration object for ngx-formwork:
+ *   - componentRegistrations: Required mapping of control types to component implementations
+ *   - validatorRegistrations: Optional mapping of validator names to validator functions
+ *     (Angular's required, requiredTrue, email, and nullValidator are registered by default)
+ *   - asyncValidatorRegistrations: Optional mapping of async validator names to async validator functions
+ *   - updateOn: Optional default update strategy for all form controls
+ *   - globalConfig: Optional global configuration settings
+ *
+ * @returns Angular environment providers to be included in application configuration
+ *
+ * @example
+ * ```ts
+ * // app.config.ts
+ * export const appConfig: ApplicationConfig = {
+ *   providers: [
+ *     provideFormwork({
+ *       componentRegistrations: {
+ *         text: TextInputComponent,
+ *         select: SelectComponent,
+ *       },
+ *       validatorRegistrations: {
+ *         customValidator: [myCustomValidator]
+ *       }
+ *     })
+ *   ]
+ * };
+ * ```
  */
 export function provideFormwork<
   S extends RegistrationRecord,
