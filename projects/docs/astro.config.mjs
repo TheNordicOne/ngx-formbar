@@ -7,6 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'ngx-formwork',
+      lastUpdated: true,
       social: [
         {
           icon: 'github',
@@ -14,6 +15,9 @@ export default defineConfig({
           href: 'https://github.com/TheNordicOne/ngx-formwork',
         },
       ],
+      components: {
+        SocialIcons: './src/components/ExtendedSocialIcons.astro',
+      },
       sidebar: [
         {
           label: 'About',
