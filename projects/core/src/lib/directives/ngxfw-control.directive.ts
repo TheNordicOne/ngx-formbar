@@ -35,24 +35,37 @@ import { withDynamicLabel } from '../composables/dynamic-label';
 import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
- * Control Directive for Ngx Formwork
+ * Core directive for creating form controls in ngx-formwork.
  *
- * This directive manages form controls within Ngx Formwork, handling:
- * - Control registration with parent form groups
- * - Visibility states and DOM representation
- * - Disabled states with inheritance from parent groups
- * - Readonly states with inheritance from parent groups
- * - Validation setup and registration
- * - Value management based on configured strategies
+ * This directive handles the integration between Angular's reactive forms and
+ * ngx-formwork's declarative configuration. It manages:
  *
- * The directive automatically:
- * - Creates and registers form controls with the parent form group
- * - Evaluates conditions for hidden/disabled/readonly states
- * - Manages the control lifecycle based on visibility
- * - Applies validators to the control
- * - Handles control values according to the specified strategy when visibility changes
+ * - Control registration and lifecycle within parent form groups
+ * - State management (hidden, disabled, readonly)
+ * - Validation setup
+ * - Dynamic value computation
+ * - Test ID generation
+ * - Dynamic label support
  *
- * @template T Type extending NgxFwControl containing control configuration
+ * Use this directive with hostDirectives in your custom control components:
+ *
+ * ```typescript
+ * @Component({
+ *   hostDirectives: [
+ *     {
+ *       directive: NgxfwControlDirective,
+ *       inputs: ['content', 'name'],
+ *     }
+ *   ],
+ * })
+ * export class TextControlComponent {
+ *   private readonly control = inject(NgxfwControlDirective<TextControl>);
+ *   readonly content = this.control.content;
+ *   readonly name = this.control.name;
+ * }
+ * ```
+ *
+ * @template T Type of the control configuration, must extend NgxFwControl
  */
 @Directive({
   selector: '[ngxfwControl]',
@@ -90,6 +103,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
   /**
    * Computed test ID derived from the control's ID
    * Used for automated testing identification
+   *
+   * Access this in your component template:
+   * ```html
+   * <input [attr.data-testid]="testId()" ... />
+   * ```
    */
   readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
 
@@ -117,7 +135,12 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   /**
    * Computed signal for the hidden state
-   * True when the control should be hidden
+   * True when the control should be hidden based on 'hidden' expression
+   *
+   * Use this in your component when implementing custom visibility handling:
+   * ```typescript
+   * readonly isHidden = this.control.isHidden;
+   * ```
    */
   readonly isHidden = withHiddenState(this.content);
 
@@ -132,20 +155,43 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   /**
    * Computed signal for the disabled state
-   * True when the control should be disabled
+   * True when the control should be disabled based on 'disabled' expression
+   *
+   * Use this in your component for custom disabled state handling:
+   * ```typescript
+   * readonly disabled = this.control.disabled;
+   * ```
    */
   readonly disabled = withDisabledState(this.content);
 
   /**
    * Computed signal for the readonly state
-   * True when the control should be readonly
+   * True when the control should be readonly based on 'readonly' expression
+   *
+   * Use this in your component to implement readonly behavior:
+   * ```html
+   * <input [attr.readonly]="readonly() || null" ... />
+   * ```
    */
   readonly readonly = withReadonlyState(this.content);
 
+  /**
+   * Computed signal for the update strategy
+   * Determines when form values are updated ('change', 'blur', or 'submit')
+   */
   readonly updateStrategy = withUpdateStrategy(this.content);
 
   /**
    * Computed signal for the dynamic label
+   * Contains the evaluated result of the dynamicLabel expression
+   *
+   * Use this in your component to display dynamic labels:
+   * ```typescript
+   * readonly displayLabel = computed(() => {
+   *   const dynamic = this.control.dynamicLabel();
+   *   return dynamic || this.content().label;
+   * });
+   * ```
    */
   readonly dynamicLabel = withDynamicLabel(this.content);
 
@@ -163,9 +209,14 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   /**
    * Computed signal for the computed value
+   * Contains the evaluated result of computedValue expressions
    */
   private readonly computedValue = withComputedValue(this.content);
 
+  /**
+   * Computed signal for the form control instance
+   * Creates a new FormControl with appropriate validators and configuration
+   */
   private readonly controlInstance = computed(() => {
     const content = this.content();
 
@@ -180,10 +231,24 @@ export class NgxfwControlDirective<T extends NgxFwControl>
     });
   });
 
+  /**
+   * Access to the parent FormGroup containing this control
+   */
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
   }
 
+  /**
+   * Access to this control's FormControl instance
+   * Use this to access validation state, errors, and other FormControl methods
+   *
+   * Example:
+   * ```typescript
+   * get hasError() {
+   *   return this.control.formControl?.hasError('required');
+   * }
+   * ```
+   */
   get formControl() {
     const id = this.name();
     if (!this.parentFormGroup?.contains(id)) {
@@ -224,6 +289,11 @@ export class NgxfwControlDirective<T extends NgxFwControl>
    * Sets the visibility handling strategy
    * Determines if visibility should be managed by the component (manual) or by Formwork (auto)
    *
+   * Use 'manual' when implementing custom visibility handling in your component:
+   * ```typescript
+   * constructor() {
+   *   this.control.setVisibilityHandling('manual');
+   * }
    * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
    */
   setVisibilityHandling(visibilityHandling: StateHandling) {

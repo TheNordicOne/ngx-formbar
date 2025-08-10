@@ -10,7 +10,7 @@ import { NgxFwBaseContent, NgxFwContent } from '../../types/content.type';
  * Ngx Formwork Form Component
  *
  * This component serves as the main container for Ngx Formwork forms:
- * - Takes an array of form content configuration objects
+ * - Takes a form configuration
  * - Establishes the form context through FormService provider
  * - Renders each content item using NgxfwAbstractControlDirective
  * - Handles component registration and dependency injection
