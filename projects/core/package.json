@@ -16,11 +16,11 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular-devkit/schematics": "^19.0.0",
-    "@schematics/angular": "^19.0.0",
+    "@angular-devkit/schematics": "file:../../node_modules/@angular-devkit/schematics",
+    "@schematics/angular": "file:../../node_modules/@schematics/angular",
     "copyfiles": "file:../../node_modules/copyfiles",
     "typescript": "file:../../node_modules/typescript",
-    "ts-morph": "^26.0.0"
+    "ts-morph": "file:../../node_modules/ts-morph"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {
