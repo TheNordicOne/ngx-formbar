@@ -1,12 +1,13 @@
 import {
   EnvironmentProviders,
   makeEnvironmentProviders,
+  Provider,
   Type,
 } from '@angular/core';
 import { ComponentRegistrationService } from '../services/component-registration.service';
 import { FormworkConfig } from '../types/provide.type';
 import { ComponentRegistrationConfig } from '../types/registration.type';
-import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
+import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import {
   AsyncValidatorConfig,
   RegistrationRecord,
@@ -15,15 +16,15 @@ import {
 } from '../types/validation.type';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
 import { ExpressionService } from '../services/expression.service';
-import { DefaultUpdateStrategy } from '../tokens/default-update-strategy';
-import { NgxFwConfigurationService } from '../services/configuration.service';
-import { NgxFwComponentRegistrations } from '../tokens/component-registrations';
+import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '../tokens/component-registrations';
 import {
-  NgxFwAsyncValidatorRegistrations,
-  NgxFwValidatorRegistrations,
+  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+  NGX_FW_VALIDATOR_REGISTRATIONS,
 } from '../tokens/validator-registrations';
-import { NgxFwValidatorResolver } from '../tokens/validator-resolver';
-import { NgxFwComponentResolver } from '../tokens/component-resolver';
+import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
+import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
+import { NGX_FW_CONFIG } from '../tokens/global-config';
 
 /**
  * Configures and provides ngx-formwork to your application.
@@ -72,41 +73,58 @@ export function provideFormwork<
     globalConfig,
   } = config;
 
-  return makeEnvironmentProviders([
+  const providers: (Provider | EnvironmentProviders)[] = [
     {
-      provide: NgxFwComponentRegistrations,
-      useValue: toComponentRegistrationMap(componentRegistrations),
-    },
-    {
-      provide: NgxFwValidatorRegistrations,
-      useValue: toValidatorRegistrationMap(validatorRegistrations),
-    },
-    {
-      provide: NgxFwAsyncValidatorRegistrations,
-      useValue: toAsyncValidatorRegistrationMap(asyncValidatorRegistrations),
-    },
-    {
-      provide: NgxFwComponentResolver,
+      provide: NGX_FW_COMPONENT_RESOLVER,
       useClass: ComponentRegistrationService,
     },
     {
-      provide: NgxFwValidatorResolver,
+      provide: NGX_VALIDATOR_RESOLVER,
       useClass: ValidatorRegistrationService,
     },
-    {
-      provide: DefaultUpdateStrategy,
-      useValue: updateOn,
-    },
-    {
-      provide: NgxFwConfigurationService,
-      useFactory: () => {
-        const service = new NgxFwConfigurationService();
-        service.configure(globalConfig);
-        return service;
-      },
-    },
     ExpressionService,
-  ]);
+  ];
+
+  if (componentRegistrations !== undefined) {
+    providers.push({
+      provide: NGX_FW_COMPONENT_REGISTRATIONS,
+      useValue: toComponentRegistrationMap(componentRegistrations),
+    });
+  }
+
+  if (validatorRegistrations !== undefined) {
+    providers.push({
+      provide: NGX_FW_VALIDATOR_REGISTRATIONS,
+      useFactory: () => toValidatorRegistrationMap(validatorRegistrations),
+      multi: true,
+    });
+  }
+
+  if (asyncValidatorRegistrations !== undefined) {
+    providers.push({
+      provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+      useFactory: () =>
+        toAsyncValidatorRegistrationMap(asyncValidatorRegistrations),
+      multi: true,
+    });
+  }
+
+  if (updateOn !== undefined) {
+    providers.push({
+      provide: NGX_FW_DEFAULT_UPDATE_STRATEGY,
+      useValue: updateOn,
+    });
+  }
+
+  if (globalConfig !== undefined) {
+    providers.push({
+      provide: NGX_FW_CONFIG,
+      useValue: globalConfig,
+      multi: true,
+    });
+  }
+
+  return makeEnvironmentProviders(providers);
 }
 
 /**
@@ -116,11 +134,8 @@ export function provideFormwork<
  * @returns Map of component types to component implementations
  */
 function toComponentRegistrationMap(
-  componentRegistrations?: ComponentRegistrationConfig,
+  componentRegistrations: ComponentRegistrationConfig,
 ) {
-  if (!componentRegistrations) {
-    return new Map<string, Type<unknown>>();
-  }
   return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
 }
 
@@ -132,56 +147,9 @@ function toComponentRegistrationMap(
  * @returns Map of validator keys to validator function arrays
  */
 function toValidatorRegistrationMap<S extends RegistrationRecord>(
-  config?: ValidatorConfig<S>,
-) {
-  if (!config) {
-    return new Map<string, ValidatorFn[]>();
-  }
-  const rawRegistrations = new Map<string, (ValidatorFn | ValidatorKey<S>)[]>(
-    Object.entries(config),
-  );
-  const registrations = getDefaultRegistrations();
-  const memo = new Map<string, ValidatorFn[]>();
-
-  for (const [key, validators] of rawRegistrations) {
-    registrations.set(key, toValidatorFn(validators, rawRegistrations, memo));
-  }
-  return registrations;
-}
-
-/**
- * Resolves validator references to actual validator functions
- * Supports recursive validator references and memoization
- *
- * @param validators Array of validator functions or validator keys
- * @param registrations Map of all registered validators
- * @param memo Memoization cache to avoid circular references
- * @returns Flattened array of validator functions
- */
-function toValidatorFn<T extends RegistrationRecord, V>(
-  validators: (V | ValidatorKey<T>)[],
-  registrations: Map<string, (V | ValidatorKey<T>)[]>,
-  memo = new Map<string, V[]>(),
-): V[] {
-  return validators.flatMap((v) => {
-    switch (typeof v) {
-      case 'string': {
-        const memoedValue = memo.get(v);
-        if (memoedValue) {
-          return memoedValue;
-        }
-        const resolved = toValidatorFn(
-          registrations.get(v) ?? [],
-          registrations,
-          memo,
-        );
-        memo.set(v, resolved);
-        return resolved;
-      }
-      default:
-        return v;
-    }
-  });
+  config: ValidatorConfig<S>,
+): ReadonlyMap<string, ValidatorFn[]> {
+  return toValidatorMap<S, ValidatorFn>(config);
 }
 
 /**
@@ -191,36 +159,74 @@ function toValidatorFn<T extends RegistrationRecord, V>(
  * @returns Map of validator keys to async validator function arrays
  */
 function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
-  config?: AsyncValidatorConfig<A>,
-) {
-  if (!config) {
-    return new Map<string, AsyncValidatorFn[]>();
-  }
-
-  const rawRegistrations = new Map<
-    string,
-    (AsyncValidatorFn | ValidatorKey<A>)[]
-  >(Object.entries(config));
-  const registrations = new Map<string, AsyncValidatorFn[]>();
-  const memo = new Map<string, AsyncValidatorFn[]>();
-
-  for (const [key, validators] of rawRegistrations) {
-    registrations.set(key, toValidatorFn(validators, rawRegistrations, memo));
-  }
-  return registrations;
+  config: AsyncValidatorConfig<A>,
+): ReadonlyMap<string, AsyncValidatorFn[]> {
+  return toValidatorMap<A, AsyncValidatorFn>(config);
 }
 
 /**
- * Returns a map of default Angular validators
- * Provides built-in validators like required, email, etc.
+ * Resolves validator references to actual validator functions
+ * Supports recursive validator references and memoization
  *
- * @returns Map of validator keys to validator function arrays
+ * @param validators Array of validator functions or validator keys
+ * @param registrations Map of all registered validators
+ * @param memo Memoization cache to avoid circular references
+ * @param visiting
+ * @returns Flattened array of validator functions
  */
-function getDefaultRegistrations() {
-  return new Map<string, ValidatorFn[]>([
-    ['required', [Validators.required]],
-    ['requiredTrue', [Validators.requiredTrue]],
-    ['email', [Validators.email]],
-    ['nullValidator', [Validators.nullValidator]],
-  ]);
+function toValidatorFn<T extends RegistrationRecord, V>(
+  validators: (V | ValidatorKey<T>)[],
+  registrations: Record<string, (V | ValidatorKey<T>)[]>,
+  memo = new Map<string, V[]>(),
+  visiting = new Set<string>(),
+): V[] {
+  return validators.flatMap((v) => {
+    switch (typeof v) {
+      case 'string': {
+        const cached = memo.get(v);
+        if (cached) return cached;
+
+        if (visiting.has(v))
+          throw new Error(
+            `Cyclic validator reference: ${[...visiting, v].join(' -> ')}`,
+          );
+
+        if (!Object.prototype.hasOwnProperty.call(registrations, v))
+          throw new Error(`Unknown validator key: "${v}"`);
+        const spec = registrations[v];
+
+        visiting.add(v);
+        const resolved = toValidatorFn(spec, registrations, memo, visiting);
+        visiting.delete(v);
+        memo.set(v, resolved);
+        return resolved;
+      }
+      default:
+        return v;
+    }
+  });
+}
+
+function toValidatorMap<T extends RegistrationRecord, V>(
+  source: Record<string, (V | ValidatorKey<T>)[]>,
+): ReadonlyMap<string, V[]> {
+  const out = new Map<string, V[]>();
+  const memo = new Map<string, V[]>();
+
+  for (const key in source) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      continue;
+    }
+
+    const spec = source[key];
+    const cached = memo.get(key);
+    if (cached) {
+      out.set(key, cached);
+      continue;
+    }
+    const resolved = toValidatorFn(spec, source, memo);
+    memo.set(key, resolved);
+    out.set(key, resolved);
+  }
+  return out;
 }
