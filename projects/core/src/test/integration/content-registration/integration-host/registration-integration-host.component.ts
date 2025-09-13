@@ -2,7 +2,7 @@ import { Component, inject, input } from '@angular/core';
 import { TestTextControl } from '../../../types/controls.type';
 import { FormService } from '../../../../lib/services/form.service';
 import { NgxfwAbstractControlDirective } from '../../../../lib';
-import { NgxFwComponentResolver } from '../../../../lib/tokens/component-resolver';
+import { NGX_FW_COMPONENT_RESOLVER } from '../../../../lib/tokens/component-resolver';
 
 @Component({
   selector: 'ngxfw-integration-host',
@@ -11,7 +11,9 @@ import { NgxFwComponentResolver } from '../../../../lib/tokens/component-resolve
   providers: [FormService],
 })
 export class RegistrationIntegrationHostComponent {
-  private readonly contentRegistrationService = inject(NgxFwComponentResolver);
+  private readonly contentRegistrationService = inject(
+    NGX_FW_COMPONENT_RESOLVER,
+  );
   readonly registrations = this.contentRegistrationService.registrations;
 
   readonly content = input.required<TestTextControl>();

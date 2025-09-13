@@ -10,5 +10,8 @@ export * from './directives/ngxfw-group.directive';
 export * from './directives/ngxfw-block.directive';
 export * from './directives/ngxfw-abstract-control.directive';
 export * from './tokens/component-registrations';
+export * from './tokens/component-resolver';
 export * from './tokens/default-update-strategy';
+export * from './tokens/global-config';
 export * from './tokens/validator-registrations';
+export * from './tokens/validator-resolver';

@@ -1,18 +1,14 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { TestIdBuilderFn } from '../types/functions.type';
-import { NgxFwGlobalConfiguration } from '../types/global-configuration.type';
+import { NGX_FW_CONFIG_RESOLVED } from '../tokens/global-config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NgxFwConfigurationService {
-  private _testIdBuilderFn: TestIdBuilderFn | undefined;
+  private readonly _config = inject(NGX_FW_CONFIG_RESOLVED);
 
-  get testIdBuilder() {
-    return this._testIdBuilderFn;
-  }
-
-  configure(config: NgxFwGlobalConfiguration | undefined) {
-    this._testIdBuilderFn = config?.testIdBuilderFn;
+  get testIdBuilder(): TestIdBuilderFn | undefined {
+    return this._config.testIdBuilderFn;
   }
 }

@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { ComponentResolver } from '../types/component-resolver.type';
 
-export const NgxFwComponentResolver = new InjectionToken<ComponentResolver>(
-  'NgxFwComponentResolver',
+export const NGX_FW_COMPONENT_RESOLVER = new InjectionToken<ComponentResolver>(
+  'NGX_FW_COMPONENT_RESOLVER',
 );

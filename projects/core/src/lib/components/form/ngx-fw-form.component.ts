@@ -4,7 +4,7 @@ import { controlContainerViewProviders } from '../../helper/control-container-vi
 import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-control.directive';
 import { NgxFwForm } from '../../types/form.type';
 import { NgxFwBaseContent, NgxFwContent } from '../../types/content.type';
-import { NgxFwComponentResolver } from '../../tokens/component-resolver';
+import { NGX_FW_COMPONENT_RESOLVER } from '../../tokens/component-resolver';
 
 /**
  * Ngx Formwork Form Component
@@ -31,7 +31,9 @@ export class NgxFwFormComponent<T extends NgxFwBaseContent = NgxFwContent> {
    * Service for component registration
    * Provides access to component type mappings
    */
-  private readonly contentRegistrationService = inject(NgxFwComponentResolver);
+  private readonly contentRegistrationService = inject(
+    NGX_FW_COMPONENT_RESOLVER,
+  );
 
   /**
    * Registration map of component types

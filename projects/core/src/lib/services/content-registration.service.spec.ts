@@ -1,7 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Type } from '@angular/core';
-import { NgxFwComponentResolver } from '../tokens/component-resolver';
-import { NgxFwComponentRegistrations } from '../tokens/component-registrations';
+import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 import { ComponentResolver } from '../types/component-resolver.type';
 import { ComponentRegistrationService } from './component-registration.service';
 
@@ -12,16 +10,12 @@ describe('ContentRegistrationService', () => {
     TestBed.configureTestingModule({
       providers: [
         {
-          provide: NgxFwComponentRegistrations,
-          useValue: new Map<string, Type<unknown>>(),
-        },
-        {
-          provide: NgxFwComponentResolver,
+          provide: NGX_FW_COMPONENT_RESOLVER,
           useClass: ComponentRegistrationService,
         },
       ],
     });
-    service = TestBed.inject(NgxFwComponentResolver);
+    service = TestBed.inject(NGX_FW_COMPONENT_RESOLVER);
   });
 
   it('should be created', () => {

@@ -7,7 +7,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import { NgxFwBaseContent } from '../types/content.type';
-import { NgxFwComponentResolver } from '../tokens/component-resolver';
+import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 
 /**
  * Structural directive that renders the appropriate component based on the control's type.
@@ -44,7 +44,9 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
    * Service for component registration
    * Provides access to component type mappings
    */
-  private readonly contentRegistrationService = inject(NgxFwComponentResolver);
+  private readonly contentRegistrationService = inject(
+    NGX_FW_COMPONENT_RESOLVER,
+  );
 
   /**
    * Required input for control configuration

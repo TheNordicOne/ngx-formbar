@@ -1,6 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import { NgxFwAbstractControl } from '../types/content.type';
-import { NgxFwValidatorResolver } from '../tokens/validator-resolver';
+import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 
 /**
  * Computes a reactive array of validators based on control content
@@ -12,7 +12,7 @@ import { NgxFwValidatorResolver } from '../tokens/validator-resolver';
  * @returns Computed signal that resolves to an array of validator functions
  */
 export function withValidators(content: Signal<NgxFwAbstractControl>) {
-  const validatorRegistrations = inject(NgxFwValidatorResolver).registrations;
+  const validatorRegistrations = inject(NGX_VALIDATOR_RESOLVER).registrations;
 
   return computed(() => {
     const validatorKeys = content().validators ?? [];
@@ -33,7 +33,7 @@ export function withValidators(content: Signal<NgxFwAbstractControl>) {
  */
 export function withAsyncValidators(content: Signal<NgxFwAbstractControl>) {
   const asyncValidatorRegistrations = inject(
-    NgxFwValidatorResolver,
+    NGX_VALIDATOR_RESOLVER,
   ).asyncRegistrations;
   return computed(() => {
     const validatorKeys = content().asyncValidators ?? [];

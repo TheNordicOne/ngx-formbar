@@ -6,7 +6,7 @@ import {
 } from '../types/content.type';
 
 import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
-import { DefaultUpdateStrategy } from '../tokens/default-update-strategy';
+import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
 
 /**
  * Creates a computed signal for the control's update strategy
@@ -32,7 +32,7 @@ export function withUpdateStrategy(content: Signal<NgxFwAbstractControl>) {
       skipSelf: true,
     });
 
-  const defaultUpdateStrategy = inject(DefaultUpdateStrategy);
+  const defaultUpdateStrategy = inject(NGX_FW_DEFAULT_UPDATE_STRATEGY);
 
   const parentGroupUpdateStrategy: Signal<UpdateStrategy> =
     computed<UpdateStrategy>(() => {
