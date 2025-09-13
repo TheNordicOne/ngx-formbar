@@ -17,6 +17,13 @@ import { ValidatorRegistrationService } from '../services/validator-registration
 import { ExpressionService } from '../services/expression.service';
 import { DefaultUpdateStrategy } from '../tokens/default-update-strategy';
 import { NgxFwConfigurationService } from '../services/configuration.service';
+import { NgxFwComponentRegistrations } from '../tokens/component-registrations';
+import {
+  NgxFwAsyncValidatorRegistrations,
+  NgxFwValidatorRegistrations,
+} from '../tokens/validator-registrations';
+import { NgxFwValidatorResolver } from '../tokens/validator-resolver';
+import { NgxFwComponentResolver } from '../tokens/component-resolver';
 
 /**
  * Configures and provides ngx-formwork to your application.
@@ -25,7 +32,7 @@ import { NgxFwConfigurationService } from '../services/configuration.service';
  * and set global configuration for the formwork library.
  *
  * @param config Configuration object for ngx-formwork:
- *   - componentRegistrations: Required mapping of control types to component implementations
+ *   - componentRegistrations: Optional mapping of control types to component implementations
  *   - validatorRegistrations: Optional mapping of validator names to validator functions
  *     (Angular's required, requiredTrue, email, and nullValidator are registered by default)
  *   - asyncValidatorRegistrations: Optional mapping of async validator names to async validator functions
@@ -55,7 +62,8 @@ import { NgxFwConfigurationService } from '../services/configuration.service';
 export function provideFormwork<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
->(config: FormworkConfig<S, A>): EnvironmentProviders {
+>(config?: FormworkConfig<S, A>): EnvironmentProviders {
+  config ??= {};
   const {
     componentRegistrations,
     validatorRegistrations,
@@ -66,15 +74,24 @@ export function provideFormwork<
 
   return makeEnvironmentProviders([
     {
-      provide: ComponentRegistrationService,
-      useValue: createComponentRegistrationService(componentRegistrations),
+      provide: NgxFwComponentRegistrations,
+      useValue: toComponentRegistrationMap(componentRegistrations),
     },
     {
-      provide: ValidatorRegistrationService,
-      useValue: createValidatorRegistrationService(
-        validatorRegistrations,
-        asyncValidatorRegistrations,
-      ),
+      provide: NgxFwValidatorRegistrations,
+      useValue: toValidatorRegistrationMap(validatorRegistrations),
+    },
+    {
+      provide: NgxFwAsyncValidatorRegistrations,
+      useValue: toAsyncValidatorRegistrationMap(asyncValidatorRegistrations),
+    },
+    {
+      provide: NgxFwComponentResolver,
+      useClass: ComponentRegistrationService,
+    },
+    {
+      provide: NgxFwValidatorResolver,
+      useClass: ValidatorRegistrationService,
     },
     {
       provide: DefaultUpdateStrategy,
@@ -93,70 +110,18 @@ export function provideFormwork<
 }
 
 /**
- * Creates a ComponentRegistrationService with registered form components
- *
- * @param componentRegistrations Array of component registration configurations
- * @returns Configured ComponentRegistrationService instance
- */
-function createComponentRegistrationService(
-  componentRegistrations: ComponentRegistrationConfig,
-) {
-  const registrations = toComponentRegistrationMap(componentRegistrations);
-  return new ComponentRegistrationService(registrations);
-}
-
-/**
  * Converts component registration array to a lookup map
  *
  * @param componentRegistrations Array of component registration configurations
  * @returns Map of component types to component implementations
  */
 function toComponentRegistrationMap(
-  componentRegistrations: ComponentRegistrationConfig,
+  componentRegistrations?: ComponentRegistrationConfig,
 ) {
-  return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
-}
-
-/**
- * Creates a ValidatorRegistrationService with registered validators
- *
- * @param config Configuration object for synchronous validators
- * @param asyncConfig Configuration object for asynchronous validators
- * @returns Configured ValidatorRegistrationService instance
- */
-function createValidatorRegistrationService<
-  S extends RegistrationRecord,
-  A extends RegistrationRecord,
->(config?: ValidatorConfig<S>, asyncConfig?: AsyncValidatorConfig<A>) {
-  const registrations = toValidatorRegistrationMap(config, asyncConfig);
-  return new ValidatorRegistrationService(...registrations);
-}
-
-/**
- * Converts validator configurations to registration maps
- *
- * @param config Configuration object for synchronous validators
- * @param asyncConfig Configuration object for asynchronous validators
- * @returns Tuple of [validatorMap, asyncValidatorMap]
- */
-function toValidatorRegistrationMap<
-  S extends RegistrationRecord,
-  A extends RegistrationRecord,
->(
-  config?: ValidatorConfig<S>,
-  asyncConfig?: AsyncValidatorConfig<A>,
-): [Map<string, ValidatorFn[]>, Map<string, AsyncValidatorFn[]>] {
-  if (!config && !asyncConfig) {
-    return [
-      new Map<string, ValidatorFn[]>(),
-      new Map<string, AsyncValidatorFn[]>(),
-    ];
+  if (!componentRegistrations) {
+    return new Map<string, Type<unknown>>();
   }
-
-  const registrations = toValidatorMap(config);
-  const asyncRegistrations = toAsyncValidatorMap(asyncConfig);
-
-  return [registrations, asyncRegistrations];
+  return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
 }
 
 /**
@@ -166,7 +131,7 @@ function toValidatorRegistrationMap<
  * @param config Configuration object for validators
  * @returns Map of validator keys to validator function arrays
  */
-function toValidatorMap<S extends RegistrationRecord>(
+function toValidatorRegistrationMap<S extends RegistrationRecord>(
   config?: ValidatorConfig<S>,
 ) {
   if (!config) {
@@ -225,7 +190,7 @@ function toValidatorFn<T extends RegistrationRecord, V>(
  * @param config Configuration object for async validators
  * @returns Map of validator keys to async validator function arrays
  */
-function toAsyncValidatorMap<A extends RegistrationRecord>(
+function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
   config?: AsyncValidatorConfig<A>,
 ) {
   if (!config) {

@@ -1,26 +1,19 @@
-import { Injectable, signal, Signal, WritableSignal } from '@angular/core';
-import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
+import { inject, Injectable, signal } from '@angular/core';
+import {
+  NgxFwAsyncValidatorRegistrations,
+  NgxFwValidatorRegistrations,
+} from '../tokens/validator-registrations';
+import { ValidatorResolver } from '../types/validator-resolver.type';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ValidatorRegistrationService {
-  private readonly _registrations: WritableSignal<Map<string, ValidatorFn[]>>;
-  readonly registrations: Signal<Map<string, ValidatorFn[]>>;
+export class ValidatorRegistrationService implements ValidatorResolver {
+  private readonly _registrations = signal(inject(NgxFwValidatorRegistrations));
+  readonly registrations = this._registrations.asReadonly();
 
-  private readonly _asyncRegistrations: WritableSignal<
-    Map<string, AsyncValidatorFn[]>
-  >;
-  readonly asyncRegistrations: Signal<Map<string, AsyncValidatorFn[]>>;
-
-  constructor(
-    registrations: Map<string, ValidatorFn[]>,
-    asyncRegistrations: Map<string, AsyncValidatorFn[]>,
-  ) {
-    this._registrations = signal(registrations);
-    this.registrations = this._registrations.asReadonly();
-
-    this._asyncRegistrations = signal(asyncRegistrations);
-    this.asyncRegistrations = this._asyncRegistrations.asReadonly();
-  }
+  private readonly _asyncRegistrations = signal(
+    inject(NgxFwAsyncValidatorRegistrations),
+  );
+  readonly asyncRegistrations = this._asyncRegistrations.asReadonly();
 }

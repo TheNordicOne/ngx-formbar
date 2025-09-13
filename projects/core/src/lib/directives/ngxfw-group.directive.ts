@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { NgxFwFormGroup, ValueStrategy } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
-import { ComponentRegistrationService } from '../services/component-registration.service';
 import { StateHandling } from '../types/registration.type';
 import {
   disabledEffect,
@@ -26,6 +25,7 @@ import { withTestId } from '../composables/testId';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { TestIdBuilderFn } from '../types/functions.type';
+import { NgxFwComponentResolver } from '../tokens/component-resolver';
 
 /**
  * Core directive for creating form groups in ngx-formwork.
@@ -69,9 +69,7 @@ import { TestIdBuilderFn } from '../types/functions.type';
 export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   implements OnDestroy
 {
-  private readonly contentRegistrationService = inject(
-    ComponentRegistrationService,
-  );
+  private readonly contentRegistrationService = inject(NgxFwComponentResolver);
   private parentContainer = inject(ControlContainer);
 
   private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =

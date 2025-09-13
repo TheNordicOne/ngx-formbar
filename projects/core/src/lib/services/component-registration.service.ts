@@ -1,20 +1,12 @@
-import {
-  Injectable,
-  Signal,
-  signal,
-  Type,
-  WritableSignal,
-} from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { NgxFwComponentRegistrations } from '../tokens/component-registrations';
+import { ComponentResolver } from '../types/component-resolver.type';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ComponentRegistrationService {
-  private readonly _registrations: WritableSignal<Map<string, Type<unknown>>>;
-  readonly registrations: Signal<Map<string, Type<unknown>>>;
+export class ComponentRegistrationService implements ComponentResolver {
+  private readonly _registrations = signal(inject(NgxFwComponentRegistrations));
 
-  constructor(registrations: Map<string, Type<unknown>>) {
-    this._registrations = signal(registrations);
-    this.registrations = this._registrations.asReadonly();
-  }
+  readonly registrations = this._registrations.asReadonly();
 }

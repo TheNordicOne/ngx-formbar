@@ -13,7 +13,7 @@ import { NgxFwGlobalConfiguration } from './global-configuration.type';
  * @template S - Type extending RegistrationRecord for synchronous validators
  * @template A - Type extending RegistrationRecord for asynchronous validators
  *
- * @property componentRegistrations - Array of component configurations to register
+ * @property componentRegistrations - Optional mapping of control types to component implementations
  * @property validatorRegistrations - Optional configuration for synchronous validators
  * @property asyncValidatorRegistrations - Optional configuration for asynchronous validators
  *
@@ -40,7 +40,7 @@ export interface FormworkConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
 > {
-  componentRegistrations: ComponentRegistrationConfig;
+  componentRegistrations?: ComponentRegistrationConfig;
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
   updateOn?: UpdateStrategy;
