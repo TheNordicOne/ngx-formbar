@@ -1,10 +1,10 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import { NgxfwAbstractControlDirective } from '../../directives/ngxfw-abstract-control.directive';
 import { NgxFwForm } from '../../types/form.type';
 import { NgxFwBaseContent, NgxFwContent } from '../../types/content.type';
+import { NgxFwComponentResolver } from '../../tokens/component-resolver';
 
 /**
  * Ngx Formwork Form Component
@@ -31,9 +31,7 @@ export class NgxFwFormComponent<T extends NgxFwBaseContent = NgxFwContent> {
    * Service for component registration
    * Provides access to component type mappings
    */
-  private readonly contentRegistrationService = inject(
-    ComponentRegistrationService,
-  );
+  private readonly contentRegistrationService = inject(NgxFwComponentResolver);
 
   /**
    * Registration map of component types
