@@ -1,5 +1,5 @@
 <span [attr.data-testId]="testId()">Group</span>
-<span [attr.data-testId]="testId() + '-title'">{{
+<span [attr.data-testId]="`${testId()}-title`">{{
   dynamicTitle() ?? content()?.title
 }}</span>
 <div [formGroupName]="name()">
@@ -9,17 +9,17 @@
 </div>
 
 @if (formGroup?.hasError('duplicates')) {
-  <span [attr.data-testId]="testId() + '-validation-error-no-duplicates'"
+  <span [attr.data-testId]="`${testId()}-validation-error-no-duplicates`"
     >No duplicate values</span
   >
 }
 
 @if (formGroup?.hasError('forbiddenLetterA')) {
-  <span [attr.data-testId]="testId() + '-validation-error-forbidden-letter-a'"
+  <span [attr.data-testId]="`${testId()}-validation-error-forbidden-letter-a`"
     >The letter A is not allowed</span
   >
 }
 
 @if (formGroup?.hasError('async')) {
-  <span [attr.data-testId]="testId() + '-validation-error-async'">async</span>
+  <span [attr.data-testId]="`${testId()}-validation-error-async`">async</span>
 }
