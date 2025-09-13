@@ -1,40 +1,42 @@
 @if (!isHidden()) {
   <span [attr.data-testId]="testId()">Control</span>
-  <label [htmlFor]="name()" [attr.data-testId]="testId() + '-label'">{{
+  <label [htmlFor]="name()" [attr.data-testId]="`${testId()}-label`">{{
     dynamicLabel() ?? content()?.label
   }}</label>
   <input
-    [attr.data-testId]="testId() + '-input'"
+    [attr.data-testId]="`${testId()}-input`"
     [id]="name()"
     [formControlName]="name()"
     [attr.readonly]="readonly() || null"
   />
-  <span [attr.data-testId]="testId() + '-hint'">{{ content()?.hint }}</span>
+  <span [attr.data-testId]="`${testId()}-hint`">{{ content()?.hint }}</span>
 
   @if (formControl?.hasError('required')) {
-    <span [attr.data-testId]="testId() + '-validation-error-required'"
+    <span [attr.data-testId]="`${testId()}-validation-error-required`"
       >Required</span
     >
   }
 
   @if (formControl?.hasError('async')) {
-    <span [attr.data-testId]="testId() + '-validation-error-async'">async</span>
+    <span [attr.data-testId]="`${testId()}-validation-error-async`">async</span>
   }
 
   @if (formControl?.hasError('minlength')) {
-    <span [attr.data-testId]="testId() + '-validation-error-min-chars'"
+    <span [attr.data-testId]="`${testId()}-validation-error-min-chars`"
       >Needs 3 characters</span
     >
   }
 
   @if (formControl?.hasError('letter')) {
-    <span [attr.data-testId]="testId() + '-validation-error-letter'"
+    <span [attr.data-testId]="`${testId()}-validation-error-letter`"
       >Must contain the letter A</span
     >
   }
 
+  <!-- Does not matter for this test component -->
+  <!-- eslint-disable-next-line @angular-eslint/template/cyclomatic-complexity-->
   @if (formControl?.hasError('combined')) {
-    <span [attr.data-testId]="testId() + '-validation-error-combined'"
+    <span [attr.data-testId]="`${testId()}-validation-error-combined`"
       >All conditions must apply</span
     >
   }
