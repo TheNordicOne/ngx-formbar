@@ -1,6 +1,6 @@
 {
   "name": "ngx-formwork",
-  "version": "0.8.0",
+  "version": "0.7.1",
   "scripts": {
     "build": "tsc -p tsconfig.schematics.json",
     "postbuild": "copyfiles schematics/*/schema.json schematics/**/files/**/*.* schematics/**/files/*.* schematics/collection.json ../../dist/core/"
