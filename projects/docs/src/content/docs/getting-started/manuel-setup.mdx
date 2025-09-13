@@ -6,6 +6,7 @@ sidebar:
 ---
 
 
+
 import ControlSetup from '../../shared/control-setup.md';
 import GroupSetup from '../../shared/group-setup.md';
 
@@ -30,6 +31,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormwork({
+      // All parameters below are optional
       componentRegistrations: {
         // Component registrations go here
       },
@@ -48,10 +50,20 @@ export const appConfig: ApplicationConfig = {
       asyncValidatorRegistrations: {
         // Async Validator registrations go here
       },
+
+      // Global update strategy (optional)
+      updateOn: 'blur', // or 'change' or 'submit'
+
+      // Global configuration options (optional)
+      globalConfig: {
+        // Global configuration goes here
+      }
     })
   ]
 };
 ```
+
+You can also use `provideFormwork()` with no parameters if you plan to provide registrations via injection tokens.
 
 ### Splitting Configuration
 
