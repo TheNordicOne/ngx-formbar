@@ -29,7 +29,7 @@ When running schematics, pass the flags to use your files:
 ng generate ngx-formwork:<schematic> --helper --helperPath src/app/shared/helper
 ```
 
-Or set these defaults in `angular.json` under your project’s `schematics` section:
+Or set these defaults in `angular.json` under your project's `schematics` section:
 
 ```json
 "ngx-formwork:control": { "helper": true, "helperPath": "src/app/shared/helper" },
@@ -114,11 +114,11 @@ export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
 
 ## Code Splitting
 
-Registering all controls. validators, etc. directly in the _app.config.ts_ is not ideal. Set up a dedicated file for your registrations.
+Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. ngx-formwork provides multiple approaches to organize your code better.
 
-### defineFormworkConfig
+### Using defineFormworkConfig
 
-Create a file, next to your _app.config.ts_, with this content to get started. The `defineFormworkConfig` function is a helper, to get type support when defining the configuration in a separate file.
+Create a file next to your _app.config.ts_ with this content to get started. The `defineFormworkConfig` function is a helper that provides type support when defining the configuration in a separate file.
 
 ```ts title="formwork.config.ts"
 import { defineFormworkConfig } from 'ngx-formwork';
@@ -138,7 +138,7 @@ export const formworkConfig = defineFormworkConfig({
 });
 ```
 
-In _app.config.ts_ use it like this
+In _app.config.ts_ use it like this:
 
 ```ts title="app.config.ts"
 import { formworkConfig } from './formwork.config.ts';
@@ -151,10 +151,139 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+### Using Injection Tokens Directly
 
-### Splitting Registrations
+For more advanced code organization, you can leverage Angular's dependency injection system by providing the tokens directly.
 
-You can further split up the configuration, by having files specifically for your control and validator registrations. While it is recommended to have everything withing _formwork.config.ts_, in some case further splitting can be beneficial for clarity.
+:::note
+When using the DI tokens directly, be aware of how resolution works:
+- For components: Your provided map is taken "as is"
+- For validators: Your provided validators are merged with defaults, with your values taking precedence for duplicate keys
+- For global config: Your configuration is deeply merged with defaults
+:::
+
+#### Component Registration with Tokens
+
+```ts title="component-registrations.provider.ts"
+import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+import { TextControlComponent } from './components/text-control.component';
+import { GroupComponent } from './components/group.component';
+import { InfoBlockComponent } from './components/info-block.component';
+
+export const componentRegistrationsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+    ['text-control', TextControlComponent],
+    ['group', GroupComponent],
+    ['info', InfoBlockComponent],
+    // more registrations...
+  ])
+};
+```
+
+#### Validator Registration with Tokens
+
+```ts title="validator-registrations.provider.ts"
+import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork';
+import { Validators } from '@angular/forms';
+import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
+import { asyncValidator, asyncGroupValidator } from './async-validators';
+
+// Synchronous validators
+export const validatorRegistrationsProvider = {
+  provide: NGX_FW_VALIDATOR_REGISTRATIONS,
+  useValue: new Map([
+    ['min-chars', [Validators.minLength(3)]],
+    ['letter', [letterValidator]],
+    ['combined', [Validators.minLength(3), Validators.required, letterValidator]],
+    ['no-duplicates', [noDuplicateValuesValidator]],
+    ['forbidden-letter-a', [forbiddenLetterAValidator]],
+    // more registrations...
+  ])
+};
+
+// Asynchronous validators
+export const asyncValidatorRegistrationsProvider = {
+  provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+  useValue: new Map([
+    ['async', [asyncValidator]],
+    ['async-group', [asyncGroupValidator]],
+    // more registrations...
+  ])
+};
+```
+
+In _app.config.ts_ use them like this:
+
+```ts title="app.config.ts"
+import { componentRegistrationsProvider } from './component-registrations.provider';
+import { validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from './validator-registrations.provider';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork(),
+    // Custom providers MUST come after provideFormwork()
+    componentRegistrationsProvider,
+    validatorRegistrationsProvider,
+    asyncValidatorRegistrationsProvider,
+  ]
+}; 
+```
+
+### Multiple Configurations with Injection Tokens
+
+You can also provide multiple configuration objects that will be merged according to their resolution strategy:
+
+```ts title="split-configurations.provider.ts"
+import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_CONFIG } from 'ngx-formwork';
+
+// First set of components
+export const baseComponentsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+    ['text', TextComponent],
+    ['number', NumberComponent],
+  ])
+};
+
+// Additional components from a different module
+export const extraComponentsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+    ['date', DateComponent],
+    ['select', SelectComponent],
+  ])
+};
+
+// Multiple global configs will be deep merged
+export const baseConfigProvider = {
+  provide: NGX_FW_CONFIG,
+  useValue: {
+    testIdBuilderFn: (baseName, controlName) => `${baseName}-${controlName}`,
+  }
+};
+
+export const moduleConfigProvider = {
+  provide: NGX_FW_CONFIG,
+  useValue: {
+    extraSettings: {
+      theme: 'dark',
+    }
+  }
+};
+```
+
+:::note
+When providing multiple maps with the same token:
+- For components: Only the last provided map will be used
+- For validators: All maps are collected in an array and merged, with later entries overriding earlier ones
+- For global config: All configs are deeply merged, with nested object properties preserved
+:::
+
+### Traditional Code Splitting
+
+For simpler scenarios, you can still split your registration files by type while using the `provideFormwork()` function.
 
 #### Controls Registration
 
@@ -256,5 +385,40 @@ export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
   // ⚠️ letter only spelled with one T. 
   // This will give an TS error in the provideFormwork function, but not in this case
   combined: [Validators.required, 'leter'], 
+};
+```
+
+### Global Configuration with Injection Tokens
+
+For advanced scenarios, you can provide global configuration options using the `NGX_FW_CONFIG` injection token.
+
+```ts title="global-config.provider.ts"
+import { NGX_FW_CONFIG } from 'ngx-formwork';
+import { TestIdBuilderFn } from 'ngx-formwork';
+
+// Example test ID builder function
+const testIdBuilder: TestIdBuilderFn = (baseName, controlName) => {
+  return `${baseName}-${controlName}`;
+};
+
+export const globalConfigProvider = {
+  provide: NGX_FW_CONFIG,
+  useValue: {
+    testIdBuilderFn: testIdBuilder
+  }
+};
+```
+
+In _app.config.ts_ use it like this:
+
+```ts title="app.config.ts"
+import { globalConfigProvider } from './global-config.provider';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork(),
+    globalConfigProvider
+  ]
 };
 ```
