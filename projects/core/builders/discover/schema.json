@@ -1,7 +1,31 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Ngx Formwork Discovery Builder",
+  "description": "Discovers components using Ngx Formwork directives",
   "type": "object",
   "properties": {
-
-  }
+    "include": {
+      "type": "array",
+      "description": "Glob patterns to include when searching for components",
+      "default": ["**/*.ts"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Glob patterns to exclude when searching for components",
+      "default": ["**/node_modules/**", "**/*.spec.ts"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Path where to save the discovered components information",
+      "default": "formwork-components.json"
+    }
+  },
+  "additionalProperties": false
 }
+
