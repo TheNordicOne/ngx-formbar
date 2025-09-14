@@ -2,9 +2,10 @@
   "name": "ngx-formwork",
   "version": "0.8.0",
   "scripts": {
-    "build": "tsc -p tsconfig.schematics.json",
-    "postbuild": "copyfiles schematics/*/schema.json schematics/**/files/**/*.* schematics/**/files/*.* schematics/collection.json ../../dist/core/"
+    "build": "tsc -p tsconfig.schematics.json && tsc -p tsconfig.builders.json",
+    "postbuild": "copyfiles schematics/*/schema.json schematics/**/files/**/*.* schematics/**/files/*.* schematics/collection.json ../../dist/core/ builders/**/*.json ../../dist/core/"
   },
+  "builders": "builder.json",
   "peerDependencies": {
     "@angular/cdk": "^19.0.0",
     "@angular/common": "^19.0.0",
@@ -20,7 +21,12 @@
     "@schematics/angular": "file:../../node_modules/@schematics/angular",
     "copyfiles": "file:../../node_modules/copyfiles",
     "typescript": "file:../../node_modules/typescript",
-    "ts-morph": "file:../../node_modules/ts-morph"
+    "ts-morph": "file:../../node_modules/ts-morph",
+    "@angular-devkit/architect": "^0.2003.1",
+    "@angular-devkit/core": "^20.3.1",
+    "@types/node": "^24.3.3",
+    "rimraf": "^6.0.1",
+    "tsc-watch": "^7.1.1"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {
