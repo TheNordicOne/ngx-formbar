@@ -22,11 +22,8 @@
     "copyfiles": "file:../../node_modules/copyfiles",
     "typescript": "file:../../node_modules/typescript",
     "ts-morph": "file:../../node_modules/ts-morph",
-    "@angular-devkit/architect": "^0.2003.1",
-    "@angular-devkit/core": "^20.3.1",
-    "@types/node": "^24.3.3",
-    "rimraf": "^6.0.1",
-    "tsc-watch": "^7.1.1"
+    "@angular-devkit/core": "file:../../node_modules//@angular-devkit/core",
+    "@angular-devkit/architect": "file:../../node_modules//@angular-devkit/architect"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {
