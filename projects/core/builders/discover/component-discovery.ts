@@ -1,10 +1,11 @@
 import * as fs from 'fs';
 import * as glob from 'glob';
-import ts from 'typescript';
+
 import {
   FormworkComponentInfo,
   FormworkComponentType,
 } from './models/component-info.model';
+import { ts } from 'ts-morph';
 
 /**
  * Find components that use Ngx Formwork directives based on the given patterns
@@ -106,7 +107,7 @@ function analyzeSourceFile(
       continue;
     }
 
-    const componentDecorator = decorators.find((decorator) => {
+    const componentDecorator = decorators.find((decorator: ts.Decorator) => {
       const decoratorName = getDecoratorName(decorator);
       return decoratorName === 'Component';
     });
@@ -396,7 +397,7 @@ function extractDirectiveInfo(
         }
         inputs = prop.initializer.elements
           .filter(ts.isStringLiteral)
-          .map((element) => element.text);
+          .map((element: ts.StringLiteral) => element.text);
       }
     }
   }
