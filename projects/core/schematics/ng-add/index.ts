@@ -15,9 +15,10 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
-import * as ts from 'typescript';
+
 import { normalize } from '@angular-devkit/core';
 import { updateSchematicConfig } from '../shared/rules';
+import { ts } from 'ts-morph';
 
 interface NgAddOptions {
   project?: string;
