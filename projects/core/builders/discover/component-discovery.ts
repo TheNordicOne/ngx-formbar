@@ -20,30 +20,43 @@ export function findComponents(
 ): FormworkComponentInfo[] {
   const components: FormworkComponentInfo[] = [];
 
-  // Get all TypeScript files matching the patterns
   const files = getFilesMatchingPatterns(
     basePath,
     includePatterns,
     excludePatterns,
   );
 
-  // Analyze each file for Ngx Formwork directives
-  files.forEach((filePath) => {
+  for (const filePath of files) {
     try {
       const fileContent = fs.readFileSync(filePath, 'utf8');
+
+      // Fast prefilter: skip parsing if no chance to contain a relevant component
+      // We expect Angular components with hostDirectives or ngxfw tokens
+      if (
+        !fileContent.includes('@Component') ||
+        !(
+          fileContent.includes('hostDirectives') ||
+          fileContent.toLowerCase().includes('ngxfw')
+        )
+      ) {
+        continue;
+      }
+
       const sourceFile = ts.createSourceFile(
         filePath,
         fileContent,
         ts.ScriptTarget.Latest,
-        true,
+        false,
       );
 
       const discoveredComponents = analyzeSourceFile(sourceFile, filePath);
-      components.push(...discoveredComponents);
+      if (discoveredComponents.length) {
+        components.push(...discoveredComponents);
+      }
     } catch (error) {
       console.error(`Error processing file ${filePath}:`, error);
     }
-  });
+  }
 
   return components;
 }
@@ -56,21 +69,21 @@ function getFilesMatchingPatterns(
   includePatterns: string[],
   excludePatterns: string[],
 ): string[] {
-  let allFiles: string[] = [];
+  const all = new Set<string>();
 
-  includePatterns.forEach((pattern) => {
+  for (const pattern of includePatterns) {
     const files = glob.sync(pattern, {
       cwd: basePath,
       absolute: true,
       ignore: excludePatterns,
       fs: fs,
+      nodir: true,
     });
 
-    allFiles = [...allFiles, ...files];
-  });
+    for (const f of files) all.add(f);
+  }
 
-  // Remove duplicates
-  return [...new Set(allFiles)];
+  return Array.from(all);
 }
 
 /**
@@ -82,50 +95,38 @@ function analyzeSourceFile(
 ): FormworkComponentInfo[] {
   const components: FormworkComponentInfo[] = [];
 
-  // Visit all nodes in the source file
-  ts.forEachChild(sourceFile, (node) => {
-    visitNode(node, filePath, components);
-  });
+  // Only inspect top-level class declarations; avoid deep AST traversal
+  for (const stmt of sourceFile.statements) {
+    if (!ts.isClassDeclaration(stmt)) {
+      continue;
+    }
 
-  return components;
-}
+    const decorators = ts.getDecorators(stmt);
+    if (!decorators || decorators.length === 0) {
+      continue;
+    }
 
-/**
- * Recursively visits nodes to find components with directives
- */
-function visitNode(
-  node: ts.Node,
-  filePath: string,
-  components: FormworkComponentInfo[],
-): void {
-  // Check if the node is a class declaration with a Component decorator
-  if (ts.isClassDeclaration(node)) {
-    const decorators = ts.getDecorators(node);
-    if (decorators && decorators.length > 0) {
-      const componentDecorator = decorators.find((decorator) => {
-        // Check if it's the @Component decorator
-        const decoratorName = getDecoratorName(decorator);
-        return decoratorName === 'Component';
-      });
+    const componentDecorator = decorators.find((decorator) => {
+      const decoratorName = getDecoratorName(decorator);
+      return decoratorName === 'Component';
+    });
 
-      if (componentDecorator && node.name) {
-        // Extract component information from decorator
-        const componentInfo = extractComponentInfo(
-          node,
-          componentDecorator,
-          filePath,
-        );
-        if (componentInfo) {
-          components.push(componentInfo);
-        }
-      }
+    if (!componentDecorator || !stmt.name) {
+      continue;
+    }
+
+    const componentInfo = extractComponentInfo(
+      stmt,
+      componentDecorator,
+      filePath,
+    );
+
+    if (componentInfo) {
+      components.push(componentInfo);
     }
   }
 
-  // Continue visiting child nodes
-  ts.forEachChild(node, (child) => {
-    visitNode(child, filePath, components);
-  });
+  return components;
 }
 
 /**
@@ -144,6 +145,25 @@ function getDecoratorName(decorator: ts.Decorator): string | undefined {
   return undefined;
 }
 
+// Small helper to determine component type from a name token
+function inferTypeFromToken(
+  tokenLower: string,
+): FormworkComponentType | undefined {
+  if (tokenLower.includes('block')) {
+    return FormworkComponentType.Block;
+  }
+
+  if (tokenLower.includes('group')) {
+    return FormworkComponentType.Group;
+  }
+
+  if (tokenLower.includes('control')) {
+    return FormworkComponentType.Control;
+  }
+
+  return undefined;
+}
+
 /**
  * Extracts component information from a component declaration
  */
@@ -155,6 +175,7 @@ function extractComponentInfo(
   if (
     !ts.isCallExpression(componentDecorator.expression) ||
     !classNode.name ||
+    componentDecorator.expression.arguments.length === 0 ||
     !ts.isObjectLiteralExpression(componentDecorator.expression.arguments[0])
   ) {
     return undefined;
@@ -163,47 +184,32 @@ function extractComponentInfo(
   const className = classNode.name.text;
   const componentArgs = componentDecorator.expression.arguments[0];
 
-  // Get the selector
   let selector: string | undefined;
-  // Find hostDirectives property
   let hostDirectivesNode: ts.PropertyAssignment | undefined;
 
   for (const prop of componentArgs.properties) {
-    if (ts.isPropertyAssignment(prop)) {
-      if (prop.name.getText() === 'selector') {
-        if (ts.isStringLiteral(prop.initializer)) {
-          selector = prop.initializer.text;
-        }
-      } else if (prop.name.getText() === 'hostDirectives') {
-        hostDirectivesNode = prop;
-      }
+    if (!ts.isPropertyAssignment(prop)) {
+      continue;
+    }
+
+    const n = prop.name;
+    const key =
+      ts.isIdentifier(n) || ts.isStringLiteral(n) ? n.text : undefined;
+
+    if (!key) {
+      continue;
+    }
+
+    if (key === 'selector' && ts.isStringLiteral(prop.initializer)) {
+      selector = prop.initializer.text;
+    }
+
+    if (key === 'hostDirectives') {
+      hostDirectivesNode = prop;
     }
   }
 
-  // Added: handle identifier initializer (variable) directly here
-  if (hostDirectivesNode && ts.isIdentifier(hostDirectivesNode.initializer)) {
-    const variableName = hostDirectivesNode.initializer.text;
-    if (variableName.includes('ngxfw')) {
-      let type: FormworkComponentType | undefined;
-      const lower = variableName.toLowerCase();
-      if (lower.includes('block')) type = FormworkComponentType.Block;
-      else if (lower.includes('group')) type = FormworkComponentType.Group;
-      else if (lower.includes('control')) type = FormworkComponentType.Control;
-      if (type) {
-        return {
-          type,
-          filePath,
-          className,
-          // selector already resolved above
-          selector,
-          // Default assumption for variable-based host directive declaration
-          directiveInputs: ['content', 'name'],
-        };
-      }
-    }
-  }
-
-  // If no hostDirectives found, check for a variable assignment pattern
+  // If no hostDirectives found, check for a variable assignment pattern (fallback)
   if (!hostDirectivesNode) {
     return checkForHostDirectiveVariable(
       componentArgs,
@@ -213,13 +219,34 @@ function extractComponentInfo(
     );
   }
 
-  // Process the hostDirectives property
-  return processHostDirectives(
-    hostDirectivesNode,
+  if (!ts.isIdentifier(hostDirectivesNode.initializer)) {
+    return processHostDirectives(
+      hostDirectivesNode,
+      filePath,
+      className,
+      selector,
+    );
+  }
+
+  const variableNameLower = hostDirectivesNode.initializer.text.toLowerCase();
+
+  if (!variableNameLower.includes('ngxfw')) {
+    return;
+  }
+
+  const type = inferTypeFromToken(variableNameLower);
+
+  if (!type) {
+    return;
+  }
+
+  return {
+    type,
     filePath,
     className,
     selector,
-  );
+    directiveInputs: ['content', 'name'],
+  };
 }
 
 /**
@@ -232,35 +259,36 @@ function checkForHostDirectiveVariable(
   selector?: string,
 ): FormworkComponentInfo | undefined {
   for (const prop of componentArgs.properties) {
-    if (
-      ts.isPropertyAssignment(prop) &&
-      prop.name.getText() === 'hostDirectives'
-    ) {
-      if (ts.isIdentifier(prop.initializer)) {
-        const variableName = prop.initializer.text;
-        // If it contains ngxfwBlock, ngxfwGroup, or ngxfwControl, it's likely a directive we're looking for
-        if (variableName.includes('ngxfw')) {
-          let type: FormworkComponentType | undefined;
-          if (variableName.toLowerCase().includes('block')) {
-            type = FormworkComponentType.Block;
-          } else if (variableName.toLowerCase().includes('group')) {
-            type = FormworkComponentType.Group;
-          } else if (variableName.toLowerCase().includes('control')) {
-            type = FormworkComponentType.Control;
-          }
-
-          if (type) {
-            return {
-              type,
-              filePath,
-              className,
-              selector,
-              directiveInputs: ['content', 'name'], // Assuming default inputs based on the example
-            };
-          }
-        }
-      }
+    if (!ts.isPropertyAssignment(prop)) {
+      continue;
     }
+
+    const name = prop.name;
+    const isHostDirectives =
+      (ts.isIdentifier(name) && name.text === 'hostDirectives') ||
+      (ts.isStringLiteral(name) && name.text === 'hostDirectives');
+
+    if (!isHostDirectives || !ts.isIdentifier(prop.initializer)) {
+      continue;
+    }
+
+    const variableNameLower = prop.initializer.text.toLowerCase();
+    if (!variableNameLower.includes('ngxfw')) {
+      continue;
+    }
+
+    const type = inferTypeFromToken(variableNameLower);
+    if (!type) {
+      continue;
+    }
+
+    return {
+      type,
+      filePath,
+      className,
+      selector,
+      directiveInputs: ['content', 'name'],
+    };
   }
 
   return undefined;
@@ -278,14 +306,10 @@ function processHostDirectives(
   const directiveInputs: string[] = [];
   let type: FormworkComponentType | undefined;
 
-  // Handle identifier variable again (in case future refactors call directly)
   if (ts.isIdentifier(hostDirectivesNode.initializer)) {
-    const variableName = hostDirectivesNode.initializer.text;
-    if (variableName.includes('ngxfw')) {
-      const lower = variableName.toLowerCase();
-      if (lower.includes('block')) type = FormworkComponentType.Block;
-      else if (lower.includes('group')) type = FormworkComponentType.Group;
-      else if (lower.includes('control')) type = FormworkComponentType.Control;
+    const variableNameLower = hostDirectivesNode.initializer.text.toLowerCase();
+    if (variableNameLower.includes('ngxfw')) {
+      type = inferTypeFromToken(variableNameLower);
       if (type) {
         return {
           type,
@@ -298,17 +322,15 @@ function processHostDirectives(
     }
   }
 
-  // Handle array of host directives
   if (ts.isArrayLiteralExpression(hostDirectivesNode.initializer)) {
     for (const element of hostDirectivesNode.initializer.elements) {
       const result = extractDirectiveInfo(element);
       if (result) {
         type = result.type;
         directiveInputs.push(...result.inputs);
-        break; // Found a matching directive
+        break;
       }
     }
-    // Handle single host directive object
   } else if (ts.isObjectLiteralExpression(hostDirectivesNode.initializer)) {
     const result = extractDirectiveInfo(hostDirectivesNode.initializer);
     if (result) {
@@ -317,17 +339,17 @@ function processHostDirectives(
     }
   }
 
-  if (type) {
-    return {
-      type,
-      filePath,
-      className,
-      selector,
-      directiveInputs,
-    };
+  if (!type) {
+    return undefined;
   }
 
-  return undefined;
+  return {
+    type,
+    filePath,
+    className,
+    selector,
+    directiveInputs,
+  };
 }
 
 /**
@@ -344,19 +366,37 @@ function extractDirectiveInfo(
   let inputs: string[] = [];
 
   for (const prop of node.properties) {
-    if (ts.isPropertyAssignment(prop)) {
-      if (prop.name.getText() === 'directive') {
+    if (!ts.isPropertyAssignment(prop)) {
+      continue;
+    }
+
+    const name = prop.name;
+    const keyText = ts.isIdentifier(name)
+      ? name.text
+      : ts.isStringLiteral(name)
+        ? name.text
+        : undefined;
+
+    switch (keyText) {
+      case 'directive': {
         if (ts.isIdentifier(prop.initializer)) {
           directiveName = prop.initializer.text;
-        } else if (ts.isPropertyAccessExpression(prop.initializer)) {
+          break;
+        }
+
+        if (ts.isPropertyAccessExpression(prop.initializer)) {
           directiveName = prop.initializer.name.text;
         }
-      } else if (prop.name.getText() === 'inputs') {
-        if (ts.isArrayLiteralExpression(prop.initializer)) {
-          inputs = prop.initializer.elements
-            .filter(ts.isStringLiteral)
-            .map((element) => element.text);
+
+        break;
+      }
+      case 'inputs': {
+        if (!ts.isArrayLiteralExpression(prop.initializer)) {
+          break;
         }
+        inputs = prop.initializer.elements
+          .filter(ts.isStringLiteral)
+          .map((element) => element.text);
       }
     }
   }
@@ -365,12 +405,15 @@ function extractDirectiveInfo(
     return undefined;
   }
 
-  // Determine the type based on directive name
   if (directiveName.includes('NgxfwBlockDirective')) {
     return { type: FormworkComponentType.Block, inputs };
-  } else if (directiveName.includes('NgxfwGroupDirective')) {
+  }
+
+  if (directiveName.includes('NgxfwGroupDirective')) {
     return { type: FormworkComponentType.Group, inputs };
-  } else if (directiveName.includes('NgxfwControlDirective')) {
+  }
+
+  if (directiveName.includes('NgxfwControlDirective')) {
     return { type: FormworkComponentType.Control, inputs };
   }
 
