@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { vol } from 'memfs';
+import * as fs from 'fs';
 import { findComponents } from './component-discovery';
 import { FormworkComponentType } from './models/component-info.model';
 
@@ -161,14 +162,24 @@ describe('Component Discovery: findComponents', () => {
     expect(hits).toHaveLength(1);
   });
 
-  it('handles file read errors gracefully (EISDIR scenario)', () => {
+  it('handles file read errors gracefully (read error scenario)', () => {
     write({
-      'src/app/error.ts': null,
+      // A file that would otherwise match our globs
+      'src/app/error.ts': `
+        import { Component } from '@angular/core';
+        @Component({ selector: 'err', template: '', hostDirectives: [] })
+        export class ErrorCmp {}
+      `,
     });
 
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
+
+    const readSpy = vi.spyOn(fs, 'readFileSync').mockImplementation(() => {
+      throw new Error('mock read error');
+    });
+
     const res = findComponents('/project');
 
     expect(res).toHaveLength(0);
@@ -176,6 +187,8 @@ describe('Component Discovery: findComponents', () => {
       expect.stringContaining('Error processing file'),
       expect.any(Error),
     );
+
+    readSpy.mockRestore();
     consoleError.mockRestore();
   });
 });
