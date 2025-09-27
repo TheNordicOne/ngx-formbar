@@ -28,6 +28,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           test: {
             name: 'node',
             include: ['**/builders/**/*.spec.ts'],
+            setupFiles: ['src/node-test-setup.ts'],
             environment: 'node',
             globals: true,
           },
