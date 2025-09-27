@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as glob from 'glob';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import {
   FormworkComponentInfo,
   FormworkComponentType,
@@ -59,11 +59,11 @@ function getFilesMatchingPatterns(
   let allFiles: string[] = [];
 
   includePatterns.forEach((pattern) => {
-    // Use glob to find files matching the pattern
     const files = glob.sync(pattern, {
       cwd: basePath,
       absolute: true,
       ignore: excludePatterns,
+      fs: fs,
     });
 
     allFiles = [...allFiles, ...files];
