@@ -39,6 +39,7 @@ jobs:
 
       - name: Run tests
         run: |
-          npm run test
+          npm run test:component
+          npm run test:node
           npm run cypress:run
 
