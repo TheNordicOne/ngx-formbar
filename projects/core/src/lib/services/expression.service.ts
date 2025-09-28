@@ -453,9 +453,7 @@ export class ExpressionService {
         return objectValue[propertyValue as keyof typeof objectValue];
       }
 
-      throw new Error(
-        `Invalid property access on string: ${String(propertyValue)}`,
-      );
+      throw new Error(`Invalid property access on string: ${propertyValue}`);
     }
 
     if (typeof objectValue === 'number') {
@@ -565,7 +563,7 @@ export class ExpressionService {
         } else if (typeof argumentValue !== 'number') {
           throw new TypeError('Unary + operator requires a number or string');
         }
-        return +argumentValue;
+        return argumentValue;
 
       case '!':
         return !argumentValue;
