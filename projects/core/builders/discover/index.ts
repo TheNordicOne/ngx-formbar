@@ -22,11 +22,9 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
       context.logger.info('Starting component discovery...');
 
       try {
-        // Get workspace root path
         const workspaceRoot = getSystemPath(normalize(context.workspaceRoot));
         context.logger.info(`Workspace root: ${workspaceRoot}`);
 
-        // Set default values for options
         const include = options.include ?? ['**/*.ts'];
         const exclude = options.exclude ?? [
           '**/node_modules/**',
@@ -34,7 +32,6 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
         ];
         const outputPath = options.outputPath ?? 'formwork-components.json';
 
-        // Resolve output path relative to workspace root
         const resolvedOutputPath = path.resolve(workspaceRoot, outputPath);
 
         context.logger.info(
@@ -42,7 +39,6 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
         );
         context.logger.info(`Excluding: ${exclude.join(', ')}`);
 
-        // Find components matching the patterns
         const components: FormworkComponentInfo[] = findComponents(
           workspaceRoot,
           include,
@@ -53,8 +49,7 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
           `Discovered ${String(components.length)} Ngx Formwork components`,
         );
 
-        // Write the discovered components to the output file
-        writeComponentsToFile(components, resolvedOutputPath, workspaceRoot);
+        writeComponentsToFile(components, resolvedOutputPath);
 
         context.logger.info(
           `Component information saved to: ${resolvedOutputPath}`,
