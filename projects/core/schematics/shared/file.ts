@@ -21,3 +21,17 @@ export function getSourceFile(tree: Tree, path: string) {
   });
   return project.createSourceFile(path, text, { overwrite: true });
 }
+
+export function readFile(tree: Tree, path?: string): unknown | null {
+  if (!path) {
+    return null;
+  }
+  const buf = tree.read(path);
+  if (!buf) {
+    throw new SchematicsException(`Could not read ${path}`);
+  }
+
+  const text = buf.toString('utf-8');
+
+  return JSON.parse(text) as unknown;
+}

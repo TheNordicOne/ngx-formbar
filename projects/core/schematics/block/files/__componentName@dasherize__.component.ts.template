@@ -2,8 +2,8 @@ import { Component, Signal, inject } from '@angular/core';<% if (!hasViewProvide
 import { ControlContainer } from '@angular/forms';<% } %>
 import { NgxfwBlockDirective } from 'ngx-formwork';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
-import { controlContainerViewProviders } from '<%= helperImportPath %>/control-container.view-provider';<% } %><% if (hasHostDirectiveHelper) { %>
-import { ngxfwBlockHostDirective } from '<%= helperImportPath %>/block.host-directive';<% } %>
+import { controlContainerViewProviders } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
+import { ngxfwBlockHostDirective } from '<%= hostDirectiveHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',

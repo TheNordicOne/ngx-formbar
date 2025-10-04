@@ -5,5 +5,7 @@ export interface Schema {
   project?: string;
   interfaceSuffix: string;
   componentSuffix: string;
-  helperPath?: string;
+  viewProviderHelperPath?: string;
+  hostDirectiveHelperPath?: string;
+  configurationPath?: string;
 }
