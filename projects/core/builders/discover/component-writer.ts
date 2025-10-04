@@ -1,22 +1,20 @@
 import * as fs from 'node:fs';
 import * as path from 'path';
-import {
-  CodeBlockWriter,
-  Project,
-  QuoteKind,
-  ts,
-  VariableDeclarationKind,
-} from 'ts-morph';
+import { Project, QuoteKind, ts } from 'ts-morph';
 import { FormworkComponentInfo } from './models/component-info.model';
+import { register } from '../../automation/control-registration';
+import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
 
 /**
  * Writes discovered components to a TypeScript file that provides component registrations
  * @param components The discovered components to write
  * @param outputPath The path where to save the file
+ * @param automationConfig Optional automation configuration to customize registration behavior
  */
 export function writeComponentsToFile(
   components: FormworkComponentInfo[],
   outputPath: string,
+  automationConfig?: NgxFormworkAutomationConfig | null,
 ): void {
   const outputDir = path.dirname(outputPath);
   if (!fs.existsSync(outputDir)) {
@@ -34,49 +32,55 @@ export function writeComponentsToFile(
     },
   });
 
-  const sourceFile = project.createSourceFile(outputPath, '', {
+  const registrationType = automationConfig?.registrationType ?? 'token';
+
+  let initialContent = '';
+  switch ('token') {
+    case registrationType:
+      initialContent = `
+import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+
+export const componentRegistrationsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([])
+};
+`;
+      break;
+    default:
+      initialContent = `
+import { defineFormworkConfig } from 'ngx-formwork';
+
+export default defineFormworkConfig({
+  components: {}
+});
+`;
+      break;
+  }
+
+  // Create an initial source file with the basic provider structure
+  const sourceFile = project.createSourceFile(outputPath, initialContent, {
     overwrite: true,
   });
 
-  sourceFile.addImportDeclaration({
-    moduleSpecifier: 'ngx-formwork',
-    namedImports: ['NGX_FW_COMPONENT_REGISTRATIONS'],
-  });
-
+  // Register each component using the configured registration type
   components.forEach((component) => {
     const rawRelative = path.relative(outputDir, component.filePath);
     const noExt = rawRelative.replace(/\.ts$/, '');
-
     const posix = noExt.split(path.sep).join('/');
-
     const needsDotPrefix = !posix.startsWith('.') && !posix.startsWith('/');
     const moduleSpecifier = needsDotPrefix ? `./${posix}` : posix;
 
-    sourceFile.addImportDeclaration({
-      moduleSpecifier,
-      namedImports: [component.className],
-    });
-  });
-
-  const registrations = components.map((component) => {
+    // Determine the component key based on type (control, group, block) if available
+    const componentType = component.type.toLowerCase();
     const key =
-      component.selector?.split('-').slice(1).join('-') ??
-      component.type.toLowerCase();
+      component.selector?.split('-').slice(1).join('-') ?? componentType;
 
-    return `  ['${key}', ${component.className}]`;
-  });
-
-  sourceFile.addVariableStatement({
-    isExported: true,
-    declarationKind: VariableDeclarationKind.Const,
-    declarations: [
-      {
-        name: 'componentRegistrationsProvider',
-        initializer: (w) => {
-          writeProvider(w, registrations);
-        },
-      },
-    ],
+    register(sourceFile, {
+      key,
+      componentClassName: component.className,
+      componentImportPath: moduleSpecifier,
+      registrationType,
+    });
   });
 
   sourceFile.formatText({
@@ -84,30 +88,4 @@ export function writeComponentsToFile(
   });
 
   fs.writeFileSync(outputPath, sourceFile.getFullText(), 'utf8');
-}
-
-function writeProvider(w: CodeBlockWriter, regs: readonly string[]) {
-  w.write('{').newLine();
-  w.indent(() => {
-    w.writeLine('provide: NGX_FW_COMPONENT_REGISTRATIONS,');
-    w.write('useValue: new Map([').newLine();
-
-    if (regs.length === 0) {
-      w.write('])');
-      return;
-    }
-
-    w.indent(() => {
-      regs.forEach((entry, i) => {
-        w.write(entry);
-        if (i < regs.length - 1) {
-          w.write(',');
-        }
-        w.newLine();
-      });
-    });
-
-    w.write('])');
-  });
-  w.newLine().write('}');
 }

@@ -2,8 +2,8 @@ import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
 import { NgxfwControlDirective } from 'ngx-formwork';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
-import { controlContainerViewProviders } from '<%= helperImportPath %>/control-container.view-provider';<% } %><% if (hasHostDirectiveHelper) { %>
-import { ngxfwControlHostDirective } from '<%= helperImportPath %>/control.host-directive';<% } %>
+import { controlContainerViewProviders } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
+import { ngxfwControlHostDirective } from '<%= hostDirectiveHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
