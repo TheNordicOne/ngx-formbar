@@ -16,13 +16,20 @@ import {
   strings,
   workspaces,
 } from '@angular-devkit/core';
-import { registerComponentInConfig } from './ast';
+
 import { Schema } from './schema';
 import * as path from 'path';
 import {
   updateWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
+import { findConfigPath, readFile } from './file';
+import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
+import {
+  register,
+  RegistrationOptions,
+} from '../../automation/control-registration';
+import { getSourceFile } from '../../automation/ast';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function scaffoldAndRegister(
@@ -32,6 +39,12 @@ export function scaffoldAndRegister(
   return async (tree: Tree) => {
     const host = createHost(tree);
     const { workspace } = await workspaces.readWorkspace('/', host);
+
+    const automationConfig = readFile(
+      tree,
+      options.configurationPath,
+    ) as NgxFormworkAutomationConfig | null;
+    const schemaConfig = automationConfig ? automationConfig[type] : undefined;
 
     const projectName =
       (options.project ?? (workspace.extensions['defaultProject'] as string)) ||
@@ -49,29 +62,21 @@ export function scaffoldAndRegister(
       : `${project.root}/src/app`;
 
     const name = options.name ?? options.key;
-    const interfaceName = `${options.name ?? options.key}${options.interfaceSuffix}`;
+    const interfaceName = `${options.name ?? options.key}${schemaConfig?.interfaceSuffix ?? options.interfaceSuffix}`;
     const componentDir = `/${options.path ?? name}/${name}`;
 
-    const componentName = `${name}${options.componentSuffix}`;
+    const componentName = `${name}${schemaConfig?.componentSuffix ?? options.componentSuffix}`;
     const componentClassName = `${componentName}Component`;
     const componentFilePath = path.posix.join(
       componentDir,
       `${strings.dasherize(componentName)}.component`,
     );
 
-    const helperPath = options.helperPath ?? sourceRoot;
-
-    const hasViewProviderHelper = tree.exists(
-      path.join(helperPath, 'control-container.view-provider.ts'),
-    );
-    const hasHostDirectiveHelper = tree.exists(
-      path.join(helperPath, `${type}.host-directive.ts`),
-    );
-
-    const helperImportPath = buildRelativePath(
-      componentFilePath,
-      path.posix.isAbsolute(helperPath) ? helperPath : `/${helperPath}`,
-    );
+    const viewProviderHelperPath =
+      automationConfig?.viewProviderHelperPath ??
+      options.viewProviderHelperPath;
+    const hostDirectiveHelperPath =
+      schemaConfig?.hostDirectiveHelperPath ?? options.hostDirectiveHelperPath;
 
     const templateSource = apply(url('./files'), [
       applyTemplates({
@@ -80,21 +85,52 @@ export function scaffoldAndRegister(
         interfaceName,
         componentName,
         componentClassName,
-        hasViewProviderHelper,
-        hasHostDirectiveHelper,
-        helperImportPath,
+        hasViewProviderHelper: !!viewProviderHelperPath,
+        viewProviderHelperPath,
+        hasHostDirectiveHelper: !!hostDirectiveHelperPath,
+        hostDirectiveHelperPath,
         ...strings,
       }),
       move(normalize(strings.dasherize(componentDir))),
     ]);
 
-    registerComponentInConfig(
-      tree,
-      sourceRoot,
-      options.key,
+    // Register the component using the static API
+    const configPath =
+      automationConfig?.controlRegistrationsPath ??
+      findConfigPath(tree, sourceRoot);
+
+    if (!configPath) {
+      console.warn(
+        `No config file found under "${sourceRoot}". Skipping registration.`,
+      );
+      return chain([mergeWith(templateSource)]);
+    }
+
+    const registrationType = automationConfig?.registrationType ?? 'config';
+    const sourceFile = getSourceFile(tree, configPath);
+    const componentImportPath = buildRelativePath(
+      configPath,
       componentFilePath,
-      componentClassName,
     );
+
+    const registrationOptions: RegistrationOptions = {
+      key: options.key,
+      componentClassName: strings.classify(componentClassName),
+      componentImportPath,
+      registrationType,
+    };
+
+    const result = register(sourceFile, registrationOptions);
+
+    result.configFile.formatText({ indentSize: 2, convertTabsToSpaces: true });
+    tree.overwrite(configPath, result.configFile.getFullText());
+
+    if (result.additionalFiles?.length) {
+      result.additionalFiles.forEach((file) => {
+        file.formatText({ indentSize: 2, convertTabsToSpaces: true });
+        tree.overwrite(file.getFilePath(), file.getFullText());
+      });
+    }
 
     return chain([mergeWith(templateSource)]);
   };

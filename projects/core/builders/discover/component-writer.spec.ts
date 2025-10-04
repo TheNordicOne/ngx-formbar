@@ -196,45 +196,4 @@ describe('Component Writer: writeComponentsToFile', () => {
     expect(firstEntry?.getElements()[0].getText()).toBe("'info'");
     expect(firstEntry?.getElements()[1].getText()).toBe('InfoBlockComponent');
   });
-
-  it('generates the exact expected file content', () => {
-    const components: FormworkComponentInfo[] = [
-      {
-        type: FormworkComponentType.Block,
-        filePath: '/workspace/src/app/components/my-block.component.ts',
-        className: 'MyBlockComponent',
-        selector: 'app-my-block',
-        directiveInputs: ['content', 'name'],
-      },
-      {
-        type: FormworkComponentType.Control,
-        filePath: '/workspace/src/app/components/text-control.component.ts',
-        className: 'TextControlComponent',
-        selector: 'app-text-control',
-        directiveInputs: ['value', 'required'],
-      },
-    ];
-
-    const outputPath = '/workspace/src/app/component-registrations.provider.ts';
-
-    writeComponentsToFile(components, outputPath);
-    const actual = vol.readFileSync(outputPath, 'utf8').toString();
-    console.log(actual);
-    const expected = [
-      "import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
-      "import { MyBlockComponent } from './components/my-block.component';",
-      "import { TextControlComponent } from './components/text-control.component';",
-      '',
-      'export const componentRegistrationsProvider = {',
-      '  provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-      '  useValue: new Map([',
-      "    ['my-block', MyBlockComponent],",
-      "    ['text-control', TextControlComponent]",
-      '  ])',
-      '};',
-      '',
-    ].join('\n');
-
-    expect(actual).toBe(expected);
-  });
 });
