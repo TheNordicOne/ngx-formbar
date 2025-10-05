@@ -8,6 +8,9 @@ export default defineConfig({
     starlight({
       title: 'ngx-formwork',
       lastUpdated: true,
+      logo: {
+        src: './src/assets/icon.svg',
+      },
       social: [
         {
           icon: 'github',
