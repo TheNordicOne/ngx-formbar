@@ -10,40 +10,42 @@ import { RuleContext } from '../schema';
 import { normalize, strings } from '@angular-devkit/core';
 import { includeTemplates } from './include-templates.rule';
 
-export function createTokenRegistrationFiles(ruleContext: RuleContext): Rule {
-  return () => {
+export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
+  return (_, context) => {
     const {
       includeAsyncValidators,
       includeSyncValidators,
       useTokens,
-      registrationsPath,
       splitRegistrations,
+      registrationsPath,
     } = ruleContext;
 
-    if (!useTokens || !splitRegistrations || !registrationsPath) {
+    if (useTokens || !splitRegistrations || !registrationsPath) {
       return;
     }
 
+    context.logger.info('Creating registration configuration files');
+
     const templatesToInclude = [
-      normalize('token-registrations/component-registrations.ts.template'),
+      normalize('config-registrations/component-registrations.ts.template'),
     ];
 
     if (includeSyncValidators) {
       templatesToInclude.push(
-        normalize('token-registrations/validator-registrations.ts.template'),
+        normalize('config-registrations/validator-registrations.ts.template'),
       );
     }
 
     if (includeAsyncValidators) {
       templatesToInclude.push(
         normalize(
-          'token-registrations/async-validator-registrations.ts.template',
+          'config-registrations/async-validator-registrations.ts.template',
         ),
       );
     }
 
     return mergeWith(
-      apply(url('./files/token-registrations'), [
+      apply(url('./files/config-registrations'), [
         includeTemplates(templatesToInclude),
         applyTemplates({
           includeSyncValidators,

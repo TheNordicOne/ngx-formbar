@@ -13,12 +13,14 @@ import { RuleContext } from '../schema';
  * Optionally create helper files at specified helperPath
  */
 export function createHelperFiles(ruleContext: RuleContext): Rule {
-  return () => {
+  return (_, context) => {
     const { useHelper, helperPath } = ruleContext;
 
     if (!useHelper || !helperPath) {
       return;
     }
+
+    context.logger.info('Creating helper files');
 
     return mergeWith(
       apply(url('./files/helper'), [

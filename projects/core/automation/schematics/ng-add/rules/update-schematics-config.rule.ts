@@ -7,13 +7,15 @@ import { Schema } from '../../shared/schema';
  * Update angular.json for ngx-formwork schematics
  */
 export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
-  return () => {
+  return (_, context) => {
     const { useHelper, helperPath, projectName, useSchematicConfig } =
       ruleContext;
 
     if (!useSchematicConfig) {
       return;
     }
+
+    context.logger.info('Updating schematics configuration');
 
     const config: Partial<Schema> = {};
 

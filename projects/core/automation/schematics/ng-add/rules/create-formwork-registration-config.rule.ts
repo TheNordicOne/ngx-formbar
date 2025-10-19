@@ -12,7 +12,7 @@ import { normalize, strings } from '@angular-devkit/core';
 export function createFormworkRegistrationsConfig(
   ruleContext: RuleContext,
 ): Rule {
-  return () => {
+  return (_, context) => {
     const {
       useRegistrationConfig,
       includeAsyncValidators,
@@ -31,6 +31,8 @@ export function createFormworkRegistrationsConfig(
     ) {
       return;
     }
+
+    context.logger.info('Creating provider file');
 
     return mergeWith(
       apply(url('./files/provider-config'), [

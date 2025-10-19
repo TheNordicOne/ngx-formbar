@@ -109,7 +109,7 @@ export function findVariableWithObjectLiteral(
  * Recursively unwrap common wrappers until we hit an ObjectLiteralExpression.
  * Returns null when the expression never resolves to an object literal.
  */
-function unwrapToObjectLiteral(
+export function unwrapToObjectLiteral(
   expr: ts.Expression,
 ): ts.ObjectLiteralExpression | null {
   let current: ts.Expression | undefined = expr;
