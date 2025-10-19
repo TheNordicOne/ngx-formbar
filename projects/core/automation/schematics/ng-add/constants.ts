@@ -1,5 +1,5 @@
-export const PACKAGE_NAME = '^0.6.0';
-export const PACKAGE_VERSION = '^0.6.0';
+export const PACKAGE_NAME = 'ngx-formwork';
+export const PACKAGE_VERSION = '^0.8.0';
 
 export const DEFAULT_REGISTRATIONS_PATH = 'src/app/registrations';
 

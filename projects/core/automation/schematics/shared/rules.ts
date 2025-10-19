@@ -24,8 +24,6 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
 import { findConfigPath, readFile } from './file';
-
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { PACKAGE_NAME } from '../ng-add/constants';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import { getSourceFile } from '../../shared/ast';
@@ -110,10 +108,7 @@ export function scaffoldAndRegister(
 
     const registrationType = automationConfig?.registrationType ?? 'config';
     const sourceFile = getSourceFile(tree, configPath);
-    const componentImportPath = buildRelativePath(
-      configPath,
-      componentFilePath,
-    );
+    const componentImportPath = componentFilePath;
 
     const registrationOptions: RegistrationOptions = {
       key: options.key,

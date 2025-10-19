@@ -2,13 +2,12 @@ import { RuleContext } from '../schema';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
 import { ts } from 'ts-morph';
 import {
+  applyToUpdateRecorder,
   Change,
-  InsertChange,
   ReplaceChange,
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { CallExpression, createSourceFile } from 'typescript';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   addArguments,
   addUniqueArrayElement,
@@ -61,7 +60,9 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       throw new SchematicsException(`'providers' is not an array`);
     }
 
-    const providersArray = structuredClone(providersInit);
+    const providersArray = ts.factory.createArrayLiteralExpression([
+      ...providersInit.elements,
+    ]);
 
     const isProvideFormworkCall = (el: ts.Expression) =>
       ts.isCallExpression(el) &&
@@ -78,10 +79,7 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       [],
     );
 
-    const componentRegistrationsImportPath = buildRelativePath(
-      path,
-      registrationsPath ?? '',
-    );
+    const componentRegistrationsImportPath = registrationsPath ?? '';
 
     switch (registrationStyle) {
       case 'inline':
@@ -153,13 +151,9 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       providersArray,
     );
     changes.push(...providersChange);
-
     const recorder = tree.beginUpdate(path);
-    for (const change of changes) {
-      if (change instanceof InsertChange) {
-        recorder.insertLeft(change.pos, change.toAdd);
-      }
-    }
+    applyToUpdateRecorder(recorder, changes);
+
     tree.commitUpdate(recorder);
     context.logger.info('app.config.ts updated');
     return tree;
