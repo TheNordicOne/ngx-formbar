@@ -14,8 +14,8 @@
     "noImplicitThis": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "rootDir": "schematics",
-    "outDir": "../../dist/core/schematics",
+    "rootDir": "automation",
+    "outDir": "../../dist/core",
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -27,9 +27,9 @@
     ]
   },
   "include": [
-    "schematics/**/*"
+    "automation/**/*",
   ],
   "exclude": [
-    "schematics/*/files/**/*"
+    "automation/schematics/*/files/**/*"
   ]
 }

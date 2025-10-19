@@ -2,8 +2,8 @@ import * as fs from 'node:fs';
 import * as path from 'path';
 import { Project, QuoteKind, ts } from 'ts-morph';
 import { FormworkComponentInfo } from './models/component-info.model';
-import { register } from '../../automation/control-registration';
-import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
+import { register } from '../../shared/control-registration';
+import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 
 /**
  * Writes discovered components to a TypeScript file that provides component registrations

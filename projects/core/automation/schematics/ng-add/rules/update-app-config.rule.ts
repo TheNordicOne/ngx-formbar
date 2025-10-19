@@ -15,12 +15,12 @@ import {
   appendArrayElement,
   findVariableWithObjectLiteral,
   isObjectLiteralWithProperty,
-} from '../../../automation/ast';
+} from '../../../shared/ast';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
-  return (tree) => {
+  return (tree, context) => {
     const { projectRoot, registrationStyle, registrationsPath } = ruleContext;
-
+    context.logger.info('Updating app.config.ts');
     const path = `${projectRoot}/src/app/app.config.ts`;
     const buffer = tree.read(path);
 
@@ -161,7 +161,7 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       }
     }
     tree.commitUpdate(recorder);
-
+    context.logger.info('app.config.ts updated');
     return tree;
   };
 }

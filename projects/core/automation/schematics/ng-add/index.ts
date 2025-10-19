@@ -7,7 +7,6 @@ import {
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
 import { RuleContext, Schema } from './schema';
-import { addDependencies } from './rules/add-dependencies.rule';
 
 import { createHelperFiles } from './rules/create-helper-files.rule';
 import { updateAppConfig } from './rules/update-app-config.rule';
@@ -72,7 +71,6 @@ export function ngAdd(options: Schema): Rule {
     };
 
     return chain([
-      addDependencies(),
       createFormworkRegistrationsConfig(ruleContext),
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),
