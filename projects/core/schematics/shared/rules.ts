@@ -24,13 +24,15 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
 import { findConfigPath, readFile } from './file';
+
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { PACKAGE_NAME } from '../ng-add/constants';
 import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
+import { getSourceFile } from '../../automation/ast';
 import {
   register,
   RegistrationOptions,
 } from '../../automation/control-registration';
-import { getSourceFile } from '../../automation/ast';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -40,10 +42,10 @@ export function scaffoldAndRegister(
     const host = createHost(tree);
     const { workspace } = await workspaces.readWorkspace('/', host);
 
-    const automationConfig = readFile(
+    const automationConfig = readFile<NgxFormworkAutomationConfig | null>(
       tree,
       options.configurationPath,
-    ) as NgxFormworkAutomationConfig | null;
+    );
     const schemaConfig = automationConfig ? automationConfig[type] : undefined;
 
     const projectName =
@@ -163,7 +165,7 @@ export function updateSchematicConfig(
     const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
 
     // Grab and merge existing schematic config
-    const schematicKey = `ngx-formwork:${schematicName}`;
+    const schematicKey = `${PACKAGE_NAME}:${schematicName}`;
     const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
     schematicsExt[schematicKey] = {
       ...existingConfig,

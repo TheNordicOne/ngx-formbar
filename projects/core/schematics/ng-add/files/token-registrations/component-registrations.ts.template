@@ -1,0 +1,7 @@
+import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+
+export const componentRegistrationsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+  ])
+};

@@ -1,5 +1,4 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
-import { Project } from 'ts-morph';
 
 export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
   const candidates = [
@@ -9,20 +8,7 @@ export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
   return candidates.find((p) => tree.exists(p)) ?? null;
 }
 
-export function getSourceFile(tree: Tree, path: string) {
-  const buffer = tree.read(path);
-  if (!buffer) {
-    throw new SchematicsException(`File not found: ${path}`);
-  }
-  const text = buffer.toString('utf-8');
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    compilerOptions: { allowJs: true },
-  });
-  return project.createSourceFile(path, text, { overwrite: true });
-}
-
-export function readFile(tree: Tree, path?: string): unknown | null {
+export function readFile<T>(tree: Tree, path?: string): T | null {
   if (!path) {
     return null;
   }
@@ -33,5 +19,5 @@ export function readFile(tree: Tree, path?: string): unknown | null {
 
   const text = buf.toString('utf-8');
 
-  return JSON.parse(text) as unknown;
+  return JSON.parse(text) as T;
 }
