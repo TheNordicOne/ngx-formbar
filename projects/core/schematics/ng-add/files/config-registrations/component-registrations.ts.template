@@ -1,0 +1,4 @@
+import { ComponentRegistrationConfig } from 'ngx-formwork';
+
+export const componentRegistrations: ComponentRegistrationConfig = {
+};

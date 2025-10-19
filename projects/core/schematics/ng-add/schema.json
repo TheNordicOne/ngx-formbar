@@ -21,10 +21,15 @@
       "type": "string",
       "description": "Path to place helper files relative to project root"
     },
-    "config": {
+    "useConfig": {
       "type": "boolean",
-      "description": "Generate a formwork.config.ts file and wire provideFormwork(formworkConfig) instead of injection tokens",
-      "default": false
+      "description": "Generate a formwork.config.ts file and wire provideFormwork(formworkConfig)",
+      "default": true
+    },
+    "schematicsConfigPath": {
+      "type": "string",
+      "description": "Path where to save the configuration that is to be used by schematics and builders",
+      "default": "./formwork-schematics.config.json"
     },
     "includeSyncValidators": {
       "type": "boolean",
@@ -35,11 +40,7 @@
       "type": "boolean",
       "description": "Whether to include async validators setup via injection tokens or config",
       "default": true
-    ,
-      "configurationPath": {
-        "type": "string",
-        "description": "Path where to save the configuration that is to be used by schematics and builders",
-        "default": "./ngx-formwork.config.json"
-      }    }
+    },
+
   }
 }
