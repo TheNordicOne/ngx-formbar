@@ -7,7 +7,7 @@ import {
   SyntaxKind,
 } from 'ts-morph';
 import { findRegistrationsObject, upsertObjectLiteral } from './ast';
-import path from 'path';
+import * as path from 'path';
 
 /**
  * Register a component in the configuration file, based on the specified registration type.

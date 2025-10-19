@@ -27,12 +27,12 @@ import { findConfigPath, readFile } from './file';
 
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { PACKAGE_NAME } from '../ng-add/constants';
-import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
-import { getSourceFile } from '../../automation/ast';
+import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import { getSourceFile } from '../../shared/ast';
 import {
   register,
   RegistrationOptions,
-} from '../../automation/control-registration';
+} from '../../shared/control-registration';
 
 export function scaffoldAndRegister(
   options: Schema,

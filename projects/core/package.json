@@ -2,8 +2,8 @@
   "name": "ngx-formwork",
   "version": "0.8.0",
   "scripts": {
-    "build": "tsc -p tsconfig.schematics.json && tsc -p tsconfig.builders.json",
-    "postbuild": "copyfiles schematics/*/schema.json schematics/**/files/**/*.* schematics/**/files/*.* schematics/collection.json ../../dist/core/ builders/**/*.json ../../dist/core/"
+    "build": "tsc -p tsconfig.schematics.json",
+    "postbuild": "copyfiles --up 1 automation/schematics/*/schema.json automation/schematics/**/files/**/*.* automation/schematics/**/files/*.* automation/schematics/collection.json ../../dist/core/ automation/builders/**/*.json ../../dist/core/"
   },
   "builders": "builder.json",
   "peerDependencies": {

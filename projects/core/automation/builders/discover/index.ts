@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { findComponents } from './component-discovery';
 import { writeComponentsToFile } from './component-writer';
-import { NgxFormworkAutomationConfig } from '../../automation/shared-config.type';
+import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 
 interface DiscoverOptions {
   include: string[];
