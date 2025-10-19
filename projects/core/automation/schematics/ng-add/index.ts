@@ -20,10 +20,12 @@ import {
   DEFAULT_REGISTRATIONS_PATH,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
+  PACKAGE_VERSION,
 } from './constants';
 import { createFormworkRegistrationsConfig } from './rules/create-formwork-registration-config.rule';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
+import { addDependency } from '@schematics/angular/utility';
 
 export function ngAdd(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
@@ -71,6 +73,7 @@ export function ngAdd(options: Schema): Rule {
     };
 
     return chain([
+      addDependency('ngx-formwork', PACKAGE_VERSION),
       createFormworkRegistrationsConfig(ruleContext),
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),

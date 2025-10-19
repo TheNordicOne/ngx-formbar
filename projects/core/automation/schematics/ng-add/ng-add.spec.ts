@@ -13,7 +13,7 @@ import { normalize } from '@angular-devkit/core';
 
 const COLLECTION_PATH = join(
   __dirname,
-  '../../../../dist/core/schematics/collection.json',
+  '../../../../../dist/core/schematics/collection.json',
 );
 
 describe('ng-add schematic', () => {
