@@ -1,0 +1,4 @@
+import { ValidatorConfig, RegistrationRecord } from 'ngx-formwork';
+
+export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
+};

@@ -1,0 +1,4 @@
+import { AsyncValidatorConfig, RegistrationRecord } from 'ngx-formwork';
+
+export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
+};

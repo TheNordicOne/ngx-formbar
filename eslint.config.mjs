@@ -37,6 +37,7 @@ export default config(
     },
     processor: processInlineTemplates,
     rules: {
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@angular-eslint/directive-selector': [
         'error',
         {

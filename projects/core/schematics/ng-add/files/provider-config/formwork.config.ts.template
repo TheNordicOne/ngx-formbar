@@ -1,0 +1,12 @@
+import { defineFormworkConfig } from 'ngx-formwork';<%if (splitRegistrations){ %>
+import { componentRegistrations<%if (includeSyncValidators){ %>, validatorRegistrations<% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations<% } %> } from '<%= registrationsPath %>';<% } %>
+
+export const formworkConfig = defineFormworkConfig(<% if (!useTokens) { %>{
+<%if (splitRegistrations){ %>componentRegistrations<%if (includeSyncValidators){ %>, validatorRegistrations<% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations<% } %>
+<% } else { %>componentRegistrations: {
+  },<% if (includeSyncValidators) { %>
+  validatorRegistrations: {
+  },<% } %><% if (includeAsyncValidators) { %>
+  asyncValidatorRegistrations: {
+  },<% } %>
+<% } %>}<% } %>);
