@@ -47,29 +47,33 @@ export function ngAdd(options: Schema): Rule {
       );
     }
 
-    const projectRoot = project.root;
+    const projectRoot = project.sourceRoot ?? project.root;
 
     context.logger.info(
       `📦 Setting up ngx-formwork in project "${projectName}"...`,
     );
 
     options.registrationStyle ??= 'token';
-    options.registrationsPath ??= `${projectRoot}/${DEFAULT_REGISTRATIONS_PATH}`;
+    options.registrationsPath ??= DEFAULT_REGISTRATIONS_PATH;
 
     options.providerConfigPath ??= DEFAULT_PROVIDER_CONFIG_PATH;
     options.providerConfigFileName ??= DEFAULT_PROVIDER_CONFIG_FILE_NAME;
+    if (options.providerConfigFileName.endsWith('.ts')) {
+      options.providerConfigFileName =
+        options.providerConfigFileName.split('.ts')[0];
+    }
 
-    options.helperPath ??= `${projectRoot}/${DEFAULT_HELPER_PATH}`;
+    options.helperPath ??= DEFAULT_HELPER_PATH;
 
-    options.schematicsConfigPath ??= `${projectRoot}/${DEFAULT_SCHEMATICS_CONFIG_PATH}`;
+    options.schematicsConfigPath ??= DEFAULT_SCHEMATICS_CONFIG_PATH;
     options.schematicConfigFileName ??= DEFAULT_SCHEMATIC_CONFIG_FILE_NAME;
 
     const ruleContext: RuleContext = {
       ...options,
+      appConfigPath: `${projectRoot}/app/app.config.ts`,
       projectRoot,
       projectName,
-      useRegistrationConfig: options.registrationStyle !== 'inline',
-      useTokens: options.registrationStyle !== 'token',
+      useTokens: options.registrationStyle === 'token',
     };
 
     return chain([

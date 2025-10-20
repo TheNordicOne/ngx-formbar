@@ -1,0 +1,4 @@
+import { defineFormworkConfig } from 'ngx-formwork';
+
+export const formworkConfig = defineFormworkConfig({});
+
