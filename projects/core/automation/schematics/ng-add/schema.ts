@@ -1,6 +1,11 @@
+import { RegistrationType } from '../../shared/shared-config.type';
+
 export interface Schema {
   project?: string;
-  registrationStyle?: 'token' | 'inline' | 'file';
+  registrationStyle?: RegistrationType;
+  provideInline?: boolean;
+  providerConfigPath?: string;
+  providerConfigFileName?: string;
 
   includeSyncValidators?: boolean;
   includeAsyncValidators?: boolean;
@@ -11,9 +16,6 @@ export interface Schema {
   splitRegistrations?: boolean;
   registrationsPath?: string;
 
-  providerConfigPath?: string;
-  providerConfigFileName?: string;
-
   useSchematicConfig?: boolean;
   schematicsConfigPath?: string;
   schematicConfigFileName?: string;
@@ -21,7 +23,7 @@ export interface Schema {
 
 export interface RuleContext extends Schema {
   projectRoot: string;
+  appConfigPath: string;
   projectName: string;
-  useRegistrationConfig: boolean;
   useTokens: boolean;
 }

@@ -12,24 +12,25 @@
         "$source": "projectName"
       }
     },
-    "helper": {
-      "type": "boolean",
-      "description": "Whether to include helper files",
-      "default": true
-    },
-    "helperPath": {
+    "registrationStyle": {
       "type": "string",
-      "description": "Path to place helper files relative to project root"
+      "description": "How components and validators will be registered. Possible values: token, map",
+      "default": "token"
     },
-    "useConfig": {
+    "provideInline": {
       "type": "boolean",
-      "description": "Generate a formwork.config.ts file and wire provideFormwork(formworkConfig)",
-      "default": true
+      "description": "Put provideFormwork call directly in app.config.ts (defaults to false)",
+      "default": false
     },
-    "schematicsConfigPath": {
+    "providerConfigPath": {
       "type": "string",
-      "description": "Path where to save the configuration that is to be used by schematics and builders",
-      "default": "./formwork-schematics.config.json"
+      "description": "Where the provider file should be placed. Defaults to 'src/app'",
+      "default": "app"
+    },
+    "providerConfigFileName": {
+      "type": "string",
+      "description": "Name of the provider file. Defaults to 'formwork.config.ts'",
+      "default": "formwork.config.ts"
     },
     "includeSyncValidators": {
       "type": "boolean",
@@ -41,6 +42,40 @@
       "description": "Whether to include async validators setup via injection tokens or config",
       "default": true
     },
-
+    "useHelper": {
+      "type": "boolean",
+      "description": "Whether to include the helper files",
+      "default": true
+    },
+    "helperPath": {
+      "type": "string",
+      "description": "Where helper files should be placed. Defaults to 'src/app/shared/helper'",
+      "default": "app/shared/helper"
+    },
+    "splitRegistrations": {
+      "type": "boolean",
+      "description": "Whether to split the registrations into a separate file",
+      "default": true
+    },
+    "registrationsPath": {
+      "type": "string",
+      "description": "Where registration files should be placed. Defaults to 'src/app/registrations'",
+      "default": "app/registrations"
+    },
+    "useSchematicConfig": {
+      "type": "boolean",
+      "description": "Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in angular.json",
+      "default": true
+    },
+    "schematicsConfigPath": {
+      "type": "string",
+      "description": "Where the schematics config should be placed. Defaults to 'src/app'",
+      "default": "app"
+    },
+    "schematicConfigFileName": {
+      "type": "string",
+      "description": "Name of the schematic config file. Defaults to 'formwork.config.json'",
+      "default": "formwork.config.json"
+    }
   }
 }

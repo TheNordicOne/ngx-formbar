@@ -192,39 +192,3 @@ export function isObjectLiteralWithProperty(
     (prop) => nameOfProperty(prop.name) === propertyName,
   );
 }
-
-export function addArguments(
-  call: ts.CallExpression,
-  extra: readonly ts.Expression[],
-) {
-  return ts.factory.updateCallExpression(
-    call,
-    call.expression,
-    call.typeArguments,
-    [...call.arguments, ...extra],
-  );
-}
-
-export function appendArrayElement(
-  arr: ts.ArrayLiteralExpression,
-  el: ts.Expression,
-): ts.ArrayLiteralExpression {
-  return ts.factory.updateArrayLiteralExpression(arr, [...arr.elements, el]);
-}
-
-export function addUniqueArrayElement(
-  arr: ts.ArrayLiteralExpression,
-  el: ts.Expression,
-  same: (a: ts.Expression) => boolean,
-): ts.ArrayLiteralExpression {
-  const elements = [...arr.elements];
-  const firstIdx = elements.findIndex(same);
-
-  if (firstIdx === -1) {
-    return ts.factory.updateArrayLiteralExpression(arr, [...elements, el]);
-  }
-
-  const filtered = elements.filter((e) => !same(e));
-  filtered.splice(firstIdx, 0, el);
-  return ts.factory.updateArrayLiteralExpression(arr, filtered);
-}

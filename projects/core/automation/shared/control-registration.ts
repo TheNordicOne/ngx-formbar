@@ -8,6 +8,7 @@ import {
 } from 'ts-morph';
 import { findRegistrationsObject, upsertObjectLiteral } from './ast';
 import * as path from 'path';
+import { RegistrationType } from './shared-config.type';
 
 /**
  * Register a component in the configuration file, based on the specified registration type.
@@ -23,7 +24,7 @@ export function register(
   switch (options.registrationType) {
     case 'token':
       return registerAsToken(sourceFile, options);
-    case 'config':
+    case 'map':
     default:
       return registerAsConfig(sourceFile, options);
   }
@@ -363,7 +364,7 @@ export interface RegistrationOptions {
   /** The import path to the component (relative to the config file) */
   componentImportPath: string;
   /** Registration type: 'config' or 'token' */
-  registrationType?: 'token' | 'config';
+  registrationType?: RegistrationType;
   /** The token name to use (e.g., 'NGX_FW_COMPONENT_REGISTRATIONS') */
   tokenName?: string;
   /** The import path for the token */

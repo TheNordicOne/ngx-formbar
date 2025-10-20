@@ -106,7 +106,7 @@ export function scaffoldAndRegister(
       return chain([mergeWith(templateSource)]);
     }
 
-    const registrationType = automationConfig?.registrationType ?? 'config';
+    const registrationType = automationConfig?.registrationType ?? 'map';
     const sourceFile = getSourceFile(tree, configPath);
     const componentImportPath = componentFilePath;
 

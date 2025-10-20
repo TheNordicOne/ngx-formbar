@@ -1,42 +1,63 @@
 import { RuleContext } from '../schema';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
-import { ts } from 'ts-morph';
+
 import {
   applyToUpdateRecorder,
   Change,
-  ReplaceChange,
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
-import { CallExpression, createSourceFile } from 'typescript';
 import {
-  addArguments,
-  addUniqueArrayElement,
-  appendArrayElement,
   findVariableWithObjectLiteral,
   isObjectLiteralWithProperty,
 } from '../../../shared/ast';
 
+import {
+  createSourceFile,
+  isArrayLiteralExpression,
+  isIdentifier,
+  isPropertyAssignment,
+  PropertyAssignment,
+  ScriptTarget,
+} from 'typescript';
+import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
+
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { projectRoot, registrationStyle, registrationsPath } = ruleContext;
-    context.logger.info('Updating app.config.ts');
-    const path = `${projectRoot}/src/app/app.config.ts`;
-    const buffer = tree.read(path);
+    const {
+      projectRoot,
+      registrationStyle,
+      registrationsPath,
+      provideInline,
+      appConfigPath,
+      providerConfigPath,
+      providerConfigFileName,
+    } = ruleContext;
 
+    context.logger.info('Updating app.config.ts');
+
+    const buffer = tree.read(appConfigPath);
     if (!buffer) {
-      throw new SchematicsException(`Missing file or unreadable: ${path}`);
+      throw new SchematicsException(
+        `Missing file or unreadable: ${appConfigPath}`,
+      );
     }
 
     const content = buffer.toString('utf-8');
     const sourceFile = createSourceFile(
-      path,
+      appConfigPath,
       content,
-      ts.ScriptTarget.Latest,
+      ScriptTarget.Latest,
       true,
     );
 
     const changes: Change[] = [
-      insertImport(sourceFile, path, 'provideFormwork', 'ngx-formwork', false),
+      insertImport(
+        sourceFile,
+        appConfigPath,
+        'provideFormwork',
+        'ngx-formwork',
+        false,
+      ),
     ];
 
     const appConfig = findVariableWithObjectLiteral(sourceFile, (variable) =>
@@ -45,133 +66,53 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
 
     const providersProp = appConfig?.properties.find(
       (prop) =>
-        ts.isPropertyAssignment(prop) &&
-        ts.isIdentifier(prop.name) &&
+        isPropertyAssignment(prop) &&
+        isIdentifier(prop.name) &&
         prop.name.text === 'providers',
-    ) as ts.PropertyAssignment | undefined;
+    ) as PropertyAssignment | undefined;
 
     const providersInit = providersProp?.initializer;
-
     if (!providersInit) {
       throw new SchematicsException(`'providers' array not found in appConfig`);
     }
-
-    if (!ts.isArrayLiteralExpression(providersInit)) {
+    if (!isArrayLiteralExpression(providersInit)) {
       throw new SchematicsException(`'providers' is not an array`);
     }
 
-    const providersArray = ts.factory.createArrayLiteralExpression([
-      ...providersInit.elements,
-    ]);
+    context.logger.info(`providerConfigPath=${providerConfigPath ?? ''}`);
 
-    const isProvideFormworkCall = (el: ts.Expression) =>
-      ts.isCallExpression(el) &&
-      ts.isIdentifier(el.expression) &&
-      el.expression.text === 'provideFormwork';
+    const { updatedProvidersArray, extraChanges, didChange } =
+      buildProvidersUpdate({
+        projectRoot,
+        sourceFile,
+        appConfigPath,
+        fileText: content,
+        providersArray: providersInit,
+        registrationStyle,
+        registrationsPath,
+        providerConfigPath: `${providerConfigPath ?? ''}/${providerConfigFileName ?? ''}`,
+        provideInline,
+      });
 
-    let provideFormworkExpression = providersArray.elements.find(
-      isProvideFormworkCall,
-    ) as CallExpression | undefined;
+    changes.push(...extraChanges);
 
-    provideFormworkExpression ??= ts.factory.createCallExpression(
-      ts.factory.createIdentifier('provideFormwork'),
-      undefined,
-      [],
-    );
-
-    const componentRegistrationsImportPath = registrationsPath ?? '';
-
-    switch (registrationStyle) {
-      case 'inline':
-        provideFormworkExpression = addArguments(provideFormworkExpression, [
-          ts.factory.createObjectLiteralExpression([
-            ts.factory.createPropertyAssignment(
-              'componentRegistrations',
-              ts.factory.createObjectLiteralExpression([]),
-            ),
-          ]),
-        ]);
-        addUniqueArrayElement(
-          providersArray,
-          provideFormworkExpression,
-          isProvideFormworkCall,
-        );
-        break;
-      case 'file':
-        changes.push(
-          insertImport(
-            sourceFile,
-            path,
-            'componentRegistrations',
-            componentRegistrationsImportPath,
-            false,
-          ),
-        );
-        provideFormworkExpression = addArguments(provideFormworkExpression, [
-          ts.factory.createObjectLiteralExpression([
-            ts.factory.createShorthandPropertyAssignment(
-              'componentRegistrations',
-            ),
-          ]),
-        ]);
-        addUniqueArrayElement(
-          providersArray,
-          provideFormworkExpression,
-          isProvideFormworkCall,
-        );
-        break;
-
-      default:
-        changes.push(
-          insertImport(
-            sourceFile,
-            path,
-            'componentRegistrationsProvider',
-            componentRegistrationsImportPath,
-            false,
-          ),
-        );
-
-        addUniqueArrayElement(
-          providersArray,
-          provideFormworkExpression,
-          isProvideFormworkCall,
-        );
-        appendArrayElement(
-          providersArray,
-          ts.factory.createIdentifier('componentRegistrationsProvider'),
-        );
+    if (didChange) {
+      changes.push(
+        ...replaceNodeWithPrinted(
+          sourceFile,
+          appConfigPath,
+          content,
+          providersInit,
+          updatedProvidersArray,
+        ),
+      );
     }
 
-    const providersChange = replaceNodeWithPrinted(
-      sourceFile,
-      path,
-      content,
-      providersInit,
-      providersArray,
-    );
-    changes.push(...providersChange);
-    const recorder = tree.beginUpdate(path);
+    const recorder = tree.beginUpdate(appConfigPath);
     applyToUpdateRecorder(recorder, changes);
-
     tree.commitUpdate(recorder);
+
     context.logger.info('app.config.ts updated');
     return tree;
   };
-}
-
-function replaceNodeWithPrinted(
-  sf: ts.SourceFile,
-  filePath: string,
-  fileText: string,
-  original: ts.Node,
-  replacement: ts.Node,
-): Change[] {
-  const printer = ts.createPrinter({});
-  const printed = printer.printNode(ts.EmitHint.Unspecified, replacement, sf);
-  const start = original.getStart(sf);
-  const end = original.getEnd();
-  return [
-    new ReplaceChange(filePath, start, fileText.slice(start, end), printed),
-  ];
 }

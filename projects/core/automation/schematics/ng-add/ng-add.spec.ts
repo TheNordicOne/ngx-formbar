@@ -10,6 +10,12 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import { normalize } from '@angular-devkit/core';
+import {
+  DEFAULT_HELPER_PATH,
+  DEFAULT_PROVIDER_CONFIG_FILE_NAME,
+  DEFAULT_PROVIDER_CONFIG_PATH,
+  DEFAULT_REGISTRATIONS_PATH,
+} from './constants';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -50,20 +56,22 @@ describe('ng-add schematic', () => {
 
   it('should generate token provider files by default', async () => {
     const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
+    const projectRoot = '/projects/test-app';
+    const registrationsPath = `${projectRoot}/${DEFAULT_REGISTRATIONS_PATH}`;
 
     expect(tree.files).toContain(
-      '/projects/test-app/src/app/component-registrations.provider.ts',
+      `${registrationsPath}/component-registrations.provider.ts`,
     );
     expect(tree.files).toContain(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
 
     expect(tree.files).not.toContain(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${projectRoot}/${DEFAULT_PROVIDER_CONFIG_PATH}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
 
     const compProv = tree.readContent(
-      '/projects/test-app/src/app/component-registrations.provider.ts',
+      `${registrationsPath}/component-registrations.provider.ts`,
     );
     expect(compProv).toContain(
       "import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork'",
@@ -71,7 +79,7 @@ describe('ng-add schematic', () => {
     expect(compProv).toContain('useValue: new Map([');
 
     const valProv = tree.readContent(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
     expect(valProv).toContain(
       "import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork'",
@@ -84,9 +92,10 @@ describe('ng-add schematic', () => {
 
   it('should update app.config.ts for token-based setup (default)', async () => {
     const tree = await runner.runSchematic('ng-add', baseOptions, appTree);
+    const projectRoot = '/projects/test-app';
 
     expect(tree.files).not.toContain(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${projectRoot}/${DEFAULT_PROVIDER_CONFIG_PATH}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
 
     const content = tree.readContent(
@@ -97,10 +106,10 @@ describe('ng-add schematic', () => {
     expect(content).toContain("import { provideFormwork } from 'ngx-formwork'");
 
     expect(content).toContain(
-      "import { componentRegistrationsProvider } from './component-registrations.provider'",
+      `import { componentRegistrationsProvider } from '${DEFAULT_REGISTRATIONS_PATH}/component-registrations.provider'`,
     );
     expect(content).toContain(
-      "import { validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from './validator-registrations.provider'",
+      `import { validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from '${DEFAULT_REGISTRATIONS_PATH}/validator-registrations.provider'`,
     );
 
     const pfwIdx = content.indexOf('provideFormwork()');
@@ -110,12 +119,12 @@ describe('ng-add schematic', () => {
   });
 
   it('should generate helper files and configure schematic helperPath in angular.json', async () => {
-    const helperPath = 'projects/test-app/src/app/shared/helper';
+    const helperPath = `projects/test-app/${DEFAULT_HELPER_PATH}`;
     const absoluteHelperPath = `/${helperPath}`;
-    const options = { ...baseOptions, helper: true };
+    const options = { ...baseOptions, useHelper: true };
+
     const tree = await runner.runSchematic('ng-add', options, appTree);
 
-    console.dir(tree.files);
     expect(tree.files).toContain(
       normalize(absoluteHelperPath + '/block.host-directive.ts'),
     );
@@ -144,26 +153,30 @@ describe('ng-add schematic', () => {
     expect(schematicsConfig['ngx-formwork:block'].helperPath).toBe(helperPath);
   });
 
-  it('should generate formwork.config.ts and wire provideFormwork(formworkConfig) when --config is set', async () => {
+  it('should generate formwork.config.ts and wire provideFormwork(formworkConfig) when registrationStyle is file', async () => {
+    const projectRoot = '/projects/test-app';
+    const providerConfigPath = `${projectRoot}/${DEFAULT_PROVIDER_CONFIG_PATH}`;
+
     const tree = await runner.runSchematic(
       'ng-add',
-      { ...baseOptions, config: true },
+      { ...baseOptions, registrationStyle: 'file' },
       appTree,
     );
 
     expect(tree.files).toContain(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
 
+    const registrationsPath = `${projectRoot}/${DEFAULT_REGISTRATIONS_PATH}`;
     expect(tree.files).not.toContain(
-      '/projects/test-app/src/app/component-registrations.provider.ts',
+      `${registrationsPath}/component-registrations.provider.ts`,
     );
     expect(tree.files).not.toContain(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
 
     const configContent = tree.readContent(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
     expect(configContent).toContain('import { defineFormworkConfig } from');
     expect(configContent).toContain(
@@ -175,11 +188,14 @@ describe('ng-add schematic', () => {
     );
     expect(appConfig).toContain('provideFormwork(formworkConfig)');
     expect(appConfig).toContain(
-      "import { formworkConfig } from './formwork.config'",
+      `import { formworkConfig } from './${DEFAULT_PROVIDER_CONFIG_FILE_NAME.replace('.ts', '')}'`,
     );
   });
 
   it('respects includeSyncValidators/includeAsyncValidators for token setup', async () => {
+    const projectRoot = '/projects/test-app';
+    const registrationsPath = `${projectRoot}/${DEFAULT_REGISTRATIONS_PATH}`;
+
     const treeAsyncOnly = await runner.runSchematic(
       'ng-add',
       {
@@ -191,10 +207,10 @@ describe('ng-add schematic', () => {
     );
 
     expect(treeAsyncOnly.files).toContain(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
     const asyncOnlyContent = treeAsyncOnly.readContent(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
     expect(asyncOnlyContent).toContain(
       "import { NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork'",
@@ -211,7 +227,7 @@ describe('ng-add schematic', () => {
       '/projects/test-app/src/app/app.config.ts',
     );
     expect(appConfigAsyncOnly).toContain(
-      "import { asyncValidatorRegistrationsProvider } from './validator-registrations.provider'",
+      `import { asyncValidatorRegistrationsProvider } from '${DEFAULT_REGISTRATIONS_PATH}/validator-registrations.provider'`,
     );
     expect(appConfigAsyncOnly).not.toContain('validatorRegistrationsProvider');
 
@@ -226,7 +242,7 @@ describe('ng-add schematic', () => {
     );
 
     const syncOnlyContent = treeSyncOnly.readContent(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
     expect(syncOnlyContent).toContain(
       "import { NGX_FW_VALIDATOR_REGISTRATIONS } from 'ngx-formwork'",
@@ -245,7 +261,7 @@ describe('ng-add schematic', () => {
       '/projects/test-app/src/app/app.config.ts',
     );
     expect(appConfigSyncOnly).toContain(
-      "import { validatorRegistrationsProvider } from './validator-registrations.provider'",
+      `import { validatorRegistrationsProvider } from '${DEFAULT_REGISTRATIONS_PATH}/validator-registrations.provider'`,
     );
     expect(appConfigSyncOnly).not.toContain(
       'asyncValidatorRegistrationsProvider',
@@ -262,7 +278,7 @@ describe('ng-add schematic', () => {
     );
 
     expect(treeNoValidators.files).not.toContain(
-      '/projects/test-app/src/app/validator-registrations.provider.ts',
+      `${registrationsPath}/validator-registrations.provider.ts`,
     );
     const appConfigNoVal = treeNoValidators.readContent(
       '/projects/test-app/src/app/app.config.ts',
@@ -271,14 +287,17 @@ describe('ng-add schematic', () => {
     expect(appConfigNoVal).not.toContain('asyncValidatorRegistrationsProvider');
   });
 
-  it('respects includeSyncValidators/includeAsyncValidators for config setup', async () => {
+  it('respects includeSyncValidators/includeAsyncValidators for file-based registration setup', async () => {
+    const projectRoot = '/projects/test-app';
+    const providerConfigPath = `${projectRoot}/${DEFAULT_PROVIDER_CONFIG_PATH}`;
+
     const treeDefault = await runner.runSchematic(
       'ng-add',
-      { ...baseOptions, config: true },
+      { ...baseOptions, registrationStyle: 'file' },
       appTree,
     );
     const cfgDefault = treeDefault.readContent(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
     expect(cfgDefault).toContain('componentRegistrations');
     expect(cfgDefault).toContain('validatorRegistrations');
@@ -288,14 +307,14 @@ describe('ng-add schematic', () => {
       'ng-add',
       {
         ...baseOptions,
-        config: true,
+        registrationStyle: 'file',
         includeSyncValidators: true,
         includeAsyncValidators: false,
       },
       appTree,
     );
     const cfgSyncOnly = treeSyncOnly.readContent(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
     expect(cfgSyncOnly).toContain('validatorRegistrations');
     expect(cfgSyncOnly).not.toContain('asyncValidatorRegistrations');
@@ -304,14 +323,14 @@ describe('ng-add schematic', () => {
       'ng-add',
       {
         ...baseOptions,
-        config: true,
+        registrationStyle: 'file',
         includeSyncValidators: false,
         includeAsyncValidators: true,
       },
       appTree,
     );
     const cfgAsyncOnly = treeAsyncOnly.readContent(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
     expect(cfgAsyncOnly).not.toContain('validatorRegistrations');
     expect(cfgAsyncOnly).toContain('asyncValidatorRegistrations');
@@ -320,17 +339,49 @@ describe('ng-add schematic', () => {
       'ng-add',
       {
         ...baseOptions,
-        config: true,
+        registrationStyle: 'file',
         includeSyncValidators: false,
         includeAsyncValidators: false,
       },
       appTree,
     );
     const cfgNone = treeNone.readContent(
-      '/projects/test-app/src/app/formwork.config.ts',
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
     );
     expect(cfgNone).toContain('componentRegistrations');
     expect(cfgNone).not.toContain('validatorRegistrations');
     expect(cfgNone).not.toContain('asyncValidatorRegistrations');
+  });
+
+  it('should generate an inline setup when registrationStyle is inline', async () => {
+    const tree = await runner.runSchematic(
+      'ng-add',
+      { ...baseOptions, registrationStyle: 'inline' },
+      appTree,
+    );
+
+    const projectRoot = '/projects/test-app';
+    const registrationsPath = `${projectRoot}/${DEFAULT_REGISTRATIONS_PATH}`;
+    const providerConfigPath = `${projectRoot}/${DEFAULT_PROVIDER_CONFIG_PATH}`;
+
+    // No token files or config file should be created
+    expect(tree.files).not.toContain(
+      `${registrationsPath}/component-registrations.provider.ts`,
+    );
+    expect(tree.files).not.toContain(
+      `${registrationsPath}/validator-registrations.provider.ts`,
+    );
+    expect(tree.files).not.toContain(
+      `${providerConfigPath}/${DEFAULT_PROVIDER_CONFIG_FILE_NAME}`,
+    );
+
+    // App config should have inline registrations
+    const appConfig = tree.readContent(
+      '/projects/test-app/src/app/app.config.ts',
+    );
+    expect(appConfig).toContain('provideFormwork({');
+    expect(appConfig).toContain('componentRegistrations: new Map([');
+    expect(appConfig).toContain('validatorRegistrations: new Map([');
+    expect(appConfig).toContain('asyncValidatorRegistrations: new Map([');
   });
 });

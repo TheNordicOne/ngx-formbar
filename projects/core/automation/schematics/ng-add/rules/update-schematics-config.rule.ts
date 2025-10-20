@@ -11,7 +11,7 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
     const { useHelper, helperPath, projectName, useSchematicConfig } =
       ruleContext;
 
-    if (!useSchematicConfig) {
+    if (useSchematicConfig) {
       return;
     }
 

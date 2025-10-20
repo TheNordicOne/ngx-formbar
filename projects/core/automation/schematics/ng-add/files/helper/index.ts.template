@@ -1,4 +1,4 @@
-export { ngxfwBlockHostDirective } from './block.host-directive.ts';
-export { ngxfwControlHostDirective } from './control.host-directive.ts';
-export { controlContainerViewProviders } from './control-container.view-provider.ts';
-export { ngxfwGroupHostDirective } from './group.host-directive.ts';
+export { ngxfwBlockHostDirective } from './block.host-directive';
+export { ngxfwControlHostDirective } from './control.host-directive';
+export { controlContainerViewProviders } from './control-container.view-provider';
+export { ngxfwGroupHostDirective } from './group.host-directive';
