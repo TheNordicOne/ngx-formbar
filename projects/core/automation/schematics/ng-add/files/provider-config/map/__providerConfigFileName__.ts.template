@@ -1,0 +1,9 @@
+import { defineFormworkConfig } from 'ngx-formwork';
+import { componentRegistrations<%if (includeSyncValidators){ %>, validatorRegistrations<% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations<% } %> } from '<%= registrationsPath %>';
+
+export const formworkConfig = defineFormworkConfig({
+componentRegistrations,<%if (includeSyncValidators){ %>, validatorRegistrations
+<% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations
+<% } %>
+});
+

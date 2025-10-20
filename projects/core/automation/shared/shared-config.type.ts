@@ -1,4 +1,4 @@
-export type RegistrationType = 'token' | 'config';
+export type RegistrationType = 'token' | 'map';
 
 export interface BaseGenerateSchematicConfig {
   interfaceSuffix?: string;
@@ -12,7 +12,7 @@ export interface DiscoveryConfig {
 }
 
 export interface NgxFormworkAutomationConfig {
-  registrationType: RegistrationType;
+  registrationType?: RegistrationType;
   controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;
   discovery?: DiscoveryConfig;

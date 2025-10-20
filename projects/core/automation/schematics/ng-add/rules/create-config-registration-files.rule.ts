@@ -18,6 +18,7 @@ export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
       useTokens,
       splitRegistrations,
       registrationsPath,
+      projectRoot,
     } = ruleContext;
 
     if (useTokens || !splitRegistrations || !registrationsPath) {
@@ -27,20 +28,19 @@ export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
     context.logger.info('Creating registration configuration files');
 
     const templatesToInclude = [
-      normalize('config-registrations/component-registrations.ts.template'),
+      normalize('/index.ts.template'),
+      normalize('/component-registrations.ts.template'),
     ];
 
     if (includeSyncValidators) {
       templatesToInclude.push(
-        normalize('config-registrations/validator-registrations.ts.template'),
+        normalize('/validator-registrations.ts.template'),
       );
     }
 
     if (includeAsyncValidators) {
       templatesToInclude.push(
-        normalize(
-          'config-registrations/async-validator-registrations.ts.template',
-        ),
+        normalize('/async-validator-registrations.ts.template'),
       );
     }
 
@@ -52,7 +52,7 @@ export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
           includeAsyncValidators,
           ...strings,
         }),
-        move(normalize(registrationsPath)),
+        move(normalize(`${projectRoot}/${registrationsPath}`)),
       ]),
     );
   };

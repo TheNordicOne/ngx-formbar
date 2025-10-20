@@ -14,7 +14,7 @@ import { RuleContext } from '../schema';
  */
 export function createHelperFiles(ruleContext: RuleContext): Rule {
   return (_, context) => {
-    const { useHelper, helperPath } = ruleContext;
+    const { useHelper, helperPath, projectRoot } = ruleContext;
 
     if (!useHelper || !helperPath) {
       return;
@@ -25,7 +25,7 @@ export function createHelperFiles(ruleContext: RuleContext): Rule {
     return mergeWith(
       apply(url('./files/helper'), [
         applyTemplates({}),
-        move(normalize(helperPath)),
+        move(normalize(`${projectRoot}/${helperPath}`)),
       ]),
     );
   };

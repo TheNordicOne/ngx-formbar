@@ -14,7 +14,6 @@ export function createFormworkRegistrationsConfig(
 ): Rule {
   return (_, context) => {
     const {
-      useRegistrationConfig,
       includeAsyncValidators,
       includeSyncValidators,
       providerConfigPath,
@@ -22,30 +21,35 @@ export function createFormworkRegistrationsConfig(
       useTokens,
       splitRegistrations,
       registrationsPath,
+      provideInline,
+      projectRoot,
     } = ruleContext;
 
-    if (
-      !useRegistrationConfig ||
-      !providerConfigPath ||
-      !providerConfigFileName
-    ) {
+    if (provideInline || !providerConfigPath || !providerConfigFileName) {
       return;
     }
 
     context.logger.info('Creating provider file');
 
+    const template = useTokens
+      ? 'token'
+      : splitRegistrations
+        ? 'map'
+        : 'inline';
+
     return mergeWith(
-      apply(url('./files/provider-config'), [
+      apply(url(`./files/provider-config/${template}`), [
         applyTemplates({
           includeSyncValidators,
           includeAsyncValidators,
           useTokens,
-          useConfig: useRegistrationConfig,
+          useConfig: provideInline,
           splitRegistrations,
           registrationsPath,
+          providerConfigFileName,
           ...strings,
         }),
-        move(normalize(`${providerConfigPath}/${providerConfigFileName}`)),
+        move(normalize(`${projectRoot}/${providerConfigPath}`)),
       ]),
     );
   };
