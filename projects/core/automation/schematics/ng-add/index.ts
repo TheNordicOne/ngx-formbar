@@ -26,6 +26,7 @@ import { createFormworkRegistrationsConfig } from './rules/create-formwork-regis
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { addDependency } from '@schematics/angular/utility';
+import { createSchematicsConfig } from './rules/create-schematics-config.rule';
 
 export function ngAdd(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
@@ -67,6 +68,10 @@ export function ngAdd(options: Schema): Rule {
 
     options.schematicsConfigPath ??= DEFAULT_SCHEMATICS_CONFIG_PATH;
     options.schematicConfigFileName ??= DEFAULT_SCHEMATIC_CONFIG_FILE_NAME;
+    if (options.schematicConfigFileName.endsWith('json')) {
+      options.schematicConfigFileName =
+        options.schematicConfigFileName.split('.json')[0];
+    }
 
     const ruleContext: RuleContext = {
       ...options,
@@ -82,6 +87,7 @@ export function ngAdd(options: Schema): Rule {
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),
       createHelperFiles(ruleContext),
+      createSchematicsConfig(ruleContext),
       updateSchematicsConfig(ruleContext),
       updateAppConfig(ruleContext),
       installDependencies(),

@@ -15,6 +15,8 @@ export interface NgxFormworkAutomationConfig {
   registrationType?: RegistrationType;
   controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;
+  providerConfigPath?: string;
+  providerConfigFileName?: string;
   discovery?: DiscoveryConfig;
   control?: BaseGenerateSchematicConfig;
   group?: BaseGenerateSchematicConfig;

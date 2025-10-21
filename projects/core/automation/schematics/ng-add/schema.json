@@ -24,7 +24,7 @@
     },
     "providerConfigPath": {
       "type": "string",
-      "description": "Where the provider file should be placed. Defaults to 'src/app'",
+      "description": "Where the provider file should be placed, relative to the project root. Defaults to 'app'",
       "default": "app"
     },
     "providerConfigFileName": {
@@ -49,7 +49,7 @@
     },
     "helperPath": {
       "type": "string",
-      "description": "Where helper files should be placed. Defaults to 'src/app/shared/helper'",
+      "description": "Where helper files should be placed, relative to the project root. Defaults to 'app/shared/helper'",
       "default": "app/shared/helper"
     },
     "splitRegistrations": {
@@ -59,7 +59,7 @@
     },
     "registrationsPath": {
       "type": "string",
-      "description": "Where registration files should be placed. Defaults to 'src/app/registrations'",
+      "description": "Where registration files should be placed, relative to the project root. Defaults to 'app/registrations'",
       "default": "app/registrations"
     },
     "useSchematicConfig": {
@@ -69,7 +69,7 @@
     },
     "schematicsConfigPath": {
       "type": "string",
-      "description": "Where the schematics config should be placed. Defaults to 'src/app'",
+      "description": "Where the schematics config should be placed, relative to the project root. Defaults to 'app'",
       "default": "app"
     },
     "schematicConfigFileName": {
