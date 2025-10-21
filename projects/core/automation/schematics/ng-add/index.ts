@@ -17,6 +17,7 @@ import {
   DEFAULT_HELPER_PATH,
   DEFAULT_PROVIDER_CONFIG_FILE_NAME,
   DEFAULT_PROVIDER_CONFIG_PATH,
+  DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
@@ -54,7 +55,7 @@ export function ngAdd(options: Schema): Rule {
       `📦 Setting up ngx-formwork in project "${projectName}"...`,
     );
 
-    options.registrationStyle ??= 'token';
+    options.registrationStyle ??= DEFAULT_REGISTRATION_TYPE;
     options.registrationsPath ??= DEFAULT_REGISTRATIONS_PATH;
 
     options.providerConfigPath ??= DEFAULT_PROVIDER_CONFIG_PATH;
