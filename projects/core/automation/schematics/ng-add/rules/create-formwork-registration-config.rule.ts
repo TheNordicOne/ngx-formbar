@@ -8,6 +8,7 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { normalize, strings } from '@angular-devkit/core';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function createFormworkRegistrationsConfig(
   ruleContext: RuleContext,
@@ -37,6 +38,14 @@ export function createFormworkRegistrationsConfig(
         ? 'map'
         : 'inline';
 
+    const targetPath = normalize(`/${projectRoot}/${providerConfigPath}`);
+    const registrations = `/${projectRoot}/${registrationsPath ?? ''}`;
+
+    const registrationsRelativePath = buildRelativePath(
+      `${targetPath}/${providerConfigFileName}.ts`,
+      registrations,
+    );
+
     return mergeWith(
       apply(url(`./files/provider-config/${template}`), [
         applyTemplates({
@@ -45,11 +54,11 @@ export function createFormworkRegistrationsConfig(
           useTokens,
           useConfig: provideInline,
           splitRegistrations,
-          registrationsPath,
+          registrationsPath: registrationsRelativePath,
           providerConfigFileName,
           ...strings,
         }),
-        move(normalize(`${projectRoot}/${providerConfigPath}`)),
+        move(targetPath),
       ]),
     );
   };

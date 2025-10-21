@@ -49,6 +49,7 @@ describe('ng-add schematic', () => {
   const helperDir = app('shared/helper');
   const appConfigPath = app('app.config.ts');
   const formworkConfigPath = app('formwork.config.ts');
+  const formworkConfigImportPath = formworkConfigPath.split('.ts')[0];
   const schematicsConfigPath = app('formwork.config.json');
 
   async function runAdd(options: Schema = {}) {
@@ -197,15 +198,15 @@ describe('ng-add schematic', () => {
         importForSymbolUsesCorrectRelativePath(
           appConfig,
           appConfigPath,
-          'componentRegistrations',
+          'componentRegistrationsProvider',
           registrations,
         );
 
       const usesCorrectConfigPath = importForSymbolUsesCorrectRelativePath(
         appConfig,
         appConfigPath,
-        'componentRegistrations',
-        formworkConfigPath,
+        'formworkConfig',
+        formworkConfigImportPath,
       );
 
       expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
@@ -332,7 +333,8 @@ describe('ng-add schematic', () => {
     });
 
     it('uses the user provided registrationsPath', async () => {
-      const registrationsPath = app('management/forms');
+      const registrationsPath = 'app/management/forms';
+      const finalPath = src(registrationsPath);
       const tree = await runAdd({
         registrationStyle: 'token',
         includeSyncValidators: true,
@@ -345,20 +347,16 @@ describe('ng-add schematic', () => {
       const usesCorrectRelativePath = importForSymbolUsesCorrectRelativePath(
         appConfig,
         appConfigPath,
-        'componentRegistrations',
-        registrationsPath,
+        'componentRegistrationsProvider',
+        finalPath,
       );
 
-      expect(
-        tree.exists(`${registrationsPath}/component-registrations.ts`),
-      ).toBe(true);
-      expect(tree.exists(`${registrationsPath}/index.ts`)).toBe(true);
-      expect(
-        tree.exists(`${registrationsPath}/validator-registrations.ts`),
-      ).toBe(true);
-      expect(
-        tree.exists(`${registrationsPath}/async-validator-registrations.ts`),
-      ).toBe(true);
+      expect(tree.exists(`${finalPath}/component-registrations.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/index.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/validator-registrations.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/async-validator-registrations.ts`)).toBe(
+        true,
+      );
 
       expect(usesCorrectRelativePath).toBe(true);
     });
@@ -370,32 +368,11 @@ describe('ng-add schematic', () => {
       const providerConfig = parseTS(read(tree, formworkConfigPath));
       const appConfig = parseTS(read(tree, appConfigPath));
 
-      const formworkConfigHasComponentRegistrations = callObjectArgHasProp(
-        providerConfig,
-        'defineFormworkConfig',
-        'componentRegistrations',
-        'shorthand',
-      );
-
-      const appConfigHasComponentRegistrations = callObjectArgHasProp(
+      const appConfigUsesFormworkConfig = callObjectArgHasProp(
         appConfig,
         'provideFormwork',
-        'componentRegistrations',
-        'shorthand',
-      );
-
-      const appConfigHasValidatorRegistrations = callObjectArgHasProp(
-        appConfig,
-        'provideFormwork',
-        'validatorRegistrations',
-        'shorthand',
-      );
-
-      const appConfigHasAsyncValidatorRegistrations = callObjectArgHasProp(
-        appConfig,
-        'provideFormwork',
-        'asyncValidatorRegistrations',
-        'shorthand',
+        'formworkConfig',
+        'identifier',
       );
 
       const providerConfigHasComponentRegistrations = callObjectArgHasProp(
@@ -430,10 +407,7 @@ describe('ng-add schematic', () => {
       ).toBe(true);
       expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
 
-      expect(formworkConfigHasComponentRegistrations).toBe(true);
-      expect(appConfigHasComponentRegistrations).toBe(true);
-      expect(appConfigHasValidatorRegistrations).toBe(true);
-      expect(appConfigHasAsyncValidatorRegistrations).toBe(true);
+      expect(appConfigUsesFormworkConfig).toBe(true);
 
       expect(providerConfigHasComponentRegistrations).toBe(true);
       expect(providerConfigHasValidatorRegistrations).toBe(true);
@@ -506,7 +480,8 @@ describe('ng-add schematic', () => {
     });
 
     it('uses the user provided registrationsPath', async () => {
-      const registrationsPath = app('management/forms');
+      const registrationsPath = 'app/management/forms';
+      const finalPath = src(registrationsPath);
       const tree = await runAdd({
         registrationStyle: 'map',
         includeSyncValidators: true,
@@ -514,25 +489,21 @@ describe('ng-add schematic', () => {
         registrationsPath,
       });
 
-      const appConfig = parseTS(read(tree, appConfigPath));
+      const formworkConfig = parseTS(read(tree, formworkConfigPath));
 
       const usesCorrectRelativePath = importForSymbolUsesCorrectRelativePath(
-        appConfig,
-        appConfigPath,
+        formworkConfig,
+        formworkConfigPath,
         'componentRegistrations',
-        registrationsPath,
+        finalPath,
       );
 
-      expect(
-        tree.exists(`${registrationsPath}/component-registrations.ts`),
-      ).toBe(true);
-      expect(tree.exists(`${registrationsPath}/index.ts`)).toBe(true);
-      expect(
-        tree.exists(`${registrationsPath}/validator-registrations.ts`),
-      ).toBe(true);
-      expect(
-        tree.exists(`${registrationsPath}/async-validator-registrations.ts`),
-      ).toBe(true);
+      expect(tree.exists(`${finalPath}/component-registrations.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/index.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/validator-registrations.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/async-validator-registrations.ts`)).toBe(
+        true,
+      );
 
       expect(usesCorrectRelativePath).toBe(true);
     });
@@ -547,7 +518,6 @@ describe('ng-add schematic', () => {
         });
 
         const appConfig = parseTS(read(tree, appConfigPath));
-        const providerConfig = parseTS(read(tree, formworkConfigPath));
 
         const appConfigHasComponentRegistrations = callObjectArgHasProp(
           appConfig,
@@ -570,28 +540,6 @@ describe('ng-add schematic', () => {
           'shorthand',
         );
 
-        const providerConfigHasComponentRegistrations = callObjectArgHasProp(
-          providerConfig,
-          'defineFormworkConfig',
-          'componentRegistrations',
-          'shorthand',
-        );
-
-        const providerConfigHasValidatorRegistrations = callObjectArgHasProp(
-          providerConfig,
-          'defineFormworkConfig',
-          'validatorRegistrations',
-          'shorthand',
-        );
-
-        const providerConfigHasAsyncValidatorRegistrations =
-          callObjectArgHasProp(
-            providerConfig,
-            'defineFormworkConfig',
-            'asyncValidatorRegistrations',
-            'shorthand',
-          );
-
         expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
           true,
         );
@@ -608,10 +556,6 @@ describe('ng-add schematic', () => {
         expect(appConfigHasComponentRegistrations).toBe(true);
         expect(appConfigHasValidatorRegistrations).toBe(true);
         expect(appConfigHasAsyncValidatorRegistrations).toBe(true);
-
-        expect(providerConfigHasComponentRegistrations).toBe(true);
-        expect(providerConfigHasValidatorRegistrations).toBe(true);
-        expect(providerConfigHasAsyncValidatorRegistrations).toBe(true);
       });
 
       it("does not create a registration config and doesn't splits configuration, if splitRegistrations is set to false", async () => {
@@ -681,24 +625,23 @@ describe('ng-add schematic', () => {
     });
 
     it('uses the user provided helperPath', async () => {
-      const helperPath = app('management/forms/helper');
+      const helperPath = 'app/management/forms/helper';
+      const finalPath = src(helperPath);
       const tree = await runAdd({
         useHelper: true,
         helperPath,
       });
 
-      expect(tree.exists(`${helperPath}/block.host-directive.ts`)).toBe(false);
-      expect(tree.exists(`${helperPath}/group.host-directive.ts`)).toBe(false);
-      expect(tree.exists(`${helperPath}/control.host-directive.ts`)).toBe(
-        false,
-      );
+      expect(tree.exists(`${finalPath}/block.host-directive.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/group.host-directive.ts`)).toBe(true);
+      expect(tree.exists(`${finalPath}/control.host-directive.ts`)).toBe(true);
       expect(
-        tree.exists(`${helperDir}/control-container.view-provider.ts`),
-      ).toBe(false);
+        tree.exists(`${finalPath}/control-container.view-provider.ts`),
+      ).toBe(true);
     });
 
     it('uses the user provided providerConfigPath and providerConfigFileName', async () => {
-      const providerConfigPath = app('management/forms');
+      const providerConfigPath = 'app/management/forms';
       const providerConfigFileName = 'providers.ts';
       const tree = await runAdd({
         provideInline: false,
@@ -707,7 +650,7 @@ describe('ng-add schematic', () => {
       });
 
       expect(
-        tree.exists(`${providerConfigPath}/${providerConfigFileName}`),
+        tree.exists(`${src(providerConfigPath)}/${providerConfigFileName}`),
       ).toBe(true);
     });
   });
@@ -723,22 +666,25 @@ describe('ng-add schematic', () => {
       });
 
       it('writes all user provided configurations in angular.json', async () => {
-        const helperPath = app('management/forms/helper');
+        const helperPath = 'app/management/forms/helper';
         const tree = await runAdd({
           useSchematicConfig: false,
           helperPath,
         });
 
         const angularJson = JSON.parse(read(tree, 'angular.json')) as {
-          'test-app': {
-            schematics: {
-              'ngx-formwork:control'?: BaseGenerateSchematicConfig;
-              'ngx-formwork:group'?: BaseGenerateSchematicConfig;
-              'ngx-formwork:block'?: BaseGenerateSchematicConfig;
+          projects: {
+            'test-app': {
+              schematics: {
+                'ngx-formwork:control'?: BaseGenerateSchematicConfig;
+                'ngx-formwork:group'?: BaseGenerateSchematicConfig;
+                'ngx-formwork:block'?: BaseGenerateSchematicConfig;
+              };
             };
           };
         };
-        const schematicsConfig = angularJson['test-app'].schematics;
+
+        const schematicsConfig = angularJson.projects['test-app'].schematics;
         const controlConfig = schematicsConfig['ngx-formwork:control'];
         const groupConfig = schematicsConfig['ngx-formwork:group'];
         const blockConfig = schematicsConfig['ngx-formwork:block'];
@@ -751,23 +697,34 @@ describe('ng-add schematic', () => {
 
     describe('useSchematicConfig is set to true', () => {
       it('writes all user provided configurations in config file', async () => {
-        const helperPath = app('management/forms/helper');
-        const registrationsPath = app('management/forms/helper');
+        const helperPath = 'app/management/forms/helper';
+        const registrationsPath = 'app/management/forms/registrations';
+        const providerConfigPath = 'app/management/forms';
+        const providerConfigFileName = 'providers.ts';
+
         const tree = await runAdd({
+          registrationStyle: 'map',
           useSchematicConfig: true,
           helperPath,
           registrationsPath,
+          providerConfigPath,
+          providerConfigFileName,
         });
 
         const schematicsConfig = JSON.parse(
           read(tree, schematicsConfigPath),
         ) as NgxFormworkAutomationConfig;
 
-        expect(schematicsConfig.registrationType).toBe('token');
+        expect(schematicsConfig.registrationType).toBe('map');
         expect(schematicsConfig.controlRegistrationsPath).toBe(
           registrationsPath,
         );
-        expect(schematicsConfig.viewProviderHelperPath).toBe(registrationsPath);
+        expect(schematicsConfig.viewProviderHelperPath).toBe(helperPath);
+        expect(schematicsConfig.providerConfigPath).toBe(providerConfigPath);
+        expect(schematicsConfig.providerConfigFileName).toBe(
+          providerConfigFileName,
+        );
+
         expect(schematicsConfig.control?.hostDirectiveHelperPath).toBe(
           helperPath,
         );
@@ -780,7 +737,7 @@ describe('ng-add schematic', () => {
       });
 
       it('uses the user provided schematicsConfigPath && schematicConfigFileName', async () => {
-        const schematicsConfigPath = app('management/forms');
+        const schematicsConfigPath = 'app/management/forms';
         const schematicConfigFileName = 'schemas.json';
         const tree = await runAdd({
           useSchematicConfig: true,
@@ -789,7 +746,9 @@ describe('ng-add schematic', () => {
         });
 
         expect(
-          tree.exists(`${schematicsConfigPath}/${schematicConfigFileName}`),
+          tree.exists(
+            `${src(schematicsConfigPath)}/${schematicConfigFileName}`,
+          ),
         ).toBe(true);
       });
     });
@@ -997,7 +956,7 @@ function countCall(sf: SourceFile, callee: string) {
   return count;
 }
 
-type PropShape = 'shorthand' | 'object';
+type PropShape = 'shorthand' | 'object' | 'identifier';
 
 function objectHasPropOfKind(
   obj: ObjectLiteralExpression,
@@ -1052,10 +1011,21 @@ function callObjectArgHasProp(
 
     if (isCallExpression(node) && isCallee(node.expression, calleeName)) {
       const [firstArg] = node.arguments;
+
+      if (
+        kind === 'identifier' &&
+        node.arguments.length > 0 &&
+        isIdentifier(firstArg)
+      ) {
+        found = firstArg.text === propName;
+        return;
+      }
+
       if (node.arguments.length === 0 || !isObjectLiteralExpression(firstArg)) {
         node.forEachChild(visit);
         return;
       }
+
       found = objectHasPropOfKind(firstArg, propName, kind);
       return;
     }
@@ -1073,7 +1043,14 @@ function importForSymbolUsesCorrectRelativePath(
   symbolName: string,
   targetFilePath: string,
 ) {
-  const expectedRaw = buildRelativePath(fromFilePath, targetFilePath);
+  const fromPath = fromFilePath.startsWith('/')
+    ? fromFilePath
+    : `/${fromFilePath}`;
+
+  const toPath = targetFilePath.startsWith('/')
+    ? targetFilePath
+    : `/${targetFilePath}`;
+  const expectedRaw = buildRelativePath(fromPath, toPath);
   const expected = normalize(expectedRaw);
   let found = false;
 

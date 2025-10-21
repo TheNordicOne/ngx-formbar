@@ -4,6 +4,7 @@ import { Project, QuoteKind, ts } from 'ts-morph';
 import { FormworkComponentInfo } from './models/component-info.model';
 import { register } from '../../shared/control-registration';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import { DEFAULT_REGISTRATION_TYPE } from '../../schematics/ng-add/constants';
 
 /**
  * Writes discovered components to a TypeScript file that provides component registrations
@@ -32,7 +33,8 @@ export function writeComponentsToFile(
     },
   });
 
-  const registrationType = automationConfig?.registrationType ?? 'token';
+  const registrationType =
+    automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE;
 
   let initialContent = '';
   switch ('token') {
