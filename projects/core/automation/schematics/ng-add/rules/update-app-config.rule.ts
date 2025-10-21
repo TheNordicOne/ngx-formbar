@@ -23,15 +23,7 @@ import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const {
-      projectRoot,
-      registrationStyle,
-      registrationsPath,
-      provideInline,
-      appConfigPath,
-      providerConfigPath,
-      providerConfigFileName,
-    } = ruleContext;
+    const { appConfigPath } = ruleContext;
 
     context.logger.info('Updating app.config.ts');
 
@@ -79,20 +71,12 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       throw new SchematicsException(`'providers' is not an array`);
     }
 
-    context.logger.info(`providerConfigPath=${providerConfigPath ?? ''}`);
+    context.logger.info(
+      `providerConfigPath=${ruleContext.providerConfigPath ?? ''}`,
+    );
 
     const { updatedProvidersArray, extraChanges, didChange } =
-      buildProvidersUpdate({
-        projectRoot,
-        sourceFile,
-        appConfigPath,
-        fileText: content,
-        providersArray: providersInit,
-        registrationStyle,
-        registrationsPath,
-        providerConfigPath: `${providerConfigPath ?? ''}/${providerConfigFileName ?? ''}`,
-        provideInline,
-      });
+      buildProvidersUpdate(sourceFile, ruleContext, providersInit);
 
     changes.push(...extraChanges);
 
