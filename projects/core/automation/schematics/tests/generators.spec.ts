@@ -24,13 +24,16 @@ import {
   parseTS,
   provideFormworkComponentRegistrationsHasIdentifier,
   read,
+  writeJson,
   writeTs,
 } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 
 const appConfigPathRaw = 'app.config.ts';
 const formworkConfigPath = 'formwork.config.ts';
 const registrationsPath = 'registrations/component-registrations.ts';
+const schematicsConfigPath = 'formwork.config.json';
 
 describe('control schematic', () => {
   let appTree: UnitTestTree;
@@ -215,7 +218,7 @@ describe('control schematic', () => {
     it('registers the created control in app.config.ts via provideFormwork', async () => {
       provideMapInlineNoSplit(appTree);
       const tree = await runSchematic('control');
-      const formworkConfigSf = parseTS(read(tree, app(formworkConfigPath)));
+      const appConfigSf = parseTS(read(tree, appConfigPath));
 
       const componentImportPath = buildRelativePath(
         appConfigPath,
@@ -223,14 +226,14 @@ describe('control schematic', () => {
       );
 
       const importsComponent = hasNamedImport(
-        formworkConfigSf,
+        appConfigSf,
         componentImportPath,
         'TestControlComponent',
       );
 
       const hasRegistration =
         provideFormworkComponentRegistrationsHasIdentifier(
-          formworkConfigSf,
+          appConfigSf,
           'test',
           'TestControlComponent',
         );
@@ -346,17 +349,235 @@ describe('control schematic', () => {
     });
   });
 
-  describe.skip('with a configuration file', () => {
-    // Creates a control with values from configuration
-    // overwrites values from configuration with CLI options
-    // Registers the created control to default location
-    // Registers the created control to configured location
-    // does not register the created control if skipRegistration is set to true
-    // skips registration if control registrations file is not found
-  });
+  describe('with a configuration file', () => {
+    it('creates a control with values from configuration', async () => {
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          interfaceSuffix: 'Field',
+          componentSuffix: 'Widget',
+        },
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+      provideMapInlineNoSplit(appTree);
 
-  describe.skip('with configuration via angular.json', () => {
-    // placeholder
+      const tree = await runSchematic('control', {
+        key: 'user',
+        name: 'profile',
+        path: 'features/account',
+      });
+
+      const baseDir = app('features/account/profile');
+      const componentFilePath = `${baseDir}/profile-widget.component.ts`;
+      const typeFilePath = `${baseDir}/profile-field.type.ts`;
+
+      const componentSf = parseTS(tree.readText(componentFilePath));
+      const typeSf = parseTS(tree.readText(typeFilePath));
+
+      const hasClass = classDeclarationExists(
+        componentSf,
+        'ProfileWidgetComponent',
+      );
+      const hasSelector = componentSelectorEquals(
+        componentSf,
+        'app-profile-widget',
+      );
+
+      const interfaceHasType = interfaceHasTypeLiteral(
+        typeSf,
+        'ProfileField',
+        'user',
+      );
+
+      expect(hasClass).toBe(true);
+      expect(hasSelector).toBe(true);
+      expect(interfaceHasType).toBe(true);
+    });
+
+    it('overwrites values from configuration with CLI options', async () => {
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          interfaceSuffix: 'Field',
+          componentSuffix: 'Widget',
+        },
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+      provideMapInlineNoSplit(appTree);
+
+      const options: GenerateOptions = {
+        project: 'test-app',
+        key: 'user',
+        name: 'username',
+        path: 'features/user',
+        componentSuffix: 'Control',
+      };
+
+      const tree = await runSchematic('control', options);
+
+      const baseDir = app('features/user/username');
+      const componentFilePath = `${baseDir}/username-control.component.ts`;
+      const typeFilePath = `${baseDir}/username-field.type.ts`;
+
+      const componentSf = parseTS(tree.readText(componentFilePath));
+      const typeSf = parseTS(tree.readText(typeFilePath));
+
+      const hasClass = classDeclarationExists(
+        componentSf,
+        'UsernameControlComponent',
+      );
+      const hasSelector = componentSelectorEquals(
+        componentSf,
+        'app-username-control',
+      );
+
+      const interfaceHasType = interfaceHasTypeLiteral(
+        typeSf,
+        'UsernameField',
+        'user',
+      );
+
+      expect(hasClass).toBe(true);
+      expect(hasSelector).toBe(true);
+      expect(interfaceHasType).toBe(true);
+    });
+
+    it('registers the created control to default location', async () => {
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          interfaceSuffix: 'Field',
+          componentSuffix: 'Control',
+        },
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+      provideMapInlineNoSplit(appTree);
+
+      const tree = await runSchematic('control', {
+        key: 'user',
+        name: 'email',
+      });
+      const formworkConfigSf = parseTS(read(tree, app(formworkConfigPath)));
+
+      const componentImportPath = buildRelativePath(
+        app(formworkConfigPath),
+        app('test/email/email-control.component.ts'),
+      );
+
+      const importsComponent = hasNamedImport(
+        formworkConfigSf,
+        componentImportPath,
+        'EmailControlComponent',
+      );
+
+      const hasRegistration =
+        provideFormworkComponentRegistrationsHasIdentifier(
+          formworkConfigSf,
+          'user',
+          'EmailControlComponent',
+        );
+
+      expect(importsComponent).toBe(true);
+      expect(hasRegistration).toBe(true);
+    });
+
+    it('registers the created control to configured location', async () => {
+      provideToken(appTree);
+
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          interfaceSuffix: 'Field',
+          componentSuffix: 'Control',
+        },
+        controlRegistrationsPath: app(registrationsPath),
+        registrationType: 'token',
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+
+      const tree = await runSchematic('control', {
+        key: 'email',
+        name: 'email',
+      });
+
+      const registrationsSf = parseTS(read(tree, app(registrationsPath)));
+
+      const componentImportPath = buildRelativePath(
+        app(registrationsPath),
+        app('test/email/email-control.component.ts'),
+      );
+
+      const importsComponent = hasNamedImport(
+        registrationsSf,
+        componentImportPath,
+        'EmailControlComponent',
+      );
+
+      const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
+        registrationsSf,
+        'email',
+        'EmailControlComponent',
+      );
+
+      expect(importsComponent).toBe(true);
+      expect(hasRegistration).toBe(true);
+    });
+
+    it('does not register the created control if skipRegistration is set to true', async () => {
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          skipRegistration: true,
+        },
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+      provideMapInlineNoSplit(appTree);
+
+      const tree = await runSchematic('control', {
+        key: 'email',
+        name: 'email',
+      });
+
+      const formworkConfigSf = parseTS(read(tree, app(formworkConfigPath)));
+
+      const componentImportPath = buildRelativePath(
+        app(formworkConfigPath),
+        app('test/email/email-control.component.ts'),
+      );
+
+      const importsComponent = hasNamedImport(
+        formworkConfigSf,
+        componentImportPath,
+        'EmailControlComponent',
+      );
+
+      const hasRegistration =
+        provideFormworkComponentRegistrationsHasIdentifier(
+          formworkConfigSf,
+          'email',
+          'EmailControlComponent',
+        );
+
+      expect(importsComponent).toBe(false);
+      expect(hasRegistration).toBe(false);
+    });
+
+    it('skips registration if control registrations file is not found', async () => {
+      const config: NgxFormworkAutomationConfig = {
+        control: {
+          interfaceSuffix: 'Field',
+          componentSuffix: 'Control',
+        },
+        controlRegistrationsPath: 'shared/forms/non-existent-registrations.ts',
+        registrationType: 'token',
+      };
+      writeJson(appTree, app(schematicsConfigPath), config);
+      provideMapInlineNoSplit(appTree);
+
+      const tree = await runSchematic('control');
+
+      const componentPath = app('test/email/email-control.component.ts');
+      expect(tree.exists(componentPath)).toBe(true);
+
+      expect(
+        tree.exists(app('shared/forms/non-existent-registrations.ts')),
+      ).toBe(false);
+    });
   });
 });
 
