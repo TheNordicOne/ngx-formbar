@@ -16,7 +16,7 @@ import {
 import { Change, ReplaceChange } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { normalize, Path } from '@angular-devkit/core';
+import { JsonObject, normalize, Path } from '@angular-devkit/core';
 import {
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
@@ -24,6 +24,11 @@ import {
   PACKAGE_NAME,
 } from './constants';
 import { RuleContext } from './schema';
+import {
+  updateWorkspace,
+  WorkspaceDefinition,
+} from '@schematics/angular/utility';
+import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
 function isProvideFormworkCall(n: Expression): boolean {
   return (
@@ -500,4 +505,40 @@ export function replaceNodeWithPrinted(
   return [
     new ReplaceChange(filePath, start, fileText.slice(start, end), printed),
   ];
+}
+
+export function updateSchematicConfig(
+  schematicName: string,
+  options: JsonObject,
+  projectName?: string,
+): Rule {
+  return updateWorkspace((workspace: WorkspaceDefinition) => {
+    // Determine which project to update
+    const targetProject =
+      projectName ?? (workspace.extensions['defaultProject'] as string);
+    if (!targetProject) {
+      throw new SchematicsException(
+        `No projectName provided and workspace.defaultProject is not set.`,
+      );
+    }
+
+    const projectDef = workspace.projects.get(targetProject);
+    if (!projectDef) {
+      throw new SchematicsException(
+        `Project "${targetProject}" does not exist in the workspace.`,
+      );
+    }
+
+    // Ensure the "schematics" extension exists on the project
+    projectDef.extensions['schematics'] ??= {};
+    const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
+
+    // Grab and merge existing schematic config
+    const schematicKey = `${PACKAGE_NAME}:${schematicName}`;
+    const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
+    schematicsExt[schematicKey] = {
+      ...existingConfig,
+      ...options,
+    };
+  });
 }

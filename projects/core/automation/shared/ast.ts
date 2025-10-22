@@ -1,25 +1,5 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
-import {
-  ObjectLiteralExpression,
-  Project,
-  QuoteKind,
-  SourceFile,
-  SyntaxKind,
-  ts,
-} from 'ts-morph';
-
-export function setupTsMorphProject() {
-  return new Project({
-    skipAddingFilesFromTsConfig: true,
-    manipulationSettings: {
-      quoteKind: QuoteKind.Single,
-    },
-    compilerOptions: {
-      target: ts.ScriptTarget.ES2020,
-      module: ts.ModuleKind.ESNext,
-    },
-  });
-}
+import { Project, ts } from 'ts-morph';
 
 /** Load a TS file into an in‑memory ts-morph SourceFile */
 export function getSourceFile(tree: Tree, filePath: string) {
@@ -34,44 +14,6 @@ export function getSourceFile(tree: Tree, filePath: string) {
     skipFileDependencyResolution: true,
   });
   return project.createSourceFile(filePath, content, { overwrite: true });
-}
-
-/** Find the exported const componentRegistrations = { … } in a file */
-export function findRegistrationsObject(
-  source: SourceFile,
-): ObjectLiteralExpression {
-  const varDecl = source
-    .getVariableDeclarations()
-    .find(
-      (d) => d.getName() === 'componentRegistrations' && d.hasExportKeyword(),
-    );
-
-  if (!varDecl) {
-    throw new SchematicsException(
-      `No exported 'componentRegistrations' found in ${source.getBaseName()}`,
-    );
-  }
-
-  const init = varDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
-  if (!init) {
-    throw new SchematicsException(
-      `Expected 'componentRegistrations' to be initialized with an object literal in ${source.getBaseName()}`,
-    );
-  }
-
-  return init;
-}
-
-/** Upsert a key→className into an ObjectLiteralExpression */
-export function upsertObjectLiteral(
-  objLit: ObjectLiteralExpression,
-  key: string,
-  className: string,
-) {
-  if (objLit.getProperty(key)) {
-    return;
-  }
-  objLit.addPropertyAssignment({ name: key, initializer: className });
 }
 
 /**

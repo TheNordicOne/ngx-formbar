@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'path';
 import { Project, QuoteKind, ts } from 'ts-morph';
 import { FormworkComponentInfo } from './models/component-info.model';
-import { register } from '../../shared/control-registration';
+// import { register } from '../../shared/control-registration';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import { DEFAULT_REGISTRATION_TYPE } from '../../schematics/ng-add/constants';
 
@@ -17,6 +17,7 @@ export function writeComponentsToFile(
   outputPath: string,
   automationConfig?: NgxFormworkAutomationConfig | null,
 ): void {
+  console.log(components);
   const outputDir = path.dirname(outputPath);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -65,25 +66,25 @@ export default defineFormworkConfig({
   });
 
   // Register each component using the configured registration type
-  components.forEach((component) => {
-    const rawRelative = path.relative(outputDir, component.filePath);
-    const noExt = rawRelative.replace(/\.ts$/, '');
-    const posix = noExt.split(path.sep).join('/');
-    const needsDotPrefix = !posix.startsWith('.') && !posix.startsWith('/');
-    const moduleSpecifier = needsDotPrefix ? `./${posix}` : posix;
+  // components.forEach((component) => {
+  // const rawRelative = path.relative(outputDir, component.filePath);
+  // const noExt = rawRelative.replace(/\.ts$/, '');
+  // const posix = noExt.split(path.sep).join('/');
+  // const needsDotPrefix = !posix.startsWith('.') && !posix.startsWith('/');
+  // const moduleSpecifier = needsDotPrefix ? `./${posix}` : posix;
 
-    // Determine the component key based on type (control, group, block) if available
-    const componentType = component.type.toLowerCase();
-    const key =
-      component.selector?.split('-').slice(1).join('-') ?? componentType;
+  // Determine the component key based on type (control, group, block) if available
+  // const componentType = component.type.toLowerCase();
+  // const key =
+  //   component.selector?.split('-').slice(1).join('-') ?? componentType;
 
-    register(sourceFile, {
-      key,
-      componentClassName: component.className,
-      componentImportPath: moduleSpecifier,
-      registrationType,
-    });
-  });
+  // register(sourceFile, {
+  //   key,
+  //   componentClassName: component.className,
+  //   componentImportPath: moduleSpecifier,
+  //   registrationType,
+  // });
+  // });
 
   sourceFile.formatText({
     indentSize: 2,

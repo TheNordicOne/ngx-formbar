@@ -1,7 +1,8 @@
 import { chain, Rule } from '@angular-devkit/schematics';
-import { updateSchematicConfig } from '../../shared/rules';
+
 import { RuleContext } from '../schema';
 import { Schema } from '../../shared/schema';
+import { updateSchematicConfig } from '../helper';
 
 /**
  * Update angular.json for ngx-formwork schematics
