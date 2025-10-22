@@ -38,6 +38,27 @@ export function read(tree: UnitTestTree, path: string) {
   return tree.readText(path).replace(/\r\n/g, '\n');
 }
 
+export function writeJson(
+  tree: UnitTestTree,
+  filePath: string,
+  value: unknown,
+) {
+  const content = JSON.stringify(value);
+  if (tree.exists(filePath)) {
+    tree.overwrite(filePath, content);
+    return;
+  }
+  tree.create(filePath, content);
+}
+
+export function writeTs(tree: UnitTestTree, filePath: string, content: string) {
+  if (tree.exists(filePath)) {
+    tree.overwrite(filePath, content);
+    return;
+  }
+  tree.create(filePath, content);
+}
+
 // TS AST helpers
 export function parseTS(code: string) {
   return createSourceFile('temp.ts', code, ScriptTarget.Latest, true);
