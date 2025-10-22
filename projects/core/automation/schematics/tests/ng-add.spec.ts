@@ -3,8 +3,6 @@ import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
-import { Schema as WorkspaceOptions } from '@schematics/angular/workspace/schema';
-import { Schema as ApplicationOptions } from '@schematics/angular/application/schema';
 import { join } from 'path';
 import { Schema } from '../ng-add/schema';
 import {
@@ -25,6 +23,7 @@ import {
   read,
   src,
 } from './helper';
+import { setupWorkspace } from './workspace-setup';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -54,29 +53,8 @@ describe('ng-add schematic', () => {
   beforeEach(async () => {
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
 
-    const workspaceOptions: WorkspaceOptions = {
-      name: 'workspace',
-      version: '19.0.0',
-      newProjectRoot: 'projects',
-    };
-
-    const workspaceTree = await runner.runExternalSchematic(
-      '@schematics/angular',
-      'workspace',
-      workspaceOptions,
-    );
-
-    const appOptions: ApplicationOptions = {
-      name: 'test-app',
-      standalone: true,
-    };
-
-    appTree = await runner.runExternalSchematic(
-      '@schematics/angular',
-      'application',
-      appOptions,
-      workspaceTree,
-    );
+    runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
+    appTree = await setupWorkspace(runner);
   });
 
   it('adds ngx-formwork to package.json', async () => {
