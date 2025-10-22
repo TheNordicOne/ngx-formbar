@@ -4,6 +4,7 @@ export interface BaseGenerateSchematicConfig {
   interfaceSuffix?: string;
   componentSuffix?: string;
   hostDirectiveHelperPath?: string;
+  skipRegistration?: boolean;
 }
 
 export interface DiscoveryConfig {
