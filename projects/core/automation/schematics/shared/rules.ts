@@ -32,6 +32,7 @@ import {
   RegistrationOptions,
 } from '../../shared/control-registration';
 import { classify } from '@angular-devkit/core/src/utils/strings';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -112,7 +113,10 @@ export function scaffoldAndRegister(
 
     const registrationType = automationConfig?.registrationType ?? 'map';
     const sourceFile = getSourceFile(tree, configPath);
-    const componentImportPath = componentFilePath;
+    const componentImportPath = buildRelativePath(
+      configPath,
+      `/${sourceRoot}/${componentFilePath}`,
+    );
 
     const registrationOptions: RegistrationOptions = {
       key: options.key,
