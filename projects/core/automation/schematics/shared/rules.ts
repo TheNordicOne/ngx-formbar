@@ -31,6 +31,7 @@ import {
   register,
   RegistrationOptions,
 } from '../../shared/control-registration';
+import { classify } from '@angular-devkit/core/src/utils/strings';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -62,10 +63,13 @@ export function scaffoldAndRegister(
       : `${project.root}/src/app`;
 
     const name = options.name ?? options.key;
-    const interfaceName = `${options.name ?? options.key}${schemaConfig?.interfaceSuffix ?? options.interfaceSuffix}`;
+    const interfaceName = classify(
+      `${options.name ?? options.key}${schemaConfig?.interfaceSuffix ?? options.interfaceSuffix ?? ''}`,
+    );
+
     const componentDir = `/${options.path ?? name}/${name}`;
 
-    const componentName = `${name}${schemaConfig?.componentSuffix ?? options.componentSuffix}`;
+    const componentName = `${name}${schemaConfig?.componentSuffix ?? options.componentSuffix ?? ''}`;
     const componentClassName = `${componentName}Component`;
     const componentFilePath = path.posix.join(
       componentDir,
