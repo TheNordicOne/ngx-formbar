@@ -12,6 +12,9 @@ export function readFile<T>(tree: Tree, path?: string): T | null {
   if (!path) {
     return null;
   }
+  if (!tree.exists(path)) {
+    return null;
+  }
   const buf = tree.read(path);
   if (!buf) {
     throw new SchematicsException(`Could not read ${path}`);
