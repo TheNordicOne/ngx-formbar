@@ -12,11 +12,13 @@ import {
   isLiteralTypeNode,
   isNamedImports,
   isNamespaceImport,
+  isNewExpression,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
   isPropertySignature,
   isStringLiteral,
+  isVariableStatement,
   Node,
   ObjectLiteralExpression,
   ScriptTarget,
@@ -279,6 +281,9 @@ export function hasNamedImport(
   imported: string,
 ) {
   let found = false;
+  if (moduleName.endsWith('.ts')) {
+    moduleName = moduleName.split('.ts')[0];
+  }
   sf.forEachChild((n) => {
     if (found) {
       return;
@@ -746,4 +751,485 @@ export function interfaceHasTypeLiteral(
 
   sf.forEachChild(visit);
   return ok;
+}
+
+export function getProvideFormworkArg(
+  sf: SourceFile,
+): ObjectLiteralExpression | undefined {
+  let result: ObjectLiteralExpression | undefined;
+
+  const visit = (node: Node): void => {
+    if (result) {
+      return;
+    }
+
+    if (isPropertyAssignment(node)) {
+      const n = node.name;
+      const isProviders =
+        (isIdentifier(n) && n.text === 'providers') ||
+        (isStringLiteral(n) && n.text === 'providers');
+      if (!isProviders) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      const init = node.initializer;
+      if (!isArrayLiteralExpression(init)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      const call = init.elements.find((el) => {
+        if (!isCallExpression(el)) {
+          return false;
+        }
+        return isCallee(
+          el.expression as unknown as Expression,
+          'provideFormwork',
+        );
+      });
+
+      if (!call || !isCallExpression(call)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      const [firstArg] = call.arguments;
+      if (call.arguments.length === 0 || !isObjectLiteralExpression(firstArg)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      result = firstArg as unknown as ObjectLiteralExpression;
+      return;
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return result;
+}
+
+export function provideFormworkComponentRegistrationsHasIdentifier(
+  sf: SourceFile,
+  key: string,
+  identifierName: string,
+) {
+  const arg = getProvideFormworkArg(sf);
+  if (!arg) {
+    return false;
+  }
+
+  const regProp = arg.properties.find((p) => {
+    if (!isPropertyAssignment(p)) {
+      return false;
+    }
+    const n = p.name;
+    return (
+      (isIdentifier(n) && n.text === 'componentRegistrations') ||
+      (isStringLiteral(n) && n.text === 'componentRegistrations')
+    );
+  });
+
+  if (!regProp || !isPropertyAssignment(regProp)) {
+    return false;
+  }
+
+  const nested = regProp.initializer;
+  if (!isObjectLiteralExpression(nested)) {
+    return false;
+  }
+
+  const entry = nested.properties.find((p) => {
+    if (!isPropertyAssignment(p)) {
+      return false;
+    }
+    const n = p.name;
+    const matchesKey =
+      (isIdentifier(n) && n.text === key) ||
+      (isStringLiteral(n) && n.text === key);
+    if (!matchesKey) {
+      return false;
+    }
+    return isIdentifier(p.initializer) && p.initializer.text === identifierName;
+  });
+
+  return !!entry;
+}
+
+export function defineFormworkConfigComponentRegistrationsHasIdentifier(
+  sf: SourceFile,
+  key: string,
+  identifierName: string,
+) {
+  let found = false;
+
+  const visit = (node: Node): void => {
+    if (found) {
+      return;
+    }
+
+    if (
+      isCallExpression(node) &&
+      isCallee(node.expression, 'defineFormworkConfig')
+    ) {
+      const [firstArg] = node.arguments;
+      if (node.arguments.length === 0 || !isObjectLiteralExpression(firstArg)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      const regProp = firstArg.properties.find((p) => {
+        if (!isPropertyAssignment(p)) {
+          return false;
+        }
+        const n = p.name;
+        return (
+          (isIdentifier(n) && n.text === 'componentRegistrations') ||
+          (isStringLiteral(n) && n.text === 'componentRegistrations')
+        );
+      });
+
+      if (!regProp || !isPropertyAssignment(regProp)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      const nested = regProp.initializer;
+      if (!isObjectLiteralExpression(nested)) {
+        node.forEachChild(visit);
+        return;
+      }
+
+      found = nested.properties.some((p) => {
+        if (!isPropertyAssignment(p)) {
+          return false;
+        }
+        const n = p.name;
+        const matchesKey =
+          (isIdentifier(n) && n.text === key) ||
+          (isStringLiteral(n) && n.text === key);
+        if (!matchesKey) {
+          return false;
+        }
+        return (
+          isIdentifier(p.initializer) && p.initializer.text === identifierName
+        );
+      });
+      return;
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
+}
+
+export function directComponentRegistrationsHasIdentifier(
+  sf: SourceFile,
+  key: string,
+  identifierName: string,
+) {
+  let found = false;
+
+  const visit = (node: Node): void => {
+    if (found) {
+      return;
+    }
+
+    if (isVariableStatement(node)) {
+      const decls = node.declarationList.declarations;
+      for (const decl of decls) {
+        if (
+          !isIdentifier(decl.name) ||
+          decl.name.text !== 'componentRegistrations'
+        ) {
+          continue;
+        }
+
+        const init = decl.initializer;
+        if (!init || !isObjectLiteralExpression(init)) {
+          continue;
+        }
+
+        found = init.properties.some((p) => {
+          if (!isPropertyAssignment(p)) {
+            return false;
+          }
+          const n = p.name;
+          const matchesKey =
+            (isIdentifier(n) && n.text === key) ||
+            (isStringLiteral(n) && n.text === key);
+          if (!matchesKey) {
+            return false;
+          }
+          return (
+            isIdentifier(p.initializer) && p.initializer.text === identifierName
+          );
+        });
+        return;
+      }
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
+}
+
+export function componentRegistrationsMapProviderHasIdentifier(
+  sf: SourceFile,
+  key: string,
+  identifierName: string,
+) {
+  let found = false;
+
+  const visit = (node: Node): void => {
+    if (found) {
+      return;
+    }
+
+    if (isVariableStatement(node)) {
+      const decls = node.declarationList.declarations;
+      for (const decl of decls) {
+        if (
+          !isIdentifier(decl.name) ||
+          decl.name.text !== 'componentRegistrationsProvider'
+        ) {
+          continue;
+        }
+
+        const init = decl.initializer;
+        if (!init || !isObjectLiteralExpression(init)) {
+          continue;
+        }
+
+        // Find the useValue property
+        const useValueProp = init.properties.find((p) => {
+          if (!isPropertyAssignment(p)) {
+            return false;
+          }
+          const n = p.name;
+          return (
+            (isIdentifier(n) && n.text === 'useValue') ||
+            (isStringLiteral(n) && n.text === 'useValue')
+          );
+        });
+
+        if (!useValueProp || !isPropertyAssignment(useValueProp)) {
+          continue;
+        }
+
+        // Check if useValue is a new Map expression
+        const mapExpr = useValueProp.initializer;
+        if (
+          !isCallExpression(mapExpr) ||
+          !isNewExpression(mapExpr.expression) ||
+          !isIdentifier(mapExpr.expression.expression) ||
+          mapExpr.expression.expression.text !== 'Map'
+        ) {
+          continue;
+        }
+
+        // Check if the Map has arguments
+        if (mapExpr.arguments.length === 0) {
+          continue;
+        }
+
+        // Get the array literal that initializes the Map
+        const mapArg = mapExpr.arguments[0];
+        if (!isArrayLiteralExpression(mapArg)) {
+          continue;
+        }
+
+        // Check each entry in the Map
+        found = mapArg.elements.some((el) => {
+          if (!isArrayLiteralExpression(el)) {
+            return false;
+          }
+
+          if (el.elements.length !== 2) {
+            return false;
+          }
+
+          const keyElement = el.elements[0];
+          const valueElement = el.elements[1];
+
+          // Check if the key matches
+          const keyMatches =
+            isStringLiteral(keyElement) && keyElement.text === key;
+
+          // Check if the value is the identifier we're looking for
+          const valueMatches =
+            isIdentifier(valueElement) && valueElement.text === identifierName;
+
+          return keyMatches && valueMatches;
+        });
+
+        return;
+      }
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
+}
+
+export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
+  sf: SourceFile,
+  key: string,
+  identifierName: string,
+) {
+  let found = false;
+
+  const visit = (node: Node): void => {
+    if (found) {
+      return;
+    }
+
+    if (isVariableStatement(node)) {
+      const decls = node.declarationList.declarations;
+      for (const decl of decls) {
+        if (!isIdentifier(decl.name) || decl.name.text !== 'appConfig') {
+          continue;
+        }
+
+        const init = decl.initializer;
+        if (!init || !isObjectLiteralExpression(init)) {
+          continue;
+        }
+
+        // Find the providers property
+        const providersProp = init.properties.find((p) => {
+          if (!isPropertyAssignment(p)) {
+            return false;
+          }
+          const n = p.name;
+          return (
+            (isIdentifier(n) && n.text === 'providers') ||
+            (isStringLiteral(n) && n.text === 'providers')
+          );
+        });
+
+        if (!providersProp || !isPropertyAssignment(providersProp)) {
+          continue;
+        }
+
+        // Check if providers is an array
+        const providersArray = providersProp.initializer;
+        if (!isArrayLiteralExpression(providersArray)) {
+          continue;
+        }
+
+        // Find the component registrations provider object
+        const registrationsProvider = providersArray.elements.find((el) => {
+          if (!isObjectLiteralExpression(el)) {
+            return false;
+          }
+
+          // Check if this object has a provide property with NGX_FW_COMPONENT_REGISTRATIONS
+          const provideProp = el.properties.find((p) => {
+            if (!isPropertyAssignment(p)) {
+              return false;
+            }
+            const n = p.name;
+            const isProvide =
+              (isIdentifier(n) && n.text === 'provide') ||
+              (isStringLiteral(n) && n.text === 'provide');
+            if (!isProvide) {
+              return false;
+            }
+
+            return (
+              isIdentifier(p.initializer) &&
+              p.initializer.text === 'NGX_FW_COMPONENT_REGISTRATIONS'
+            );
+          });
+
+          return !!provideProp;
+        });
+
+        if (
+          !registrationsProvider ||
+          !isObjectLiteralExpression(registrationsProvider)
+        ) {
+          continue;
+        }
+
+        // Find the useValue property in the provider object
+        const useValueProp = registrationsProvider.properties.find((p) => {
+          if (!isPropertyAssignment(p)) {
+            return false;
+          }
+          const n = p.name;
+          return (
+            (isIdentifier(n) && n.text === 'useValue') ||
+            (isStringLiteral(n) && n.text === 'useValue')
+          );
+        });
+
+        if (!useValueProp || !isPropertyAssignment(useValueProp)) {
+          continue;
+        }
+
+        // Check if useValue is a new Map expression
+        const mapExpr = useValueProp.initializer;
+        if (
+          !isCallExpression(mapExpr) ||
+          !isNewExpression(mapExpr.expression) ||
+          !isIdentifier(mapExpr.expression.expression) ||
+          mapExpr.expression.expression.text !== 'Map'
+        ) {
+          continue;
+        }
+
+        // Check if the Map has arguments
+        if (mapExpr.arguments.length === 0) {
+          continue;
+        }
+
+        // Get the array literal that initializes the Map
+        const mapArg = mapExpr.arguments[0];
+        if (!isArrayLiteralExpression(mapArg)) {
+          continue;
+        }
+
+        // Check each entry in the Map
+        found = mapArg.elements.some((el) => {
+          if (!isArrayLiteralExpression(el)) {
+            return false;
+          }
+
+          if (el.elements.length !== 2) {
+            return false;
+          }
+
+          const keyElement = el.elements[0];
+          const valueElement = el.elements[1];
+
+          // Check if the key matches
+          const keyMatches =
+            isStringLiteral(keyElement) && keyElement.text === key;
+
+          // Check if the value is the identifier we're looking for
+          const valueMatches =
+            isIdentifier(valueElement) && valueElement.text === identifierName;
+
+          return keyMatches && valueMatches;
+        });
+
+        return;
+      }
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
 }
