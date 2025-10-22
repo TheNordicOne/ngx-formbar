@@ -1,11 +1,29 @@
-export interface Schema {
+import {
+  BaseGenerateSchematicConfig,
+  RegistrationType,
+} from '../../shared/shared-config.type';
+
+export interface Schema extends BaseGenerateSchematicConfig {
   name?: string;
   key: string;
   path?: string;
   project?: string;
-  interfaceSuffix?: string;
-  componentSuffix?: string;
   viewProviderHelperPath?: string;
+  schematicsConfig?: string;
+}
+
+export interface ScaffoldContext extends Schema {
+  registrationType: RegistrationType;
+  resolvedName: string;
+  interfaceName: string;
+  componentName: string;
+  componentClassName: string;
+  componentPath: string;
+  componentFilePath: string;
+  projectRoot: string;
+  hasViewProviderHelper: boolean;
+  viewProviderHelperPath?: string;
+  hasHostDirectiveHelper: boolean;
   hostDirectiveHelperPath?: string;
-  configurationPath?: string;
+  controlRegistrationsPath?: string | null;
 }

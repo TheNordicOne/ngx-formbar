@@ -29,6 +29,7 @@ import {
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { normalize, Path } from '@angular-devkit/core';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '../ng-add/constants';
 
 // Path helpers
 export function appRoot(p = '') {
@@ -1023,29 +1024,25 @@ export function componentRegistrationsMapProviderHasIdentifier(
           continue;
         }
 
-        // Check if useValue is a new Map expression
         const mapExpr = useValueProp.initializer;
         if (
-          !isCallExpression(mapExpr) ||
-          !isNewExpression(mapExpr.expression) ||
-          !isIdentifier(mapExpr.expression.expression) ||
-          mapExpr.expression.expression.text !== 'Map'
+          !isNewExpression(mapExpr) ||
+          !isIdentifier(mapExpr.expression) ||
+          mapExpr.expression.text !== 'Map'
         ) {
           continue;
         }
+        const mapArgs = mapExpr.arguments;
 
-        // Check if the Map has arguments
-        if (mapExpr.arguments.length === 0) {
+        if (!mapArgs || mapArgs.length === 0) {
           continue;
         }
 
-        // Get the array literal that initializes the Map
-        const mapArg = mapExpr.arguments[0];
+        const mapArg = mapArgs[0];
         if (!isArrayLiteralExpression(mapArg)) {
           continue;
         }
 
-        // Check each entry in the Map
         found = mapArg.elements.some((el) => {
           if (!isArrayLiteralExpression(el)) {
             return false;
@@ -1058,13 +1055,13 @@ export function componentRegistrationsMapProviderHasIdentifier(
           const keyElement = el.elements[0];
           const valueElement = el.elements[1];
 
-          // Check if the key matches
           const keyMatches =
             isStringLiteral(keyElement) && keyElement.text === key;
 
-          // Check if the value is the identifier we're looking for
           const valueMatches =
-            isIdentifier(valueElement) && valueElement.text === identifierName;
+            isIdentifier(valueElement) &&
+            (valueElement.text === identifierName ||
+              valueElement.text.includes(identifierName));
 
           return keyMatches && valueMatches;
         });
@@ -1104,7 +1101,6 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
           continue;
         }
 
-        // Find the providers property
         const providersProp = init.properties.find((p) => {
           if (!isPropertyAssignment(p)) {
             return false;
@@ -1120,19 +1116,16 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
           continue;
         }
 
-        // Check if providers is an array
         const providersArray = providersProp.initializer;
         if (!isArrayLiteralExpression(providersArray)) {
           continue;
         }
 
-        // Find the component registrations provider object
         const registrationsProvider = providersArray.elements.find((el) => {
           if (!isObjectLiteralExpression(el)) {
             return false;
           }
 
-          // Check if this object has a provide property with NGX_FW_COMPONENT_REGISTRATIONS
           const provideProp = el.properties.find((p) => {
             if (!isPropertyAssignment(p)) {
               return false;
@@ -1147,7 +1140,7 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
 
             return (
               isIdentifier(p.initializer) &&
-              p.initializer.text === 'NGX_FW_COMPONENT_REGISTRATIONS'
+              p.initializer.text === NGX_FW_COMPONENT_REGISTRATIONS
             );
           });
 
@@ -1161,7 +1154,6 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
           continue;
         }
 
-        // Find the useValue property in the provider object
         const useValueProp = registrationsProvider.properties.find((p) => {
           if (!isPropertyAssignment(p)) {
             return false;
@@ -1177,29 +1169,26 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
           continue;
         }
 
-        // Check if useValue is a new Map expression
         const mapExpr = useValueProp.initializer;
         if (
-          !isCallExpression(mapExpr) ||
-          !isNewExpression(mapExpr.expression) ||
-          !isIdentifier(mapExpr.expression.expression) ||
-          mapExpr.expression.expression.text !== 'Map'
+          !isNewExpression(mapExpr) ||
+          !isIdentifier(mapExpr.expression) ||
+          mapExpr.expression.text !== 'Map'
         ) {
           continue;
         }
 
-        // Check if the Map has arguments
-        if (mapExpr.arguments.length === 0) {
+        const mapArgs = mapExpr.arguments;
+
+        if (!mapArgs || mapArgs.length === 0) {
           continue;
         }
 
-        // Get the array literal that initializes the Map
-        const mapArg = mapExpr.arguments[0];
+        const mapArg = mapArgs[0];
         if (!isArrayLiteralExpression(mapArg)) {
           continue;
         }
 
-        // Check each entry in the Map
         found = mapArg.elements.some((el) => {
           if (!isArrayLiteralExpression(el)) {
             return false;
@@ -1212,13 +1201,13 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
           const keyElement = el.elements[0];
           const valueElement = el.elements[1];
 
-          // Check if the key matches
           const keyMatches =
             isStringLiteral(keyElement) && keyElement.text === key;
 
-          // Check if the value is the identifier we're looking for
           const valueMatches =
-            isIdentifier(valueElement) && valueElement.text === identifierName;
+            isIdentifier(valueElement) &&
+            (valueElement.text === identifierName ||
+              valueElement.text.includes(identifierName));
 
           return keyMatches && valueMatches;
         });

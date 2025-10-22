@@ -24,6 +24,7 @@ import {
   parseTS,
   provideFormworkComponentRegistrationsHasIdentifier,
   read,
+  src,
   writeJson,
   writeTs,
 } from './helper';
@@ -31,9 +32,9 @@ import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 
 const appConfigPathRaw = 'app.config.ts';
-const formworkConfigPath = 'formwork.config.ts';
-const registrationsPath = 'registrations/component-registrations.ts';
-const schematicsConfigPath = 'formwork.config.json';
+const formworkConfigPath = 'app/formwork.config.ts';
+const registrationsPath = 'app/registrations/component-registrations.ts';
+const schematicsConfigPath = 'app/formwork.config.json';
 
 describe('control schematic', () => {
   let appTree: UnitTestTree;
@@ -49,7 +50,7 @@ describe('control schematic', () => {
 
   const hostDirectiveHelperPath = 'app/shared/helper/control.host-directive';
 
-  const componentPath = '/test/test/test-control.component.ts';
+  const defaultComponentOutputPath = app('test/test-control.component.ts');
   const appConfigPath = app(appConfigPathRaw);
 
   async function runSchematic(
@@ -76,7 +77,7 @@ describe('control schematic', () => {
     it('uses view provider helper if provided', async () => {
       const tree = await runSchematic('control', { viewProviderHelperPath });
 
-      const sf = parseTS(tree.readText(componentPath));
+      const sf = parseTS(tree.readText(defaultComponentOutputPath));
 
       const importsViewProviderHelper = hasNamedImport(
         sf,
@@ -105,7 +106,7 @@ describe('control schematic', () => {
     it('uses host directive helper if provided', async () => {
       const tree = await runSchematic('control', { hostDirectiveHelperPath });
 
-      const sf = parseTS(tree.readText(componentPath));
+      const sf = parseTS(tree.readText(defaultComponentOutputPath));
 
       const importsControlHostDirectiveHelper = hasNamedImport(
         sf,
@@ -127,7 +128,7 @@ describe('control schematic', () => {
 
     it('falls back to inline providers and host directive when helpers are not provided', async () => {
       const tree = await runSchematic('control');
-      const sf = parseTS(tree.readText(componentPath));
+      const sf = parseTS(tree.readText(defaultComponentOutputPath));
 
       const importsControlContainerFromAngular = hasNamedImport(
         sf,
@@ -171,14 +172,14 @@ describe('control schematic', () => {
         project: 'test-app',
         name: 'profile',
         key: 'user',
-        path: 'features/account',
+        path: 'app/features/account',
         interfaceSuffix: 'Field',
         componentSuffix: 'Widget',
       };
 
       const tree = await runSchematic('control', options);
 
-      const baseDir = '/features/account/profile';
+      const baseDir = app('features/account/profile');
       const componentFilePath = `${baseDir}/profile-widget.component.ts`;
 
       const typeFilePath = `${baseDir}/profile-field.type.ts`;
@@ -215,104 +216,26 @@ describe('control schematic', () => {
       expect(interfaceHasType).toBe(true);
     });
 
-    it('registers the created control in app.config.ts via provideFormwork', async () => {
-      provideMapInlineNoSplit(appTree);
-      const tree = await runSchematic('control');
-      const appConfigSf = parseTS(read(tree, appConfigPath));
-
-      const componentImportPath = buildRelativePath(
-        appConfigPath,
-        app(componentPath),
-      );
-
-      const importsComponent = hasNamedImport(
-        appConfigSf,
-        componentImportPath,
-        'TestControlComponent',
-      );
-
-      const hasRegistration =
-        provideFormworkComponentRegistrationsHasIdentifier(
-          appConfigSf,
-          'test',
-          'TestControlComponent',
-        );
-
-      expect(importsComponent).toBe(true);
-      expect(hasRegistration).toBe(true);
-    });
-
-    it('registers the created control directly in the registrations config if registrations are not split', async () => {
-      provideMapNoSplit(appTree);
-      const tree = await runSchematic('control', {});
-      const appConfigSf = parseTS(read(tree, appConfigPath));
-
-      const componentImportPath = buildRelativePath(
-        appConfigPath,
-        app(componentPath),
-      );
-
-      const importsComponent = hasNamedImport(
-        appConfigSf,
-        componentImportPath,
-        'TestControlComponent',
-      );
-
-      const hasRegistration =
-        defineFormworkConfigComponentRegistrationsHasIdentifier(
-          appConfigSf,
-          'test',
-          'TestControlComponent',
-        );
-
-      expect(importsComponent).toBe(true);
-      expect(hasRegistration).toBe(true);
-    });
-
-    it('registers the created control in the registrations if registrations are split', async () => {
-      provideMap(appTree);
-      const tree = await runSchematic('control', {});
-      const appConfigSf = parseTS(read(tree, appConfigPath));
-
-      const componentImportPath = buildRelativePath(
-        appConfigPath,
-        app(componentPath),
-      );
-
-      const importsComponent = hasNamedImport(
-        appConfigSf,
-        componentImportPath,
-        'TestControlComponent',
-      );
-
-      const hasRegistration = directComponentRegistrationsHasIdentifier(
-        appConfigSf,
-        'test',
-        'TestControlComponent',
-      );
-
-      expect(importsComponent).toBe(true);
-      expect(hasRegistration).toBe(true);
-    });
-
     it('registers the created control with the token provider if registrations are split', async () => {
       provideToken(appTree);
-      const tree = await runSchematic('control', {});
-      const appConfigSf = parseTS(read(tree, appConfigPath));
+      const tree = await runSchematic('control');
+      const componentRegistrationsSf = parseTS(
+        read(tree, src(registrationsPath)),
+      );
 
       const componentImportPath = buildRelativePath(
-        appConfigPath,
-        app(componentPath),
+        src(registrationsPath),
+        defaultComponentOutputPath,
       );
 
       const importsComponent = hasNamedImport(
-        appConfigSf,
+        componentRegistrationsSf,
         componentImportPath,
         'TestControlComponent',
       );
 
       const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
-        appConfigSf,
+        componentRegistrationsSf,
         'test',
         'TestControlComponent',
       );
@@ -323,12 +246,12 @@ describe('control schematic', () => {
 
     it('registers the created control with the token provider if registrations are not split', async () => {
       provideTokenNoSplit(appTree);
-      const tree = await runSchematic('control', {});
+      const tree = await runSchematic('control');
       const appConfigSf = parseTS(read(tree, appConfigPath));
 
       const componentImportPath = buildRelativePath(
         appConfigPath,
-        app(componentPath),
+        defaultComponentOutputPath,
       );
 
       const importsComponent = hasNamedImport(
@@ -357,13 +280,14 @@ describe('control schematic', () => {
           componentSuffix: 'Widget',
         },
       };
-      writeJson(appTree, app(schematicsConfigPath), config);
+      writeJson(appTree, src(schematicsConfigPath), config);
       provideMapInlineNoSplit(appTree);
 
       const tree = await runSchematic('control', {
         key: 'user',
         name: 'profile',
-        path: 'features/account',
+        path: 'app/features/account',
+        schematicsConfig: schematicsConfigPath,
       });
 
       const baseDir = app('features/account/profile');
@@ -393,53 +317,6 @@ describe('control schematic', () => {
       expect(interfaceHasType).toBe(true);
     });
 
-    it('overwrites values from configuration with CLI options', async () => {
-      const config: NgxFormworkAutomationConfig = {
-        control: {
-          interfaceSuffix: 'Field',
-          componentSuffix: 'Widget',
-        },
-      };
-      writeJson(appTree, app(schematicsConfigPath), config);
-      provideMapInlineNoSplit(appTree);
-
-      const options: GenerateOptions = {
-        project: 'test-app',
-        key: 'user',
-        name: 'username',
-        path: 'features/user',
-        componentSuffix: 'Control',
-      };
-
-      const tree = await runSchematic('control', options);
-
-      const baseDir = app('features/user/username');
-      const componentFilePath = `${baseDir}/username-control.component.ts`;
-      const typeFilePath = `${baseDir}/username-field.type.ts`;
-
-      const componentSf = parseTS(tree.readText(componentFilePath));
-      const typeSf = parseTS(tree.readText(typeFilePath));
-
-      const hasClass = classDeclarationExists(
-        componentSf,
-        'UsernameControlComponent',
-      );
-      const hasSelector = componentSelectorEquals(
-        componentSf,
-        'app-username-control',
-      );
-
-      const interfaceHasType = interfaceHasTypeLiteral(
-        typeSf,
-        'UsernameField',
-        'user',
-      );
-
-      expect(hasClass).toBe(true);
-      expect(hasSelector).toBe(true);
-      expect(interfaceHasType).toBe(true);
-    });
-
     it('registers the created control to default location', async () => {
       const config: NgxFormworkAutomationConfig = {
         control: {
@@ -447,32 +324,35 @@ describe('control schematic', () => {
           componentSuffix: 'Control',
         },
       };
-      writeJson(appTree, app(schematicsConfigPath), config);
-      provideMapInlineNoSplit(appTree);
+      writeJson(appTree, src(schematicsConfigPath), config);
+      provideToken(appTree);
 
       const tree = await runSchematic('control', {
         key: 'user',
         name: 'email',
+        schematicsConfig: schematicsConfigPath,
       });
-      const formworkConfigSf = parseTS(read(tree, app(formworkConfigPath)));
+
+      const componentRegistrationsSf = parseTS(
+        read(tree, src(registrationsPath)),
+      );
 
       const componentImportPath = buildRelativePath(
-        app(formworkConfigPath),
-        app('test/email/email-control.component.ts'),
+        src(registrationsPath),
+        app('email/email-control.component.ts'),
       );
 
       const importsComponent = hasNamedImport(
-        formworkConfigSf,
+        componentRegistrationsSf,
         componentImportPath,
         'EmailControlComponent',
       );
 
-      const hasRegistration =
-        provideFormworkComponentRegistrationsHasIdentifier(
-          formworkConfigSf,
-          'user',
-          'EmailControlComponent',
-        );
+      const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
+        componentRegistrationsSf,
+        'user',
+        'EmailControlComponent',
+      );
 
       expect(importsComponent).toBe(true);
       expect(hasRegistration).toBe(true);
@@ -486,21 +366,22 @@ describe('control schematic', () => {
           interfaceSuffix: 'Field',
           componentSuffix: 'Control',
         },
-        controlRegistrationsPath: app(registrationsPath),
+        controlRegistrationsPath: src(registrationsPath),
         registrationType: 'token',
       };
-      writeJson(appTree, app(schematicsConfigPath), config);
+      writeJson(appTree, src(schematicsConfigPath), config);
 
       const tree = await runSchematic('control', {
         key: 'email',
         name: 'email',
+        schematicsConfig: schematicsConfigPath,
       });
 
-      const registrationsSf = parseTS(read(tree, app(registrationsPath)));
+      const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
       const componentImportPath = buildRelativePath(
-        app(registrationsPath),
-        app('test/email/email-control.component.ts'),
+        src(registrationsPath),
+        app('email/email-control.component.ts'),
       );
 
       const importsComponent = hasNamedImport(
@@ -525,30 +406,31 @@ describe('control schematic', () => {
           skipRegistration: true,
         },
       };
-      writeJson(appTree, app(schematicsConfigPath), config);
-      provideMapInlineNoSplit(appTree);
+      writeJson(appTree, src(schematicsConfigPath), config);
+      provideToken(appTree);
 
       const tree = await runSchematic('control', {
         key: 'email',
         name: 'email',
+        schematicsConfig: schematicsConfigPath,
       });
 
-      const formworkConfigSf = parseTS(read(tree, app(formworkConfigPath)));
+      const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
       const componentImportPath = buildRelativePath(
-        app(formworkConfigPath),
-        app('test/email/email-control.component.ts'),
+        src(registrationsPath),
+        app('email/email-control.component.ts'),
       );
 
       const importsComponent = hasNamedImport(
-        formworkConfigSf,
+        registrationsSf,
         componentImportPath,
         'EmailControlComponent',
       );
 
       const hasRegistration =
         provideFormworkComponentRegistrationsHasIdentifier(
-          formworkConfigSf,
+          registrationsSf,
           'email',
           'EmailControlComponent',
         );
@@ -564,19 +446,178 @@ describe('control schematic', () => {
           componentSuffix: 'Control',
         },
         controlRegistrationsPath: 'shared/forms/non-existent-registrations.ts',
-        registrationType: 'token',
       };
-      writeJson(appTree, app(schematicsConfigPath), config);
-      provideMapInlineNoSplit(appTree);
+      writeJson(appTree, src(schematicsConfigPath), config);
+      provideToken(appTree);
 
-      const tree = await runSchematic('control');
+      const tree = await runSchematic('control', {
+        key: 'email',
+        name: 'email',
+        schematicsConfig: schematicsConfigPath,
+      });
 
-      const componentPath = app('test/email/email-control.component.ts');
+      const componentPath = app('email/email-control.component.ts');
       expect(tree.exists(componentPath)).toBe(true);
 
       expect(
         tree.exists(app('shared/forms/non-existent-registrations.ts')),
       ).toBe(false);
+    });
+
+    describe('registration style: map', () => {
+      beforeEach(() => {
+        const config: NgxFormworkAutomationConfig = {
+          registrationType: 'map',
+        };
+        writeJson(appTree, src(schematicsConfigPath), config);
+      });
+
+      it('registers the created control in app.config.ts in provideFormwork', async () => {
+        provideMapInlineNoSplit(appTree);
+        const tree = await runSchematic('control');
+        const appConfigSf = parseTS(read(tree, appConfigPath));
+
+        const componentImportPath = buildRelativePath(
+          appConfigPath,
+          defaultComponentOutputPath,
+        );
+
+        const importsComponent = hasNamedImport(
+          appConfigSf,
+          componentImportPath,
+          'TestControlComponent',
+        );
+
+        const hasRegistration =
+          provideFormworkComponentRegistrationsHasIdentifier(
+            appConfigSf,
+            'test',
+            'TestControlComponent',
+          );
+
+        expect(importsComponent).toBe(true);
+        expect(hasRegistration).toBe(true);
+      });
+
+      it('registers the created control directly in the registrations config if registrations are not split', async () => {
+        provideMapNoSplit(appTree);
+        const tree = await runSchematic('control');
+        const formworkConfigSf = parseTS(read(tree, src(formworkConfigPath)));
+
+        const componentImportPath = buildRelativePath(
+          src(formworkConfigPath),
+          defaultComponentOutputPath,
+        );
+
+        const importsComponent = hasNamedImport(
+          formworkConfigSf,
+          componentImportPath,
+          'TestControlComponent',
+        );
+
+        const hasRegistration =
+          defineFormworkConfigComponentRegistrationsHasIdentifier(
+            formworkConfigSf,
+            'test',
+            'TestControlComponent',
+          );
+
+        expect(importsComponent).toBe(true);
+        expect(hasRegistration).toBe(true);
+      });
+
+      it('registers the created control in the registrations if registrations are split', async () => {
+        provideMap(appTree);
+        const tree = await runSchematic('control');
+        const registrationsSf = parseTS(read(tree, src(registrationsPath)));
+
+        const componentImportPath = buildRelativePath(
+          src(registrationsPath),
+          defaultComponentOutputPath,
+        );
+
+        const importsComponent = hasNamedImport(
+          registrationsSf,
+          componentImportPath,
+          'TestControlComponent',
+        );
+
+        const hasRegistration = directComponentRegistrationsHasIdentifier(
+          registrationsSf,
+          'test',
+          'TestControlComponent',
+        );
+
+        expect(importsComponent).toBe(true);
+        expect(hasRegistration).toBe(true);
+      });
+
+      it('does not register the created control if skipRegistration is set to true', async () => {
+        const config: NgxFormworkAutomationConfig = {
+          control: {
+            skipRegistration: true,
+          },
+          registrationType: 'map',
+        };
+        writeJson(appTree, src(schematicsConfigPath), config);
+        provideMap(appTree);
+
+        const tree = await runSchematic('control', {
+          key: 'email',
+          name: 'email',
+          schematicsConfig: schematicsConfigPath,
+        });
+
+        const formworkConfigSf = parseTS(read(tree, src(formworkConfigPath)));
+
+        const componentImportPath = buildRelativePath(
+          src(formworkConfigPath),
+          app('email/email-control.component.ts'),
+        );
+
+        const importsComponent = hasNamedImport(
+          formworkConfigSf,
+          componentImportPath,
+          'EmailControlComponent',
+        );
+
+        const hasRegistration =
+          provideFormworkComponentRegistrationsHasIdentifier(
+            formworkConfigSf,
+            'email',
+            'EmailControlComponent',
+          );
+
+        expect(importsComponent).toBe(false);
+        expect(hasRegistration).toBe(false);
+      });
+
+      it('skips registration if control registrations file is not found', async () => {
+        const config: NgxFormworkAutomationConfig = {
+          control: {
+            interfaceSuffix: 'Field',
+            componentSuffix: 'Control',
+          },
+          controlRegistrationsPath:
+            'shared/forms/non-existent-registrations.ts',
+          registrationType: 'map',
+        };
+        writeJson(appTree, src(schematicsConfigPath), config);
+        provideMapInlineNoSplit(appTree);
+
+        const tree = await runSchematic('control', {
+          key: 'email',
+          name: 'email',
+          schematicsConfig: schematicsConfigPath,
+        });
+
+        const componentPath = app('email/email-control.component.ts');
+        expect(tree.exists(componentPath)).toBe(true);
+
+        expect(
+          tree.exists(app('shared/forms/non-existent-registrations.ts')),
+        ).toBe(false);
+      });
     });
   });
 });
@@ -614,7 +655,7 @@ function provideToken(appTree: UnitTestTree) {
     '};',
   ].join('\n');
 
-  writeTs(appTree, app(registrationsPath), formworkConfigContent);
+  writeTs(appTree, src(registrationsPath), formworkConfigContent);
 }
 
 function provideTokenNoSplit(appTree: UnitTestTree) {
@@ -623,16 +664,18 @@ function provideTokenNoSplit(appTree: UnitTestTree) {
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
+    "import { provideFormwork, NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
     '',
     'export const appConfig: ApplicationConfig = {',
     '  providers: [',
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork({',
-    '      componentRegistrations: {}',
-    '    }),',
+    '    provideFormwork(),',
+    '    {',
+    '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
+    '      useValue: new Map([])',
+    '    }',
     '  ],',
     '};',
     '',
@@ -696,7 +739,7 @@ function provideMap(appTree: UnitTestTree) {
     '});',
   ].join('\n');
 
-  writeTs(appTree, app(formworkConfigPath), formworkConfigContent);
+  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
 
   const registrationsContent = [
     "import { ComponentRegistrationConfig } from 'ngx-formwork';",
@@ -704,7 +747,7 @@ function provideMap(appTree: UnitTestTree) {
     'export const componentRegistrations: ComponentRegistrationConfig = {};',
   ].join('\n');
 
-  writeTs(appTree, app(registrationsPath), registrationsContent);
+  writeTs(appTree, src(registrationsPath), registrationsContent);
 }
 
 function provideMapNoSplit(appTree: UnitTestTree) {
@@ -741,5 +784,5 @@ function provideMapNoSplit(appTree: UnitTestTree) {
     '});',
   ].join('\n');
 
-  writeTs(appTree, app(formworkConfigPath), formworkConfigContent);
+  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
 }

@@ -48,8 +48,7 @@
     },
     "configurationPath": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic",
-      "default": "./ngx-formwork.config.json"
+      "description": "Path of the configuration that is to be used by this schematic"
     }
   },
   "required": [
