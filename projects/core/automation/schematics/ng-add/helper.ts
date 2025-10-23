@@ -22,7 +22,7 @@ import {
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,
   PACKAGE_NAME,
-} from './constants';
+} from '../../shared/constants';
 import { RuleContext } from './schema';
 import {
   updateWorkspace,

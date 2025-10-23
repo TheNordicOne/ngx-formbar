@@ -4,7 +4,7 @@ import { Project, QuoteKind, ts } from 'ts-morph';
 import { FormworkComponentInfo } from './models/component-info.model';
 // import { register } from '../../shared/control-registration';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
-import { DEFAULT_REGISTRATION_TYPE } from '../../schematics/ng-add/constants';
+import { DEFAULT_REGISTRATION_TYPE } from '../../shared/constants';
 
 /**
  * Writes discovered components to a TypeScript file that provides component registrations

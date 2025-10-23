@@ -9,7 +9,7 @@ import { strings } from '@angular-devkit/core';
 
 import { ScaffoldContext, Schema } from '../schema';
 import { findConfigPath, findSchematicsConfig, readFile } from '../file';
-import { DEFAULT_REGISTRATION_TYPE } from '../../ng-add/constants';
+import { DEFAULT_REGISTRATION_TYPE } from '../../../shared/constants';
 import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { createComponent } from './create-component.rule';
