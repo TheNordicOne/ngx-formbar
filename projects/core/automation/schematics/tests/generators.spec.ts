@@ -77,7 +77,7 @@ describe('control schematic', () => {
     it('uses view provider helper if provided', async () => {
       const tree = await runSchematic('control', { viewProviderHelperPath });
 
-      const sf = parseTS(tree.readText(defaultComponentOutputPath));
+      const sf = parseTS(read(tree, defaultComponentOutputPath));
 
       const importsViewProviderHelper = hasNamedImport(
         sf,
@@ -106,7 +106,7 @@ describe('control schematic', () => {
     it('uses host directive helper if provided', async () => {
       const tree = await runSchematic('control', { hostDirectiveHelperPath });
 
-      const sf = parseTS(tree.readText(defaultComponentOutputPath));
+      const sf = parseTS(read(tree, defaultComponentOutputPath));
 
       const importsControlHostDirectiveHelper = hasNamedImport(
         sf,
@@ -128,7 +128,7 @@ describe('control schematic', () => {
 
     it('falls back to inline providers and host directive when helpers are not provided', async () => {
       const tree = await runSchematic('control');
-      const sf = parseTS(tree.readText(defaultComponentOutputPath));
+      const sf = parseTS(read(tree, defaultComponentOutputPath));
 
       const importsControlContainerFromAngular = hasNamedImport(
         sf,
@@ -184,8 +184,8 @@ describe('control schematic', () => {
 
       const typeFilePath = `${baseDir}/profile-field.type.ts`;
 
-      const componentSf = parseTS(tree.readText(componentFilePath));
-      const typeSf = parseTS(tree.readText(typeFilePath));
+      const componentSf = parseTS(read(tree, componentFilePath));
+      const typeSf = parseTS(read(tree, typeFilePath));
 
       const hasClass = classDeclarationExists(
         componentSf,
@@ -294,8 +294,8 @@ describe('control schematic', () => {
       const componentFilePath = `${baseDir}/profile-widget.component.ts`;
       const typeFilePath = `${baseDir}/profile-field.type.ts`;
 
-      const componentSf = parseTS(tree.readText(componentFilePath));
-      const typeSf = parseTS(tree.readText(typeFilePath));
+      const componentSf = parseTS(read(tree, componentFilePath));
+      const typeSf = parseTS(read(tree, typeFilePath));
 
       const hasClass = classDeclarationExists(
         componentSf,
