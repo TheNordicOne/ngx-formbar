@@ -5,7 +5,26 @@ import {
   FormworkComponentInfo,
   FormworkComponentType,
 } from './models/component-info.model';
-import { ts } from 'ts-morph';
+import {
+  ClassDeclaration,
+  createSourceFile,
+  Decorator,
+  getDecorators,
+  isArrayLiteralExpression,
+  isCallExpression,
+  isClassDeclaration,
+  isIdentifier,
+  isObjectLiteralExpression,
+  isPropertyAccessExpression,
+  isPropertyAssignment,
+  isStringLiteral,
+  Node,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  ScriptTarget,
+  SourceFile,
+  StringLiteral,
+} from 'typescript';
 
 /**
  * Find components that use Ngx Formwork directives based on the given patterns
@@ -43,10 +62,10 @@ export function findComponents(
         continue;
       }
 
-      const sourceFile = ts.createSourceFile(
+      const sourceFile = createSourceFile(
         filePath,
         fileContent,
-        ts.ScriptTarget.Latest,
+        ScriptTarget.Latest,
         false,
       );
 
@@ -91,23 +110,23 @@ function getFilesMatchingPatterns(
  * Analyzes a TypeScript source file to find components with Ngx Formwork directives
  */
 function analyzeSourceFile(
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   filePath: string,
 ): FormworkComponentInfo[] {
   const components: FormworkComponentInfo[] = [];
 
   // Only inspect top-level class declarations; avoid deep AST traversal
   for (const stmt of sourceFile.statements) {
-    if (!ts.isClassDeclaration(stmt)) {
+    if (!isClassDeclaration(stmt)) {
       continue;
     }
 
-    const decorators = ts.getDecorators(stmt);
+    const decorators = getDecorators(stmt);
     if (!decorators || decorators.length === 0) {
       continue;
     }
 
-    const componentDecorator = decorators.find((decorator: ts.Decorator) => {
+    const componentDecorator = decorators.find((decorator: Decorator) => {
       const decoratorName = getDecoratorName(decorator);
       return decoratorName === 'Component';
     });
@@ -133,13 +152,13 @@ function analyzeSourceFile(
 /**
  * Gets the name of a decorator
  */
-function getDecoratorName(decorator: ts.Decorator): string | undefined {
-  if (!ts.isCallExpression(decorator.expression)) {
+function getDecoratorName(decorator: Decorator): string | undefined {
+  if (!isCallExpression(decorator.expression)) {
     return undefined;
   }
 
   const expression = decorator.expression.expression;
-  if (ts.isIdentifier(expression)) {
+  if (isIdentifier(expression)) {
     return expression.text;
   }
 
@@ -169,15 +188,15 @@ function inferTypeFromToken(
  * Extracts component information from a component declaration
  */
 function extractComponentInfo(
-  classNode: ts.ClassDeclaration,
-  componentDecorator: ts.Decorator,
+  classNode: ClassDeclaration,
+  componentDecorator: Decorator,
   filePath: string,
 ): FormworkComponentInfo | undefined {
   if (
-    !ts.isCallExpression(componentDecorator.expression) ||
+    !isCallExpression(componentDecorator.expression) ||
     !classNode.name ||
     componentDecorator.expression.arguments.length === 0 ||
-    !ts.isObjectLiteralExpression(componentDecorator.expression.arguments[0])
+    !isObjectLiteralExpression(componentDecorator.expression.arguments[0])
   ) {
     return undefined;
   }
@@ -186,22 +205,21 @@ function extractComponentInfo(
   const componentArgs = componentDecorator.expression.arguments[0];
 
   let selector: string | undefined;
-  let hostDirectivesNode: ts.PropertyAssignment | undefined;
+  let hostDirectivesNode: PropertyAssignment | undefined;
 
   for (const prop of componentArgs.properties) {
-    if (!ts.isPropertyAssignment(prop)) {
+    if (!isPropertyAssignment(prop)) {
       continue;
     }
 
     const n = prop.name;
-    const key =
-      ts.isIdentifier(n) || ts.isStringLiteral(n) ? n.text : undefined;
+    const key = isIdentifier(n) || isStringLiteral(n) ? n.text : undefined;
 
     if (!key) {
       continue;
     }
 
-    if (key === 'selector' && ts.isStringLiteral(prop.initializer)) {
+    if (key === 'selector' && isStringLiteral(prop.initializer)) {
       selector = prop.initializer.text;
     }
 
@@ -220,7 +238,7 @@ function extractComponentInfo(
     );
   }
 
-  if (!ts.isIdentifier(hostDirectivesNode.initializer)) {
+  if (!isIdentifier(hostDirectivesNode.initializer)) {
     return processHostDirectives(
       hostDirectivesNode,
       filePath,
@@ -254,22 +272,22 @@ function extractComponentInfo(
  * Checks for a hostDirective variable pattern like 'ngxfwControlHostDirective'
  */
 function checkForHostDirectiveVariable(
-  componentArgs: ts.ObjectLiteralExpression,
+  componentArgs: ObjectLiteralExpression,
   filePath: string,
   className: string,
   selector?: string,
 ): FormworkComponentInfo | undefined {
   for (const prop of componentArgs.properties) {
-    if (!ts.isPropertyAssignment(prop)) {
+    if (!isPropertyAssignment(prop)) {
       continue;
     }
 
     const name = prop.name;
     const isHostDirectives =
-      (ts.isIdentifier(name) && name.text === 'hostDirectives') ||
-      (ts.isStringLiteral(name) && name.text === 'hostDirectives');
+      (isIdentifier(name) && name.text === 'hostDirectives') ||
+      (isStringLiteral(name) && name.text === 'hostDirectives');
 
-    if (!isHostDirectives || !ts.isIdentifier(prop.initializer)) {
+    if (!isHostDirectives || !isIdentifier(prop.initializer)) {
       continue;
     }
 
@@ -299,7 +317,7 @@ function checkForHostDirectiveVariable(
  * Processes hostDirectives property to find Ngx Formwork directives
  */
 function processHostDirectives(
-  hostDirectivesNode: ts.PropertyAssignment,
+  hostDirectivesNode: PropertyAssignment,
   filePath: string,
   className: string,
   selector?: string,
@@ -307,7 +325,7 @@ function processHostDirectives(
   const directiveInputs: string[] = [];
   let type: FormworkComponentType | undefined;
 
-  if (ts.isIdentifier(hostDirectivesNode.initializer)) {
+  if (isIdentifier(hostDirectivesNode.initializer)) {
     const variableNameLower = hostDirectivesNode.initializer.text.toLowerCase();
     if (variableNameLower.includes('ngxfw')) {
       type = inferTypeFromToken(variableNameLower);
@@ -323,7 +341,7 @@ function processHostDirectives(
     }
   }
 
-  if (ts.isArrayLiteralExpression(hostDirectivesNode.initializer)) {
+  if (isArrayLiteralExpression(hostDirectivesNode.initializer)) {
     for (const element of hostDirectivesNode.initializer.elements) {
       const result = extractDirectiveInfo(element);
       if (result) {
@@ -332,7 +350,7 @@ function processHostDirectives(
         break;
       }
     }
-  } else if (ts.isObjectLiteralExpression(hostDirectivesNode.initializer)) {
+  } else if (isObjectLiteralExpression(hostDirectivesNode.initializer)) {
     const result = extractDirectiveInfo(hostDirectivesNode.initializer);
     if (result) {
       type = result.type;
@@ -357,9 +375,9 @@ function processHostDirectives(
  * Extracts information about the directive from a node
  */
 function extractDirectiveInfo(
-  node: ts.Node,
+  node: Node,
 ): { type: FormworkComponentType; inputs: string[] } | undefined {
-  if (!ts.isObjectLiteralExpression(node)) {
+  if (!isObjectLiteralExpression(node)) {
     return undefined;
   }
 
@@ -367,37 +385,37 @@ function extractDirectiveInfo(
   let inputs: string[] = [];
 
   for (const prop of node.properties) {
-    if (!ts.isPropertyAssignment(prop)) {
+    if (!isPropertyAssignment(prop)) {
       continue;
     }
 
     const name = prop.name;
-    const keyText = ts.isIdentifier(name)
+    const keyText = isIdentifier(name)
       ? name.text
-      : ts.isStringLiteral(name)
+      : isStringLiteral(name)
         ? name.text
         : undefined;
 
     switch (keyText) {
       case 'directive': {
-        if (ts.isIdentifier(prop.initializer)) {
+        if (isIdentifier(prop.initializer)) {
           directiveName = prop.initializer.text;
           break;
         }
 
-        if (ts.isPropertyAccessExpression(prop.initializer)) {
+        if (isPropertyAccessExpression(prop.initializer)) {
           directiveName = prop.initializer.name.text;
         }
 
         break;
       }
       case 'inputs': {
-        if (!ts.isArrayLiteralExpression(prop.initializer)) {
+        if (!isArrayLiteralExpression(prop.initializer)) {
           break;
         }
         inputs = prop.initializer.elements
-          .filter(ts.isStringLiteral)
-          .map((element: ts.StringLiteral) => element.text);
+          .filter(isStringLiteral)
+          .map((element: StringLiteral) => element.text);
       }
     }
   }
