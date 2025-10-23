@@ -5,11 +5,11 @@
   "type": "object",
   "properties": {
     "name": {
-      "description": "The name of the component that this group will use. Defaults to the key if not provided.",
+      "description": "The name of the component that this control will use. Defaults to the key if not provided.",
       "type": "string"
     },
     "key": {
-      "description": "The name of the key that this group will be associated with.",
+      "description": "The name of the key that this control will be associated with.",
       "type": "string"
     },
     "path": {
@@ -30,18 +30,29 @@
     },
     "interfaceSuffix": {
       "type": "string",
-      "description": "The suffix of the interface. Defaults to 'Group'",
-      "default": "Group"
+      "description": "The suffix of the interface. Defaults to 'Control'",
+      "default": "Control"
     },
     "componentSuffix": {
       "type": "string",
-      "description": "The suffix of the component. Defaults to 'Group'",
-      "default": "Group"
+      "description": "The suffix of the component. Defaults to 'Control'",
+      "default": "Control"
     },
-    "configurationPath": {
+    "hostDirectiveHelperPath": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic",
-      "default": "./ngx-formwork.config.json"
+      "description": "Path to the hostDirective helper"
+    },
+    "skipRegistration": {
+      "type": "boolean",
+      "description": "Skip automatic registration"
+    },
+    "viewProviderHelperPath": {
+      "type": "string",
+      "description": "Path to the viewProvider helper"
+    },
+    "schematicsConfig": {
+      "type": "string",
+      "description": "Path of the configuration that is to be used by this schematic"
     }
   },
   "required": [
