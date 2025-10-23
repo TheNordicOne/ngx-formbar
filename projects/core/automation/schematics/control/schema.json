@@ -38,15 +38,19 @@
       "description": "The suffix of the component. Defaults to 'Control'",
       "default": "Control"
     },
-    "viewProviderHelperPath": {
-      "type": "string",
-      "description": "Path to the viewProvider helper"
-    },
     "hostDirectiveHelperPath": {
       "type": "string",
       "description": "Path to the hostDirective helper"
     },
-    "configurationPath": {
+    "skipRegistration": {
+      "type": "boolean",
+      "description": "Skip automatic registration"
+    },
+    "viewProviderHelperPath": {
+      "type": "string",
+      "description": "Path to the viewProvider helper"
+    },
+    "schematicsConfig": {
       "type": "string",
       "description": "Path of the configuration that is to be used by this schematic"
     }
