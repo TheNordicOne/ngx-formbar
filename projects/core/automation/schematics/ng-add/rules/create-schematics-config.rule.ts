@@ -15,7 +15,7 @@ import {
   DEFAULT_PROVIDER_CONFIG_PATH,
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
-} from '../constants';
+} from '../../../shared/constants';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (_, context) => {

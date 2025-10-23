@@ -29,7 +29,7 @@ import {
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { normalize, Path } from '@angular-devkit/core';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { NGX_FW_COMPONENT_REGISTRATIONS } from '../ng-add/constants';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '../../shared/constants';
 
 // Path helpers
 export function appRoot(p = '') {

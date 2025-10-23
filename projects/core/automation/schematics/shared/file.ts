@@ -3,8 +3,8 @@ import {
   DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME,
   DEFAULT_REGISTRATIONS_PATH,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
-  DEFAULT_SCHEMATICS_CONFIG_PATH
-} from '../ng-add/constants';
+  DEFAULT_SCHEMATICS_CONFIG_PATH,
+} from '../../shared/constants';
 
 export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
   const candidates = [
