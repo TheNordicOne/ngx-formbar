@@ -6,10 +6,10 @@ import {
 } from '@angular-devkit/architect';
 import { getSystemPath, JsonObject, normalize } from '@angular-devkit/core';
 import * as path from 'path';
-import * as fs from 'fs';
 import { findComponents } from './component-discovery';
 import { writeComponentsToFile } from './component-writer';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import { readAutomationConfig } from './helper';
 
 interface DiscoverOptions {
   include: string[];
@@ -19,25 +19,6 @@ interface DiscoverOptions {
 }
 
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
-
-/**
- * Reads the automation configuration from a file if it exists
- * @param configPath Path to the configuration file
- * @returns The automation configuration or null if not found
- */
-function readAutomationConfig(
-  configPath: string,
-): NgxFormworkAutomationConfig | null {
-  try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, 'utf8');
-      return JSON.parse(content) as NgxFormworkAutomationConfig;
-    }
-  } catch (error) {
-    console.warn(`Failed to read automation config from ${configPath}:`, error);
-  }
-  return null;
-}
 
 const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
   createBuilder<DiscoverOptions>(
@@ -58,7 +39,7 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
         if (options.configPath) {
           const configPath = path.resolve(workspaceRoot, options.configPath);
           context.logger.info(`Reading automation config from: ${configPath}`);
-          automationConfig = readAutomationConfig(configPath);
+          automationConfig = readAutomationConfig(configPath, context);
         }
 
         context.logger.info(
