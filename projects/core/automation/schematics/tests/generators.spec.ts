@@ -6,8 +6,10 @@ import {
 
 import { Schema as GenerateOptions } from '../shared/schema';
 import { COLLECTION_PATH, setupWorkspace } from './workspace-setup';
+import { app, read, src, writeJson, writeTs } from './helper';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import {
-  app,
   appConfigProvidersComponentRegistrationsMapHasIdentifier,
   classDeclarationExists,
   componentRegistrationsMapProviderHasIdentifier,
@@ -23,13 +25,7 @@ import {
   interfaceHasTypeLiteral,
   parseTS,
   provideFormworkComponentRegistrationsHasIdentifier,
-  read,
-  src,
-  writeJson,
-  writeTs,
-} from './helper';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+} from '../shared/ast';
 
 const appConfigPathRaw = 'app.config.ts';
 const formworkConfigPath = 'app/formwork.config.ts';

@@ -29,13 +29,10 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
+import { isCallee } from '../shared/ast';
 
 function isProvideFormworkCall(n: Expression): boolean {
-  return (
-    isCallExpression(n) &&
-    isIdentifier(n.expression) &&
-    n.expression.text === 'provideFormwork'
-  );
+  return isCallExpression(n) && isCallee(n.expression, 'provideFormwork');
 }
 
 function hasIdentifier(name: string): (n: Expression) => boolean {

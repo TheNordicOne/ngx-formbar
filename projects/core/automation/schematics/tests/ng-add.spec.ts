@@ -14,9 +14,6 @@ import {
   callObjectArgHasProp,
   countCall,
   countNamedImport,
-  hasNamedImport,
-  importForSymbolUsesCorrectRelativePath,
-  parseTS,
   providersArrayContainsCall,
   providersArrayContainsIdentifier,
   providersArrayContainsProviderObject,
@@ -24,6 +21,11 @@ import {
   src,
 } from './helper';
 import { setupWorkspace } from './workspace-setup';
+import {
+  hasNamedImport,
+  importForSymbolUsesCorrectRelativePath,
+  parseTS,
+} from '../shared/ast';
 
 const COLLECTION_PATH = join(
   __dirname,
