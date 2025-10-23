@@ -21,6 +21,11 @@
       "description": "Scaffolds a new block and registers it.",
       "factory": "./block/index#block",
       "schema": "./block/schema.json"
+    },
+    "register": {
+      "description": "Searches for all components and registers them",
+      "factory": "./register/index#register",
+      "schema": "./register/schema.json"
     }
   }
 }
