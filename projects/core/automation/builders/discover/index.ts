@@ -11,13 +11,6 @@ import { writeComponentsToFile } from './component-writer';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import { readAutomationConfig } from './helper';
 
-interface DiscoverOptions {
-  include: string[];
-  exclude: string[];
-  outputPath?: string;
-  configPath?: string;
-}
-
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
 
 const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
@@ -53,13 +46,20 @@ const discoverBuilder: Builder<DiscoverOptions & JsonObject> =
           `Discovered ${String(components.length)} Ngx Formwork components`,
         );
 
-        writeComponentsToFile(components, resolvedOutputPath, automationConfig);
-
-        context.logger.info(
-          `Component information saved to: ${resolvedOutputPath}`,
+        const success = writeComponentsToFile(
+          components,
+          resolvedOutputPath,
+          automationConfig ?? {},
+          context,
         );
 
-        return Promise.resolve({ success: true });
+        if (success) {
+          context.logger.info(
+            `Component information saved to: ${resolvedOutputPath}`,
+          );
+        }
+
+        return Promise.resolve({ success });
       } catch (error) {
         context.logger.fatal('Component discovery failed!');
         context.logger.error(
