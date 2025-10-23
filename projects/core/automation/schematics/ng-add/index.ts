@@ -22,7 +22,7 @@ import {
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
   PACKAGE_VERSION,
-} from './constants';
+} from '../../shared/constants';
 import { createFormworkRegistrationsConfig } from './rules/create-formwork-registration-config.rule';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';

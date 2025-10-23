@@ -22,7 +22,7 @@ import {
   SyntaxKind,
 } from 'typescript';
 import { ReplaceChange } from '@schematics/angular/utility/change';
-import { NGX_FW_COMPONENT_REGISTRATIONS } from '../ng-add/constants';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '../../shared/constants';
 
 export function loadSourceFile(tree: Tree, path: string) {
   const buffer = tree.read(path);
