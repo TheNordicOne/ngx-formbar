@@ -5,8 +5,16 @@ import {
 } from '@angular-devkit/schematics/testing';
 
 import { Schema as GenerateOptions } from '../shared/schema';
-import { COLLECTION_PATH, setupWorkspace } from './workspace-setup';
-import { app, read, src, writeJson, writeTs } from './helper';
+import {
+  COLLECTION_PATH,
+  provideMap,
+  provideMapInlineNoSplit,
+  provideMapNoSplit,
+  provideToken,
+  provideTokenNoSplit,
+  setupWorkspace,
+} from './workspace-setup';
+import { app, read, src, writeJson } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import {
@@ -67,7 +75,7 @@ describe('control schematic', () => {
 
   describe('generated file content', () => {
     beforeEach(() => {
-      provideMapInlineNoSplit(appTree);
+      provideMapInlineNoSplit(appTree, appConfigPathRaw);
     });
 
     it('uses view provider helper if provided', async () => {
@@ -163,7 +171,7 @@ describe('control schematic', () => {
 
   describe('without configuration', () => {
     it('creates a control with passed values (name, key, path, suffixes)', async () => {
-      provideMapInlineNoSplit(appTree);
+      provideMapInlineNoSplit(appTree, appConfigPathRaw);
       const options: GenerateOptions = {
         project: 'test-app',
         name: 'profile',
@@ -213,7 +221,7 @@ describe('control schematic', () => {
     });
 
     it('registers the created control with the token provider if registrations are split', async () => {
-      provideToken(appTree);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
       const tree = await runSchematic('control');
       const componentRegistrationsSf = parseTS(
         read(tree, src(registrationsPath)),
@@ -241,7 +249,7 @@ describe('control schematic', () => {
     });
 
     it('registers the created control with the token provider if registrations are not split', async () => {
-      provideTokenNoSplit(appTree);
+      provideTokenNoSplit(appTree, appConfigPathRaw);
       const tree = await runSchematic('control');
       const appConfigSf = parseTS(read(tree, appConfigPath));
 
@@ -277,7 +285,7 @@ describe('control schematic', () => {
         },
       };
       writeJson(appTree, src(schematicsConfigPath), config);
-      provideMapInlineNoSplit(appTree);
+      provideMapInlineNoSplit(appTree, appConfigPathRaw);
 
       const tree = await runSchematic('control', {
         key: 'user',
@@ -321,7 +329,7 @@ describe('control schematic', () => {
         },
       };
       writeJson(appTree, src(schematicsConfigPath), config);
-      provideToken(appTree);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
 
       const tree = await runSchematic('control', {
         key: 'user',
@@ -355,7 +363,7 @@ describe('control schematic', () => {
     });
 
     it('registers the created control to configured location', async () => {
-      provideToken(appTree);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
 
       const config: NgxFormworkAutomationConfig = {
         control: {
@@ -403,7 +411,7 @@ describe('control schematic', () => {
         },
       };
       writeJson(appTree, src(schematicsConfigPath), config);
-      provideToken(appTree);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
 
       const tree = await runSchematic('control', {
         key: 'email',
@@ -444,7 +452,7 @@ describe('control schematic', () => {
         controlRegistrationsPath: 'shared/forms/non-existent-registrations.ts',
       };
       writeJson(appTree, src(schematicsConfigPath), config);
-      provideToken(appTree);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
 
       const tree = await runSchematic('control', {
         key: 'email',
@@ -469,7 +477,7 @@ describe('control schematic', () => {
       });
 
       it('registers the created control in app.config.ts in provideFormwork', async () => {
-        provideMapInlineNoSplit(appTree);
+        provideMapInlineNoSplit(appTree, appConfigPathRaw);
         const tree = await runSchematic('control');
         const appConfigSf = parseTS(read(tree, appConfigPath));
 
@@ -496,7 +504,7 @@ describe('control schematic', () => {
       });
 
       it('registers the created control directly in the registrations config if registrations are not split', async () => {
-        provideMapNoSplit(appTree);
+        provideMapNoSplit(appTree, appConfigPathRaw, formworkConfigPath);
         const tree = await runSchematic('control');
         const formworkConfigSf = parseTS(read(tree, src(formworkConfigPath)));
 
@@ -523,7 +531,12 @@ describe('control schematic', () => {
       });
 
       it('registers the created control in the registrations if registrations are split', async () => {
-        provideMap(appTree);
+        provideMap(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          formworkConfigPath,
+        );
         const tree = await runSchematic('control');
         const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
@@ -556,7 +569,12 @@ describe('control schematic', () => {
           registrationType: 'map',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
-        provideMap(appTree);
+        provideMap(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          formworkConfigPath,
+        );
 
         const tree = await runSchematic('control', {
           key: 'email',
@@ -599,7 +617,7 @@ describe('control schematic', () => {
           registrationType: 'map',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
-        provideMapInlineNoSplit(appTree);
+        provideMapInlineNoSplit(appTree, appConfigPathRaw);
 
         const tree = await runSchematic('control', {
           key: 'email',
@@ -617,168 +635,3 @@ describe('control schematic', () => {
     });
   });
 });
-
-function provideToken(appTree: UnitTestTree) {
-  const appConfigContent = [
-    "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
-    "import { provideRouter } from '@angular/router';",
-    "import { appRoutes } from './app.routes';",
-    "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
-    "import { componentRegistrationsProvider } from './registrations';",
-    '',
-    'export const appConfig: ApplicationConfig = {',
-    '  providers: [',
-    '    provideZoneChangeDetection({ eventCoalescing: true }),',
-    '    provideRouter(appRoutes),',
-    '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
-    '    componentRegistrationsProvider,',
-    '  ],',
-    '};',
-    '',
-  ].join('\n');
-
-  writeTs(appTree, app(appConfigPathRaw), appConfigContent);
-
-  const formworkConfigContent = [
-    "import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
-    '',
-    'export const componentRegistrationsProvider = {',
-    '  provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '  useValue: new Map([])',
-    '};',
-  ].join('\n');
-
-  writeTs(appTree, src(registrationsPath), formworkConfigContent);
-}
-
-function provideTokenNoSplit(appTree: UnitTestTree) {
-  const appConfigContent = [
-    "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
-    "import { provideRouter } from '@angular/router';",
-    "import { appRoutes } from './app.routes';",
-    "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork, NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
-    '',
-    'export const appConfig: ApplicationConfig = {',
-    '  providers: [',
-    '    provideZoneChangeDetection({ eventCoalescing: true }),',
-    '    provideRouter(appRoutes),',
-    '    provideHttpClient(),',
-    '    provideFormwork(),',
-    '    {',
-    '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '      useValue: new Map([])',
-    '    }',
-    '  ],',
-    '};',
-    '',
-  ].join('\n');
-
-  writeTs(appTree, app(appConfigPathRaw), appConfigContent);
-}
-
-function provideMapInlineNoSplit(appTree: UnitTestTree) {
-  const content = [
-    "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
-    "import { provideRouter } from '@angular/router';",
-    "import { appRoutes } from './app.routes';",
-    "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    '',
-    'export const appConfig: ApplicationConfig = {',
-    '  providers: [',
-    '    provideZoneChangeDetection({ eventCoalescing: true }),',
-    '    provideRouter(appRoutes),',
-    '    provideHttpClient(),',
-    '    provideFormwork({',
-    '      componentRegistrations: {}',
-    '    }),',
-    '  ],',
-    '};',
-    '',
-  ].join('\n');
-
-  writeTs(appTree, app(appConfigPathRaw), content);
-}
-
-function provideMap(appTree: UnitTestTree) {
-  const appConfigContent = [
-    "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
-    "import { provideRouter } from '@angular/router';",
-    "import { appRoutes } from './app.routes';",
-    "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
-    '',
-    'export const appConfig: ApplicationConfig = {',
-    '  providers: [',
-    '    provideZoneChangeDetection({ eventCoalescing: true }),',
-    '    provideRouter(appRoutes),',
-    '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
-    '  ],',
-    '};',
-    '',
-  ].join('\n');
-
-  writeTs(appTree, app(appConfigPathRaw), appConfigContent);
-
-  const formworkConfigContent = [
-    "import { defineFormworkConfig } from 'ngx-formwork';",
-    "import { componentRegistrations } from './registrations';",
-    '',
-    'export const formworkConfig = defineFormworkConfig({',
-    '    componentRegistrations,',
-    '});',
-  ].join('\n');
-
-  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
-
-  const registrationsContent = [
-    "import { ComponentRegistrationConfig } from 'ngx-formwork';",
-    '',
-    'export const componentRegistrations: ComponentRegistrationConfig = {};',
-  ].join('\n');
-
-  writeTs(appTree, src(registrationsPath), registrationsContent);
-}
-
-function provideMapNoSplit(appTree: UnitTestTree) {
-  const appConfigContent = [
-    "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
-    "import { provideRouter } from '@angular/router';",
-    "import { appRoutes } from './app.routes';",
-    "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
-    '',
-    'export const appConfig: ApplicationConfig = {',
-    '  providers: [',
-    '    provideZoneChangeDetection({ eventCoalescing: true }),',
-    '    provideRouter(appRoutes),',
-    '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
-    '    {',
-    '        provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '        useValue: new Map([])',
-    '    }',
-    '  ],',
-    '};',
-    '',
-  ].join('\n');
-
-  writeTs(appTree, app(appConfigPathRaw), appConfigContent);
-
-  const formworkConfigContent = [
-    "import { defineFormworkConfig } from 'ngx-formwork';",
-    '',
-    'export const formworkConfig = defineFormworkConfig({',
-    '    componentRegistrations: {},',
-    '});',
-  ].join('\n');
-
-  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
-}
