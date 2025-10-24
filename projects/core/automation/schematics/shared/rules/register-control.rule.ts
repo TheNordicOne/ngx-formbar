@@ -1,12 +1,18 @@
-import { ScaffoldContext } from '../schema';
+import { RegisterComponentContext, ScaffoldContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
 import { registerTypeToken } from './register-type-token.rule';
 import { registerTypeMap } from './register-type-map.rule';
 
 export function registerControl(ruleContext: ScaffoldContext): Rule {
   return (tree, context) => {
-    const { skipRegistration, controlRegistrationsPath, registrationType } =
-      ruleContext;
+    const {
+      skipRegistration,
+      controlRegistrationsPath,
+      registrationType,
+      key,
+      componentFilePath,
+      componentClassName,
+    } = ruleContext;
 
     if (skipRegistration) {
       return tree;
@@ -19,11 +25,18 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
       return tree;
     }
 
+    const registerComponentContext: RegisterComponentContext = {
+      controlRegistrationsPath,
+      key,
+      componentFilePath,
+      componentClassName,
+    };
+
     switch (registrationType) {
       case 'token':
-        return registerTypeToken(ruleContext);
+        return registerTypeToken(registerComponentContext);
       case 'map':
-        return registerTypeMap(ruleContext);
+        return registerTypeMap(registerComponentContext);
     }
   };
 }

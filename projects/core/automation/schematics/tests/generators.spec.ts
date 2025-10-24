@@ -370,7 +370,7 @@ describe('control schematic', () => {
           interfaceSuffix: 'Field',
           componentSuffix: 'Control',
         },
-        controlRegistrationsPath: src(registrationsPath),
+        controlRegistrationsPath: registrationsPath,
         registrationType: 'token',
       };
       writeJson(appTree, src(schematicsConfigPath), config);

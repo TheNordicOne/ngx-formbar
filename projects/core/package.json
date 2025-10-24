@@ -5,7 +5,6 @@
     "build": "tsc -p tsconfig.schematics.json",
     "postbuild": "copyfiles --up 1 automation/schematics/*/schema.json automation/schematics/**/files/**/*.* automation/schematics/**/files/*.* automation/schematics/collection.json ../../dist/core/ automation/builders/**/*.json ../../dist/core/"
   },
-  "builders": "builder.json",
   "peerDependencies": {
     "@angular/cdk": "^19.0.0",
     "@angular/common": "^19.0.0",

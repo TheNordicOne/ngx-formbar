@@ -2,7 +2,6 @@ import {
   chain,
   Rule,
   SchematicContext,
-  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
@@ -14,10 +13,8 @@ import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type'
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
-import {
-  getWorkspace,
-  ProjectDefinition,
-} from '@schematics/angular/utility/workspace';
+import { ProjectDefinition } from '@schematics/angular/utility/workspace';
+import { getProject } from '../helper';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -30,27 +27,6 @@ export function scaffoldAndRegister(
 
     return chain([createComponent(ruleContext), registerControl(ruleContext)]);
   };
-}
-
-async function getProject(tree: Tree, projectName?: string) {
-  const workspace = await getWorkspace(tree);
-  projectName ??= workspace.extensions['defaultProject'] as string;
-
-  if (!projectName) {
-    throw new SchematicsException(
-      'No project specified and no default project found.',
-    );
-  }
-
-  const project = workspace.projects.get(projectName);
-
-  if (!project) {
-    throw new SchematicsException(
-      `Project "${projectName}" not found in workspace.`,
-    );
-  }
-
-  return project;
 }
 
 function mergeOptions(
@@ -94,9 +70,9 @@ function mergeOptions(
     controlTypeConfig?.hostDirectiveHelperPath ??
     mergedConfig.hostDirectiveHelperPath;
 
-  const controlRegistrationsPath =
-    automationConfig?.controlRegistrationsPath ??
-    findConfigPath(tree, projectRoot);
+  const controlRegistrationsPath = automationConfig?.controlRegistrationsPath
+    ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
+    : findConfigPath(tree, projectRoot);
 
   if (!controlRegistrationsPath) {
     context.logger.warn(
