@@ -1,12 +1,44 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NgxFormworkControl",
-  "title": "Scaffold Control",
+  "title": "Register controls",
   "type": "object",
   "properties": {
-
-  },
-  "required": [
-    "key"
-  ]
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add ngx-formwork to.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "registrationStyle": {
+      "type": "string",
+      "description": "How components and validators will be registered. Possible values: token, map",
+      "default": "token"
+    },
+    "controlRegistrations": {
+      "type": "string",
+      "description": "Path to the registration file that should be used,"
+    },
+    "schematicsConfig": {
+      "type": "string",
+      "description": "Path of the configuration that is to be used by this schematic"
+    },
+    "include": {
+      "type": "array",
+      "description": "Glob patterns to include when searching for components",
+      "default": ["**/*.ts"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    }
+  }
 }

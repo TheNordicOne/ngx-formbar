@@ -27,3 +27,10 @@ export interface ScaffoldContext extends Schema {
   hostDirectiveHelperPath?: string;
   controlRegistrationsPath?: string | null;
 }
+
+export interface RegisterComponentContext {
+  controlRegistrationsPath?: string | null;
+  key: string;
+  componentFilePath: string;
+  componentClassName: string;
+}

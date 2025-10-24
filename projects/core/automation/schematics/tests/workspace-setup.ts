@@ -6,6 +6,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { app, src, writeTs } from './helper';
+import { classify } from '@angular-devkit/core/src/utils/strings';
 
 export const COLLECTION_PATH = join(
   __dirname,
@@ -42,6 +43,8 @@ export function provideToken(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
   registrationsPath: string,
+  initialRegistrations = '',
+  initialImports = '',
 ) {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
@@ -68,10 +71,11 @@ export function provideToken(
 
   const formworkConfigContent = [
     "import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
+    initialImports,
     '',
     'export const componentRegistrationsProvider = {',
     '  provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '  useValue: new Map([])',
+    `  useValue: new Map([${initialRegistrations}])`,
     '};',
   ].join('\n');
 
@@ -81,6 +85,8 @@ export function provideToken(
 export function provideTokenNoSplit(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
+  initialRegistrations = '',
+  initialImports = '',
 ) {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
@@ -88,6 +94,7 @@ export function provideTokenNoSplit(
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
     "import { provideFormwork, NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
+    initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
     '  providers: [',
@@ -97,7 +104,7 @@ export function provideTokenNoSplit(
     '    provideFormwork(),',
     '    {',
     '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '      useValue: new Map([])',
+    `      useValue: new Map([${initialRegistrations}])`,
     '    }',
     '  ],',
     '};',
@@ -110,6 +117,8 @@ export function provideTokenNoSplit(
 export function provideMapInlineNoSplit(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
+  initialRegistrations = '',
+  initialImports = '',
 ) {
   const content = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
@@ -117,6 +126,7 @@ export function provideMapInlineNoSplit(
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
     "import { provideFormwork } from 'ngx-formwork';",
+    initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
     '  providers: [',
@@ -124,7 +134,7 @@ export function provideMapInlineNoSplit(
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
     '    provideFormwork({',
-    '      componentRegistrations: {}',
+    `      componentRegistrations: {${initialRegistrations}}`,
     '    }),',
     '  ],',
     '};',
@@ -139,6 +149,8 @@ export function provideMap(
   appConfigPathRaw: string,
   registrationsPath: string,
   formworkConfigPath: string,
+  initialRegistrations = '',
+  initialImports = '',
 ) {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
@@ -147,6 +159,7 @@ export function provideMap(
     "import { provideHttpClient } from '@angular/common/http';",
     "import { provideFormwork } from 'ngx-formwork';",
     "import { formworkConfig } from './formwork.config';",
+    initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
     '  providers: [',
@@ -175,7 +188,7 @@ export function provideMap(
   const registrationsContent = [
     "import { ComponentRegistrationConfig } from 'ngx-formwork';",
     '',
-    'export const componentRegistrations: ComponentRegistrationConfig = {};',
+    `export const componentRegistrations: ComponentRegistrationConfig = {${initialRegistrations}};`,
   ].join('\n');
 
   writeTs(appTree, src(registrationsPath), registrationsContent);
@@ -185,6 +198,8 @@ export function provideMapNoSplit(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
   formworkConfigPath: string,
+  initialRegistrations = '',
+  initialImports = '',
 ) {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
@@ -193,6 +208,7 @@ export function provideMapNoSplit(
     "import { provideHttpClient } from '@angular/common/http';",
     "import { provideFormwork } from 'ngx-formwork';",
     "import { formworkConfig } from './formwork.config';",
+    initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
     '  providers: [',
@@ -202,7 +218,7 @@ export function provideMapNoSplit(
     '    provideFormwork(formworkConfig),',
     '    {',
     '        provide: NGX_FW_COMPONENT_REGISTRATIONS,',
-    '        useValue: new Map([])',
+    `        useValue: new Map([${initialRegistrations}])`,
     '    }',
     '  ],',
     '};',
@@ -220,4 +236,75 @@ export function provideMapNoSplit(
   ].join('\n');
 
   writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
+}
+
+export function addFiles(appTree: UnitTestTree, files: TestComponentDetails[]) {
+  for (const { path, content } of files) {
+    writeTs(appTree, path, content);
+  }
+}
+
+export function createControlComponent(
+  name: string,
+  providersAndImports: [string, string],
+  className: string,
+) {
+  const classifiedName = classify(name);
+
+  const [providers, imports] = providersAndImports;
+
+  return `import { Component } from '@angular/core';
+  import { NgxfwControlDirective } from '@ngx-formwork/core';
+  import { ReactiveFormsModule } from '@angular/forms';
+  ${imports}
+
+  @Component({
+  selector: 'app-${name}-control',
+  imports: [ReactiveFormsModule],
+  templateUrl: './${name}-control.component.html',
+  ${providers}
+})
+export class ${className} {
+  private readonly control = inject(NgxfwControlDirective<${classifiedName}Control>);
+}
+  `;
+}
+
+export type TestComponentDetails = {
+  path: string;
+  content: string;
+  className: string;
+  key: string;
+  shouldRegister?: boolean;
+};
+
+export const inlineProviders: [string, string] = [
+  `viewProviders: [
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ],
+  hostDirectives: [
+    {
+      directive: NgxfwControlDirective,
+      inputs: ['content', 'name'],
+    }
+  ],`,
+  `import { ControlContainer } from '@angular/forms';`,
+];
+
+export const helperProviders: [string, string] = [
+  `viewProviders: viewProviders,
+  hostDirectives: [
+    ngxfwControlHostDirective
+  ],`,
+  `import { viewProviders } from '../shared/helper';
+    import { ngxfwControlHostDirective } from '../shared/helper';`,
+];
+
+export function createUnrelatedComponent(name: string, className: string) {
+  return `import { Component } from '@angular/core';
+        @Component({ selector: 'app-${name}', template: '' })
+        export class ${className} {}`;
 }

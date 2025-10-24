@@ -1287,3 +1287,168 @@ function isArrayAndMatchesIdentifierName(
     valueEl.text === identifierName
   );
 }
+
+export function registrationNodeHasKey(node: Node, key: string): boolean {
+  if (isNewExpression(node)) {
+    const arr = findMapArrayLiteral(node);
+    if (!arr) {
+      return false;
+    }
+    return arrayLiteralHasKey(arr, key);
+  }
+
+  if (isObjectLiteralExpression(node)) {
+    return objectLiteralHasKey(node, key);
+  }
+
+  return false;
+}
+
+export function registrationNodeUsesIdentifier(
+  node: Node,
+  identifierName: string,
+): boolean {
+  if (isNewExpression(node)) {
+    const arr = findMapArrayLiteral(node);
+    if (!arr) {
+      return false;
+    }
+    return arrayLiteralUsesIdentifier(arr, identifierName);
+  }
+
+  if (isObjectLiteralExpression(node)) {
+    return objectLiteralUsesIdentifier(node, identifierName);
+  }
+
+  return false;
+}
+
+function arrayLiteralHasKey(arr: ArrayLiteralExpression, key: string): boolean {
+  for (const el of arr.elements) {
+    if (!isArrayLiteralExpression(el) || el.elements.length !== 2) {
+      continue;
+    }
+    const [k] = el.elements;
+    if (isStringLiteral(k) && k.text === key) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function arrayLiteralUsesIdentifier(
+  arr: ArrayLiteralExpression,
+  identifierName: string,
+): boolean {
+  for (const el of arr.elements) {
+    if (!isArrayLiteralExpression(el) || el.elements.length !== 2) {
+      continue;
+    }
+    const [, v] = el.elements;
+    if (isIdentifier(v) && v.text === identifierName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function objectLiteralHasKey(
+  obj: ObjectLiteralExpression,
+  key: string,
+): boolean {
+  for (const p of obj.properties) {
+    if (!isPropertyAssignment(p)) {
+      continue;
+    }
+    const n = p.name;
+    if (isIdentifier(n) && n.text === key) {
+      return true;
+    }
+    if (isStringLiteral(n) && n.text === key) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function objectLiteralUsesIdentifier(
+  obj: ObjectLiteralExpression,
+  identifierName: string,
+): boolean {
+  for (const p of obj.properties) {
+    if (!isPropertyAssignment(p)) {
+      continue;
+    }
+    if (isIdentifier(p.initializer) && p.initializer.text === identifierName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function registrationsObjectHasKey(
+  obj: ObjectLiteralExpression,
+  key: string,
+): boolean {
+  for (const p of obj.properties) {
+    if (!isPropertyAssignment(p)) {
+      continue;
+    }
+    const n = p.name;
+    const matchesKey =
+      (isIdentifier(n) && n.text === key) ||
+      (isStringLiteral(n) && n.text === key);
+
+    if (matchesKey) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function registrationsObjectUsesIdentifier(
+  obj: ObjectLiteralExpression,
+  identifierName: string,
+): boolean {
+  for (const p of obj.properties) {
+    if (!isPropertyAssignment(p)) {
+      continue;
+    }
+    if (isIdentifier(p.initializer) && p.initializer.text === identifierName) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function componentRegistrationsObjectHasKey(
+  node: Node | null,
+  key: string,
+): boolean {
+  if (!node) {
+    return false;
+  }
+
+  if (!isObjectLiteralExpression(node)) {
+    return false;
+  }
+
+  return registrationsObjectHasKey(node, key);
+}
+
+export function componentRegistrationsObjectUsesIdentifier(
+  node: Node | null,
+  identifierName: string,
+): boolean {
+  if (!node) {
+    return false;
+  }
+
+  if (!isObjectLiteralExpression(node)) {
+    return false;
+  }
+
+  return registrationsObjectUsesIdentifier(node, identifierName);
+}
