@@ -16,10 +16,6 @@ export interface NgxFormworkAutomationConfig {
   registrationType?: RegistrationType;
   controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;
-  //ToDo: remove
-  providerConfigPath?: string;
-  //ToDo: remove
-  providerConfigFileName?: string;
   discovery?: DiscoveryConfig;
   control?: BaseGenerateSchematicConfig;
   group?: BaseGenerateSchematicConfig;
