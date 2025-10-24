@@ -11,8 +11,6 @@ import { RuleContext } from '../schema';
 import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import {
   DEFAULT_HELPER_PATH,
-  DEFAULT_PROVIDER_CONFIG_FILE_NAME,
-  DEFAULT_PROVIDER_CONFIG_PATH,
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
 } from '../../../shared/constants';
@@ -24,8 +22,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       schematicsConfigPath,
       schematicConfigFileName,
       projectRoot,
-      providerConfigPath,
-      providerConfigFileName,
       helperPath,
       registrationsPath,
       registrationStyle,
@@ -45,14 +41,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
 
     if (registrationsPath !== DEFAULT_REGISTRATIONS_PATH) {
       schematicConfig.controlRegistrationsPath = registrationsPath;
-    }
-
-    if (providerConfigPath !== DEFAULT_PROVIDER_CONFIG_PATH) {
-      schematicConfig.providerConfigPath = providerConfigPath;
-    }
-
-    if (providerConfigFileName !== DEFAULT_PROVIDER_CONFIG_FILE_NAME) {
-      schematicConfig.providerConfigFileName = `${providerConfigFileName ?? ''}.ts`;
     }
 
     if (helperPath !== DEFAULT_HELPER_PATH) {

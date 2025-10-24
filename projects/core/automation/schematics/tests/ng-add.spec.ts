@@ -691,10 +691,6 @@ describe('ng-add schematic', () => {
           registrationsPath,
         );
         expect(schematicsConfig.viewProviderHelperPath).toBe(helperPath);
-        expect(schematicsConfig.providerConfigPath).toBe(providerConfigPath);
-        expect(schematicsConfig.providerConfigFileName).toBe(
-          providerConfigFileName,
-        );
 
         expect(schematicsConfig.control?.hostDirectiveHelperPath).toBe(
           helperPath,
