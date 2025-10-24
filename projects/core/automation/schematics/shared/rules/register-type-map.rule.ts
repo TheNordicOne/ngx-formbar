@@ -1,7 +1,9 @@
-import { ScaffoldContext } from '../schema';
+import { RegisterComponentContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
 import {
   addComponentRegistration,
+  componentRegistrationsObjectHasKey,
+  componentRegistrationsObjectUsesIdentifier,
   findComponentRegistrationsObject,
   loadSourceFile,
 } from '../ast';
@@ -12,7 +14,7 @@ import {
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 
-export function registerTypeMap(ruleContext: ScaffoldContext): Rule {
+export function registerTypeMap(ruleContext: RegisterComponentContext): Rule {
   return (tree, context) => {
     const {
       controlRegistrationsPath,
@@ -37,6 +39,35 @@ export function registerTypeMap(ruleContext: ScaffoldContext): Rule {
       return tree;
     }
 
+    const registrationsObject = findComponentRegistrationsObject(
+      registrationsSourceFile,
+    );
+
+    if (!registrationsObject) {
+      return tree;
+    }
+
+    const identifierAlreadyUsed = componentRegistrationsObjectUsesIdentifier(
+      registrationsObject,
+      componentClassName,
+    );
+
+    if (identifierAlreadyUsed) {
+      context.logger.warn(
+        `A component with the name "${componentClassName}" is already used`,
+      );
+      return tree;
+    }
+
+    const keyAlreadyUsed = componentRegistrationsObjectHasKey(
+      registrationsObject,
+      key,
+    );
+    if (keyAlreadyUsed) {
+      context.logger.warn(`A key with the name "${key}" is already used`);
+      return tree;
+    }
+
     const componentImportPath = buildRelativePath(
       controlRegistrationsPath,
       componentFilePath,
@@ -51,22 +82,16 @@ export function registerTypeMap(ruleContext: ScaffoldContext): Rule {
       ),
     ];
 
-    const registrationsObject = findComponentRegistrationsObject(
+    const updateChanges = addComponentRegistration(
+      tree,
       registrationsSourceFile,
+      controlRegistrationsPath,
+      registrationsObject,
+      key,
+      componentClassName,
     );
 
-    if (registrationsObject) {
-      const updateChanges = addComponentRegistration(
-        tree,
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        registrationsObject,
-        key,
-        componentClassName,
-      );
-
-      changes.push(...updateChanges);
-    }
+    changes.push(...updateChanges);
 
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);

@@ -1,9 +1,11 @@
-import { ScaffoldContext } from '../schema';
+import { RegisterComponentContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
 import {
   findComponentRegistrationsNode,
   findMapArrayLiteral,
   loadSourceFile,
+  registrationNodeHasKey,
+  registrationNodeUsesIdentifier,
   updateMapEntries,
 } from '../ast';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
@@ -14,7 +16,7 @@ import {
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 
-export function registerTypeToken(ruleContext: ScaffoldContext): Rule {
+export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
   return (tree, context) => {
     const {
       controlRegistrationsPath,
@@ -39,6 +41,30 @@ export function registerTypeToken(ruleContext: ScaffoldContext): Rule {
       return tree;
     }
 
+    const mapNode = findComponentRegistrationsNode(registrationsSourceFile);
+
+    if (!mapNode) {
+      return tree;
+    }
+
+    const identifierAlreadyUsed = registrationNodeUsesIdentifier(
+      mapNode,
+      componentClassName,
+    );
+
+    if (identifierAlreadyUsed) {
+      context.logger.warn(
+        `A component with the name "${componentClassName}" is already used`,
+      );
+      return tree;
+    }
+
+    const keyAlreadyUsed = registrationNodeHasKey(mapNode, key);
+    if (keyAlreadyUsed) {
+      context.logger.warn(`A key with the name "${key}" is already used`);
+      return tree;
+    }
+
     const componentImportPath = buildRelativePath(
       controlRegistrationsPath,
       componentFilePath,
@@ -52,12 +78,6 @@ export function registerTypeToken(ruleContext: ScaffoldContext): Rule {
         componentImportPath,
       ),
     ];
-
-    const mapNode = findComponentRegistrationsNode(registrationsSourceFile);
-
-    if (!mapNode) {
-      return tree;
-    }
 
     const mapArrayLiteral = findMapArrayLiteral(mapNode);
 

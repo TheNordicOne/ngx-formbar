@@ -1,9 +1,0 @@
-{
-  "builders": {
-    "discover": {
-      "description": "Discovers components and validators and creates a registration file.",
-      "implementation": "./dist/discover",
-      "schema": "./dist/discover/schema.json"
-    }
-  }
-}
