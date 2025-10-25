@@ -508,7 +508,7 @@ describe('register schematic', () => {
       'app/feature/survey/form/component-registrations.ts';
 
     const config: NgxFormworkAutomationConfig = {
-      registrationType: 'map',
+      registrationType: 'config',
       controlRegistrationsPath: nonDefaultRegistrationsPath,
       discovery: {
         include: ['**/components/form/controls/**'],
@@ -583,7 +583,7 @@ describe('register schematic', () => {
 
     addFiles(appTree, files);
     const config: NgxFormworkAutomationConfig = {
-      registrationType: 'map',
+      registrationType: 'config',
       discovery: {
         include: ['**/components/form/controls/**'],
         exclude: ['**/components/form/controls/secret/**'],

@@ -1,4 +1,4 @@
-export type RegistrationType = 'token' | 'map';
+export type RegistrationType = 'token' | 'config';
 
 export interface BaseGenerateSchematicConfig {
   interfaceSuffix?: string;

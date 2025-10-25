@@ -477,7 +477,7 @@ describe('control schematic', () => {
     describe('registration style: map', () => {
       beforeEach(() => {
         const config: NgxFormworkAutomationConfig = {
-          registrationType: 'map',
+          registrationType: 'config',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
       });
@@ -572,7 +572,7 @@ describe('control schematic', () => {
           control: {
             skipRegistration: true,
           },
-          registrationType: 'map',
+          registrationType: 'config',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
         provideMap(
@@ -620,7 +620,7 @@ describe('control schematic', () => {
           },
           controlRegistrationsPath:
             'shared/forms/non-existent-registrations.ts',
-          registrationType: 'map',
+          registrationType: 'config',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
         provideMapInlineNoSplit(appTree, appConfigPathRaw);
