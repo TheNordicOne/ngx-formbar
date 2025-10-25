@@ -10,7 +10,7 @@ import {
 import { normalize, strings } from '@angular-devkit/core';
 
 export function createComponent(ruleContext: ScaffoldContext): Rule {
-  return (_) => {
+  return () => {
     const { resolvedName, componentPath } = ruleContext;
 
     return mergeWith(

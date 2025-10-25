@@ -26,15 +26,15 @@ import {
   writeJson,
 } from './helper';
 import { DiscoverOptions } from '../register/schema';
-import {
-  componentRegistrationsMapProviderHasIdentifier,
-  directComponentRegistrationsHasIdentifier,
-  hasNamedImport,
-  parseTS,
-} from '../shared/ast';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { SourceFile } from 'typescript';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import {
+  componentRegistrationsMapProviderHasIdentifier,
+  directComponentRegistrationsHasIdentifier,
+} from '../shared/ast/registrations';
+import { parseTS } from '../shared/ast/parse';
+import { hasNamedImport } from '../shared/ast/imports';
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
