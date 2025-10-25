@@ -17,23 +17,29 @@ import {
 import { app, read, src, writeJson } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import { parseTS } from '../shared/ast/parse';
 import {
-  appConfigProvidersComponentRegistrationsMapHasIdentifier,
-  classDeclarationExists,
-  componentRegistrationsMapProviderHasIdentifier,
+  hasNamedImport,
+  importForSymbolUsesCorrectRelativePath,
+} from '../shared/ast/imports';
+import {
   componentSelectorEquals,
   decoratorArrayPropContainsIdentifier,
   decoratorArrayPropContainsProviderObject,
   decoratorHostDirectivesHasInlineDirectiveWithInputs,
   decoratorPropInitializerIsIdentifier,
+} from '../shared/ast/decorators';
+import {
+  classDeclarationExists,
+  interfaceHasTypeLiteral,
+} from '../shared/ast/types';
+import {
+  appConfigProvidersComponentRegistrationsMapHasIdentifier,
+  componentRegistrationsMapProviderHasIdentifier,
   defineFormworkConfigComponentRegistrationsHasIdentifier,
   directComponentRegistrationsHasIdentifier,
-  hasNamedImport,
-  importForSymbolUsesCorrectRelativePath,
-  interfaceHasTypeLiteral,
-  parseTS,
   provideFormworkComponentRegistrationsHasIdentifier,
-} from '../shared/ast';
+} from '../shared/ast/registrations';
 
 const appConfigPathRaw = 'app.config.ts';
 const formworkConfigPath = 'app/formwork.config.ts';

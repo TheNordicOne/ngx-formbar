@@ -16,7 +16,7 @@ import {
 import { Change, ReplaceChange } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { JsonObject, normalize, Path } from '@angular-devkit/core';
+import { JsonObject, normalize } from '@angular-devkit/core';
 import {
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
@@ -28,15 +28,161 @@ import {
   updateWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
-import { Rule, SchematicsException } from '@angular-devkit/schematics';
-import { isCallee } from '../shared/ast';
+import { SchematicsException } from '@angular-devkit/schematics';
+import { isCallee } from '../shared/ast/decorators';
 
-function isProvideFormworkCall(n: Expression): boolean {
+export function updateSchematicConfig(
+  schematicName: string,
+  options: JsonObject,
+  projectName?: string,
+) {
+  return updateWorkspace((workspace: WorkspaceDefinition) => {
+    const targetProject =
+      projectName ?? (workspace.extensions['defaultProject'] as string);
+
+    if (!targetProject) {
+      throw new SchematicsException(
+        `No projectName provided and workspace.defaultProject is not set.`,
+      );
+    }
+
+    const projectDef = workspace.projects.get(targetProject);
+    if (!projectDef) {
+      throw new SchematicsException(
+        `Project "${targetProject}" does not exist in the workspace.`,
+      );
+    }
+
+    projectDef.extensions['schematics'] ??= {};
+    const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
+
+    const schematicKey = `${PACKAGE_NAME}:${schematicName}`;
+    const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
+    schematicsExt[schematicKey] = {
+      ...existingConfig,
+      ...options,
+    };
+  });
+}
+
+export function buildProvidersUpdate(
+  sourceFile: SourceFile,
+  ruleContext: RuleContext,
+  providersArray: ArrayLiteralExpression,
+) {
+  const {
+    projectRoot,
+    appConfigPath,
+    registrationStyle,
+    registrationsPath,
+    providerConfigPath,
+    providerConfigFileName,
+    splitRegistrations,
+  } = ruleContext;
+
+  const extraChanges: Change[] = [];
+  const existingElements = [...providersArray.elements];
+  const newElements = [...existingElements];
+
+  const formattedProviderConfigPath =
+    providerConfigPath && providerConfigFileName
+      ? `${providerConfigPath}/${providerConfigFileName}`
+      : (providerConfigPath ?? '');
+
+  const registrationsImportPath = createRelativePath(
+    appConfigPath,
+    `${projectRoot}/${registrationsPath ?? ''}`,
+  );
+
+  const providerConfigImportPath = createRelativePath(
+    appConfigPath,
+    `${projectRoot}/${formattedProviderConfigPath}`,
+  );
+
+  const hasProvideCall = existingElements.some(isProvideFormworkCall);
+  if (!hasProvideCall) {
+    const callArgs = createArgsForConfig(
+      sourceFile,
+      ruleContext,
+      registrationsImportPath,
+      providerConfigImportPath,
+      extraChanges,
+    );
+
+    newElements.push(
+      factory.createCallExpression(
+        factory.createIdentifier('provideFormwork'),
+        undefined,
+        callArgs,
+      ),
+    );
+  }
+
+  if (registrationStyle !== 'token') {
+    return buildResult(
+      providersArray,
+      newElements,
+      existingElements,
+      extraChanges,
+    );
+  }
+
+  if (splitRegistrations) {
+    handleSplitRegistrations(
+      sourceFile,
+      ruleContext,
+      registrationsImportPath,
+      existingElements,
+      newElements,
+      extraChanges,
+    );
+
+    return buildResult(
+      providersArray,
+      newElements,
+      existingElements,
+      extraChanges,
+    );
+  }
+
+  handleStandaloneTokens(
+    sourceFile,
+    ruleContext,
+    existingElements,
+    newElements,
+    extraChanges,
+  );
+
+  return buildResult(
+    providersArray,
+    newElements,
+    existingElements,
+    extraChanges,
+  );
+}
+
+export function replaceNodeWithPrinted(
+  sf: SourceFile,
+  filePath: string,
+  fileText: string,
+  original: Node,
+  replacement: Node,
+) {
+  const printer = createPrinter({});
+  const printed = printer.printNode(EmitHint.Unspecified, replacement, sf);
+  const start = original.getStart(sf);
+  const end = original.getEnd();
+  return [
+    new ReplaceChange(filePath, start, fileText.slice(start, end), printed),
+  ];
+}
+
+function isProvideFormworkCall(n: Expression) {
   return isCallExpression(n) && isCallee(n.expression, 'provideFormwork');
 }
 
-function hasIdentifier(name: string): (n: Expression) => boolean {
-  return function (n: Expression): boolean {
+function hasIdentifier(name: string) {
+  return function (n: Expression) {
     return isIdentifier(n) && n.text === name;
   };
 }
@@ -45,16 +191,16 @@ function compareElements(
   el: Expression,
   i: number,
   existingElements: Expression[],
-): boolean {
+) {
   return el !== existingElements[i];
 }
 
-function ensureAbsolutePath(path: string): Path {
+function ensureAbsolutePath(path: string) {
   const pathWithLeadingSlash = path.startsWith('/') ? path : `/${path}`;
   return normalize(pathWithLeadingSlash);
 }
 
-function createRelativePath(from: string, to: string): string {
+function createRelativePath(from: string, to: string) {
   const absoluteFrom = ensureAbsolutePath(from);
   const absoluteTo = ensureAbsolutePath(to);
   return buildRelativePath(absoluteFrom, absoluteTo);
@@ -66,7 +212,7 @@ function createArgsForConfig(
   registrationsImportPath: string,
   providerConfigImportPath: string,
   extraChanges: Change[],
-): Expression[] {
+) {
   const {
     provideInline,
     splitRegistrations,
@@ -184,7 +330,7 @@ function createArgsForConfig(
 function checkTokenProviderExists(
   existingElements: Expression[],
   tokenName: string,
-): boolean {
+) {
   return existingElements.some((el) => {
     if (!isCallExpression(el)) {
       return false;
@@ -206,7 +352,7 @@ function checkTokenProviderExists(
   });
 }
 
-function createMapProviderExpression(tokenName: string): Expression {
+function createMapProviderExpression(tokenName: string) {
   return factory.createObjectLiteralExpression(
     [
       factory.createPropertyAssignment(
@@ -233,7 +379,7 @@ function addStandaloneRegistrationProvider(
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
-): void {
+) {
   const { appConfigPath } = ruleContext;
 
   extraChanges.push(
@@ -254,7 +400,7 @@ function addSplitRegistrationProvider(
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
-): void {
+) {
   const { appConfigPath } = ruleContext;
   const hasProvider = existingElements.some(hasIdentifier(providerName));
 
@@ -280,7 +426,7 @@ function handleSplitRegistrations(
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
-): void {
+) {
   const { registrationsPath, includeSyncValidators, includeAsyncValidators } =
     ruleContext;
 
@@ -327,7 +473,7 @@ function handleStandaloneTokens(
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
-): void {
+) {
   const { includeSyncValidators, includeAsyncValidators } = ruleContext;
 
   addStandaloneRegistrationProvider(
@@ -367,11 +513,7 @@ function buildResult(
   newElements: Expression[],
   existingElements: Expression[],
   extraChanges: Change[],
-): {
-  updatedProvidersArray: ArrayLiteralExpression;
-  extraChanges: Change[];
-  didChange: boolean;
-} {
+) {
   const didChange =
     newElements.length !== existingElements.length ||
     newElements.some((el, i) => compareElements(el, i, existingElements));
@@ -381,161 +523,4 @@ function buildResult(
     : providersArray;
 
   return { updatedProvidersArray, extraChanges, didChange };
-}
-
-export function buildProvidersUpdate(
-  sourceFile: SourceFile,
-  ruleContext: RuleContext,
-  providersArray: ArrayLiteralExpression,
-): {
-  updatedProvidersArray: ArrayLiteralExpression;
-  extraChanges: Change[];
-  didChange: boolean;
-} {
-  const {
-    projectRoot,
-    appConfigPath,
-    registrationStyle,
-    registrationsPath,
-    providerConfigPath,
-    providerConfigFileName,
-    splitRegistrations,
-  } = ruleContext;
-
-  const extraChanges: Change[] = [];
-  const existingElements = [...providersArray.elements];
-  const newElements: Expression[] = [...existingElements];
-
-  const formattedProviderConfigPath =
-    providerConfigPath && providerConfigFileName
-      ? `${providerConfigPath}/${providerConfigFileName}`
-      : (providerConfigPath ?? '');
-
-  const registrationsImportPath = createRelativePath(
-    appConfigPath,
-    `${projectRoot}/${registrationsPath ?? ''}`,
-  );
-
-  const providerConfigImportPath = createRelativePath(
-    appConfigPath,
-    `${projectRoot}/${formattedProviderConfigPath}`,
-  );
-
-  // Add provideFormwork call if missing
-  const hasProvideCall = existingElements.some(isProvideFormworkCall);
-  if (!hasProvideCall) {
-    const callArgs = createArgsForConfig(
-      sourceFile,
-      ruleContext,
-      registrationsImportPath,
-      providerConfigImportPath,
-      extraChanges,
-    );
-
-    newElements.push(
-      factory.createCallExpression(
-        factory.createIdentifier('provideFormwork'),
-        undefined,
-        callArgs,
-      ),
-    );
-  }
-
-  // Exit early if not using token registration style
-  if (registrationStyle !== 'token') {
-    return buildResult(
-      providersArray,
-      newElements,
-      existingElements,
-      extraChanges,
-    );
-  }
-
-  // Split registration providers path
-  if (splitRegistrations) {
-    handleSplitRegistrations(
-      sourceFile,
-      ruleContext,
-      registrationsImportPath,
-      existingElements,
-      newElements,
-      extraChanges,
-    );
-
-    return buildResult(
-      providersArray,
-      newElements,
-      existingElements,
-      extraChanges,
-    );
-  }
-
-  // Standalone token providers path
-  handleStandaloneTokens(
-    sourceFile,
-    ruleContext,
-    existingElements,
-    newElements,
-    extraChanges,
-  );
-
-  return buildResult(
-    providersArray,
-    newElements,
-    existingElements,
-    extraChanges,
-  );
-}
-
-/** Tiny utility to safely replace a node via the TS printer. */
-export function replaceNodeWithPrinted(
-  sf: SourceFile,
-  filePath: string,
-  fileText: string,
-  original: Node,
-  replacement: Node,
-): Change[] {
-  const printer = createPrinter({});
-  const printed = printer.printNode(EmitHint.Unspecified, replacement, sf);
-  const start = original.getStart(sf);
-  const end = original.getEnd();
-  return [
-    new ReplaceChange(filePath, start, fileText.slice(start, end), printed),
-  ];
-}
-
-export function updateSchematicConfig(
-  schematicName: string,
-  options: JsonObject,
-  projectName?: string,
-): Rule {
-  return updateWorkspace((workspace: WorkspaceDefinition) => {
-    // Determine which project to update
-    const targetProject =
-      projectName ?? (workspace.extensions['defaultProject'] as string);
-    if (!targetProject) {
-      throw new SchematicsException(
-        `No projectName provided and workspace.defaultProject is not set.`,
-      );
-    }
-
-    const projectDef = workspace.projects.get(targetProject);
-    if (!projectDef) {
-      throw new SchematicsException(
-        `Project "${targetProject}" does not exist in the workspace.`,
-      );
-    }
-
-    // Ensure the "schematics" extension exists on the project
-    projectDef.extensions['schematics'] ??= {};
-    const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
-
-    // Grab and merge existing schematic config
-    const schematicKey = `${PACKAGE_NAME}:${schematicName}`;
-    const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
-    schematicsExt[schematicKey] = {
-      ...existingConfig,
-      ...options,
-    };
-  });
 }

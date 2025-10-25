@@ -1,33 +1,31 @@
-import { SchematicsException, Tree } from '@angular-devkit/schematics';
-import { Project, ts } from 'ts-morph';
+import {
+  AsExpression,
+  CallExpression,
+  Expression,
+  isArrowFunction,
+  isIdentifier,
+  isNumericLiteral,
+  isObjectLiteralExpression,
+  isParenthesizedExpression,
+  isStringLiteral,
+  isVariableStatement,
+  Node,
+  NonNullExpression,
+  ObjectLiteralExpression,
+  ParenthesizedExpression,
+  PropertyName,
+  SatisfiesExpression,
+  SourceFile,
+  SyntaxKind,
+  VariableDeclaration,
+} from 'typescript';
 
-/** Load a TS file into an in‑memory ts-morph SourceFile */
-export function getSourceFile(tree: Tree, filePath: string) {
-  const buffer = tree.read(filePath);
-  if (!buffer) {
-    throw new SchematicsException(`Cannot find ${filePath}`);
-  }
-  const content = buffer.toString('utf-8');
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    compilerOptions: { allowJs: true, target: 3 },
-    skipFileDependencyResolution: true,
-  });
-  return project.createSourceFile(filePath, content, { overwrite: true });
-}
-
-/**
- * Find a top-level variable by name whose initializer is an ObjectLiteralExpression,
- * accounting for wrappers like parentheses, type assertions, `satisfies`, and non-null.
- *
- * Pure: does not touch Tree/Recorder.
- */
 export function findVariableWithObjectLiteral(
-  sf: ts.SourceFile,
-  expression: (d: ts.VariableDeclaration) => boolean,
-): ts.ObjectLiteralExpression | null {
+  sf: SourceFile,
+  expression: (d: VariableDeclaration) => boolean,
+) {
   for (const stmt of sf.statements) {
-    if (!ts.isVariableStatement(stmt)) {
+    if (!isVariableStatement(stmt)) {
       continue;
     }
 
@@ -51,41 +49,39 @@ export function findVariableWithObjectLiteral(
  * Recursively unwrap common wrappers until we hit an ObjectLiteralExpression.
  * Returns null when the expression never resolves to an object literal.
  */
-export function unwrapToObjectLiteral(
-  expr: ts.Expression,
-): ts.ObjectLiteralExpression | null {
-  let current: ts.Expression | undefined = expr;
+export function unwrapToObjectLiteral(expr: Expression) {
+  let current: Expression | undefined = expr;
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
-    if (ts.isObjectLiteralExpression(current)) {
+    if (isObjectLiteralExpression(current)) {
       return current;
     }
 
     switch (current.kind) {
-      case ts.SyntaxKind.ParenthesizedExpression:
-        current = (current as ts.ParenthesizedExpression).expression;
+      case SyntaxKind.ParenthesizedExpression:
+        current = (current as ParenthesizedExpression).expression;
         continue;
-      case ts.SyntaxKind.AsExpression:
-        current = (current as ts.AsExpression).expression;
+      case SyntaxKind.AsExpression:
+        current = (current as AsExpression).expression;
         continue;
-      case ts.SyntaxKind.SatisfiesExpression:
-        current = (current as ts.SatisfiesExpression).expression;
+      case SyntaxKind.SatisfiesExpression:
+        current = (current as SatisfiesExpression).expression;
         continue;
-      case ts.SyntaxKind.NonNullExpression:
-        current = (current as ts.NonNullExpression).expression;
+      case SyntaxKind.NonNullExpression:
+        current = (current as NonNullExpression).expression;
         continue;
-      case ts.SyntaxKind.CallExpression: {
-        const call = current as ts.CallExpression;
+      case SyntaxKind.CallExpression: {
+        const call = current as CallExpression;
         const callee = call.expression;
         if (
-          ts.isParenthesizedExpression(callee) &&
-          ts.isArrowFunction(callee.expression)
+          isParenthesizedExpression(callee) &&
+          isArrowFunction(callee.expression)
         ) {
           const body = callee.expression.body;
           if (
-            ts.isParenthesizedExpression(body) &&
-            ts.isObjectLiteralExpression(body.expression)
+            isParenthesizedExpression(body) &&
+            isObjectLiteralExpression(body.expression)
           ) {
             return body.expression;
           }
@@ -98,27 +94,25 @@ export function unwrapToObjectLiteral(
   }
 }
 
-export function isObjectLiteral(
-  node: ts.Node,
-): node is ts.ObjectLiteralExpression {
-  return ts.isObjectLiteralExpression(node);
+export function isObjectLiteral(node: Node): node is ObjectLiteralExpression {
+  return isObjectLiteralExpression(node);
 }
 
-export function nameOfProperty(propertyName: ts.PropertyName | undefined) {
+export function nameOfProperty(propertyName: PropertyName | undefined) {
   if (!propertyName) {
     return null;
   }
-  return ts.isIdentifier(propertyName)
+  return isIdentifier(propertyName)
     ? propertyName.text
-    : ts.isStringLiteral(propertyName)
+    : isStringLiteral(propertyName)
       ? propertyName.text
-      : ts.isNumericLiteral(propertyName)
+      : isNumericLiteral(propertyName)
         ? propertyName.text
         : null; // ignore computed names for this check
 }
 
 export function isObjectLiteralWithProperty(
-  variable: ts.VariableDeclaration,
+  variable: VariableDeclaration,
   propertyName: string,
 ) {
   const initializer = variable.initializer;

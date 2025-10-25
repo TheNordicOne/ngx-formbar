@@ -21,11 +21,11 @@ import {
   src,
 } from './helper';
 import { setupWorkspace } from './workspace-setup';
+import { parseTS } from '../shared/ast/parse';
 import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
-  parseTS,
-} from '../shared/ast';
+} from '../shared/ast/imports';
 
 const COLLECTION_PATH = join(
   __dirname,

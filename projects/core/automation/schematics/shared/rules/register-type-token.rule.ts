@@ -1,13 +1,5 @@
 import { RegisterComponentContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
-import {
-  findComponentRegistrationsNode,
-  findMapArrayLiteral,
-  loadSourceFile,
-  registrationNodeHasKey,
-  registrationNodeUsesIdentifier,
-  updateMapEntries,
-} from '../ast';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 import {
@@ -15,6 +7,14 @@ import {
   Change,
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
+import { loadSourceFile } from '../ast/parse';
+import {
+  findComponentRegistrationsNode,
+  findMapArrayLiteral,
+  registrationNodeHasKey,
+  registrationNodeUsesIdentifier,
+  updateMapEntries,
+} from '../ast/registrations';
 
 export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
   return (tree, context) => {
