@@ -20,7 +20,6 @@
     "@schematics/angular": "file:../../node_modules/@schematics/angular",
     "copyfiles": "file:../../node_modules/copyfiles",
     "typescript": "file:../../node_modules/typescript",
-    "ts-morph": "file:../../node_modules/ts-morph",
     "@angular-devkit/core": "file:../../node_modules//@angular-devkit/core",
     "@angular-devkit/architect": "file:../../node_modules//@angular-devkit/architect"
   },
