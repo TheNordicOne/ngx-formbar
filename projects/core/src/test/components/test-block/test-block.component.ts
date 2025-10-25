@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, Signal } from '@angular/core';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
-import { NgxfwBlockDirective } from '../../../lib/directives/ngxfw-block.directive';
+import { NgxfwBlockDirective } from '../../../lib';
 import { InfoBlock } from '../../types/block.type';
 import { simpleTestIdBuilder } from '../../helper/test-id-builder';
 

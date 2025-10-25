@@ -6,20 +6,18 @@ import {
   isIdentifier,
   isImportDeclaration,
   isNamedImports,
-  isNewExpression,
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteral,
-  isVariableDeclaration,
   isVariableStatement,
   Node,
-  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   SourceFile,
   SyntaxKind,
 } from 'typescript';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { isCallee } from '../shared/ast';
+import { isCallee } from '../shared/ast/decorators';
+import { getMapArguments } from '../shared/ast/registrations';
 
 // Path helpers
 export function appRoot(p = '') {
@@ -61,7 +59,7 @@ export function writeTs(tree: UnitTestTree, filePath: string, content: string) {
 export function providersArrayContainsCall(sf: SourceFile, callee: string) {
   let found = false;
 
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (found) {
       return;
     }
@@ -92,7 +90,7 @@ export function providersArrayContainsCall(sf: SourceFile, callee: string) {
 export function providersArrayContainsIdentifier(sf: SourceFile, name: string) {
   let found = false;
 
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (found) {
       return;
     }
@@ -123,7 +121,7 @@ export function providersArrayContainsProviderObject(
 ) {
   let found = false;
 
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (found) {
       return;
     }
@@ -206,7 +204,7 @@ export function countNamedImport(
 
 export function countCall(sf: SourceFile, callee: string) {
   let count = 0;
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (
       isCallExpression(node) &&
       isIdentifier(node.expression) &&
@@ -271,7 +269,7 @@ export function callObjectArgHasProp(
 ) {
   let found = false;
 
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (found) {
       return;
     }
@@ -307,77 +305,11 @@ export function callObjectArgHasProp(
 export function forEachAtLeastOnce<T>(
   array: readonly T[],
   callback: Parameters<(readonly T[])['forEach']>[0],
-): void {
+) {
   if (array.length === 0) {
     throw new Error('Array.forEach did not iterate at least once.');
   }
   array.forEach(callback);
-}
-
-// Counts the number of Identifier nodes in the entire SourceFile that match the provided name.
-export function countIdentifier(sf: SourceFile, name: string): number {
-  let count = 0;
-  const visit = (node: Node): void => {
-    if (isIdentifier(node) && node.text === name) {
-      count += 1;
-    }
-    node.forEachChild(visit);
-  };
-  sf.forEachChild(visit);
-  return count;
-}
-
-// Counts how many times a given Identifier appears directly inside any `providers: [...]` array.
-export function countProvidersArrayIdentifiers(
-  sf: SourceFile,
-  name: string,
-): number {
-  let count = 0;
-
-  const visit = (node: Node): void => {
-    if (
-      isPropertyAssignment(node) &&
-      isIdentifier(node.name) &&
-      node.name.text === 'providers'
-    ) {
-      const init = node.initializer;
-      if (isArrayLiteralExpression(init)) {
-        const items = init.elements;
-        items.forEach((el) => {
-          if (isIdentifier(el) && el.text === name) {
-            count += 1;
-          }
-        });
-      }
-    }
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return count;
-}
-
-// --- Count variants for specific *HasIdentifier scenarios ---
-
-function matchesIdentifierName(
-  p: ObjectLiteralElementLike,
-  key: string,
-  identifierName: string,
-) {
-  if (!isPropertyAssignment(p)) {
-    return false;
-  }
-
-  const n = p.name;
-  const matchesKey =
-    (isIdentifier(n) && n.text === key) ||
-    (isStringLiteral(n) && n.text === key);
-
-  return (
-    matchesKey &&
-    isIdentifier(p.initializer) &&
-    p.initializer.text === identifierName
-  );
 }
 
 function isArrayAndMatchesIdentifierName(
@@ -398,106 +330,6 @@ function isArrayAndMatchesIdentifierName(
   );
 }
 
-// Count entries inside provideFormwork({ componentRegistrations: { [key]: Identifier } })
-export function countProvideFormworkComponentRegistrationsIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): number {
-  let count = 0;
-
-  const visit = (node: Node): void => {
-    if (
-      isCallExpression(node) &&
-      isCallee(node.expression, 'provideFormwork')
-    ) {
-      const [firstArg] = node.arguments;
-      if (!isObjectLiteralExpression(firstArg)) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      const regProp = firstArg.properties.find((p) => {
-        if (!isPropertyAssignment(p)) return false;
-        const n = p.name;
-        return (
-          (isIdentifier(n) && n.text === 'componentRegistrations') ||
-          (isStringLiteral(n) && n.text === 'componentRegistrations')
-        );
-      });
-
-      if (
-        !regProp ||
-        !isPropertyAssignment(regProp) ||
-        !isObjectLiteralExpression(regProp.initializer)
-      ) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      regProp.initializer.properties.forEach((p) => {
-        if (matchesIdentifierName(p, key, identifierName)) {
-          count += 1;
-        }
-      });
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return count;
-}
-
-// Count entries inside defineFormworkConfig({ componentRegistrations: { [key]: Identifier } })
-export function countDefineFormworkConfigComponentRegistrationsIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): number {
-  let count = 0;
-
-  const visit = (node: Node): void => {
-    if (
-      isCallExpression(node) &&
-      isCallee(node.expression, 'defineFormworkConfig')
-    ) {
-      const [firstArg] = node.arguments;
-      if (!isObjectLiteralExpression(firstArg)) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      const regProp = firstArg.properties.find(
-        (p) =>
-          isPropertyAssignment(p) &&
-          isIdentifier(p.name) &&
-          p.name.text === 'componentRegistrations',
-      );
-
-      if (
-        !regProp ||
-        !isPropertyAssignment(regProp) ||
-        !isObjectLiteralExpression(regProp.initializer)
-      ) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      regProp.initializer.properties.forEach((p) => {
-        if (matchesIdentifierName(p, key, identifierName)) {
-          count += 1;
-        }
-      });
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return count;
-}
-
 // Count entries inside variable componentRegistrationsProvider = { useValue: new Map([[key, Identifier], ...]) }
 export function countComponentRegistrationsMapProviderIdentifier(
   sf: SourceFile,
@@ -506,186 +338,15 @@ export function countComponentRegistrationsMapProviderIdentifier(
 ): number {
   let count = 0;
 
-  const visit = (node: Node): void => {
+  const visit = (node: Node) => {
     if (isVariableStatement(node)) {
       const decls = node.declarationList.declarations;
       for (const decl of decls) {
-        if (
-          !isIdentifier(decl.name) ||
-          decl.name.text !== 'componentRegistrationsProvider'
-        ) {
+        const mapArg = getMapArguments(decl);
+        if (!mapArg) {
           continue;
         }
 
-        const init = decl.initializer;
-        if (!init || !isObjectLiteralExpression(init)) {
-          continue;
-        }
-
-        const useValueProp = init.properties.find(
-          (p) =>
-            isPropertyAssignment(p) &&
-            isIdentifier(p.name) &&
-            p.name.text === 'useValue',
-        );
-
-        if (!useValueProp || !isPropertyAssignment(useValueProp)) {
-          continue;
-        }
-
-        const mapExpr = useValueProp.initializer;
-        if (
-          !isNewExpression(mapExpr) ||
-          !mapExpr.arguments ||
-          mapExpr.arguments.length === 0
-        ) {
-          continue;
-        }
-
-        const mapArg = mapExpr.arguments[0];
-        if (!isArrayLiteralExpression(mapArg)) {
-          continue;
-        }
-
-        mapArg.elements.forEach((el) => {
-          if (isArrayAndMatchesIdentifierName(el, key, identifierName)) {
-            count += 1;
-          }
-        });
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return count;
-}
-
-// Count entries inside variable componentRegistrations = { [key]: Identifier }
-export function countDirectComponentRegistrationsIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): number {
-  let count = 0;
-
-  const visit = (node: Node): void => {
-    if (isVariableStatement(node)) {
-      const decls = node.declarationList.declarations;
-      for (const decl of decls) {
-        if (
-          !isIdentifier(decl.name) ||
-          decl.name.text !== 'componentRegistrations'
-        ) {
-          continue;
-        }
-
-        const init = decl.initializer;
-        if (!init || !isObjectLiteralExpression(init)) {
-          continue;
-        }
-
-        init.properties.forEach((p) => {
-          if (matchesIdentifierName(p, key, identifierName)) {
-            count += 1;
-          }
-        });
-        // Do not early-return; there could technically be multiple such declarations
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return count;
-}
-
-// Count entries inside appConfig.providers providing NGX_FW_COMPONENT_REGISTRATIONS via useValue: new Map([[key, Identifier]])
-export function countAppConfigProvidersComponentRegistrationsMapIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): number {
-  let count = 0;
-
-  const visit = (node: Node): void => {
-    if (!isVariableStatement(node)) {
-      node.forEachChild(visit);
-      return;
-    }
-
-    const decls = node.declarationList.declarations;
-    for (const decl of decls) {
-      if (
-        !isVariableDeclaration(decl) ||
-        !isIdentifier(decl.name) ||
-        decl.name.text !== 'appConfig' ||
-        !decl.initializer
-      ) {
-        continue;
-      }
-
-      if (!isObjectLiteralExpression(decl.initializer)) {
-        continue;
-      }
-
-      const providersProperty = decl.initializer.properties.find(
-        (prop) =>
-          isPropertyAssignment(prop) &&
-          isIdentifier(prop.name) &&
-          prop.name.text === 'providers',
-      );
-
-      if (
-        !providersProperty ||
-        !isPropertyAssignment(providersProperty) ||
-        !isArrayLiteralExpression(providersProperty.initializer)
-      ) {
-        continue;
-      }
-
-      const providersArray = providersProperty.initializer;
-      for (const element of providersArray.elements) {
-        if (!isObjectLiteralExpression(element)) continue;
-
-        const provideProp = element.properties.find(
-          (p) =>
-            isPropertyAssignment(p) &&
-            isIdentifier(p.name) &&
-            p.name.text === 'provide' &&
-            isIdentifier(p.initializer) &&
-            p.initializer.text === 'NGX_FW_COMPONENT_REGISTRATIONS',
-        );
-
-        if (!provideProp) continue;
-
-        const useValueProp = element.properties.find(
-          (p) =>
-            isPropertyAssignment(p) &&
-            isIdentifier(p.name) &&
-            p.name.text === 'useValue',
-        );
-
-        if (
-          !useValueProp ||
-          !isPropertyAssignment(useValueProp) ||
-          !isNewExpression(useValueProp.initializer)
-        ) {
-          continue;
-        }
-
-        const mapExpr = useValueProp.initializer;
-        if (
-          !mapExpr.arguments ||
-          mapExpr.arguments.length === 0 ||
-          !isArrayLiteralExpression(mapExpr.arguments[0])
-        ) {
-          continue;
-        }
-
-        const mapArg = mapExpr.arguments[0];
         mapArg.elements.forEach((el) => {
           if (isArrayAndMatchesIdentifierName(el, key, identifierName)) {
             count += 1;

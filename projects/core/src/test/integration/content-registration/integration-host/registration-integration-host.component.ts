@@ -1,8 +1,10 @@
 import { Component, inject, input } from '@angular/core';
 import { TestTextControl } from '../../../types/controls.type';
 import { FormService } from '../../../../lib/services/form.service';
-import { NgxfwAbstractControlDirective } from '../../../../lib';
-import { NGX_FW_COMPONENT_RESOLVER } from '../../../../lib/tokens/component-resolver';
+import {
+  NGX_FW_COMPONENT_RESOLVER,
+  NgxfwAbstractControlDirective,
+} from '../../../../lib';
 
 @Component({
   selector: 'ngxfw-integration-host',

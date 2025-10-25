@@ -1,18 +1,18 @@
 import { RegisterComponentContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
-import {
-  addComponentRegistration,
-  componentRegistrationsObjectHasKey,
-  componentRegistrationsObjectUsesIdentifier,
-  findComponentRegistrationsObject,
-  loadSourceFile,
-} from '../ast';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
+import { loadSourceFile } from '../ast/parse';
+import {
+  addComponentRegistration,
+  componentRegistrationsObjectHasKey,
+  componentRegistrationsObjectUsesIdentifier,
+  findComponentRegistrationsObject,
+} from '../ast/registrations';
 
 export function registerTypeMap(ruleContext: RegisterComponentContext): Rule {
   return (tree, context) => {

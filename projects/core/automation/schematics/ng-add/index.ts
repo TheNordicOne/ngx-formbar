@@ -29,6 +29,7 @@ import { createConfigRegistrationFiles } from './rules/create-config-registratio
 import { addDependency } from '@schematics/angular/utility';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
 
+// noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
