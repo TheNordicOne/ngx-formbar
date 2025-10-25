@@ -1,8 +1,9 @@
 ---
 title: Features
 keyword: FeaturePage
+sidebar:
+  order: 2
 ---
-
 
 ## Overview
 
