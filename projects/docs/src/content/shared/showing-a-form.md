@@ -1,9 +1,3 @@
----
-title: Showing a form
-keyword: ShowingPage
-sidebar:
-  order: 4
----
 
 You build the form as usual. This gives you full access to the underlying form object, and you can do everything you normally can.
 

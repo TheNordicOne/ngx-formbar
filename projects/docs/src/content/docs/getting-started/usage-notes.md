@@ -2,7 +2,7 @@
 title: Usage Notes
 keyword: UsageNotesPage
 sidebar:
-  order: 3
+  order: 4
 ---
 
 A few things to know about when using _ngx-formwork_

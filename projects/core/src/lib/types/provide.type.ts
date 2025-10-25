@@ -16,6 +16,8 @@ import { NgxFwGlobalConfiguration } from './global-configuration.type';
  * @property componentRegistrations - Optional mapping of control types to component implementations
  * @property validatorRegistrations - Optional configuration for synchronous validators
  * @property asyncValidatorRegistrations - Optional configuration for asynchronous validators
+ * @property updateOn - (Optional) Specifies when to update the control's value
+ * @property globalConfig - (Optional) Configuration that is used for all controls
  *
  * @example
  * // Define custom form components and validators

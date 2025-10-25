@@ -1,120 +1,49 @@
 ---
-title: Improvements & DRY Code
-keyword: HelperPage
+title: Formwork Configuration
+keyword: ImprovementsPage
+sidebar:
+  order: 7
 ---
 
-## Helper
+## Formwork Configuration vs. Schematics Configuration
 
-To reduce the amount of boilerplate needed with each component and to improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
+There are two configuration files used by _ngx-formwork_
 
-:::caution
-Helper file names must exactly be `control-container.view-provider.ts` and `<type>.host-directive.ts`. Any deviation will result in the schematics not recognizing the files correctly and falling back to the verbose syntax.
+- Formwork Configuration: `formwork.config.ts`
+- Schematics Configuration: `formwork.config.json`
 
-The declarations within these files also have to be exact, otherwise you will end up with a broken import that you need to fix manually.
-:::
+The schematics configuration is only used for the schematics and therefore only hold default values. This file is not relevant during runtime. All relevant options are shown on the schematics pages [Generators](/schematics/generators) and [Register](/schematics/register).
 
-### Manual Helper File Integration
+## Formwork Configuration Object
 
-- If you create helper files yourself, you can place them in any folder in your project.
-- Run schematics with the `--helper` flag and use `--helperPath <path>` to point to your helper directory (default: `src/app/shared/helper`).
-- The schematic will look in that path for files named exactly:
-  - `control-container.view-provider.ts`
-  - `control.host-directive.ts`
-  - `group.host-directive.ts`
-  - `block.host-directive.ts`
+The configuration object that is used by the `provideFormwork` function has these properties
 
-When running schematics, pass the flags to use your files:
+| Property                    | Type                                           | Required | Description                                   |
+|-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
+| componentRegistrations      | Record<string, Type<unknown>>                  | Yes      | Mapping between keys and controls.            |
+| validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
+| asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
+| updateOn                    | 'change' \| 'blur' \ \| 'submit'               | No       | Specifies when to update the control's value. |
+| globalConfig                | NgxFwGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
 
-```bash
-ng generate ngx-formwork:<schematic> --helper --helperPath src/app/shared/helper
-```
+### NgxFwGlobalConfiguration
 
-Or set these defaults in `angular.json` under your project's `schematics` section:
+This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
 
-```json
-"ngx-formwork:control": { "helper": true, "helperPath": "src/app/shared/helper" },
-```
+| Property        | Type                                                                       | Required | Description                                              |
+|-----------------|----------------------------------------------------------------------------|----------|----------------------------------------------------------|
+| testIdBuilderFn | (content: NgxFwBaseContent,name: string,parentTestId?: string,) => string; | Yes      | Function that is used to build the test id for a control |
 
-
-### Control Container View Providers
-
-`ControlContainer` is required for all controls and groups that will be used within _ngx-formwork_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
-
-```ts title="control-container.view-provider.ts"
-export const controlContainerViewProviders = [
-  {
-    provide: ControlContainer,
-    useFactory: () => inject(ControlContainer, { skipSelf: true }),
-  },
-];
-```
-
-```ts title="text-control.component.ts || group.component.ts"
-@Component({
-  // Other component decorator options
-  viewProviders: controlContainerViewProviders,
-})
-```
-
-### Control Host Directive
-
-This is a convenience helper to apply the `NgxfwControlDirective`.
-
-```ts title="control.host-directive.ts"
-export const ngxfwControlHostDirective = {
-  directive: NgxfwControlDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```ts title="text-control.component.ts"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfwControlHostDirective
-  ],
-})
-```
-
-### Group Host Directive
-
-This is a convenience helper to apply the `NgxfwGroupDirective`.
-
-```ts title="group.host-directive.ts"
-export const ngxfwGroupHostDirective = {
-  directive: NgxfwGroupDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```ts title="group.component.ts"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfwGroupHostDirective
-  ],
-})
-```
-
-### Union Types
-
-For official documentation of Union Types checkout the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
-
-Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
-
-```ts
-export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
-```
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. ngx-formwork provides multiple approaches to organize your code better.
+Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. _ngx-formwork_ provides multiple approaches to organize your code better.
+
+If you ran `ng add` with default parameters to install _ngx-formwork_ your setup already is using split configurations.
+
+:::info
+This section assumes that you have read and understood the [Registration Concepts](/guides/core-concepts) and now how you need to set the configuration. 
+:::
 
 ### Using defineFormworkConfig
 
@@ -146,21 +75,22 @@ import { formworkConfig } from './formwork.config.ts';
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork(formworkConfig)
-  ]
+    provideFormwork(formworkConfig),
+  ],
 };
 ```
 
-### Using Injection Tokens Directly
+### Using Injection Tokens
 
 For more advanced code organization, you can leverage Angular's dependency injection system by providing the tokens directly.
 
 :::note
-When using the DI tokens directly, be aware of how resolution works:
+When using the DI tokens, be aware of how resolution works:
+
 - For components: Your provided map is taken "as is"
 - For validators: Your provided validators are merged with defaults, with your values taking precedence for duplicate keys
 - For global config: Your configuration is deeply merged with defaults
-:::
+  :::
 
 #### Component Registration with Tokens
 
@@ -177,7 +107,7 @@ export const componentRegistrationsProvider = {
     ['group', GroupComponent],
     ['info', InfoBlockComponent],
     // more registrations...
-  ])
+  ]),
 };
 ```
 
@@ -199,7 +129,7 @@ export const validatorRegistrationsProvider = {
     ['no-duplicates', [noDuplicateValuesValidator]],
     ['forbidden-letter-a', [forbiddenLetterAValidator]],
     // more registrations...
-  ])
+  ]),
 };
 
 // Asynchronous validators
@@ -209,7 +139,7 @@ export const asyncValidatorRegistrationsProvider = {
     ['async', [asyncValidator]],
     ['async-group', [asyncGroupValidator]],
     // more registrations...
-  ])
+  ]),
 };
 ```
 
@@ -227,8 +157,8 @@ export const appConfig: ApplicationConfig = {
     componentRegistrationsProvider,
     validatorRegistrationsProvider,
     asyncValidatorRegistrationsProvider,
-  ]
-}; 
+  ],
+};
 ```
 
 ### Multiple Configurations with Injection Tokens
@@ -244,7 +174,7 @@ export const baseComponentsProvider = {
   useValue: new Map([
     ['text', TextComponent],
     ['number', NumberComponent],
-  ])
+  ]),
 };
 
 // Additional components from a different module
@@ -253,7 +183,7 @@ export const extraComponentsProvider = {
   useValue: new Map([
     ['date', DateComponent],
     ['select', SelectComponent],
-  ])
+  ]),
 };
 
 // Multiple global configs will be deep merged
@@ -261,7 +191,7 @@ export const baseConfigProvider = {
   provide: NGX_FW_CONFIG,
   useValue: {
     testIdBuilderFn: (baseName, controlName) => `${baseName}-${controlName}`,
-  }
+  },
 };
 
 export const moduleConfigProvider = {
@@ -269,17 +199,18 @@ export const moduleConfigProvider = {
   useValue: {
     extraSettings: {
       theme: 'dark',
-    }
-  }
+    },
+  },
 };
 ```
 
 :::note
 When providing multiple maps with the same token:
+
 - For components: Only the last provided map will be used
 - For validators: All maps are collected in an array and merged, with later entries overriding earlier ones
 - For global config: All configs are deeply merged, with nested object properties preserved
-:::
+  :::
 
 ### Traditional Code Splitting
 
@@ -307,9 +238,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormwork({
-      componentRegistrations
-    })
-  ]
+      componentRegistrations,
+    }),
+  ],
 };
 ```
 
@@ -354,7 +285,7 @@ export const appConfig: ApplicationConfig = {
     provideFormwork({
       validatorRegistrations,
       asyncValidatorRegistrations,
-    })
+    }),
   ],
 };
 ```
@@ -382,9 +313,9 @@ The following example shows the case where the reference to the `letter` validat
 ```ts title="misspelled.validators.registerations.ts"
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
   letter: [letterValidator],
-  // ⚠️ letter only spelled with one T. 
+  // ⚠️ letter only spelled with one T.
   // This will give an TS error in the provideFormwork function, but not in this case
-  combined: [Validators.required, 'leter'], 
+  combined: [Validators.required, 'leter'],
 };
 ```
 
@@ -404,8 +335,8 @@ const testIdBuilder: TestIdBuilderFn = (baseName, controlName) => {
 export const globalConfigProvider = {
   provide: NGX_FW_CONFIG,
   useValue: {
-    testIdBuilderFn: testIdBuilder
-  }
+    testIdBuilderFn: testIdBuilder,
+  },
 };
 ```
 
@@ -418,7 +349,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormwork(),
-    globalConfigProvider
-  ]
+    globalConfigProvider,
+  ],
 };
 ```

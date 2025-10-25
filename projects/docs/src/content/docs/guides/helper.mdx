@@ -1,0 +1,94 @@
+---
+title: Helper Files
+keyword: HelperPage
+sidebar:
+  order: 8
+---
+import NamingHint from '../../shared/file-naming-hint.md';
+
+To reduce the amount of boilerplate needed with each component and to improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
+
+<NamingHint/>
+
+### Manual Helper File Integration
+
+You can place the helper files in any folder in your project. If you put them in the default location (`app/shared/helper`), they can be discovered automatically.
+
+Otherwise, run schematics with the `--hostDirectiveHelperPath` and/or `--viewProviderHelperPath` flag to point to your files or configure them as defaults. The configuration for each schematic is described on the schematics pages [Generators](/schematics/generators) and [Register](/schematics/register).
+
+
+### Control Container View Providers
+
+`ControlContainer` is required for all controls and groups that will be used within _ngx-formwork_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
+
+```ts title="control-container.view-provider.ts"
+export const controlContainerViewProviders = [
+  {
+    provide: ControlContainer,
+    useFactory: () => inject(ControlContainer, { skipSelf: true }),
+  },
+];
+```
+
+```ts title="text-control.component.ts || group.component.ts"
+@Component({
+  // Other component decorator options
+  viewProviders: controlContainerViewProviders,
+})
+```
+
+### Control Host Directive
+
+This is a convenience helper to apply the `NgxfwControlDirective`.
+
+```ts title="control.host-directive.ts"
+export const ngxfwControlHostDirective = {
+  directive: NgxfwControlDirective,
+  inputs: ['content', 'name'],
+};
+```
+
+Use it like this:
+
+```ts title="text-control.component.ts"
+@Component({
+  // Other component decorator options
+  hostDirectives: [
+    // Apply here
+    ngxfwControlHostDirective
+  ],
+})
+```
+
+### Group Host Directive
+
+This is a convenience helper to apply the `NgxfwGroupDirective`.
+
+```ts title="group.host-directive.ts"
+export const ngxfwGroupHostDirective = {
+  directive: NgxfwGroupDirective,
+  inputs: ['content', 'name'],
+};
+```
+
+Use it like this:
+
+```ts title="group.component.ts"
+@Component({
+  // Other component decorator options
+  hostDirectives: [
+    // Apply here
+    ngxfwGroupHostDirective
+  ],
+})
+```
+
+### Union Types
+
+For official documentation of Union Types checkout the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
+
+Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
+
+```ts
+export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
+```

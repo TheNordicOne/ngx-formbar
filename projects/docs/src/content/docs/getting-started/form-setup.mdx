@@ -1,0 +1,60 @@
+---
+title: Form Setup
+keyword: FormSetupPage
+sidebar:
+  order: 3
+---
+
+import ShowingAForm from '../../shared/showing-a-form.md';
+
+## Preparation
+
+Before you go render a form, you must have at least one control set up and registered.
+
+Detailed instructions for how to create and register controls, groups and blocks can be found in the Guides section.
+
+- [Controls](/guides/controls)
+- [Groups](/guides/groupds)
+- [Blocks](/guides/blocks)
+
+In addition to controls you can also optionally configure validators. See [Validation Page](/guides/validation) for detailed instructions.
+
+## Configuring a form
+
+Once you've registered controls and optionally validators, you write a configuration for a form. You can either do this directly in JSON or in TypeScript, for better typing information.
+
+This example is written in TypeScript
+
+```ts title="example.form.ts"
+export const exampleForm: NgxFwForm = {
+  content: {
+    name: {
+      type: 'text',
+      label: 'First and Lastname',
+    },
+    company: {
+      type: 'text',
+      label: 'Name of Company',
+      hint: 'If applicable',
+    },
+    repo: {
+      type: 'group',
+      controls: {
+        username: {
+          type: 'text',
+          label: 'Username',
+          default: 'UsernameSuggestion123',
+        },
+      },
+    },
+  },
+};
+```
+
+As you can see the configuration is just an array of controls and/or groups/blocks. Every item in that array will be registered on the top-level of the form. Items within the `controls` property of a group wil lbe registered withing that group.
+
+This is just simple example. For more details go to the [Configuring a Form Page](ConfigurationPage).
+
+## Showing a form
+
+<ShowingAForm/>
