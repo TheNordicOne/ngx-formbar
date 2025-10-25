@@ -1,0 +1,73 @@
+---
+title: Register
+keyword: RegisterSchematicPage
+sidebar:
+  order: 1
+---
+
+import ResolvingOptions from '../../shared/resolving-options.md';
+
+While the [Generator Schematics](/schematics/generators/), per default, already register every new component, you may not always use them. In those cases you could either manually register them or use this schematic.
+
+## What does it do
+
+This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those always have to be manually registered.
+
+## Options
+
+| Option                 | Type             | Required | Default (control/group/block) | Description                                                                                                                                                                                                                                                                                          |
+|------------------------|------------------|----------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --project              | string           | No       | workspace default project     | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
+| --registrationStyle    | 'token' \| 'map' | No       | 'token'                       | Which registration style is used.                                                                                                                                                                                                                                                                    |
+| --controlRegistrations | string           | No       | -                             | Path to the registration file that should be used. If this is not provided, the schematic will try to resolve it from the default locations.                                                                                                                                                         |
+| --schematicsConfig     | string           | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
+| --include              | array            | No       | `["**/*.ts"]`                 | Glob patterns to include when searching for components                                                                                                                                                                                                                                               |
+| --exclude              | array            | No       | `[]`                          | lob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                                                                                                                                                                                          |
+
+## Setting Options
+
+There are two ways to set custom default options. This helps repeating the same parameters on every CLi command.
+
+### In `formwork.config.json`
+
+All options are optional, but are listed here in full. You can put any combination of them.
+
+```json title="formwork.config.json"
+{
+  "registrationType": "map",
+  "controlRegistrationsPath": "app/form/registrations.ts",
+  "discovery": {
+    "include": ["**/components/form/controls/**"],
+    "exclude": ["**/components/form/controls/secret/**"]
+  }
+}
+```
+
+### In `angular.json`
+
+You can set default values for any ngx-formwork schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
+
+All options are optional, but are listed here in full. You can put any combination of them.
+Note, that compared to `formwork.config.json`, you have to repeat all values.
+
+```json title="angular.json"
+{
+  "projects": {
+    "my-app": {
+      "schematics": {
+        "ngx-formwork:register": {
+          "registrationType": "map",
+          "controlRegistrationsPath": "app/form/registrations.ts",
+          "include": ["**/components/form/controls/**"],
+          "exclude": ["**/components/form/controls/secret/**"]
+        }
+      }
+    }
+  }
+}
+```
+
+
+## Resolving options
+
+<ResolvingOptions/>

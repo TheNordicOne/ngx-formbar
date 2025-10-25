@@ -1,6 +1,8 @@
 ---
 title: Custom Resolvers
 keyword: CustomResolvers
+sidebar:
+  order: 5
 ---
 
 # Custom Resolvers

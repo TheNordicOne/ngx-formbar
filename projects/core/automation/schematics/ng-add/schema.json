@@ -19,32 +19,32 @@
     },
     "provideInline": {
       "type": "boolean",
-      "description": "Put provideFormwork call directly in app.config.ts (defaults to false)",
+      "description": "Put configuration of provideFormwork call directly in app.config.ts (defaults to false)",
       "default": false
     },
     "providerConfigPath": {
       "type": "string",
-      "description": "Where the provider file should be placed, relative to the project root. Defaults to 'app'",
+      "description": "Where the provider configuration file should be placed, relative to the project root. Defaults to 'app'",
       "default": "app"
     },
     "providerConfigFileName": {
       "type": "string",
-      "description": "Name of the provider file. Defaults to 'formwork.config.ts'",
+      "description": "Name of the provider configuration file. Defaults to 'formwork.config.ts'",
       "default": "formwork.config.ts"
     },
     "includeSyncValidators": {
       "type": "boolean",
-      "description": "Whether to include validators (sync) setup via injection tokens or config",
+      "description": "Whether to include the setup for validators",
       "default": true
     },
     "includeAsyncValidators": {
       "type": "boolean",
-      "description": "Whether to include async validators setup via injection tokens or config",
+      "description": "Whether to include the setup for async validators",
       "default": true
     },
     "useHelper": {
       "type": "boolean",
-      "description": "Whether to include the helper files",
+      "description": "Include helper files for view providers and host directives",
       "default": true
     },
     "helperPath": {

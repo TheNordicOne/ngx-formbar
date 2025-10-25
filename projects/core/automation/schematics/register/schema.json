@@ -13,12 +13,12 @@
     },
     "registrationStyle": {
       "type": "string",
-      "description": "How components and validators will be registered. Possible values: token, map",
+      "description": "How components will be registered. Possible values: token, map",
       "default": "token"
     },
     "controlRegistrations": {
       "type": "string",
-      "description": "Path to the registration file that should be used,"
+      "description": "Path to the registration file that should be used."
     },
     "schematicsConfig": {
       "type": "string",
