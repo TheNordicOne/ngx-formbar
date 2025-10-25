@@ -333,9 +333,9 @@ describe('ng-add schematic', () => {
     });
   });
 
-  describe('Registration Style Map', () => {
+  describe('Registration Style Config', () => {
     it('generates config-based registration files and formwork.config.ts', async () => {
-      const tree = await runAdd({ registrationStyle: 'map' });
+      const tree = await runAdd({ registrationStyle: 'config' });
       const providerConfig = parseTS(read(tree, formworkConfigPath));
       const appConfig = parseTS(read(tree, appConfigPath));
 
@@ -387,7 +387,7 @@ describe('ng-add schematic', () => {
 
     it('respects validator flags', async () => {
       const tree = await runAdd({
-        registrationStyle: 'map',
+        registrationStyle: 'config',
         includeSyncValidators: false,
         includeAsyncValidators: false,
       });
@@ -402,7 +402,7 @@ describe('ng-add schematic', () => {
 
     it('does not create a registration files and adds registrations directly to config, if splitRegistrations is set to false', async () => {
       const tree = await runAdd({
-        registrationStyle: 'map',
+        registrationStyle: 'config',
         includeSyncValidators: true,
         includeAsyncValidators: true,
         provideInline: false,
@@ -454,7 +454,7 @@ describe('ng-add schematic', () => {
       const registrationsPath = 'app/management/forms';
       const finalPath = src(registrationsPath);
       const tree = await runAdd({
-        registrationStyle: 'map',
+        registrationStyle: 'config',
         includeSyncValidators: true,
         includeAsyncValidators: true,
         registrationsPath,
@@ -482,7 +482,7 @@ describe('ng-add schematic', () => {
     describe('provideInline is set to true', () => {
       it('does not create a registration config, but still splits configuration, if splitRegistrations is set to true ', async () => {
         const tree = await runAdd({
-          registrationStyle: 'map',
+          registrationStyle: 'config',
           includeSyncValidators: true,
           includeAsyncValidators: true,
           provideInline: true,
@@ -531,7 +531,7 @@ describe('ng-add schematic', () => {
 
       it("does not create a registration config and doesn't splits configuration, if splitRegistrations is set to false", async () => {
         const tree = await runAdd({
-          registrationStyle: 'map',
+          registrationStyle: 'config',
           includeSyncValidators: true,
           includeAsyncValidators: true,
           provideInline: true,
@@ -674,7 +674,7 @@ describe('ng-add schematic', () => {
         const providerConfigFileName = 'providers.ts';
 
         const tree = await runAdd({
-          registrationStyle: 'map',
+          registrationStyle: 'config',
           useSchematicConfig: true,
           helperPath,
           registrationsPath,
@@ -686,7 +686,7 @@ describe('ng-add schematic', () => {
           read(tree, schematicsConfigPath),
         ) as NgxFormworkAutomationConfig;
 
-        expect(schematicsConfig.registrationType).toBe('map');
+        expect(schematicsConfig.registrationType).toBe('config');
         expect(schematicsConfig.controlRegistrationsPath).toBe(
           registrationsPath,
         );

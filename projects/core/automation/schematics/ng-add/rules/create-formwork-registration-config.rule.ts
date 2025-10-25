@@ -35,7 +35,7 @@ export function createFormworkRegistrationsConfig(
     const template = useTokens
       ? 'token'
       : splitRegistrations
-        ? 'map'
+        ? 'config'
         : 'inline';
 
     const targetPath = normalize(`/${projectRoot}/${providerConfigPath}`);

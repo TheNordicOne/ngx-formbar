@@ -14,7 +14,9 @@ import {
   findComponentRegistrationsObject,
 } from '../ast/registrations';
 
-export function registerTypeMap(ruleContext: RegisterComponentContext): Rule {
+export function registerTypeConfig(
+  ruleContext: RegisterComponentContext,
+): Rule {
   return (tree, context) => {
     const {
       controlRegistrationsPath,
