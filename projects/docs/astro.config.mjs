@@ -31,6 +31,10 @@ export default defineConfig({
           autogenerate: { directory: 'getting-started' },
         },
         {
+          label: 'Schematics',
+          autogenerate: { directory: 'schematics' },
+        },
+        {
           label: 'Guides',
           autogenerate: { directory: 'guides' },
         },

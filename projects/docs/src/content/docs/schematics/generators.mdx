@@ -1,0 +1,155 @@
+---
+title: Generators
+keyword: GeneratorSchematicsPage
+sidebar:
+  order: 0
+---
+
+import ResolvingOptions from '../../shared/resolving-options.md';
+
+Creating and registering a new control, group or block and be cumbersome. To make this easier, _ngx-formwork_ comes with three generator schematics.
+
+## Options
+
+All three schematics (`control`, `group`, `block`) support the same options:
+
+| Option                    | Type    | Required | Default (control/group/block) | Description                                                                                                                                                                                                                                                                                          |
+|---------------------------|---------|----------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --key                     | string  | Yes      | —                             | Registration key used in the Formwork configuration.                                                                                                                                                                                                                                                 |
+| --name                    | string  | No       | `key`                         | Base name for component and interface.                                                                                                                                                                                                                                                               |
+| --project                 | string  | No       | workspace default project     | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
+| --path                    | string  | No       | current working directory     | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
+| --interfaceSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                                                                                                                                                                                                                                                               |
+| --componentSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                                                                                                                                                                                                                                                         |
+| --hostDirectiveHelperPath | string  | No       | -                             | Path to the the hostDirective helper, relative to the project root. If the file cannot be found it will fallback to using the verbose syntax                                                                                                                                                         |
+| --viewProviderHelperPath  | string  | No       | -                             | Path to the the viewProvider helper, relative to the project root. If the file cannot be found it will fallback to using the verbose syntax                                                                                                                                                          |
+| --schematicsConfig        | string  | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
+| --skipRegistration        | boolean | No       | `false`                       | Skip automatic registration. You will have to register the component yourself or run the [Register Scheamtic](/schematics/register)                                                                                                                                                                  |
+
+
+## Examples
+
+### Generating a Control
+
+Run:
+
+```bash
+ng generate ngx-formwork:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwControl`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwControlDirective`.
+- Register the new control in your Formwork configuration under `componentRegistrations` with the given key.
+
+For implementation details and advanced usage, see the [Controls Guide](/guides/controls).
+
+### Generating a Group
+
+Run:
+
+```bash
+ng generate ngx-formwork:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwFormGroup`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwGroupDirective`.
+- Register the new group in your Formwork configuration under `componentRegistrations` with the given key.
+
+For implementation details and advanced usage, see the [Groups Guide](/guides/groups).
+
+### Generating a Block
+
+Run:
+
+```bash
+ng generate ngx-formwork:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+```
+
+This will:
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwBlock`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwBlockDirective`.
+- Register the new block in your Formwork configuration under `componentRegistrations` with the given key.
+
+For implementation details and advanced usage, see the [Blocks Guide](/guides/blocks).
+
+## Setting Options
+
+There are two ways to set custom default options. This helps repeating the same parameters on every CLi command.
+
+### In `formwork.config.json`
+
+All options are optional, but are listed here in full. You can put any combination of them.
+
+```json title="formwork.config.json"
+{
+  "controlRegistrationsPath": "app/form/registrations.ts",
+  "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+  "control": {
+    "interfaceSuffix":"Type",
+    "componentSuffix": "Input",
+    "hostDirectiveHelperPath":"app/form/helper",
+    "skipRegistration": true
+  },
+  "group": {
+      "interfaceSuffix":"GroupType",
+      "componentSuffix": "Group",
+      "hostDirectiveHelperPath":"app/form/helper",
+      "skipRegistration": true
+  },
+  "block": {
+      "interfaceSuffix":"BlockType",
+      "componentSuffix": "Block",
+      "hostDirectiveHelperPath":"app/form/helper",
+      "skipRegistration": true
+  }
+}
+```
+
+### In `angular.json`
+
+You can set default values for any ngx-formwork schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
+
+All options are optional, but are listed here in full. You can put any combination of them.
+Note, that compared to `formwork.config.json`, you have to repeat all values.
+
+```json title="angular.json"
+{
+  "projects": {
+    "my-app": {
+      "schematics": {
+        "ngx-formwork:control": {
+          "controlRegistrationsPath": "app/form/registrations.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "interfaceSuffix":"Type",
+          "componentSuffix": "Input",
+          "hostDirectiveHelperPath":"app/form/helper",
+          "skipRegistration": true
+        },
+        "ngx-formwork:group": {
+          "controlRegistrationsPath": "app/form/registrations.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "interfaceSuffix":"GroupType",
+          "componentSuffix": "Group",
+          "hostDirectiveHelperPath":"app/form/helper",
+          "skipRegistration": true
+        },
+        "ngx-formwork:block": {
+          "controlRegistrationsPath": "app/form/registrations.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "interfaceSuffix":"BlockType",
+          "componentSuffix": "Block",
+          "hostDirectiveHelperPath":"app/form/helper",
+          "skipRegistration": true
+        }
+      }
+    }
+  }
+}
+```
+
+
+## Resolving options
+
+<ResolvingOptions/>

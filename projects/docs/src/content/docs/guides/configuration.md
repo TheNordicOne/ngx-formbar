@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Once you've registered [Controls](/guides/controls), [Groups](/guides/groups) and optionally [validators](/guides/validation/), you can write a configuration for a form, either directly in JSON or in TypeScript, for better typing information.
+Once you've registered [Controls](/guides/controls), [Groups](/guides/groups) and optionally [Validators](/guides/validation), you can write a configuration for a form, either directly in JSON or in TypeScript, for better typing information.
 
 ## Form
 
@@ -17,10 +17,10 @@ The `NgxFwForm<ContentType extends NgxFwBaseContent = NgxFwContent>` interface d
 
 ### Type Generic
 
-By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a [union type](/guides/improvements/#union-types), you can pass that to get better type support. 
+By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a [union type](/guides/helper/#union-types), you can pass that to get better type support. 
 
 :::note
-If you want to use [Blocks](/guides/blocks) you must either use a [union type](/guides/improvements/#union-types) of your own controls or handle TypeScript errors by other mean.
+If you want to use [Blocks](/guides/blocks) you must either use a [union type](/guides/helper/#union-types) of your own controls or handle TypeScript errors by other mean.
 :::
 
 ## Content

@@ -1,6 +1,8 @@
 ---
 title: Expressions
 keyword: ExpressionsPage
+sidebar:
+  order: 6
 ---
 
 Expressions are JavaScript snippets provided as strings. They are parsed into an Abstract Syntax Tree (AST) using [Acorn](https://www.npmjs.com/package/acorn). The AST is then evaluated in a controlled environment against the forms value (onValueChange).

@@ -4,16 +4,11 @@ keyword: ManualSetupPage
 sidebar:
   order: 2
 ---
+## Notes
 
+While it is possible to set up everything yourself, it is highly recommended to use the installation via `ng add`.
 
-
-import ControlSetup from '../../shared/control-setup.md';
-import GroupSetup from '../../shared/group-setup.md';
-
-:::note
-Checkout [Helper](/guides/improvements) to see how to set up helpers.
-:::
-
+However, if you want to or have to install it manually, here is the bare minimum setup.
 
 ## Installation
 
@@ -67,98 +62,9 @@ You can also use `provideFormwork()` with no parameters if you plan to provide r
 
 ### Splitting Configuration
 
-To avoid bloating your _app.config.ts_, put your registrations in a separate file. Checkout the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
+To avoid bloating your _app.config.ts_, put your registrations in a separate file. Check out the [Code Splitting Section](/guides/improvements#code-splitting) for the details.
 
-## Controls
+## Setting up helpers
 
-<ControlSetup />
+Check out [Helper](/guides/improvements) to see how to set up helpers.
 
-## Groups
-
-<GroupSetup />
-
-## Configuring a form
-
-Once you've registered controls and optionally validators, you write a configuration for a form. You can either do this directly in JSON or in TypeScript, for better typing information.
-
-This example is written in TypeScript
-
-```ts title="example.form.ts"
-export const exampleForm: NgxFwForm = {
-  content: {
-    name: {
-      type: 'text',
-      label: 'First and Lastname',
-    },
-    company: {
-      type: 'text',
-      label: 'Name of Company',
-      hint: 'If applicable',
-    },
-    repo: {
-      type: 'group',
-      controls: {
-        username: {
-          type: 'text',
-          label: 'Username',
-          default: 'UsernameSuggestion123',
-        },
-      },
-    },
-  },
-};
-```
-
-As you can see the configuration is just an array of controls and/or groups. Every item in that array will be registered on the top-level of the form.
-
-## Rendering a form
-
-Now that everything is set up, you can render the form.
-
-You build the form as usual. This gives you full access to the underlying form, and you can do everything you normally can too.
-
-```ts title="example-form.component.ts"
-import { NgxFwForm } from './form.type';
-import { computed } from '@angular/core';
-@Component({
-  selector: 'app-example-form',
-  imports: [ReactiveFormsModule, NgxFwFormComponent],
-  templateUrl: './example-form.component.html',
-})
-export class ExampleFormComponent {
-  // Construct the reactive form as usual
-  private readonly formBuilder = inject(FormBuilder);
-
-  // This is our form configuration. It doesn't have to be passed as an input. You could also have a service that gets this or just import it from a file.
-  readonly formConfig = input.required<NgxFwForm>();
-
-  // Building a form with an empty group. All controls and groups are self-registering
-  // You can also add additional hardcoded control if you want
-  form = this.formBuilder.group({});
-
-  // We have normal access to all properties of the form
-  reset() {
-    this.form.reset();
-  }
-
-  patchValue() {
-    // Setting the value of the form is done the same way as you normally would
-    this.form.patchValue({
-      //  Whatever value we want to patch
-    });
-  }
-}
-```
-
-```html title="example-form.component.ts"
-<!-- Just normal form binding -->
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <!-- This component renders your form  -->
-  <ngxfw-form [formConfig]="formConfig()" />
-
-  <!-- normal submit button -->
-  <button type="submit">Submit</button>
-</form>
-
-<button type="button" (click)="reset()">Reset</button>
-```
