@@ -7,7 +7,7 @@ import {
 import { RegisterContext } from './schema';
 import { RegisterComponentContext } from '../shared/schema';
 import { registerTypeToken } from '../shared/rules/register-type-token.rule';
-import { registerTypeMap } from '../shared/rules/register-type-map.rule';
+import { registerTypeConfig } from '../shared/rules/register-type-map.rule';
 
 export function registerComponents(
   tree: Tree,
@@ -52,8 +52,8 @@ function registerComponentsByComponentInfo(
     switch (registrationType) {
       case 'token':
         return registerTypeToken(registerComponentContext);
-      case 'map':
-        return registerTypeMap(registerComponentContext);
+      case 'config':
+        return registerTypeConfig(registerComponentContext);
     }
   });
 

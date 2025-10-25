@@ -1,7 +1,7 @@
 import { RegisterComponentContext, ScaffoldContext } from '../schema';
 import { Rule } from '@angular-devkit/schematics';
 import { registerTypeToken } from './register-type-token.rule';
-import { registerTypeMap } from './register-type-map.rule';
+import { registerTypeConfig } from './register-type-map.rule';
 
 export function registerControl(ruleContext: ScaffoldContext): Rule {
   return (tree, context) => {
@@ -35,8 +35,8 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
     switch (registrationType) {
       case 'token':
         return registerTypeToken(registerComponentContext);
-      case 'map':
-        return registerTypeMap(registerComponentContext);
+      case 'config':
+        return registerTypeConfig(registerComponentContext);
     }
   };
 }
