@@ -21,11 +21,46 @@ All three schematics (`control`, `group`, `block`) support the same options:
 | --path                    | string  | No       | current working directory     | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
 | --interfaceSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                                                                                                                                                                                                                                                               |
 | --componentSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                                                                                                                                                                                                                                                         |
-| --hostDirectiveHelperPath | string  | No       | -                             | Path to the the hostDirective helper, relative to the project root. If the file cannot be found it will fallback to using the verbose syntax                                                                                                                                                         |
-| --viewProviderHelperPath  | string  | No       | -                             | Path to the the viewProvider helper, relative to the project root. If the file cannot be found it will fallback to using the verbose syntax                                                                                                                                                          |
+| --hostDirectiveHelperPath | string  | No       | -                             | Path to the the hostDirective helper, relative to the project root. If the file cannot be found or the option was not provided, it will fallback to using the verbose syntax.                                                                                                                        |
+| --viewProviderHelperPath  | string  | No       | -                             | Path to the the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fallback to using the verbose syntax.                                                                                                                         |
 | --schematicsConfig        | string  | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
 | --skipRegistration        | boolean | No       | `false`                       | Skip automatic registration. You will have to register the component yourself or run the [Register Scheamtic](/schematics/register)                                                                                                                                                                  |
 
+
+### Notes for Path Options
+
+The paths for `hostDirectiveHelperPath` and `viewProviderHelperPath` can have three different shapes, that all resolve differently.
+
+These are the relevant default values:
+
+- Host Directive Helper File Name: `(type).host-directive.ts`
+- Host Directive Identifier: `ngxfw(Type)HostDirective`
+- View Provider Helper File Name: `view-provider.ts`
+- View Provider Identifier: `viewProviders`
+
+#### Folder
+
+Shape: `path/to/helper/folder`
+
+This will resolve to the folder path and assumes the helper files are set up with the default names and identifiers.
+
+If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
+
+#### Folder and File
+
+Shape: `path/to/helper/folder/file-name.ts`
+
+This will resolve to the file path and assumes the helper files are set up with the default identifier.
+
+If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
+
+#### Folder, File and Identifier
+
+Shape: `path/to/helper/folder/file-name.ts#customIdentifier`
+
+This will resolve to the file path and use the identifier as is. Make sure the spelling matches exactly that of the exported name
+
+If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
 
 ## Examples
 

@@ -21,12 +21,57 @@ npm install ngx-formwork
 ## Providing Formwork
 _ngx-formwork_ is provided and configured in _app.config.ts_.
 
+
+### With Tokens
+
 ```ts title="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormwork({
-      // All parameters below are optional
+          // Global update strategy (optional)
+          updateOn: 'blur', // or 'change' or 'submit'
+
+          // Global configuration options (optional)
+          globalConfig: {
+            // Global configuration goes here
+          }
+        }),
+        {
+          provide: NGX_FW_COMPONENT_REGISTRATIONS,
+          useValue: new Map([
+            // Component registrations go her
+          ])
+        },
+        // All tokens below are optional
+        {
+          provide: NGX_FW_VALIDATOR_REGISTRATIONS,
+          useValue: new Map([
+            // Validator registrations go here
+            // Following Angular validators are registered by default
+            // Validators.required
+            // Validators.requiredTrue
+            // Validators.email
+            // Validators.nullValidator
+          ]),
+        },
+        {
+          provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+          useValue: new Map([
+            // Async Validator registrations go here
+          ]),
+        }
+  ]
+};
+```
+
+### With Configuration Object
+
+```ts title="app.config.ts"
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormwork({
       componentRegistrations: {
         // Component registrations go here
       },
@@ -58,7 +103,14 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-You can also use `provideFormwork()` with no parameters if you plan to provide registrations via injection tokens.
+In addition to setting up the `app.config.ts`, you must also add a configuration to let formwork know, that you are using the config registration style.
+
+Add this file next to your `app.config.ts`
+```ts title="formwork.config.json"
+{
+  "registrationType": "config"
+}
+```
 
 ### Splitting Configuration
 
