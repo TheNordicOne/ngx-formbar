@@ -1,7 +1,8 @@
+import { AsyncValidatorFn } from '@angular/forms';
 import { NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork';
 
 export const asyncValidatorRegistrationsProvider = {
   provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  useValue: new Map([
+  useValue: new Map<string, AsyncValidatorFn[]>([
   ])
 };
