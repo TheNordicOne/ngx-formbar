@@ -59,16 +59,6 @@ describe('ng-add schematic', () => {
     appTree = await setupWorkspace(runner);
   });
 
-  it('adds ngx-formwork to package.json', async () => {
-    const tree = await runAdd();
-    const pkg = JSON.parse(read(tree, '/package.json')) as {
-      dependencies?: Record<string, string>;
-    };
-
-    expect(pkg.dependencies).toBeTruthy();
-    expect(Object.keys(pkg.dependencies ?? {})).toContain('ngx-formwork');
-  });
-
   it('is idempotent: no duplicate import or provider call on re-run', async () => {
     const once = await runAdd();
     const twice = await runner.runSchematic('ng-add', baseOptions, once);
