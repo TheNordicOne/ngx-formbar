@@ -5,7 +5,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 
 import {
-  addFiles,
+  addComponentFiles,
   COLLECTION_PATH,
   createControlComponent,
   createUnrelatedComponent,
@@ -130,7 +130,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     provideToken(appTree, appConfigPathRaw, registrationsPath);
 
     const tree = await runSchematic();
@@ -164,7 +164,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     provideToken(appTree, appConfigPathRaw, registrationsPath);
 
     const tree = await runSchematic();
@@ -238,7 +238,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     provideToken(appTree, appConfigPathRaw, registrationsPath);
 
     const tree = await runSchematic({
@@ -314,7 +314,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     provideToken(appTree, appConfigPathRaw, registrationsPath);
 
     const tree = await runSchematic({
@@ -353,7 +353,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     provideToken(appTree, appConfigPathRaw, registrationsPath);
 
     const tree = await runSchematic();
@@ -409,7 +409,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
 
     const controlsImportPath = buildRelativePath(
       src(registrationsPath),
@@ -501,7 +501,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
 
     const schematicsConfig = 'configurations/formwork.config.json';
     const nonDefaultRegistrationsPath =
@@ -581,7 +581,7 @@ describe('register schematic', () => {
       },
     ];
 
-    addFiles(appTree, files);
+    addComponentFiles(appTree, files);
     const config: NgxFormworkAutomationConfig = {
       registrationType: 'config',
       discovery: {

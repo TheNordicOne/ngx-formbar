@@ -9,6 +9,13 @@ export const DEFAULT_PROVIDER_CONFIG_PATH = 'app';
 export const DEFAULT_PROVIDER_CONFIG_FILE_NAME = 'formwork.config.ts';
 
 export const DEFAULT_HELPER_PATH = 'app/shared/helper';
+export const DEFAULT_VIEW_PROVIDER_HELPER = 'view-provider.ts#viewProviders';
+export const DEFAULT_CONTROL_HOST_PROVIDER_HELPER =
+  'control.host-directive.ts#ngxfwControlHostDirective';
+export const DEFAULT_GROUP_HOST_PROVIDER_HELPER =
+  'group.host-directive.ts#ngxfwGroupHostDirective';
+export const DEFAULT_BLOCK_HOST_PROVIDER_HELPER =
+  'block.host-directive.ts#ngxfwBlockHostDirective';
 
 export const DEFAULT_SCHEMATICS_CONFIG_PATH = 'app';
 export const DEFAULT_SCHEMATIC_CONFIG_FILE_NAME = 'formwork.config.json';

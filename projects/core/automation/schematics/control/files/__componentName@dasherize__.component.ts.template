@@ -2,20 +2,20 @@ import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
 import { NgxfwControlDirective } from 'ngx-formwork';
 import { <%= interfaceName %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
-import { controlContainerViewProviders } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
-import { ngxfwControlHostDirective } from '<%= hostDirectiveHelperPath %>';<% } %>
+import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
+import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
   imports: [ReactiveFormsModule],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
-  viewProviders: <% if (hasViewProviderHelper) { %>controlContainerViewProviders<% } else { %>[
+  viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
     {
       provide: ControlContainer,
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
     }
   ]<% } %>,
-  hostDirectives: <% if (hasHostDirectiveHelper) { %>[ngxfwControlHostDirective]<% } else { %>[
+  hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
     {
       directive: NgxfwControlDirective,
       inputs: ['content', 'name'],
