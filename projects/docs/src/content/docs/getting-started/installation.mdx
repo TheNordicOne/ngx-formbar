@@ -4,7 +4,6 @@ keyword: InstallationPage
 sidebar:
   order: 0
 ---
-import NamingHint from '../../shared/file-naming-hint.md';
 
 :::caution
 This project is still in the making and not ready to be used in production!
@@ -43,7 +42,9 @@ By default, the following things will be done
 The schematics configuration file will only contain values, that differ from the default.
 :::
 
-<NamingHint/>
+:::note
+When setting the `helperPath` option only set it to a folder path. If you want to later adjust how the files or exports are named, update the configuration afterward. Take a look at [Notes for Path Options](/schematics/generators/#notes-for-path-options) to learn how this works.
+:::
 
 ## Options
 
