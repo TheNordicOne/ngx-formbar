@@ -8,7 +8,13 @@ import { strings } from '@angular-devkit/core';
 
 import { ScaffoldContext, Schema } from '../schema';
 import { findConfigPath, findSchematicsConfig, readFile } from '../file';
-import { DEFAULT_REGISTRATION_TYPE } from '../../../shared/constants';
+import {
+  DEFAULT_BLOCK_HOST_PROVIDER_HELPER,
+  DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
+  DEFAULT_GROUP_HOST_PROVIDER_HELPER,
+  DEFAULT_REGISTRATION_TYPE,
+  DEFAULT_VIEW_PROVIDER_HELPER,
+} from '../../../shared/constants';
 import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { createComponent } from './create-component.rule';
@@ -62,13 +68,35 @@ function mergeOptions(
   const componentPath = `${projectRoot}/${mergedConfig.path ?? 'app'}/${resolvedName}`;
   const componentFilePath = `/${componentPath}/${strings.dasherize(componentName)}.component`;
 
-  const viewProviderHelperPath =
+  const viewProviderHelperPathOption =
     automationConfig?.viewProviderHelperPath ??
     mergedConfig.viewProviderHelperPath;
 
-  const hostDirectiveHelperPath =
+  const [viewProviderHelperPath, viewProviderIdentifier] =
+    resolveImportPathAndIdentifier(
+      tree,
+      projectRoot,
+      viewProviderHelperPathOption,
+      DEFAULT_VIEW_PROVIDER_HELPER,
+    );
+
+  const hasViewProviderHelper = !!viewProviderHelperPath;
+
+  const hostDirectiveHelperPathOptions =
     controlTypeConfig?.hostDirectiveHelperPath ??
     mergedConfig.hostDirectiveHelperPath;
+
+  const defaultHostDirective = getDefaultHostDirective(type);
+
+  const [hostDirectiveHelperPath, hostDirectiveIdentifier] =
+    resolveImportPathAndIdentifier(
+      tree,
+      projectRoot,
+      hostDirectiveHelperPathOptions,
+      defaultHostDirective,
+    );
+
+  const hasHostDirectiveHelper = !!hostDirectiveHelperPath;
 
   const controlRegistrationsPath = automationConfig?.controlRegistrationsPath
     ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
@@ -94,11 +122,97 @@ function mergeOptions(
     componentFilePath,
     projectRoot,
     viewProviderHelperPath,
+    viewProviderIdentifier,
     hostDirectiveHelperPath,
+    hostDirectiveIdentifier,
     controlRegistrationsPath,
-    hasViewProviderHelper: !!viewProviderHelperPath,
-    hasHostDirectiveHelper: !!hostDirectiveHelperPath,
+    hasViewProviderHelper,
+    hasHostDirectiveHelper,
   };
 
   return ruleContext;
+}
+
+function getDefaultHostDirective(type: 'control' | 'group' | 'block') {
+  switch (type) {
+    case 'group':
+      return DEFAULT_GROUP_HOST_PROVIDER_HELPER;
+    case 'block':
+      return DEFAULT_BLOCK_HOST_PROVIDER_HELPER;
+    case 'control':
+    default:
+      return DEFAULT_CONTROL_HOST_PROVIDER_HELPER;
+  }
+}
+
+function resolveImportPathAndIdentifier(
+  tree: Tree,
+  projectRoot: string,
+  pathOption: string | undefined,
+  defaultFileOption: string,
+) {
+  if (!pathOption) {
+    return [];
+  }
+  const { directory, fileName, identifier } = extractFromPath(
+    pathOption,
+    defaultFileOption,
+  );
+
+  const barrelExport = `/${projectRoot}/${directory}/index.ts`;
+  if (tree.exists(barrelExport)) {
+    return [directory, identifier];
+  }
+  const directImportPath = `${directory}/${fileName}`;
+  return [directImportPath, identifier];
+}
+
+const EXT_REGEX = /\.ts$/i;
+
+function extractFromPath(inputSpec: string, defaultSpec: string) {
+  const inputParts = splitHash(inputSpec);
+  const defaultParts = splitHash(defaultSpec);
+
+  const inputPathParts = splitPath(inputParts.left);
+  const defaultPathParts = splitPath(defaultParts.left);
+
+  const directory = inputPathParts.directory;
+  const fileName = (
+    inputPathParts.fileName || defaultPathParts.fileName
+  ).replace('.ts', '');
+  const identifier = inputParts.exportName || defaultParts.exportName;
+
+  return { directory, fileName, identifier };
+}
+
+function splitHash(rawSpec: string) {
+  const trimmedSpec = rawSpec.trim();
+  const hashIndex = trimmedSpec.indexOf('#');
+
+  if (hashIndex < 0) {
+    return { left: trimmedSpec, exportName: '' };
+  }
+
+  return {
+    left: trimmedSpec.slice(0, hashIndex),
+    exportName: trimmedSpec.slice(hashIndex + 1),
+  };
+}
+
+function splitPath(pathPart: string) {
+  const trimmedPath = pathPart.trim();
+  if (!trimmedPath) {
+    return { directory: '', fileName: '' };
+  }
+
+  const normalizedPath = trimmedPath.replace(/\\/g, '/').replace(/\/+/g, '/');
+  const pathSegments = normalizedPath.split('/');
+  const lastSegment = pathSegments[pathSegments.length - 1];
+
+  if (!EXT_REGEX.test(lastSegment)) {
+    return { directory: normalizedPath.replace(/\/$/, ''), fileName: '' };
+  }
+
+  const directory = pathSegments.slice(0, -1).join('/');
+  return { directory, fileName: lastSegment };
 }
