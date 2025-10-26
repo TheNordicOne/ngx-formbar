@@ -238,7 +238,21 @@ export function provideMapNoSplit(
   writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
 }
 
-export function addFiles(appTree: UnitTestTree, files: TestComponentDetails[]) {
+export function addHelperIndexFile(appTree: UnitTestTree, helperPath: string) {
+  const index = [
+    "export { ngxfwBlockHostDirective } from './block.host-directive';",
+    "export { ngxfwControlHostDirective } from './control.host-directive';",
+    "export { controlContainerViewProviders } from './control-container.view-provider';",
+    "export { ngxfwGroupHostDirective } from './group.host-directive';",
+  ].join('\n');
+
+  writeTs(appTree, src(`${helperPath}/index.ts`), index);
+}
+
+export function addComponentFiles(
+  appTree: UnitTestTree,
+  files: TestComponentDetails[],
+) {
   for (const { path, content } of files) {
     writeTs(appTree, path, content);
   }

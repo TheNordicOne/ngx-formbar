@@ -6,6 +6,7 @@ import {
 
 import { Schema as GenerateOptions } from '../shared/schema';
 import {
+  addHelperIndexFile,
   COLLECTION_PATH,
   provideMap,
   provideMapInlineNoSplit,
@@ -40,6 +41,10 @@ import {
   directComponentRegistrationsHasIdentifier,
   provideFormworkComponentRegistrationsHasIdentifier,
 } from '../shared/ast/registrations';
+import {
+  DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
+  DEFAULT_VIEW_PROVIDER_HELPER,
+} from '../../shared/constants';
 
 const appConfigPathRaw = 'app.config.ts';
 const formworkConfigPath = 'app/formwork.config.ts';
@@ -55,10 +60,13 @@ describe('control schematic', () => {
     key: 'test',
   };
 
-  const viewProviderHelperPath =
-    'app/shared/helper/control-container.view-provider';
+  const viewProviderHelperPath = 'app/shared/helper';
+  const viewProviderHelper = 'control-container.view-provider.ts#viewProviders';
+  const viewProviderHelperPathOption = `${viewProviderHelperPath}/${viewProviderHelper}`;
 
-  const hostDirectiveHelperPath = 'app/shared/helper/control.host-directive';
+  const hostDirectiveHelperPath = 'app/shared/helper';
+  const hostDirectiveHelperFile = 'control.directive.ts#controlHost';
+  const hostDirectiveHelperPathOption = `${hostDirectiveHelperPath}/${hostDirectiveHelperFile}`;
 
   const defaultComponentOutputPath = app('test/test-control.component.ts');
   const appConfigPath = app(appConfigPathRaw);
@@ -84,94 +92,331 @@ describe('control schematic', () => {
       provideMapInlineNoSplit(appTree, appConfigPathRaw);
     });
 
-    it('uses view provider helper if provided', async () => {
-      const tree = await runSchematic('control', { viewProviderHelperPath });
+    describe('view provider helper', () => {
+      it('imports view providers from barrel export using default file name and identifier', async () => {
+        addHelperIndexFile(appTree, viewProviderHelperPath);
+        const tree = await runSchematic('control', {
+          viewProviderHelperPath,
+        });
 
-      const sf = parseTS(read(tree, defaultComponentOutputPath));
+        const parts = DEFAULT_VIEW_PROVIDER_HELPER.split('#');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
 
-      const importsViewProviderHelper = hasNamedImport(
-        sf,
-        viewProviderHelperPath,
-        'controlContainerViewProviders',
-      );
-
-      const importsControlContainerFromAngular = hasNamedImport(
-        sf,
-        '@angular/forms',
-        'ControlContainer',
-      );
-
-      const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
-        sf,
-        'Component',
-        'viewProviders',
-        'controlContainerViewProviders',
-      );
-
-      expect(importsViewProviderHelper).toBe(true);
-      expect(importsControlContainerFromAngular).toBe(false);
-      expect(hasViewProviderInDecorator).toBe(true);
-    });
-
-    it('uses host directive helper if provided', async () => {
-      const tree = await runSchematic('control', { hostDirectiveHelperPath });
-
-      const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-      const importsControlHostDirectiveHelper = hasNamedImport(
-        sf,
-        hostDirectiveHelperPath,
-        'ngxfwControlHostDirective',
-      );
-
-      const hasControlHostDirectiveInDecorator =
-        decoratorArrayPropContainsIdentifier(
+        const importsViewProviderHelper = hasNamedImport(
           sf,
-          'Component',
-          'hostDirectives',
-          'ngxfwControlHostDirective',
+          viewProviderHelperPath,
+          identifier,
         );
 
-      expect(importsControlHostDirectiveHelper).toBe(true);
-      expect(hasControlHostDirectiveInDecorator).toBe(true);
-    });
-
-    it('falls back to inline providers and host directive when helpers are not provided', async () => {
-      const tree = await runSchematic('control');
-      const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-      const importsControlContainerFromAngular = hasNamedImport(
-        sf,
-        '@angular/forms',
-        'ControlContainer',
-      );
-
-      const hasViewProvidersInDecorator =
-        decoratorArrayPropContainsProviderObject(
+        const importsControlContainerFromAngular = hasNamedImport(
           sf,
-          'Component',
-          'viewProviders',
+          '@angular/forms',
           'ControlContainer',
         );
 
-      const importsDirective = hasNamedImport(
-        sf,
-        'ngx-formwork',
-        'NgxfwControlDirective',
-      );
-
-      const hasControlDirectiveInDecorator =
-        decoratorHostDirectivesHasInlineDirectiveWithInputs(
+        const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
           sf,
-          'NgxfwControlDirective',
-          ['content', 'name'],
+          'Component',
+          'viewProviders',
+          identifier,
         );
 
-      expect(importsControlContainerFromAngular).toBe(true);
-      expect(hasViewProvidersInDecorator).toBe(true);
-      expect(hasControlDirectiveInDecorator).toBe(true);
-      expect(importsDirective).toBe(true);
-      expect(hasControlDirectiveInDecorator).toBe(true);
+        expect(importsViewProviderHelper).toBe(true);
+        expect(importsControlContainerFromAngular).toBe(false);
+        expect(hasViewProviderInDecorator).toBe(true);
+      });
+
+      it('imports view providers from file using default file name and identifier', async () => {
+        const tree = await runSchematic('control', {
+          viewProviderHelperPath,
+        });
+
+        const parts = DEFAULT_VIEW_PROVIDER_HELPER.split('#');
+        const fileName = parts[0].replace('.ts', '');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsViewProviderHelper = hasNamedImport(
+          sf,
+          `${viewProviderHelperPath}/${fileName}`,
+          identifier,
+        );
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
+          sf,
+          'Component',
+          'viewProviders',
+          identifier,
+        );
+
+        expect(importsViewProviderHelper).toBe(true);
+        expect(importsControlContainerFromAngular).toBe(false);
+        expect(hasViewProviderInDecorator).toBe(true);
+      });
+
+      it('imports view providers from barrel export using file name and identifier from option', async () => {
+        addHelperIndexFile(appTree, viewProviderHelperPath);
+        const tree = await runSchematic('control', {
+          viewProviderHelperPath: viewProviderHelperPathOption,
+        });
+
+        const parts = viewProviderHelper.split('#');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsViewProviderHelper = hasNamedImport(
+          sf,
+          viewProviderHelperPath,
+          identifier,
+        );
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
+          sf,
+          'Component',
+          'viewProviders',
+          identifier,
+        );
+
+        expect(importsViewProviderHelper).toBe(true);
+        expect(importsControlContainerFromAngular).toBe(false);
+        expect(hasViewProviderInDecorator).toBe(true);
+      });
+
+      it('imports view providers from barrel export using file name from option and default identifier', async () => {
+        addHelperIndexFile(appTree, viewProviderHelperPath);
+        const tree = await runSchematic('control', {
+          viewProviderHelperPath: `${viewProviderHelperPath}/control-container.view-provider.ts`,
+        });
+
+        const parts = DEFAULT_VIEW_PROVIDER_HELPER.split('#');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsViewProviderHelper = hasNamedImport(
+          sf,
+          viewProviderHelperPath,
+          identifier,
+        );
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
+          sf,
+          'Component',
+          'viewProviders',
+          identifier,
+        );
+
+        expect(importsViewProviderHelper).toBe(true);
+        expect(importsControlContainerFromAngular).toBe(false);
+        expect(hasViewProviderInDecorator).toBe(true);
+      });
+
+      it('imports view providers from file using file name from option and default identifier', async () => {
+        const tree = await runSchematic('control', {
+          viewProviderHelperPath: viewProviderHelperPathOption,
+        });
+
+        const parts = viewProviderHelper.split('#');
+        const fileName = parts[0].replace('.ts', '');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsViewProviderHelper = hasNamedImport(
+          sf,
+          `${viewProviderHelperPath}/${fileName}`,
+          identifier,
+        );
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProviderInDecorator = decoratorPropInitializerIsIdentifier(
+          sf,
+          'Component',
+          'viewProviders',
+          identifier,
+        );
+
+        expect(importsViewProviderHelper).toBe(true);
+        expect(importsControlContainerFromAngular).toBe(false);
+        expect(hasViewProviderInDecorator).toBe(true);
+      });
+    });
+
+    describe('control host directive helper', () => {
+      it('imports host directive from barrel export using default file name and identifier', async () => {
+        addHelperIndexFile(appTree, hostDirectiveHelperPath);
+        const tree = await runSchematic('control', {
+          hostDirectiveHelperPath,
+        });
+
+        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsControlHostDirectiveHelper = hasNamedImport(
+          sf,
+          hostDirectiveHelperPath,
+          identifier,
+        );
+
+        const hasControlHostDirectiveInDecorator =
+          decoratorArrayPropContainsIdentifier(
+            sf,
+            'Component',
+            'hostDirectives',
+            identifier,
+          );
+
+        expect(importsControlHostDirectiveHelper).toBe(true);
+        expect(hasControlHostDirectiveInDecorator).toBe(true);
+      });
+
+      it('imports host directive from file using default file name and identifier', async () => {
+        const tree = await runSchematic('control', {
+          hostDirectiveHelperPath,
+        });
+
+        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
+        const fileName = parts[0].replace('.ts', '');
+        const identifier = parts[1];
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsControlHostDirectiveHelper = hasNamedImport(
+          sf,
+          `${hostDirectiveHelperPath}/${fileName}`,
+          identifier,
+        );
+
+        const hasControlHostDirectiveInDecorator =
+          decoratorArrayPropContainsIdentifier(
+            sf,
+            'Component',
+            'hostDirectives',
+            identifier,
+          );
+
+        expect(importsControlHostDirectiveHelper).toBe(true);
+        expect(hasControlHostDirectiveInDecorator).toBe(true);
+      });
+
+      it('imports host directive from barrel export using file name and identifier from option', async () => {
+        addHelperIndexFile(appTree, hostDirectiveHelperPath);
+        const tree = await runSchematic('control', {
+          hostDirectiveHelperPath: hostDirectiveHelperPathOption,
+        });
+
+        const parts = hostDirectiveHelperFile.split('#');
+        const identifier = parts[1];
+
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsControlHostDirectiveHelper = hasNamedImport(
+          sf,
+          hostDirectiveHelperPath,
+          identifier,
+        );
+
+        const hasControlHostDirectiveInDecorator =
+          decoratorArrayPropContainsIdentifier(
+            sf,
+            'Component',
+            'hostDirectives',
+            identifier,
+          );
+
+        expect(importsControlHostDirectiveHelper).toBe(true);
+        expect(hasControlHostDirectiveInDecorator).toBe(true);
+      });
+
+      it('imports host directive from file using file name from option and default identifier', async () => {
+        const path = `${hostDirectiveHelperPath}/control.directive.ts`;
+        const tree = await runSchematic('control', {
+          hostDirectiveHelperPath: path,
+        });
+
+        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
+        const fileName = 'control.directive';
+        const identifier = parts[1];
+
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsControlHostDirectiveHelper = hasNamedImport(
+          sf,
+          `${hostDirectiveHelperPath}/${fileName}`,
+          identifier,
+        );
+
+        const hasControlHostDirectiveInDecorator =
+          decoratorArrayPropContainsIdentifier(
+            sf,
+            'Component',
+            'hostDirectives',
+            identifier,
+          );
+
+        expect(importsControlHostDirectiveHelper).toBe(true);
+        expect(hasControlHostDirectiveInDecorator).toBe(true);
+      });
+
+      it('falls back to inline providers and host directive when helpers are not provided', async () => {
+        const tree = await runSchematic('control');
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProvidersInDecorator =
+          decoratorArrayPropContainsProviderObject(
+            sf,
+            'Component',
+            'viewProviders',
+            'ControlContainer',
+          );
+
+        const importsDirective = hasNamedImport(
+          sf,
+          'ngx-formwork',
+          'NgxfwControlDirective',
+        );
+
+        const hasControlDirectiveInDecorator =
+          decoratorHostDirectivesHasInlineDirectiveWithInputs(
+            sf,
+            'NgxfwControlDirective',
+            ['content', 'name'],
+          );
+
+        expect(importsControlContainerFromAngular).toBe(true);
+        expect(hasViewProvidersInDecorator).toBe(true);
+        expect(hasControlDirectiveInDecorator).toBe(true);
+        expect(importsDirective).toBe(true);
+        expect(hasControlDirectiveInDecorator).toBe(true);
+      });
     });
   });
 
