@@ -95,6 +95,7 @@ When using the DI tokens, be aware of how resolution works:
 #### Component Registration with Tokens
 
 ```ts title="component-registrations.provider.ts"
+import { Type } from '@angular/core';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
 import { TextControlComponent } from './components/text-control.component';
 import { GroupComponent } from './components/group.component';
@@ -102,7 +103,7 @@ import { InfoBlockComponent } from './components/info-block.component';
 
 export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
-  useValue: new Map([
+  useValue: new Map<string, Type<unknown>>([
     ['text-control', TextControlComponent],
     ['group', GroupComponent],
     ['info', InfoBlockComponent],
@@ -114,6 +115,7 @@ export const componentRegistrationsProvider = {
 #### Validator Registration with Tokens
 
 ```ts title="validator-registrations.provider.ts"
+import { ValidatorFn, AsyncValidatorFn } from '@angular/forms';
 import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
@@ -122,7 +124,7 @@ import { asyncValidator, asyncGroupValidator } from './async-validators';
 // Synchronous validators
 export const validatorRegistrationsProvider = {
   provide: NGX_FW_VALIDATOR_REGISTRATIONS,
-  useValue: new Map([
+  useValue: new Map<string, ValidatorFn[]>([
     ['min-chars', [Validators.minLength(3)]],
     ['letter', [letterValidator]],
     ['combined', [Validators.minLength(3), Validators.required, letterValidator]],
@@ -135,7 +137,7 @@ export const validatorRegistrationsProvider = {
 // Asynchronous validators
 export const asyncValidatorRegistrationsProvider = {
   provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  useValue: new Map([
+  useValue: new Map<string, AsyncValidatorFn[]>([
     ['async', [asyncValidator]],
     ['async-group', [asyncGroupValidator]],
     // more registrations...
