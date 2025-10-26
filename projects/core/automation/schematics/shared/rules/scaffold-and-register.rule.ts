@@ -65,7 +65,11 @@ function mergeOptions(
   const resolvedName = mergedConfig.name ?? mergedConfig.key;
   const componentName = `${resolvedName}${mergedConfig.componentSuffix ?? ''}`;
 
-  const componentPath = `${projectRoot}/${mergedConfig.path ?? 'app'}/${resolvedName}`;
+  const resolvedPathOption = mergedConfig.path ?? 'app';
+  const includesProjectRoot = resolvedPathOption.startsWith(projectRoot);
+  const resolvedRootPath = !includesProjectRoot ? projectRoot : '';
+
+  const componentPath = `${resolvedRootPath}/${resolvedPathOption}/${resolvedName}`;
   const componentFilePath = `/${componentPath}/${strings.dasherize(componentName)}.component`;
 
   const viewProviderHelperPathOption =
