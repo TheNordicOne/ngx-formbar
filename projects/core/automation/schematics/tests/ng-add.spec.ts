@@ -26,6 +26,7 @@ import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
 } from '../shared/ast/imports';
+import { DEFAULT_HELPER_PATH } from '../../shared/constants';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -121,10 +122,16 @@ describe('ng-add schematic', () => {
 
       expect(schematicsConfig.registrationType).toBeUndefined();
       expect(schematicsConfig.controlRegistrationsPath).toBeUndefined();
-      expect(schematicsConfig.viewProviderHelperPath).toBeUndefined();
-      expect(schematicsConfig.control?.hostDirectiveHelperPath).toBeUndefined();
-      expect(schematicsConfig.group?.hostDirectiveHelperPath).toBeUndefined();
-      expect(schematicsConfig.block?.hostDirectiveHelperPath).toBeUndefined();
+      expect(schematicsConfig.viewProviderHelperPath).toBe(DEFAULT_HELPER_PATH);
+      expect(schematicsConfig.control?.hostDirectiveHelperPath).toBe(
+        DEFAULT_HELPER_PATH,
+      );
+      expect(schematicsConfig.group?.hostDirectiveHelperPath).toBe(
+        DEFAULT_HELPER_PATH,
+      );
+      expect(schematicsConfig.block?.hostDirectiveHelperPath).toBe(
+        DEFAULT_HELPER_PATH,
+      );
     });
   });
 
