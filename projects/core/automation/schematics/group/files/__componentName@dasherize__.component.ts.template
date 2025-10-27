@@ -25,4 +25,5 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
 export class <%= classify(componentClassName) %> {
   private readonly group = inject(NgxfwGroupDirective<<%= classify(interfaceName) %>>);
   readonly content: Signal<<%= classify(interfaceName) %>> = this.group.content;
+  readonly name: Signal<string> = this.group.name;
 }
