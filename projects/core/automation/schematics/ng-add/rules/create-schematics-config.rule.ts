@@ -10,7 +10,6 @@ import { normalize } from '@angular-devkit/core';
 import { RuleContext } from '../schema';
 import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import {
-  DEFAULT_HELPER_PATH,
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
 } from '../../../shared/constants';
@@ -23,6 +22,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       schematicConfigFileName,
       projectRoot,
       helperPath,
+      useHelper,
       registrationsPath,
       registrationStyle,
     } = ruleContext;
@@ -43,7 +43,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       schematicConfig.controlRegistrationsPath = registrationsPath;
     }
 
-    if (helperPath !== DEFAULT_HELPER_PATH) {
+    if (useHelper) {
       schematicConfig.viewProviderHelperPath = helperPath;
       schematicConfig.control = {
         hostDirectiveHelperPath: helperPath,
