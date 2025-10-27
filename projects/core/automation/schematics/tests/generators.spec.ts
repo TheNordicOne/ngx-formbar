@@ -61,7 +61,8 @@ describe('control schematic', () => {
   };
 
   const viewProviderHelperPath = 'app/shared/helper';
-  const viewProviderHelper = 'control-container.view-provider.ts#viewProviders';
+  const viewProviderHelper =
+    'control-container.view-provider.ts#controlContainterViewProviders';
   const viewProviderHelperPathOption = `${viewProviderHelperPath}/${viewProviderHelper}`;
 
   const hostDirectiveHelperPath = 'app/shared/helper';
@@ -103,9 +104,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const viewProviderImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(viewProviderHelperPath),
+        );
+
         const importsViewProviderHelper = hasNamedImport(
           sf,
-          viewProviderHelperPath,
+          viewProviderImportPath,
           identifier,
         );
 
@@ -137,9 +143,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const viewProviderImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(`${viewProviderHelperPath}/${fileName}`),
+        );
+
         const importsViewProviderHelper = hasNamedImport(
           sf,
-          `${viewProviderHelperPath}/${fileName}`,
+          viewProviderImportPath,
           identifier,
         );
 
@@ -161,7 +172,7 @@ describe('control schematic', () => {
         expect(hasViewProviderInDecorator).toBe(true);
       });
 
-      it('imports view providers from barrel export using file name and identifier from option', async () => {
+      it('imports view providers from barrel export using identifier from option', async () => {
         addHelperIndexFile(appTree, viewProviderHelperPath);
         const tree = await runSchematic('control', {
           viewProviderHelperPath: viewProviderHelperPathOption,
@@ -171,9 +182,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const viewProviderImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(viewProviderHelperPath),
+        );
+
         const importsViewProviderHelper = hasNamedImport(
           sf,
-          viewProviderHelperPath,
+          viewProviderImportPath,
           identifier,
         );
 
@@ -205,9 +221,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const viewProviderImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(viewProviderHelperPath),
+        );
+
         const importsViewProviderHelper = hasNamedImport(
           sf,
-          viewProviderHelperPath,
+          viewProviderImportPath,
           identifier,
         );
 
@@ -239,9 +260,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const viewProviderImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(`${viewProviderHelperPath}/${fileName}`),
+        );
+
         const importsViewProviderHelper = hasNamedImport(
           sf,
-          `${viewProviderHelperPath}/${fileName}`,
+          viewProviderImportPath,
           identifier,
         );
 
@@ -275,9 +301,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const controlHostDirectiveImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(hostDirectiveHelperPath),
+        );
+
         const importsControlHostDirectiveHelper = hasNamedImport(
           sf,
-          hostDirectiveHelperPath,
+          controlHostDirectiveImportPath,
           identifier,
         );
 
@@ -303,9 +334,14 @@ describe('control schematic', () => {
         const identifier = parts[1];
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const controlHostDirectiveImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(`${hostDirectiveHelperPath}/${fileName}`),
+        );
+
         const importsControlHostDirectiveHelper = hasNamedImport(
           sf,
-          `${hostDirectiveHelperPath}/${fileName}`,
+          controlHostDirectiveImportPath,
           identifier,
         );
 
@@ -332,9 +368,14 @@ describe('control schematic', () => {
 
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const controlHostDirectiveImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(hostDirectiveHelperPath),
+        );
+
         const importsControlHostDirectiveHelper = hasNamedImport(
           sf,
-          hostDirectiveHelperPath,
+          controlHostDirectiveImportPath,
           identifier,
         );
 
@@ -362,9 +403,14 @@ describe('control schematic', () => {
 
         const sf = parseTS(read(tree, defaultComponentOutputPath));
 
+        const controlHostDirectiveImportPath = buildRelativePath(
+          defaultComponentOutputPath,
+          src(`${hostDirectiveHelperPath}/${fileName}`),
+        );
+
         const importsControlHostDirectiveHelper = hasNamedImport(
           sf,
-          `${hostDirectiveHelperPath}/${fileName}`,
+          controlHostDirectiveImportPath,
           identifier,
         );
 

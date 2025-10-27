@@ -21,6 +21,7 @@ import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
 import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { getProject } from '../helper';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -80,6 +81,7 @@ function mergeOptions(
     resolveImportPathAndIdentifier(
       tree,
       projectRoot,
+      componentFilePath,
       viewProviderHelperPathOption,
       DEFAULT_VIEW_PROVIDER_HELPER,
     );
@@ -96,6 +98,7 @@ function mergeOptions(
     resolveImportPathAndIdentifier(
       tree,
       projectRoot,
+      componentFilePath,
       hostDirectiveHelperPathOptions,
       defaultHostDirective,
     );
@@ -152,6 +155,7 @@ function getDefaultHostDirective(type: 'control' | 'group' | 'block') {
 function resolveImportPathAndIdentifier(
   tree: Tree,
   projectRoot: string,
+  componentFilePath: string,
   pathOption: string | undefined,
   defaultFileOption: string,
 ) {
@@ -163,11 +167,23 @@ function resolveImportPathAndIdentifier(
     defaultFileOption,
   );
 
-  const barrelExport = `/${projectRoot}/${directory}/index.ts`;
+  const includesProjectRoot = directory.startsWith(projectRoot);
+  const resolvedDirectory = includesProjectRoot
+    ? directory
+    : `/${projectRoot}/${directory}`;
+
+  const barrelExport = `${resolvedDirectory}/index.ts`;
   if (tree.exists(barrelExport)) {
-    return [directory, identifier];
+    const barrelImport = buildRelativePath(
+      componentFilePath,
+      resolvedDirectory,
+    );
+    return [barrelImport, identifier];
   }
-  const directImportPath = `${directory}/${fileName}`;
+  const directImportPath = buildRelativePath(
+    componentFilePath,
+    `${resolvedDirectory}/${fileName}`,
+  );
   return [directImportPath, identifier];
 }
 
