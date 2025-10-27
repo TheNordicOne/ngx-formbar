@@ -106,9 +106,7 @@ describe('ng-add schematic', () => {
       expect(tree.exists(`${helperDir}/block.host-directive.ts`)).toBe(true);
       expect(tree.exists(`${helperDir}/group.host-directive.ts`)).toBe(true);
       expect(tree.exists(`${helperDir}/control.host-directive.ts`)).toBe(true);
-      expect(
-        tree.exists(`${helperDir}/control-container.view-provider.ts`),
-      ).toBe(true);
+      expect(tree.exists(`${helperDir}/view-provider.ts`)).toBe(true);
 
       expect(tree.exists(formworkConfigPath)).toBe(true);
     });
@@ -587,9 +585,7 @@ describe('ng-add schematic', () => {
       expect(tree.exists(`${helperDir}/block.host-directive.ts`)).toBe(false);
       expect(tree.exists(`${helperDir}/group.host-directive.ts`)).toBe(false);
       expect(tree.exists(`${helperDir}/control.host-directive.ts`)).toBe(false);
-      expect(
-        tree.exists(`${helperDir}/control-container.view-provider.ts`),
-      ).toBe(false);
+      expect(tree.exists(`${helperDir}/view-provider.ts`)).toBe(false);
     });
 
     it('uses the user provided helperPath', async () => {
@@ -603,9 +599,7 @@ describe('ng-add schematic', () => {
       expect(tree.exists(`${finalPath}/block.host-directive.ts`)).toBe(true);
       expect(tree.exists(`${finalPath}/group.host-directive.ts`)).toBe(true);
       expect(tree.exists(`${finalPath}/control.host-directive.ts`)).toBe(true);
-      expect(
-        tree.exists(`${finalPath}/control-container.view-provider.ts`),
-      ).toBe(true);
+      expect(tree.exists(`${finalPath}/view-provider.ts`)).toBe(true);
     });
 
     it('uses the user provided providerConfigPath and providerConfigFileName', async () => {
