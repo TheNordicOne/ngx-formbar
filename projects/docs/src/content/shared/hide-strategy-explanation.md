@@ -8,3 +8,12 @@ The following strategies are available:
 |------------------|--------------------------------------------------------|
 | `keep` (default) | The control remains in the form model even when hidden |
 | `remove`         | The control is removed from the form model when hidden |
+
+
+:::danger
+If you use the `remove` strategy you **must** ensure that your component does not try to render elements with a binding to `[formGroupName]` or `[formControlName]`!
+
+This is true even if you use the `auto` visibility state management! This is currently a limitation, for which I have not found a reasonable solution.
+
+Checkout the [GitHub Issue](https://github.com/TheNordicOne/ngx-formwork/issues/64) for more details.
+:::
