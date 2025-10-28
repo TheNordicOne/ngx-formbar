@@ -18,6 +18,7 @@ import {
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { isCallee } from '../shared/ast/decorators';
 import { getMapArguments } from '../shared/ast/registrations';
+import { normalize } from '@angular-devkit/core';
 
 // Path helpers
 export function appRoot(p = '') {
@@ -32,7 +33,12 @@ export function app(p = '') {
 
 // FS helpers
 export function read(tree: UnitTestTree, path: string) {
-  return tree.readText(path).replace(/\r\n/g, '\n');
+  return tree.readText(normalize(path)).replace(/\r\n/g, '\n');
+}
+
+export function exists(tree: UnitTestTree, path: string) {
+  console.log();
+  return tree.exists(normalize(path));
 }
 
 export function writeJson(
@@ -42,18 +48,18 @@ export function writeJson(
 ) {
   const content = JSON.stringify(value);
   if (tree.exists(filePath)) {
-    tree.overwrite(filePath, content);
+    tree.overwrite(normalize(filePath), content);
     return;
   }
-  tree.create(filePath, content);
+  tree.create(normalize(filePath), content);
 }
 
 export function writeTs(tree: UnitTestTree, filePath: string, content: string) {
-  if (tree.exists(filePath)) {
-    tree.overwrite(filePath, content);
+  if (tree.exists(normalize(filePath))) {
+    tree.overwrite(normalize(filePath), content);
     return;
   }
-  tree.create(filePath, content);
+  tree.create(normalize(filePath), content);
 }
 
 export function providersArrayContainsCall(sf: SourceFile, callee: string) {
