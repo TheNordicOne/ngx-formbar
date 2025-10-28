@@ -3,6 +3,8 @@
 interface Props {
   /** Name of the directory in `examples/` that contains the code for this example. */
   example: string;
+  /** Version of ngx-formworks for this example **/
+  formworksVersion?: string;
   /** Angular Version for this example **/
   ngVersion?: string;
   /** Title for this example to display in the StackBlitz embed. Also used to provide an accessible label for the embed iframe. */
@@ -16,13 +18,21 @@ interface Props {
   /** Set to true to expand the sidebar on load (only works on larger screens). */
   showSidebar?: boolean;
 }
-const { example, title, description, openFile, clickToLoad, showSidebar, ngVersion = '19' } = Astro.props;
+const {
+  example,
+  title,
+  description,
+  openFile,
+  clickToLoad,
+  showSidebar,
+  ngVersion = '19',
+  formworksVersion = 'latest'} = Astro.props;
 if (!example) {
   throw new Error('Missing props for `<StackBlitz>` component. `example` is required.');
 }
 
 const embedUrl = new URL(
-  `https://stackblitz.com/github.com/TheNordicOne/ngx-formwork-examples/tree/main/examples/ng${ngVersion}/${example}`
+  `https://stackblitz.com/github.com/TheNordicOne/ngx-formwork-examples/tree/${formworksVersion}/examples/ng${ngVersion}/${example}`
 );
 
 embedUrl.searchParams.set('embed', '1');
