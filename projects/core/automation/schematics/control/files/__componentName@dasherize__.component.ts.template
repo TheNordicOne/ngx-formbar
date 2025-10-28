@@ -25,4 +25,5 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
 export class <%= classify(componentClassName) %> {
   private readonly control = inject(NgxfwControlDirective<<%= interfaceName %>>);
   readonly content: Signal<<%= interfaceName %>> = this.control.content;
+  readonly name: Signal<string> = this.control.name;
 }
