@@ -14,7 +14,7 @@
     },
     "registrationStyle": {
       "type": "string",
-      "description": "How components and validators will be registered. Possible values: token, map",
+      "description": "How components and validators will be registered. Possible values: token, config",
       "default": "token"
     },
     "provideInline": {
