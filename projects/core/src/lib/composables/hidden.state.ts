@@ -155,10 +155,11 @@ export function hiddenEffect(options: {
     const hideStrategy = options.hideStrategySignal();
     const valueStrategy =
       options.valueStrategySignal() ?? options.parentValueStrategySignal();
-    const formGroup = untracked(() => parentFormGroup?.get(options.name()));
+    const formControl = untracked(() => parentFormGroup?.get(options.name()));
 
     // Re-attach control
-    if (!formGroup && !isHidden) {
+    // On initial render the form control will not be attached, but we need it for the hide strategy "keep"
+    if (!formControl && (!isHidden || hideStrategy === 'keep')) {
       untracked(() => {
         options.attachFunction();
       });
@@ -166,7 +167,7 @@ export function hiddenEffect(options: {
     }
 
     // Control is already detached
-    if (hideStrategy === 'remove' && !formGroup) {
+    if (hideStrategy === 'remove' && !formControl) {
       return;
     }
 
