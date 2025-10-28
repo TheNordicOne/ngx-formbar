@@ -43,6 +43,7 @@ export default defineConfig({
           autogenerate: { directory: 'examples' },
         },
       ],
+      customCss: ['./src/styles/theme.css'],
     }),
   ],
 });
