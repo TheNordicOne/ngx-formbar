@@ -14,6 +14,7 @@ import {
   callObjectArgHasProp,
   countCall,
   countNamedImport,
+  exists,
   providersArrayContainsCall,
   providersArrayContainsIdentifier,
   providersArrayContainsProviderObject,
@@ -73,7 +74,7 @@ describe('ng-add schematic', () => {
   describe('Default', () => {
     it('imports provideFormwork from ngx-formwork', async () => {
       const tree = await runAdd();
-      expect(tree.exists(appConfigPath)).toBe(true);
+      expect(exists(tree, appConfigPath)).toBe(true);
 
       const sf = parseTS(read(tree, appConfigPath));
       expect(hasNamedImport(sf, 'ngx-formwork', 'provideFormwork')).toBe(true);
@@ -92,23 +93,23 @@ describe('ng-add schematic', () => {
     it('generates token-based registration files, helper files, and registration configuration', async () => {
       const tree = await runAdd();
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         true,
       );
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         true,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(true);
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
-      expect(tree.exists(`${helperDir}/block.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${helperDir}/group.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${helperDir}/control.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${helperDir}/view-provider.ts`)).toBe(true);
+      expect(exists(tree, `${helperDir}/block.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${helperDir}/group.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(true);
 
-      expect(tree.exists(formworkConfigPath)).toBe(true);
+      expect(exists(tree, formworkConfigPath)).toBe(true);
     });
 
     it('uses schematic config without values', async () => {
@@ -175,16 +176,16 @@ describe('ng-add schematic', () => {
         formworkConfigImportPath,
       );
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         true,
       );
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         true,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(true);
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
       expect(hasComponentRegistrations).toBe(false);
       expect(hasComponentProviders).toBe(true);
       expect(hasValidatorProviders).toBe(true);
@@ -215,11 +216,11 @@ describe('ng-add schematic', () => {
         'asyncValidatorRegistrationsProvider',
       );
 
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         false,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(false);
 
       expect(hasComponentProviders).toBe(true);
@@ -250,11 +251,11 @@ describe('ng-add schematic', () => {
         'asyncValidatorRegistrationsProvider',
       );
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         true,
       );
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
-      expect(tree.exists(formworkConfigPath)).toBe(false);
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
+      expect(exists(tree, formworkConfigPath)).toBe(false);
       expect(hasComponentProviders).toBe(true);
       expect(hasValidatorProviders).toBe(true);
       expect(hasAsyncValidatorProviders).toBe(true);
@@ -282,15 +283,15 @@ describe('ng-add schematic', () => {
         'NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS',
       );
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         false,
       );
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(false);
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(false);
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         false,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(false);
 
       expect(hasComponentProviders).toBe(true);
@@ -317,12 +318,16 @@ describe('ng-add schematic', () => {
         finalPath,
       );
 
-      expect(tree.exists(`${finalPath}/component-registrations.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/index.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/validator-registrations.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/async-validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${finalPath}/component-registrations.ts`)).toBe(
         true,
       );
+      expect(exists(tree, `${finalPath}/index.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/validator-registrations.ts`)).toBe(
+        true,
+      );
+      expect(
+        exists(tree, `${finalPath}/async-validator-registrations.ts`),
+      ).toBe(true);
 
       expect(usesCorrectRelativePath).toBe(true);
     });
@@ -362,16 +367,16 @@ describe('ng-add schematic', () => {
         'shorthand',
       );
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         true,
       );
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         true,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(true);
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
       expect(appConfigUsesFormworkConfig).toBe(true);
 
@@ -387,11 +392,11 @@ describe('ng-add schematic', () => {
         includeAsyncValidators: false,
       });
 
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         false,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(false);
     });
 
@@ -427,18 +432,18 @@ describe('ng-add schematic', () => {
         'object',
       );
 
-      expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
         false,
       );
-      expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${registrations}/validator-registrations.ts`)).toBe(
         false,
       );
       expect(
-        tree.exists(`${registrations}/async-validator-registrations.ts`),
+        exists(tree, `${registrations}/async-validator-registrations.ts`),
       ).toBe(false);
-      expect(tree.exists(`${registrations}/index.ts`)).toBe(false);
+      expect(exists(tree, `${registrations}/index.ts`)).toBe(false);
 
-      expect(tree.exists(formworkConfigPath)).toBe(true);
+      expect(exists(tree, formworkConfigPath)).toBe(true);
 
       expect(providerConfigHasComponentRegistrations).toBe(true);
       expect(providerConfigHasValidatorRegistrations).toBe(true);
@@ -464,12 +469,16 @@ describe('ng-add schematic', () => {
         finalPath,
       );
 
-      expect(tree.exists(`${finalPath}/component-registrations.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/index.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/validator-registrations.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/async-validator-registrations.ts`)).toBe(
+      expect(exists(tree, `${finalPath}/component-registrations.ts`)).toBe(
         true,
       );
+      expect(exists(tree, `${finalPath}/index.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/validator-registrations.ts`)).toBe(
+        true,
+      );
+      expect(
+        exists(tree, `${finalPath}/async-validator-registrations.ts`),
+      ).toBe(true);
 
       expect(usesCorrectRelativePath).toBe(true);
     });
@@ -506,18 +515,18 @@ describe('ng-add schematic', () => {
           'shorthand',
         );
 
-        expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
-          true,
-        );
-        expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
-          true,
-        );
         expect(
-          tree.exists(`${registrations}/async-validator-registrations.ts`),
+          exists(tree, `${registrations}/component-registrations.ts`),
         ).toBe(true);
-        expect(tree.exists(`${registrations}/index.ts`)).toBe(true);
+        expect(
+          exists(tree, `${registrations}/validator-registrations.ts`),
+        ).toBe(true);
+        expect(
+          exists(tree, `${registrations}/async-validator-registrations.ts`),
+        ).toBe(true);
+        expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
-        expect(tree.exists(formworkConfigPath)).toBe(false);
+        expect(exists(tree, formworkConfigPath)).toBe(false);
 
         expect(appConfigHasComponentRegistrations).toBe(true);
         expect(appConfigHasValidatorRegistrations).toBe(true);
@@ -556,18 +565,18 @@ describe('ng-add schematic', () => {
           'object',
         );
 
-        expect(tree.exists(`${registrations}/component-registrations.ts`)).toBe(
-          false,
-        );
-        expect(tree.exists(`${registrations}/validator-registrations.ts`)).toBe(
-          false,
-        );
         expect(
-          tree.exists(`${registrations}/async-validator-registrations.ts`),
+          exists(tree, `${registrations}/component-registrations.ts`),
         ).toBe(false);
-        expect(tree.exists(`${registrations}/index.ts`)).toBe(false);
+        expect(
+          exists(tree, `${registrations}/validator-registrations.ts`),
+        ).toBe(false);
+        expect(
+          exists(tree, `${registrations}/async-validator-registrations.ts`),
+        ).toBe(false);
+        expect(exists(tree, `${registrations}/index.ts`)).toBe(false);
 
-        expect(tree.exists(formworkConfigPath)).toBe(false);
+        expect(exists(tree, formworkConfigPath)).toBe(false);
 
         expect(appConfigHasComponentRegistrations).toBe(true);
         expect(appConfigHasValidatorRegistrations).toBe(true);
@@ -582,10 +591,12 @@ describe('ng-add schematic', () => {
         useHelper: false,
       });
 
-      expect(tree.exists(`${helperDir}/block.host-directive.ts`)).toBe(false);
-      expect(tree.exists(`${helperDir}/group.host-directive.ts`)).toBe(false);
-      expect(tree.exists(`${helperDir}/control.host-directive.ts`)).toBe(false);
-      expect(tree.exists(`${helperDir}/view-provider.ts`)).toBe(false);
+      expect(exists(tree, `${helperDir}/block.host-directive.ts`)).toBe(false);
+      expect(exists(tree, `${helperDir}/group.host-directive.ts`)).toBe(false);
+      expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(
+        false,
+      );
+      expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(false);
     });
 
     it('uses the user provided helperPath', async () => {
@@ -596,10 +607,10 @@ describe('ng-add schematic', () => {
         helperPath,
       });
 
-      expect(tree.exists(`${finalPath}/block.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/group.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/control.host-directive.ts`)).toBe(true);
-      expect(tree.exists(`${finalPath}/view-provider.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/block.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/group.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/control.host-directive.ts`)).toBe(true);
+      expect(exists(tree, `${finalPath}/view-provider.ts`)).toBe(true);
     });
 
     it('uses the user provided providerConfigPath and providerConfigFileName', async () => {
@@ -612,7 +623,7 @@ describe('ng-add schematic', () => {
       });
 
       expect(
-        tree.exists(`${src(providerConfigPath)}/${providerConfigFileName}`),
+        exists(tree, `${src(providerConfigPath)}/${providerConfigFileName}`),
       ).toBe(true);
     });
   });
@@ -624,7 +635,7 @@ describe('ng-add schematic', () => {
           useSchematicConfig: false,
         });
 
-        expect(tree.exists(schematicsConfigPath)).toBe(false);
+        expect(exists(tree, schematicsConfigPath)).toBe(false);
       });
 
       it('writes all user provided configurations in angular.json', async () => {
@@ -704,7 +715,8 @@ describe('ng-add schematic', () => {
         });
 
         expect(
-          tree.exists(
+          exists(
+            tree,
             `${src(schematicsConfigPath)}/${schematicConfigFileName}`,
           ),
         ).toBe(true);

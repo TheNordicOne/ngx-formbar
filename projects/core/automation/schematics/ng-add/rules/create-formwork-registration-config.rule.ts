@@ -58,7 +58,7 @@ export function createFormworkRegistrationsConfig(
           providerConfigFileName,
           ...strings,
         }),
-        move(targetPath),
+        move(normalize(targetPath)),
       ]),
     );
   };

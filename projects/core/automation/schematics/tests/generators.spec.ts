@@ -15,7 +15,7 @@ import {
   provideTokenNoSplit,
   setupWorkspace,
 } from './workspace-setup';
-import { app, read, src, writeJson } from './helper';
+import { app, exists, read, src, writeJson } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import { parseTS } from '../shared/ast/parse';
@@ -758,10 +758,10 @@ describe('control schematic', () => {
       });
 
       const componentPath = app('email/email-control.component.ts');
-      expect(tree.exists(componentPath)).toBe(true);
+      expect(exists(tree, componentPath)).toBe(true);
 
       expect(
-        tree.exists(app('shared/forms/non-existent-registrations.ts')),
+        exists(tree, app('shared/forms/non-existent-registrations.ts')),
       ).toBe(false);
     });
 
@@ -923,10 +923,10 @@ describe('control schematic', () => {
         });
 
         const componentPath = app('email/email-control.component.ts');
-        expect(tree.exists(componentPath)).toBe(true);
+        expect(exists(tree, componentPath)).toBe(true);
 
         expect(
-          tree.exists(app('shared/forms/non-existent-registrations.ts')),
+          exists(tree, app('shared/forms/non-existent-registrations.ts')),
         ).toBe(false);
       });
     });
