@@ -39,7 +39,6 @@ const UNSUPPORTED_NODE_TYPES = new Set([
   'ClassExpression',
   'MetaProperty',
   'AwaitExpression',
-  'ChainExpression',
   'ImportExpression',
 ]);
 
@@ -193,6 +192,8 @@ export class ExpressionService {
         return this.evaluateCallExpression(node, context);
       case 'ArrowFunctionExpression':
         return this.evaluateArrowFunctionExpression(node, context);
+      case 'ChainExpression':
+        return this.evaluateAstNode(node.expression, context);
       default:
         throw new TypeError(`Unsupported node type: ${node.type}`);
     }
@@ -410,12 +411,6 @@ export class ExpressionService {
     node: MemberExpression,
     context: FormContext,
   ): unknown {
-    const objectValue = this.evaluateAstNode(node.object, context);
-
-    if (objectValue === null || objectValue === undefined) {
-      throw new Error('Cannot access properties of null or undefined');
-    }
-
     const propertyValue = node.computed
       ? this.evaluateAstNode(node.property, context)
       : (node.property as Identifier).name;
@@ -426,6 +421,21 @@ export class ExpressionService {
     ) {
       throw new Error(
         `Property accessor must be a string or number, but was ${typeof propertyValue}`,
+      );
+    }
+
+    const objectValue = this.evaluateAstNode(node.object, context);
+
+    const isOptional = node.optional;
+    if (objectValue === null || objectValue === undefined) {
+      if (isOptional) {
+        return undefined;
+      }
+      const readObject = node.object;
+      const readingFrom =
+        readObject.type === 'Identifier' ? ` from ${readObject.name}` : '';
+      throw new Error(
+        `Cannot access properties of null or undefined (Reading: ${propertyValue.toString()}${readingFrom})`,
       );
     }
 
@@ -468,7 +478,10 @@ export class ExpressionService {
       );
     }
 
-    throw new Error(`Cannot access properties on type: ${typeof objectValue}`);
+    return this.getPropertyFromObject(
+      objectValue as Record<string, unknown>,
+      propertyValue,
+    );
   }
 
   /**
@@ -478,10 +491,12 @@ export class ExpressionService {
    * @returns The value of the property
    */
   private getPropertyFromObject(
-    object: Record<string, unknown>,
+    object: Record<string, unknown> | null | undefined,
     propertyKey: string | number,
   ): unknown {
-    return object[propertyKey];
+    return object !== null && object !== undefined
+      ? object[propertyKey]
+      : undefined;
   }
 
   /**
@@ -731,8 +746,12 @@ export class ExpressionService {
     const memberExpr = node.callee;
     const object = this.evaluateAstNode(memberExpr.object, context);
 
+    const isOptionalCall = node.optional || memberExpr.optional;
     if (object === null || object === undefined) {
-      throw new Error('Cannot call methods on null or undefined');
+      if (isOptionalCall) {
+        return undefined;
+      }
+      throw new Error('Cannot call methods on null || undefined');
     }
 
     let methodName: string;
@@ -744,7 +763,7 @@ export class ExpressionService {
         typeof propertyValue !== 'string' &&
         typeof propertyValue !== 'number'
       ) {
-        throw new TypeError('Method name must be a string or number');
+        throw new TypeError('Method name must be a string || number');
       }
       methodName = String(propertyValue);
     } else {
