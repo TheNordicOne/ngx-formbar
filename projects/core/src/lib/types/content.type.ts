@@ -99,7 +99,7 @@ export interface NgxFwControl extends NgxFwAbstractControl {
   /**
    * Specifies the label for the control
    */
-  label: string;
+  label?: string;
   /**
    * Dynamic label that can be evaluated from form data
    */

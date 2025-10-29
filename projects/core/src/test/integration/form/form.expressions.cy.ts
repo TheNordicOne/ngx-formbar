@@ -429,7 +429,7 @@ describe('Form Expressions', () => {
           },
           targetFieldLabelFunc: {
             type: 'test-text-control',
-            label: 'Initial Static Label',
+
             dynamicLabel: (formValue: FormContext): string => {
               const name =
                 (formValue['nameForLabel'] as string | undefined) ?? '';
@@ -468,7 +468,6 @@ describe('Form Expressions', () => {
           },
           targetFieldLabelFunc: {
             type: 'test-text-control',
-            label: 'Initial Static Label',
             dynamicLabel: (formValue: FormContext): string => {
               const name =
                 (formValue['nameForLabel'] as string | undefined) ?? '';
