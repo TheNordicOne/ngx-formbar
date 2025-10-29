@@ -151,8 +151,20 @@ export const appConfig: ApplicationConfig = {
     
     // Provide your custom resolvers
     // These MUST come after provideFormwork()
-    { provide: NGX_FW_COMPONENT_RESOLVER, useExisting: AppCustomComponentResolver },
-    { provide: NGX_VALIDATOR_RESOLVER, useExisting: AppCustomValidatorResolver },
+    { 
+      provide: NGX_FW_COMPONENT_RESOLVER, 
+      useClass: AppCustomComponentResolver 
+    },
+    { 
+      provide: NGX_VALIDATOR_RESOLVER, 
+      useClass: AppCustomValidatorResolver 
+    },
+    // In case you need access to methods from your resolver add this
+    // This ensures that you can inject your resolver, get the correct types for it, while still using the same instance that ngx-formwork uses
+    {
+      provide: AppCustomComponentResolver,
+      useExisting: NGX_FW_COMPONENT_RESOLVER,
+    },
   ]
 };
 ```
