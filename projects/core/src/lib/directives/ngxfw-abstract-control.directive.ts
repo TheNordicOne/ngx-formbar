@@ -1,9 +1,9 @@
 import {
   computed,
   Directive,
+  effect,
   inject,
   input,
-  OnInit,
   ViewContainerRef,
 } from '@angular/core';
 import { NgxFwBaseContent } from '../types/content.type';
@@ -35,9 +35,7 @@ import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 @Directive({
   selector: '[ngxfwAbstractControl]',
 })
-export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
-  implements OnInit
-{
+export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent> {
   private viewContainerRef = inject(ViewContainerRef);
 
   /**
@@ -77,12 +75,15 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent>
     return component ?? null;
   });
 
-  ngOnInit() {
-    const component = this.component();
-    if (component) {
-      const componentRef = this.viewContainerRef.createComponent(component);
-      componentRef.setInput('content', this.controlConfig());
-      componentRef.setInput('name', this.controlName());
-    }
+  constructor() {
+    effect(() => {
+      const component = this.component();
+      this.viewContainerRef.clear();
+      if (component) {
+        const componentRef = this.viewContainerRef.createComponent(component);
+        componentRef.setInput('content', this.controlConfig());
+        componentRef.setInput('name', this.controlName());
+      }
+    });
   }
 }
