@@ -32,6 +32,7 @@ The evaluator supports a range of node types:
 - `TemplateLiteral`
 - `CallExpression` for invoking safe methods
 - `ArrowFunctionExpression` for simple arrow functions with expression bodies
+- `ChainExpression` for using optional chaining operator
 
 ## Supported Operators
 - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`

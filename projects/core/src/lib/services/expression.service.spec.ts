@@ -757,36 +757,81 @@ describe('ExpressionService', () => {
   });
 
   describe('Null and Undefined Property Access', () => {
-    evaluateExpressionExpectingError(
-      'nullValue.property',
-      'Property access on null should throw',
-    );
+  // Non-optional access should throw
+  evaluateExpressionExpectingError(
+    'nullValue.property',
+    'Property access on null without optional chaining should throw',
+  );
 
-    evaluateExpressionExpectingError(
-      'undefinedValue.property',
-      'Property access on undefined should throw',
-    );
+  evaluateExpressionExpectingError(
+    'undefinedValue.property',
+    'Property access on undefined without optional chaining should throw',
+  );
 
-    evaluateExpressionExpectingError(
-      'nullValue[0]',
-      'Array access on null should throw',
-    );
+  evaluateExpressionExpectingError(
+    'nullValue[0]',
+    'Array access on null without optional chaining should throw',
+  );
 
-    evaluateExpressionExpectingError(
-      'undefinedValue[0]',
-      'Array access on undefined should throw',
-    );
+  evaluateExpressionExpectingError(
+    'undefinedValue[0]',
+    'Array access on undefined without optional chaining should throw',
+  );
 
-    evaluateExpressionExpectingError(
-      'nullValue["property"]',
-      'Object property access on null should throw',
-    );
+  evaluateExpressionExpectingError(
+    'nullValue["property"]',
+    'Bracket property access on null without optional chaining should throw',
+  );
 
-    evaluateExpressionExpectingError(
-      'undefinedValue["property"]',
-      'Object property access on undefined should throw',
-    );
-  });
+  evaluateExpressionExpectingError(
+    'undefinedValue["property"]',
+    'Bracket property access on undefined without optional chaining should throw',
+  );
+
+  // Optional chaining should NOT throw and should evaluate to undefined
+  evaluateExpression(
+    'nullValue?.property',
+    undefined,
+    'Optional chaining on null returns undefined',
+  );
+
+  evaluateExpression(
+    'undefinedValue?.property',
+    undefined,
+    'Optional chaining on undefined returns undefined',
+  );
+
+  evaluateExpression(
+    'nullValue?.[0]',
+    undefined,
+    'Optional element access on null returns undefined',
+  );
+
+  evaluateExpression(
+    'undefinedValue?.[0]',
+    undefined,
+    'Optional element access on undefined returns undefined',
+  );
+
+  evaluateExpression(
+    'nullValue?.["property"]',
+    undefined,
+    'Optional bracket access on null returns undefined',
+  );
+
+  evaluateExpression(
+    'undefinedValue?.["property"]',
+    undefined,
+    'Optional bracket access on undefined returns undefined',
+  );
+
+  // Optional chaining in deeper paths should short-circuit safely
+  evaluateExpression(
+    'person?.address?.street',
+    undefined,
+    'Optional chaining short-circuits when an intermediate is undefined',
+  );
+});
 
   describe('Non-existent Property Access', () => {
     evaluateExpression(
