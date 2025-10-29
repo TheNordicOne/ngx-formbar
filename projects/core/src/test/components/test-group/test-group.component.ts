@@ -1,4 +1,4 @@
-import { Component, effect, inject, Signal, Type } from '@angular/core';
+import { Component, effect, inject, Signal } from '@angular/core';
 import {
   NgxfwAbstractControlDirective,
   NgxFwContent,
@@ -24,8 +24,7 @@ export class TestGroupComponent {
   readonly name: Signal<string> = this.control.name;
   readonly testId: Signal<string> = this.control.testId;
   readonly controls: Signal<[string, NgxFwContent][]> = this.control.controls;
-  readonly registrations: Signal<ReadonlyMap<string, Type<unknown>>> =
-    this.control.registrations;
+
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
 
