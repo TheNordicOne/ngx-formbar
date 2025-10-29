@@ -25,7 +25,6 @@ import { withTestId } from '../composables/testId';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { TestIdBuilderFn } from '../types/functions.type';
-import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 
 /**
  * Core directive for creating form groups in ngx-formwork.
@@ -69,9 +68,6 @@ import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 export class NgxfwGroupDirective<T extends NgxFwFormGroup>
   implements OnDestroy
 {
-  private readonly contentRegistrationService = inject(
-    NGX_FW_COMPONENT_RESOLVER,
-  );
   private parentContainer = inject(ControlContainer);
 
   private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
@@ -241,11 +237,6 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
       },
     );
   });
-
-  /**
-   * Access to component registrations from the registration service
-   */
-  readonly registrations = this.contentRegistrationService.registrations;
 
   /**
    * Computed signal for the title of the group
