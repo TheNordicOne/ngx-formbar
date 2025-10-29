@@ -11,8 +11,8 @@ sidebar:
   - No extra packages for rendering with UI Library X or CSS Framework Y
   - Controls are fully typed
   - Add whatever options you need for your controls
+- Schematic for adding formwork and scaffolding new controls
 - Full ownership of the form
-- Automatic e2e-Id generation
 - Hide controls based on an expression and the form state
   - Decide how the value of hidden controls behave (keep last, reset, default)
 - Disable controls based on an expression and the form state or set it statically
@@ -24,9 +24,11 @@ sidebar:
 - Support for non-control blocks (pure informational components like a callout, paragraphs, etc.)
 - Derive a value based on form state (dynamic readonly controls)
 - Dynamic labels/titles based on form state
+- Use own component and validator resolvers if you need more involved logic
+- Switch, add or remove registrations during runtime
+- Automatic e2e-Id generation
 - Configuration of test id (attribute name and how value is build)
 - Support for full TypeScript-only configurations, meaning you can use actual functions for the expressions
-- Schematic for adding formwork and scaffolding new controls
 
 
 ### Planned Features and Improvements
