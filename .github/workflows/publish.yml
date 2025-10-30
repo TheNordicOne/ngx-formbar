@@ -27,6 +27,6 @@ jobs:
             --pattern "*.tgz"
 
       - name: Publish to NPM
-        run: npm publish *.tgz --provenance
+        run: npm publish *.tgz --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
