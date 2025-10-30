@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect } from 'vitest';
-import {
-  SchematicTestRunner,
-  UnitTestTree,
-} from '@angular-devkit/schematics/testing';
+import { SchematicTestRunner, UnitTestTree } from '@angular-devkit/schematics/testing';
 
 import {
   addComponentFiles,
@@ -14,7 +11,7 @@ import {
   provideMap,
   provideToken,
   setupWorkspace,
-  TestComponentDetails,
+  TestComponentDetails
 } from './workspace-setup';
 import {
   app,
@@ -23,14 +20,14 @@ import {
   forEachAtLeastOnce,
   read,
   src,
-  writeJson,
+  writeJson
 } from './helper';
 import { DiscoverOptions } from '../register/schema';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { SourceFile } from 'typescript';
 import {
   componentRegistrationsMapProviderHasIdentifier,
-  directComponentRegistrationsHasIdentifier,
+  directComponentRegistrationsHasIdentifier
 } from '../shared/ast/registrations';
 import { parseTS } from '../shared/ast/parse';
 import { hasNamedImport } from '../shared/ast/imports';
