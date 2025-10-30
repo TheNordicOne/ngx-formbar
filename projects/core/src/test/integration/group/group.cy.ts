@@ -1,5 +1,6 @@
 import { GroupIntegrationHostComponent } from './integration-host/group-integration-host.component';
 import { dummyControlContainer } from '../shared/control-container';
+import { formbarProviders } from '../shared/provide-formbar';
 
 describe('Group', () => {
   describe('content', () => {

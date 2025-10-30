@@ -1,5 +1,6 @@
 import { RegistrationIntegrationHostComponent } from './integration-host/registration-integration-host.component';
 import { dummyControlContainer } from '../shared/control-container';
+import { formbarProviders } from '../shared/provide-formbar';
 
 describe('Content Registration', () => {
   it('should show registered content', () => {

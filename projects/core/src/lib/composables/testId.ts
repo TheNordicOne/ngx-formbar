@@ -1,7 +1,7 @@
 import { computed, inject, Signal } from '@angular/core';
 import { TestIdBuilderFn } from '../types/functions.type';
 import { NgxFbBaseContent, NgxFbFormGroup } from '../types/content.type';
-import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 import { NgxFbConfigurationService } from '../services/configuration.service';
 
 /**

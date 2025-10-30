@@ -4,7 +4,7 @@ import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
 import { FormContext } from '../types/expression.type';
-import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
  * Computes a reactive readonly state based on control content

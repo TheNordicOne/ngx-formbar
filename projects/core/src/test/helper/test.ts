@@ -3,7 +3,7 @@ import { FormIntegrationHostComponent } from '../integration/form/integration-ho
 import { TestTextControl } from '../types/controls.type';
 import { TestGroup } from '../types/group.type';
 import { InfoBlock } from '../types/block.type';
-import { formbarProviders } from '../integration/shared/provide-formwork';
+import { formbarProviders } from '../integration/shared/provide-formbar';
 
 export type TestContent = TestTextControl | TestGroup | InfoBlock;
 /**

@@ -1,11 +1,11 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NgxFbForm } from '../../../../lib/types/form.type';
+import { NgxFbForm, NgxfbFormComponent } from '../../../../lib';
 
 @Component({
   selector: 'ngxfb-form-integration-host',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, NgxfbFormComponent],
   templateUrl: './form-integration-host.component.html',
 })
 export class FormIntegrationHostComponent {

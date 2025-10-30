@@ -1,4 +1,9 @@
-import { UpdateStrategy } from '../../../lib';
+import {
+  defineFormbarConfig,
+  provideFormbar,
+  TestIdBuilderFn,
+  UpdateStrategy,
+} from '../../../lib';
 import { TestTextControlComponent } from '../../components/test-text-control/test-text-control.component';
 import { TestGroupComponent } from '../../components/test-group/test-group.component';
 import { Validators } from '@angular/forms';
@@ -10,7 +15,6 @@ import {
   noDuplicateValuesValidator,
 } from '../../validator/test.validator';
 import { TestBlockComponent } from '../../components/test-block/test-block.component';
-import { TestIdBuilderFn } from '../../../lib/types/functions.type';
 
 const formbarConfig = defineFormbarConfig({
   componentRegistrations: {

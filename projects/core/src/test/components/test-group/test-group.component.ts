@@ -4,9 +4,9 @@ import { TestGroup } from '../../types/group.type';
 import { ReactiveFormsModule } from '@angular/forms';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { simpleTestIdBuilder } from '../../helper/test-id-builder';
-import { ngxfbGroupHostDirective } from '../../../lib/helper/ngxfw-group-host-directive';
-import { NgxfbGroupDirective } from '../../../lib/directives/ngxfw-group.directive';
-import { NgxfbAbstractControlDirective } from '../../../lib/directives/ngxfw-abstract-control.directive';
+import { ngxfbGroupHostDirective } from '../../../lib/helper/ngxfb-group-host-directive';
+import { NgxfbGroupDirective } from '../../../lib/directives/ngxfb-group.directive';
+import { NgxfbAbstractControlDirective } from '../../../lib/directives/ngxfb-abstract-control.directive';
 
 @Component({
   selector: 'ngxfb-test-group',

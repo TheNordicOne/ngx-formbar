@@ -25,7 +25,7 @@ import {
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
-import { createFormbarRegistrationsConfig } from './rules/create-formwork-registration-config.rule';
+import { createFormbarRegistrationsConfig } from './rules/create-formbar-registration-config.rule';
 
 // noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {

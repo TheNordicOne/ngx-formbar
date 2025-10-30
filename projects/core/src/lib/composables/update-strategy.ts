@@ -5,7 +5,7 @@ import {
   UpdateStrategy,
 } from '../types/content.type';
 import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
-import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
  * Creates a computed signal for the control's update strategy

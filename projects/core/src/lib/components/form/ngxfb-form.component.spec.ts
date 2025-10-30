@@ -3,15 +3,15 @@ import { ControlContainer, FormGroupDirective } from '@angular/forms';
 import { NGX_FW_COMPONENT_RESOLVER } from '../../tokens/component-resolver';
 import { ComponentRegistrationService } from '../../services/component-registration.service';
 import { NgxFbBaseContent } from '../../types/content.type';
-import { NgxFbFormComponent } from './ngx-fw-form.component';
+import { NgxfbFormComponent } from './ngxfb-form.component';
 
 describe('FormComponent', () => {
-  let component: NgxFbFormComponent<NgxFbBaseContent>;
-  let fixture: ComponentFixture<NgxFbFormComponent<NgxFbBaseContent>>;
+  let component: NgxfbFormComponent<NgxFbBaseContent>;
+  let fixture: ComponentFixture<NgxfbFormComponent<NgxFbBaseContent>>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NgxFbFormComponent],
+      imports: [NgxfbFormComponent],
       providers: [
         {
           provide: NGX_FW_COMPONENT_RESOLVER,
@@ -24,7 +24,7 @@ describe('FormComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(NgxFbFormComponent);
+    fixture = TestBed.createComponent(NgxfbFormComponent);
     fixture.componentRef.setInput('formConfig', { content: {} });
     component = fixture.componentInstance;
 

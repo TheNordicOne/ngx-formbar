@@ -2,10 +2,11 @@ import { Component, inject, input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TestGroup } from '../../../types/group.type';
 import { FormService } from '../../../../lib/services/form.service';
+import { TestGroupComponent } from '../../../components/test-group/test-group.component';
 
 @Component({
   selector: 'ngxfb-group-integration-host',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TestGroupComponent],
   templateUrl: './group-integration-host.component.html',
   providers: [FormService],
 })
