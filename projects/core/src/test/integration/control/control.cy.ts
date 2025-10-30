@@ -1,7 +1,7 @@
 // noinspection DuplicatedCode
 import { ControlIntegrationHostComponent } from './integration-host/control-integration-host.component';
 import { dummyControlContainer } from '../shared/control-container';
-import { formbarProviders } from '../shared/provide-formwork';
+import { formbarProviders } from '../shared/provide-formbar';
 
 describe('Control', () => {
   describe('content', () => {

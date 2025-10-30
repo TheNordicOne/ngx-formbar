@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
-import { NgxfbAbstractControlDirective } from '../../directives/ngxfw-abstract-control.directive';
+import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-control.directive';
 import { NgxFbBaseContent, NgxFbContent } from '../../types/content.type';
 import { NgxFbForm } from '../../types/form.type';
 
@@ -21,11 +21,11 @@ import { NgxFbForm } from '../../types/form.type';
 @Component({
   selector: 'ngxfb-form',
   imports: [NgxfbAbstractControlDirective],
-  templateUrl: './ngx-fw-form.component.html',
+  templateUrl: './ngxfb-form.component.html',
   providers: [FormService],
   viewProviders: [controlContainerViewProviders],
 })
-export class NgxFbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
+export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
   /**
    * Required input containing form configuration
    */

@@ -1,3 +1,5 @@
+import { NgxfbControlDirective } from '../directives/ngxfb-control.directive';
+
 /**
  * Configuration for exposing NgxfbControlDirective in standalone components
  *

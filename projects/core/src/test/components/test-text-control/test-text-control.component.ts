@@ -3,8 +3,8 @@ import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { simpleTestIdBuilder } from '../../helper/test-id-builder';
-import { ngxfbControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
-import { NgxfbControlDirective } from '../../../lib/directives/ngxfw-control.directive';
+import { ngxfbControlHostDirective } from '../../../lib/helper/ngxfb-control-host-directive';
+import { NgxfbControlDirective } from '../../../lib/directives/ngxfb-control.directive';
 
 @Component({
   selector: 'ngxfb-test-text-control',

@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, Signal } from '@angular/core';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
 import { InfoBlock } from '../../types/block.type';
 import { simpleTestIdBuilder } from '../../helper/test-id-builder';
-import { NgxfbBlockDirective } from '../../../lib/directives/ngxfw-block.directive';
+import { NgxfbBlockDirective } from '../../../lib/directives/ngxfb-block.directive';
 
 @Component({
   selector: 'ngxfb-test-block',

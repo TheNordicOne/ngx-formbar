@@ -6,7 +6,7 @@ import { StateHandling } from '../types/registration.type';
 import { SimpleFunction } from '../types/functions.type';
 import { FormContext } from '../types/expression.type';
 import { NgxFbAbstractControl, NgxFbFormGroup } from '../types/content.type';
-import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
  * Computes a reactive disabled state based on control content

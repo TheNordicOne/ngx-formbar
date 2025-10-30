@@ -32,7 +32,7 @@ import {
 } from '../composables/computed-value';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { TestIdBuilderFn } from '../types/functions.type';
-import { NgxfbGroupDirective } from './ngxfw-group.directive';
+import { NgxfbGroupDirective } from './ngxfb-group.directive';
 
 /**
  * Core directive for creating form controls in ngx-formbar.

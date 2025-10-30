@@ -6,9 +6,9 @@ import { dummyControlContainer } from '../../test/integration/shared/control-con
 import { FormService } from '../services/form.service';
 import { TestGroup } from '../../test/types/group.type';
 import { Component, input } from '@angular/core';
-import { NgxfbAbstractControlDirective } from './ngxfw-abstract-control.directive';
+import { NgxfbAbstractControlDirective } from './ngxfb-abstract-control.directive';
 import { NgxFbContent } from '../types/content.type';
-import { formbarProviders } from '../../test/integration/shared/provide-formwork';
+import { formbarProviders } from '../../test/integration/shared/provide-formbar';
 
 @Component({
   selector: 'ngxfb-host-component',

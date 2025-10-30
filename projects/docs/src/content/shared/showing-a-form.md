@@ -4,7 +4,7 @@ You build the form as usual. This gives you full access to the underlying form o
 ```ts title="some-feature.component.ts" group="component"
 @Component({
   selector: 'app-some-form',
-  imports: [ReactiveFormsModule, NgxFbFormComponent],
+  imports: [ReactiveFormsModule, NgxfbFormComponent],
   templateUrl: './form-integration-host.component.html'
 })
 export class FormIntegrationHostComponent {

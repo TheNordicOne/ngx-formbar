@@ -13,7 +13,7 @@ import { SimpleFunction, ValueHandleFunction } from '../types/functions.type';
 import { Program } from 'acorn';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
 import { FormContext } from '../types/expression.type';
-import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
  * Computes a reactive hidden state based on control content

@@ -1,3 +1,5 @@
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
+
 /**
  * Configuration for exposing NgxfbGroupDirective in standalone components
  *
