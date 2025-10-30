@@ -7,6 +7,7 @@ import {
 import { join } from 'path';
 import { app, src, writeTs } from './helper';
 import { classify } from '@angular-devkit/core/src/utils/strings';
+import { PACKAGE_NAME } from '../../shared/constants';
 
 export const COLLECTION_PATH = join(
   __dirname,
@@ -51,7 +52,7 @@ export function provideToken(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormbar } from '@ngx-formbar/core';",
+    `import { provideFormbar } from '${PACKAGE_NAME}';`,
     "import { formbarConfig } from './formbar.config';",
     "import { componentRegistrationsProvider } from './registrations';",
     '',
@@ -70,7 +71,7 @@ export function provideToken(
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
   const formbarConfigContent = [
-    "import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';",
+    `import { NGX_FW_COMPONENT_REGISTRATIONS } from '${PACKAGE_NAME}';`,
     initialImports,
     '',
     'export const componentRegistrationsProvider = {',
@@ -93,7 +94,7 @@ export function provideTokenNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormbar, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';",
+    `import { provideFormbar, NGX_FW_COMPONENT_REGISTRATIONS } from '${PACKAGE_NAME}';`,
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -125,7 +126,7 @@ export function provideMapInlineNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormbar } from '@ngx-formbar/core';",
+    `import { provideFormbar } from '${PACKAGE_NAME}';`,
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -157,7 +158,7 @@ export function provideMap(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormbar } from '@ngx-formbar/core';",
+    `import { provideFormbar } from '${PACKAGE_NAME}';`,
     "import { formbarConfig } from './formbar.config';",
     initialImports,
     '',
@@ -175,7 +176,7 @@ export function provideMap(
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
   const formbarConfigContent = [
-    "import { defineFormbarConfig } from '@ngx-formbar/core';",
+    `import { defineFormbarConfig } from '${PACKAGE_NAME}';`,
     "import { componentRegistrations } from './registrations';",
     '',
     'export const formbarConfig = defineFormbarConfig({',
@@ -186,7 +187,7 @@ export function provideMap(
   writeTs(appTree, src(formbarConfigPath), formbarConfigContent);
 
   const registrationsContent = [
-    "import { ComponentRegistrationConfig } from '@ngx-formbar/core';",
+    `import { ComponentRegistrationConfig } from '${PACKAGE_NAME}';`,
     '',
     `export const componentRegistrations: ComponentRegistrationConfig = {${initialRegistrations}};`,
   ].join('\n');
@@ -206,7 +207,7 @@ export function provideMapNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormbar } from '@ngx-formbar/core';",
+    `import { provideFormbar } from '${PACKAGE_NAME}';`,
     "import { formbarConfig } from './formbar.config';",
     initialImports,
     '',
@@ -228,7 +229,7 @@ export function provideMapNoSplit(
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
   const formbarConfigContent = [
-    "import { defineFormbarConfig } from '@ngx-formbar/core';",
+    `import { defineFormbarConfig } from '${PACKAGE_NAME}';`,
     '',
     'export const formbarConfig = defineFormbarConfig({',
     '    componentRegistrations: {},',
@@ -268,7 +269,7 @@ export function createControlComponent(
   const [providers, imports] = providersAndImports;
 
   return `import { Component } from '@angular/core';
-  import { NgxfbControlDirective } from '@ngx-formbar/core';
+  import { NgxfbControlDirective } from '${PACKAGE_NAME}';
   import { ReactiveFormsModule } from '@angular/forms';
   ${imports}
 

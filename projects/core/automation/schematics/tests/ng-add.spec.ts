@@ -27,7 +27,7 @@ import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
 } from '../shared/ast/imports';
-import { DEFAULT_HELPER_PATH } from '../../shared/constants';
+import { DEFAULT_HELPER_PATH, PACKAGE_NAME } from '../../shared/constants';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -67,7 +67,7 @@ describe('ng-add schematic', () => {
 
     const sf = parseTS(read(twice, appConfigPath));
 
-    expect(countNamedImport(sf, 'ngx-formbar', 'provideFormbar')).toBe(1);
+    expect(countNamedImport(sf, PACKAGE_NAME, 'provideFormbar')).toBe(1);
     expect(countCall(sf, 'provideFormbar')).toBe(1);
   });
 
@@ -77,7 +77,7 @@ describe('ng-add schematic', () => {
       expect(exists(tree, appConfigPath)).toBe(true);
 
       const sf = parseTS(read(tree, appConfigPath));
-      expect(hasNamedImport(sf, 'ngx-formbar', 'provideFormbar')).toBe(true);
+      expect(hasNamedImport(sf, PACKAGE_NAME, 'provideFormbar')).toBe(true);
     });
 
     it('provides formbar and component registration providers in providers array', async () => {
@@ -649,18 +649,17 @@ describe('ng-add schematic', () => {
           projects: {
             'test-app': {
               schematics: {
-                'ngx-formbar:control'?: BaseGenerateSchematicConfig;
-                'ngx-formbar:group'?: BaseGenerateSchematicConfig;
-                'ngx-formbar:block'?: BaseGenerateSchematicConfig;
+                '@ngx-formbar/core:control'?: BaseGenerateSchematicConfig;
+                '@ngx-formbar/core:group'?: BaseGenerateSchematicConfig;
+                '@ngx-formbar/core:block'?: BaseGenerateSchematicConfig;
               };
             };
           };
         };
-
         const schematicsConfig = angularJson.projects['test-app'].schematics;
-        const controlConfig = schematicsConfig['ngx-formbar:control'];
-        const groupConfig = schematicsConfig['ngx-formbar:group'];
-        const blockConfig = schematicsConfig['ngx-formbar:block'];
+        const controlConfig = schematicsConfig['@ngx-formbar/core:control'];
+        const groupConfig = schematicsConfig['@ngx-formbar/core:group'];
+        const blockConfig = schematicsConfig['@ngx-formbar/core:block'];
 
         expect(controlConfig?.hostDirectiveHelperPath).toBe(helperPath);
         expect(groupConfig?.hostDirectiveHelperPath).toBe(helperPath);
