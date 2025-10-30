@@ -1,21 +1,20 @@
 import { Component, effect, inject, Signal } from '@angular/core';
-
-import { NgxfwControlDirective } from '../../../lib';
 import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
-import { ngxfwControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
 import { simpleTestIdBuilder } from '../../helper/test-id-builder';
+import { ngxfbControlHostDirective } from '../../../lib/helper/ngxfw-control-host-directive';
+import { NgxfbControlDirective } from '../../../lib/directives/ngxfw-control.directive';
 
 @Component({
-  selector: 'ngxfw-test-text-control',
+  selector: 'ngxfb-test-text-control',
   imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html',
   viewProviders: controlContainerViewProviders,
-  hostDirectives: [ngxfwControlHostDirective],
+  hostDirectives: [ngxfbControlHostDirective],
 })
 export class TestTextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TestTextControl>);
+  private readonly control = inject(NgxfbControlDirective<TestTextControl>);
 
   readonly content: Signal<TestTextControl> = this.control.content;
   readonly name: Signal<string> = this.control.name;

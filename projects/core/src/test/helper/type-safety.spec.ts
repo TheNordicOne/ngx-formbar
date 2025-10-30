@@ -1,9 +1,9 @@
-import { NgxFwForm } from '../../lib/types/form.type';
+import { NgxFbForm } from '../../lib/types/form.type';
 import { TestContent } from './test';
 
 describe('Type Safety', () => {
   it('should not have any TS errors when using default type generic', () => {
-    const form: NgxFwForm = {
+    const form: NgxFbForm = {
       content: {
         first: {
           type: 'test-text-control',
@@ -53,7 +53,7 @@ describe('Type Safety', () => {
   });
 
   it('should not have any TS errors when using default custom generic', () => {
-    const form: NgxFwForm<TestContent> = {
+    const form: NgxFbForm<TestContent> = {
       content: {
         first: {
           type: 'test-text-control',

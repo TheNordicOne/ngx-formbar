@@ -11,7 +11,7 @@ sidebar:
   - No extra packages for rendering with UI Library X or CSS Framework Y
   - Controls are fully typed
   - Add whatever options you need for your controls
-- Schematic for adding formwork and scaffolding new controls
+- Schematic for adding formbar and scaffolding new controls
 - Full ownership of the form
 - Hide controls based on an expression and the form state
   - Decide how the value of hidden controls behave (keep last, reset, default)

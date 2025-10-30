@@ -1,5 +1,5 @@
 import { TestIdBuilderFn } from './functions.type';
 
-export interface NgxFwGlobalConfiguration {
+export interface NgxFbGlobalConfiguration {
   testIdBuilderFn: TestIdBuilderFn | undefined;
 }

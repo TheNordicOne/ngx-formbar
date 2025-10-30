@@ -1,4 +1,4 @@
-import { ValidatorConfig, RegistrationRecord } from 'ngx-formwork';
+import { ValidatorConfig, RegistrationRecord } from '@ngx-formbar/core';
 
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
 };

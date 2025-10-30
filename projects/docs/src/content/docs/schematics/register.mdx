@@ -28,11 +28,11 @@ This schematic tries to find all relevant controls and registers them at the app
 
 There are two ways to set custom default options. This helps repeating the same parameters on every CLi command.
 
-### In `formwork.config.json`
+### In `formbar.config.json`
 
 All options are optional, but are listed here in full. You can put any combination of them.
 
-```json title="formwork.config.json"
+```json title="formbar.config.json"
 {
   "registrationType": "map",
   "controlRegistrationsPath": "app/form/registrations.ts",
@@ -45,17 +45,17 @@ All options are optional, but are listed here in full. You can put any combinati
 
 ### In `angular.json`
 
-You can set default values for any ngx-formwork schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
+You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
 All options are optional, but are listed here in full. You can put any combination of them.
-Note, that compared to `formwork.config.json`, you have to repeat all values.
+Note, that compared to `formbar.config.json`, you have to repeat all values.
 
 ```json title="angular.json"
 {
   "projects": {
     "my-app": {
       "schematics": {
-        "ngx-formwork:register": {
+        "ngx-formbar:register": {
           "registrationType": "map",
           "controlRegistrationsPath": "app/form/registrations.ts",
           "include": ["**/components/form/controls/**"],

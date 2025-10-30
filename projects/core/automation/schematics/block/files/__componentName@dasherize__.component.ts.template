@@ -1,6 +1,6 @@
 import { Component, Signal, inject } from '@angular/core';<% if (!hasViewProviderHelper) { %>
 import { ControlContainer } from '@angular/forms';<% } %>
-import { NgxfwBlockDirective } from 'ngx-formwork';
+import { NgxfbBlockDirective } from '@ngx-formbar/core';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
 import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
 import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
@@ -17,13 +17,13 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
     ]<% } %>,
    hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
       {
-        directive: NgxfwBlockDirective,
+        directive: NgxfbBlockDirective,
         inputs: ['content', 'name'],
       }
     ]<% } %>,
 })
 export class <%= classify(componentClassName) %> {
-  private readonly block = inject(NgxfwBlockDirective<<%= classify(interfaceName) %>>);
+  private readonly block = inject(NgxfbBlockDirective<<%= classify(interfaceName) %>>);
   readonly content: Signal<<%= classify(interfaceName) %>> = this.block.content;
 }
 

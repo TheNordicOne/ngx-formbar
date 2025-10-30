@@ -12,10 +12,10 @@ There are two ways to provide a custom `testIdBuilderFn`:
 
 #### Global Configuration
 
-You can define a global `testIdBuilderFn` when you set up Formwork using `provideFormwork`. This function will be used for all controls unless overridden at the component level.
+You can define a global `testIdBuilderFn` when you set up Formbar using `provideFormbar`. This function will be used for all controls unless overridden at the component level.
 
 ```ts
-provideFormwork({
+provideFormbar({
   // ...
   globalConfig: {
     testIdBuilderFn: (content, parentTestId) => {
@@ -27,7 +27,7 @@ provideFormwork({
 
 #### Control-Specific Configuration
 
-Individual components can also define their own testIdBuilderFn. This is done within the component's logic by calling `setTestIdBuilderFn` on the injected `NgxfwControlDirective`. This allows for fine-grained control over how test IDs are generated for specific components
+Individual components can also define their own testIdBuilderFn. This is done within the component's logic by calling `setTestIdBuilderFn` on the injected `NgxfbControlDirective`. This allows for fine-grained control over how test IDs are generated for specific components
 
 This example demonstrate how to do this for a [Control](/guides/controls/), but it works exactly the same for [Groups](/guides/groups/) and  [Blocks](/guides/blocks/).
 
@@ -36,7 +36,7 @@ This example demonstrate how to do this for a [Control](/guides/controls/), but 
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   
   constructor() {
       this.control.setTestIdBuilderFn(simpleTestIdBuilder);
@@ -49,7 +49,7 @@ export class TextControlComponent {
 The test ID generation follows this order of precedence:
 
 1. Control-Specific testIdBuilderFn: If a function is set directly on the control instance.
-2. Global testIdBuilderFn: If defined in the provideFormwork configuration.
+2. Global testIdBuilderFn: If defined in the provideFormbar configuration.
 3. Default Behavior: If no custom builder function is provided.
 
 This system provides flexibility, allowing you to set a general rule for test IDs across your application while still being able to override it for specific cases.

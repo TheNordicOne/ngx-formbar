@@ -7,12 +7,11 @@ import {
   signal,
 } from '@angular/core';
 import {
-  NgxFwControl,
-  NgxFwFormGroup,
+  NgxFbControl,
+  NgxFbFormGroup,
   ValueStrategy,
 } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
-import { NgxfwGroupDirective } from './ngxfw-group.directive';
 import { StateHandling } from '../types/registration.type';
 import {
   disabledEffect,
@@ -33,12 +32,13 @@ import {
 } from '../composables/computed-value';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { TestIdBuilderFn } from '../types/functions.type';
+import { NgxfbGroupDirective } from './ngxfw-group.directive';
 
 /**
- * Core directive for creating form controls in ngx-formwork.
+ * Core directive for creating form controls in ngx-formbar.
  *
  * This directive handles the integration between Angular's reactive forms and
- * ngx-formwork's declarative configuration. It manages:
+ * ngx-formbar's declarative configuration. It manages:
  *
  * - Control registration and lifecycle within parent form groups
  * - State management (hidden, disabled, readonly)
@@ -53,33 +53,33 @@ import { TestIdBuilderFn } from '../types/functions.type';
  * @Component({
  *   hostDirectives: [
  *     {
- *       directive: NgxfwControlDirective,
+ *       directive: NgxfbControlDirective,
  *       inputs: ['content', 'name'],
  *     }
  *   ],
  * })
  * export class TextControlComponent {
- *   private readonly control = inject(NgxfwControlDirective<TextControl>);
+ *   private readonly control = inject(NgxfbControlDirective<TextControl>);
  *   readonly content = this.control.content;
  *   readonly name = this.control.name;
  * }
  * ```
  *
- * @template T Type of the control configuration, must extend NgxFwControl
+ * @template T Type of the control configuration, must extend NgxFbControl
  */
 @Directive({
-  selector: '[ngxfwControl]',
+  selector: '[ngxfbControl]',
   host: {
     '[attr.hidden]': 'hiddenAttribute()',
   },
 })
-export class NgxfwControlDirective<T extends NgxFwControl>
+export class NgxfbControlDirective<T extends NgxFbControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
 
-  private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+  private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
     });
 
@@ -287,7 +287,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   /**
    * Sets the visibility handling strategy
-   * Determines if visibility should be managed by the component (manual) or by Formwork (auto)
+   * Determines if visibility should be managed by the component (manual) or by Formbar (auto)
    *
    * Use 'manual' when implementing custom visibility handling in your component:
    * ```typescript
@@ -302,7 +302,7 @@ export class NgxfwControlDirective<T extends NgxFwControl>
 
   /**
    * Sets the disabled handling strategy
-   * Determines if disabled state should be managed by the component (manual) or by Formwork (auto)
+   * Determines if disabled state should be managed by the component (manual) or by Formbar (auto)
    *
    * @param disabledHandling Strategy for handling disabled state ('auto' or 'manual')
    */

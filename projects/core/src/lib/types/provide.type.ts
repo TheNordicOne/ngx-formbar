@@ -5,10 +5,10 @@ import {
   ValidatorConfig,
 } from './validation.type';
 import { UpdateStrategy } from './content.type';
-import { NgxFwGlobalConfiguration } from './global-configuration.type';
+import { NgxFbGlobalConfiguration } from './global-configuration.type';
 
 /**
- * Configuration for registering and providing components and validators in Ngx Formwork
+ * Configuration for registering and providing components and validators in Ngx Formbar
  *
  * @template S - Type extending RegistrationRecord for synchronous validators
  * @template A - Type extending RegistrationRecord for asynchronous validators
@@ -21,7 +21,7 @@ import { NgxFwGlobalConfiguration } from './global-configuration.type';
  *
  * @example
  * // Define custom form components and validators
- * const formworkConfig: FormworkConfig<SyncValidators, AsyncValidators> = {
+ * const formbarConfig: FormbarConfig<SyncValidators, AsyncValidators> = {
  *   componentRegistrations:
  *   {
  *      'text-input': TextInputComponent
@@ -38,7 +38,7 @@ import { NgxFwGlobalConfiguration } from './global-configuration.type';
  *   },
  * };
  */
-export interface FormworkConfig<
+export interface FormbarConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
 > {
@@ -46,5 +46,5 @@ export interface FormworkConfig<
   validatorRegistrations?: ValidatorConfig<S>;
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
   updateOn?: UpdateStrategy;
-  globalConfig?: NgxFwGlobalConfiguration;
+  globalConfig?: NgxFbGlobalConfiguration;
 }

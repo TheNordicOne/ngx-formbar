@@ -1,12 +1,12 @@
 import { computed, effect, inject, Signal } from '@angular/core';
-import { NgxFwAbstractControl } from '../types/content.type';
+import { NgxFbAbstractControl } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
 import { AbstractControl, ControlContainer } from '@angular/forms';
 import { FormContext } from '../types/expression.type';
 
-export function withComputedValue<T>(content: Signal<NgxFwAbstractControl>) {
+export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
   const parentContainer = inject(ControlContainer);

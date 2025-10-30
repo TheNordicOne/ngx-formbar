@@ -99,7 +99,7 @@ export function buildProvidersUpdate(
     `${projectRoot}/${formattedProviderConfigPath}`,
   );
 
-  const hasProvideCall = existingElements.some(isProvideFormworkCall);
+  const hasProvideCall = existingElements.some(isProvideFormbarCall);
   if (!hasProvideCall) {
     const callArgs = createArgsForConfig(
       sourceFile,
@@ -111,7 +111,7 @@ export function buildProvidersUpdate(
 
     newElements.push(
       factory.createCallExpression(
-        factory.createIdentifier('provideFormwork'),
+        factory.createIdentifier('provideFormbar'),
         undefined,
         callArgs,
       ),
@@ -177,8 +177,8 @@ export function replaceNodeWithPrinted(
   ];
 }
 
-function isProvideFormworkCall(n: Expression) {
-  return isCallExpression(n) && isCallee(n.expression, 'provideFormwork');
+function isProvideFormbarCall(n: Expression) {
+  return isCallExpression(n) && isCallee(n.expression, 'provideFormbar');
 }
 
 function hasIdentifier(name: string) {
@@ -318,13 +318,13 @@ function createArgsForConfig(
       insertImport(
         sourceFile,
         appConfigPath,
-        'formworkConfig',
+        'formbarConfig',
         providerConfigImportPath,
         false,
       ),
     );
   }
-  return [factory.createIdentifier('formworkConfig')];
+  return [factory.createIdentifier('formbarConfig')];
 }
 
 function checkTokenProviderExists(

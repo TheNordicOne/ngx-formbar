@@ -1,10 +1,10 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFwAbstractControl, NgxFwFormGroup } from '../types/content.type';
+import { NgxFbAbstractControl, NgxFbFormGroup } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
-import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { Program } from 'acorn';
 import { FormContext } from '../types/expression.type';
+import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
 
 /**
  * Computes a reactive readonly state based on control content
@@ -22,11 +22,11 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with potential readonly property
  * @returns Computed signal that resolves to boolean readonly state
  */
-export function withReadonlyState(content: Signal<NgxFwAbstractControl>) {
+export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "NgxFormworkNgAdd",
-  "title": "Ngx-Formwork Installation Schema",
+  "$id": "NgxFormbarNgAdd",
+  "title": "ngx-formbar Installation Schema",
   "type": "object",
-  "description": "Adds ngx-formwork to the application",
+  "description": "Adds ngx-formbar to the application",
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add ngx-formwork to.",
+      "description": "The name of the project to add ngx-formbar to.",
       "$default": {
         "$source": "projectName"
       }
@@ -19,7 +19,7 @@
     },
     "provideInline": {
       "type": "boolean",
-      "description": "Put configuration of provideFormwork call directly in app.config.ts (defaults to false)",
+      "description": "Put configuration of provideFormbar call directly in app.config.ts (defaults to false)",
       "default": false
     },
     "providerConfigPath": {
@@ -29,8 +29,8 @@
     },
     "providerConfigFileName": {
       "type": "string",
-      "description": "Name of the provider configuration file. Defaults to 'formwork.config.ts'",
-      "default": "formwork.config.ts"
+      "description": "Name of the provider configuration file. Defaults to 'formbar.config.ts'",
+      "default": "formbar.config.ts"
     },
     "includeSyncValidators": {
       "type": "boolean",
@@ -74,8 +74,8 @@
     },
     "schematicConfigFileName": {
       "type": "string",
-      "description": "Name of the schematic config file. Defaults to 'formwork.config.json'",
-      "default": "formwork.config.json"
+      "description": "Name of the schematic config file. Defaults to 'formbar.config.json'",
+      "default": "formbar.config.json"
     }
   }
 }

@@ -3,7 +3,7 @@ import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
 
 export const NGX_FW_DEFAULT_VALIDATOR_REGISTRATIONS = new InjectionToken<
   ReadonlyMap<string, ValidatorFn[]>
->('NgxFwDefaultValidatorRegistrations', {
+>('NgxFbDefaultValidatorRegistrations', {
   providedIn: 'root',
   factory: () =>
     new Map<string, ValidatorFn[]>([

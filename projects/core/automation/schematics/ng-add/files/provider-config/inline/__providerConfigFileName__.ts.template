@@ -1,6 +1,6 @@
-import { defineFormworkConfig } from 'ngx-formwork';
+import { defineFormbarConfig } from '@ngx-formbar/core';
 
-export const formworkConfig = defineFormworkConfig({
+export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {},<%if (includeSyncValidators){ %>, validatorRegistrations: {}
   <% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations: {}
   <% } %>

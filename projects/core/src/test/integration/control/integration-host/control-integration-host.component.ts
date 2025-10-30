@@ -5,7 +5,7 @@ import { TestTextControl } from '../../../types/controls.type';
 import { FormService } from '../../../../lib/services/form.service';
 
 @Component({
-  selector: 'ngxfw-control-integration-host',
+  selector: 'ngxfb-control-integration-host',
   imports: [ReactiveFormsModule, TestTextControlComponent],
   templateUrl: './control-integration-host.component.html',
   providers: [FormService],

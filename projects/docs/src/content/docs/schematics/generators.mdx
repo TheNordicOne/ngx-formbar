@@ -7,7 +7,7 @@ sidebar:
 
 import ResolvingOptions from '../../shared/resolving-options.md';
 
-Creating and registering a new control, group or block and be cumbersome. To make this easier, _ngx-formwork_ comes with three generator schematics.
+Creating and registering a new control, group or block and be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
 
 ## Options
 
@@ -15,7 +15,7 @@ All three schematics (`control`, `group`, `block`) support the same options:
 
 | Option                    | Type    | Required | Default (control/group/block) | Description                                                                                                                                                                                                                                                                                          |
 |---------------------------|---------|----------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --key                     | string  | Yes      | —                             | Registration key used in the Formwork configuration.                                                                                                                                                                                                                                                 |
+| --key                     | string  | Yes      | —                             | Registration key used in the Formbar configuration.                                                                                                                                                                                                                                                 |
 | --name                    | string  | No       | `key`                         | Base name for component and interface.                                                                                                                                                                                                                                                               |
 | --project                 | string  | No       | workspace default project     | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
 | --path                    | string  | No       | current working directory     | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
@@ -34,7 +34,7 @@ The paths for `hostDirectiveHelperPath` and `viewProviderHelperPath` can have th
 These are the relevant default values:
 
 - Host Directive Helper File Name: `(type).host-directive.ts`
-- Host Directive Identifier: `ngxfw(Type)HostDirective`
+- Host Directive Identifier: `ngxfb(Type)HostDirective`
 - View Provider Helper File Name: `view-provider.ts`
 - View Provider Identifier: `viewProviders`
 
@@ -69,13 +69,13 @@ If an `index.ts` exists, it will use this for the import. Otherwise, it falls ba
 Run:
 
 ```bash
-ng generate ngx-formwork:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate ngx-formbar:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
-- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwControl`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwControlDirective`.
-- Register the new control in your Formwork configuration under `componentRegistrations` with the given key.
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbControl`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbControlDirective`.
+- Register the new control in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Controls Guide](/guides/controls).
 
@@ -84,13 +84,13 @@ For implementation details and advanced usage, see the [Controls Guide](/guides/
 Run:
 
 ```bash
-ng generate ngx-formwork:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate ngx-formbar:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
-- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwFormGroup`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwGroupDirective`.
-- Register the new group in your Formwork configuration under `componentRegistrations` with the given key.
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbFormGroup`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbGroupDirective`.
+- Register the new group in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Groups Guide](/guides/groups).
 
@@ -99,13 +99,13 @@ For implementation details and advanced usage, see the [Groups Guide](/guides/gr
 Run:
 
 ```bash
-ng generate ngx-formwork:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate ngx-formbar:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
-- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFwBlock`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfwBlockDirective`.
-- Register the new block in your Formwork configuration under `componentRegistrations` with the given key.
+- Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbBlock`.
+- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbBlockDirective`.
+- Register the new block in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Blocks Guide](/guides/blocks).
 
@@ -113,11 +113,11 @@ For implementation details and advanced usage, see the [Blocks Guide](/guides/bl
 
 There are two ways to set custom default options. This helps repeating the same parameters on every CLi command.
 
-### In `formwork.config.json`
+### In `formbar.config.json`
 
 All options are optional, but are listed here in full. You can put any combination of them.
 
-```json title="formwork.config.json"
+```json title="formbar.config.json"
 {
   "controlRegistrationsPath": "app/form/registrations.ts",
   "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
@@ -144,17 +144,17 @@ All options are optional, but are listed here in full. You can put any combinati
 
 ### In `angular.json`
 
-You can set default values for any ngx-formwork schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
+You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
 All options are optional, but are listed here in full. You can put any combination of them.
-Note, that compared to `formwork.config.json`, you have to repeat all values.
+Note, that compared to `formbar.config.json`, you have to repeat all values.
 
 ```json title="angular.json"
 {
   "projects": {
     "my-app": {
       "schematics": {
-        "ngx-formwork:control": {
+        "ngx-formbar:control": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"Type",
@@ -162,7 +162,7 @@ Note, that compared to `formwork.config.json`, you have to repeat all values.
           "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
-        "ngx-formwork:group": {
+        "ngx-formbar:group": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"GroupType",
@@ -170,7 +170,7 @@ Note, that compared to `formwork.config.json`, you have to repeat all values.
           "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
-        "ngx-formwork:block": {
+        "ngx-formbar:block": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"BlockType",

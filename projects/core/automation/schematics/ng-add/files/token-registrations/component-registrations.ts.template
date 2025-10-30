@@ -1,5 +1,5 @@
 import { Type } from '@angular/core';
-import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
 
 export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,

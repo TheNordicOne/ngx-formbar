@@ -1,7 +1,7 @@
 /**
- * Represents information about a discovered Formwork component
+ * Represents information about a discovered Formbar component
  */
-export interface FormworkComponentInfo {
+export interface FormbarComponentInfo {
   /** The path to the component file */
   componentFilePath: string;
   /** The name of the component class */

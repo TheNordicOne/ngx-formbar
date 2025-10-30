@@ -5,13 +5,13 @@ sidebar:
   order: 4
 ---
 
-__Formwork__ supports native Angular validators and async validators. That means, that all custom validators are fully supported.
+__Formbar__ supports native Angular validators and async validators. That means, that all custom validators are fully supported.
 
-To make the validators available to __formwork__ they need to be registered. You can also combine multiple validators under one key, which is useful if you frequently use certain combinations of validators.
+To make the validators available to __formbar__ they need to be registered. You can also combine multiple validators under one key, which is useful if you frequently use certain combinations of validators.
 
 :::caution
 You can not combine synchronous validators with async ones!
-Angular itself differentiates between those, so __formwork__ does to.
+Angular itself differentiates between those, so __formbar__ does to.
 :::
 
 ## Registration
@@ -22,7 +22,7 @@ You can register (async) validators under any name you want. Note, that you have
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       //...
       // Validators
       validatorRegistrations: {
@@ -53,7 +53,7 @@ You can use an existing validator registration by referring to it via its key.
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       //...
       validatorRegistrations: {
         'min-chars': [Validators.minLength(3)],
@@ -72,7 +72,7 @@ When writing your form configuration, you can add multiple validators for your c
 To use a validator for a control, you refer to it by its key.
 
 ```ts title="example.form.ts"
-export const exampleForm: NgxFwContent[] = [
+export const exampleForm: NgxFbContent[] = [
   {
     type: 'text',
     id: 'username',
@@ -98,7 +98,7 @@ The following validators are registered by default:
 
 ## Adding Custom Validators
 
-_ngx-formwork_ uses the standard Angular validator functions. That means that writing your own is exactly the same as in Angular itself. Checkout ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
+_ngx-formbar_ uses the standard Angular validator functions. That means that writing your own is exactly the same as in Angular itself. Checkout ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
 
 
 ### Validator

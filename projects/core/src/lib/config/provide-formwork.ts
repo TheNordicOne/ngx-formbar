@@ -5,7 +5,6 @@ import {
   Type,
 } from '@angular/core';
 import { ComponentRegistrationService } from '../services/component-registration.service';
-import { FormworkConfig } from '../types/provide.type';
 import { ComponentRegistrationConfig } from '../types/registration.type';
 import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import {
@@ -25,14 +24,15 @@ import {
 import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 import { NGX_FW_CONFIG } from '../tokens/global-config';
+import { FormbarConfig } from '../types/provide.type';
 
 /**
- * Configures and provides ngx-formwork to your application.
+ * Configures and provides ngx-formbar to your application.
  *
  * This function is used in app.config.ts to register form components, validators,
- * and set global configuration for the formwork library.
+ * and set global configuration for the formbar library.
  *
- * @param config Configuration object for ngx-formwork:
+ * @param config Configuration object for ngx-formbar:
  *   - componentRegistrations: Optional mapping of control types to component implementations
  *   - validatorRegistrations: Optional mapping of validator names to validator functions
  *     (Angular's required, requiredTrue, email, and nullValidator are registered by default)
@@ -47,7 +47,7 @@ import { NGX_FW_CONFIG } from '../tokens/global-config';
  * // app.config.ts
  * export const appConfig: ApplicationConfig = {
  *   providers: [
- *     provideFormwork({
+ *     provideFormbar({
  *       componentRegistrations: {
  *         text: TextInputComponent,
  *         select: SelectComponent,
@@ -60,10 +60,10 @@ import { NGX_FW_CONFIG } from '../tokens/global-config';
  * };
  * ```
  */
-export function provideFormwork<
+export function provideFormbar<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
->(config?: FormworkConfig<S, A>): EnvironmentProviders {
+>(config?: FormbarConfig<S, A>): EnvironmentProviders {
   config ??= {};
   const {
     componentRegistrations,

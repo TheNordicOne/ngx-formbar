@@ -4,7 +4,7 @@ import { Expression } from './expression.type';
  * The foundation for all form controls and groups. It defines a common set of options
  * that control registration, validation, visibility, and behavior of the form elements.
  */
-export interface NgxFwBaseContent {
+export interface NgxFbBaseContent {
   /**
    * Specifies the kind of form control. Determines what control is used and what
    * additional properties are available.
@@ -21,7 +21,7 @@ export interface NgxFwBaseContent {
  * Extends the base content with validation and control state management properties.
  * Used as a base for both form controls and groups.
  */
-export interface NgxFwAbstractControl extends NgxFwBaseContent {
+export interface NgxFbAbstractControl extends NgxFbBaseContent {
   /**
    * Array of strings representing names of synchronous validators that apply to the control.
    * These can be registered globally with a validator registration object.
@@ -76,8 +76,8 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
 /**
  * Represents a group of controls that can be nested within a form.
  */
-export interface NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>
-  extends NgxFwAbstractControl {
+export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>
+  extends NgxFbAbstractControl {
   /**
    * Specifies a title for the group
    */
@@ -87,7 +87,7 @@ export interface NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>
    */
   dynamicTitle?: Expression<string>;
   /**
-   * Object mapping keys to NgxFwContent that configure the controls of the group
+   * Object mapping keys to NgxFbContent that configure the controls of the group
    */
   controls: Record<string, T>;
 }
@@ -95,7 +95,7 @@ export interface NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>
 /**
  * Represents an individual form control with label and value properties.
  */
-export interface NgxFwControl extends NgxFwAbstractControl {
+export interface NgxFbControl extends NgxFbAbstractControl {
   /**
    * Specifies the label for the control
    */
@@ -118,7 +118,7 @@ export interface NgxFwControl extends NgxFwAbstractControl {
  * Represents a block element that doesn't behave like a form control.
  * Used for UI elements that aren't part of the form model.
  */
-export interface NgxFwBlock extends NgxFwBaseContent {
+export interface NgxFbBlock extends NgxFbBaseContent {
   /**
    * Required property for TypeScript to properly do type narrowing
    */
@@ -129,7 +129,7 @@ export interface NgxFwBlock extends NgxFwBaseContent {
 /**
  * Union type representing all possible content types that can be used in a form.
  */
-export type NgxFwContent = NgxFwFormGroup | NgxFwControl | NgxFwBlock;
+export type NgxFbContent = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
 
 /**
  * Specifies how to handle the control when hidden:

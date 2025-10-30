@@ -39,8 +39,7 @@ export function findComponentRegistrationsNode(
     }
 
     result =
-      findMapNodeInTokenRegistration(node) ??
-      findMapNodeInProvideFormwork(node);
+      findMapNodeInTokenRegistration(node) ?? findMapNodeInProvideFormbar(node);
     if (result) {
       return;
     }
@@ -111,8 +110,8 @@ export function findComponentRegistrationsObject(
 
     result =
       findStandaloneComponentRegistrations(node) ??
-      findFormworkConfigComponentRegistrations(node) ??
-      findProvideFormworkComponentRegistrations(node);
+      findFormbarConfigComponentRegistrations(node) ??
+      findProvideFormbarComponentRegistrations(node);
 
     if (result) {
       return;
@@ -157,7 +156,7 @@ export function addComponentRegistration(
   );
 }
 
-export function getProvideFormworkArg(sf: SourceFile) {
+export function getProvideFormbarArg(sf: SourceFile) {
   let result: ObjectLiteralExpression | undefined;
 
   const visit = (node: Node): void => {
@@ -165,10 +164,7 @@ export function getProvideFormworkArg(sf: SourceFile) {
       return;
     }
 
-    if (
-      isCallExpression(node) &&
-      isCallee(node.expression, 'provideFormwork')
-    ) {
+    if (isCallExpression(node) && isCallee(node.expression, 'provideFormbar')) {
       if (
         node.arguments.length > 0 &&
         isObjectLiteralExpression(node.arguments[0])
@@ -308,12 +304,12 @@ export function componentRegistrationsObjectUsesIdentifier(
   return registrationsObjectUsesIdentifier(node, identifierName);
 }
 
-export function provideFormworkComponentRegistrationsHasIdentifier(
+export function provideFormbarComponentRegistrationsHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
 ) {
-  const arg = getProvideFormworkArg(sf);
+  const arg = getProvideFormbarArg(sf);
   if (!arg) {
     return false;
   }
@@ -355,7 +351,7 @@ export function provideFormworkComponentRegistrationsHasIdentifier(
   return !!entry;
 }
 
-export function defineFormworkConfigComponentRegistrationsHasIdentifier(
+export function defineFormbarConfigComponentRegistrationsHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
@@ -367,7 +363,7 @@ export function defineFormworkConfigComponentRegistrationsHasIdentifier(
 
     if (
       isCallExpression(node) &&
-      isCallee(node.expression, 'defineFormworkConfig')
+      isCallee(node.expression, 'defineFormbarConfig')
     ) {
       const [firstArg] = node.arguments;
       if (node.arguments.length === 0 || !isObjectLiteralExpression(firstArg)) {
@@ -640,8 +636,8 @@ function findMapNodeInTokenRegistration(node: Node) {
   return hasComponentRegistrationsToken ? node : null;
 }
 
-function findMapNodeInProvideFormwork(node: Node) {
-  if (!isProvideFormworkCall(node)) {
+function findMapNodeInProvideFormbar(node: Node) {
+  if (!isProvideFormbarCall(node)) {
     return null;
   }
 
@@ -698,12 +694,12 @@ function isProvidePropertyWithToken(prop: Node, tokenName: string) {
   );
 }
 
-function isProvideFormworkCall(node: Node) {
+function isProvideFormbarCall(node: Node) {
   return (
     isCallExpression(node) &&
     isPropertyAccessExpression(node.expression) &&
     isIdentifier(node.expression.name) &&
-    node.expression.name.text === 'provideFormwork'
+    node.expression.name.text === 'provideFormbar'
   );
 }
 
@@ -773,7 +769,7 @@ function findStandaloneComponentRegistrations(node: Node) {
   return null;
 }
 
-function findFormworkConfigComponentRegistrations(node: Node) {
+function findFormbarConfigComponentRegistrations(node: Node) {
   if (
     !isVariableStatement(node) ||
     node.declarationList.declarations.length === 0
@@ -785,7 +781,7 @@ function findFormworkConfigComponentRegistrations(node: Node) {
   if (
     !isVariableDeclaration(declaration) ||
     !isIdentifier(declaration.name) ||
-    declaration.name.text !== 'formworkConfig' ||
+    declaration.name.text !== 'formbarConfig' ||
     !declaration.initializer
   ) {
     return null;
@@ -798,7 +794,7 @@ function findFormworkConfigComponentRegistrations(node: Node) {
   const callExpr = declaration.initializer;
   if (
     !isIdentifier(callExpr.expression) ||
-    callExpr.expression.text !== 'defineFormworkConfig' ||
+    callExpr.expression.text !== 'defineFormbarConfig' ||
     callExpr.arguments.length === 0
   ) {
     return null;
@@ -808,7 +804,7 @@ function findFormworkConfigComponentRegistrations(node: Node) {
   return getComponentRegistrationExpression(configArg);
 }
 
-function findProvideFormworkComponentRegistrations(node: Node) {
+function findProvideFormbarComponentRegistrations(node: Node) {
   if (!isVariableStatement(node)) {
     return null;
   }
@@ -818,18 +814,18 @@ function findProvideFormworkComponentRegistrations(node: Node) {
     return null;
   }
 
-  const provideFormworkCall = providersArray.elements.find(
+  const provideFormbarCall = providersArray.elements.find(
     (el) =>
       isCallExpression(el) &&
       isIdentifier(el.expression) &&
-      el.expression.text === 'provideFormwork',
+      el.expression.text === 'provideFormbar',
   ) as CallExpression | undefined;
 
-  if (!provideFormworkCall || provideFormworkCall.arguments.length === 0) {
+  if (!provideFormbarCall || provideFormbarCall.arguments.length === 0) {
     return null;
   }
 
-  const configArg = provideFormworkCall.arguments[0];
+  const configArg = provideFormbarCall.arguments[0];
   return getComponentRegistrationExpression(configArg);
 }
 

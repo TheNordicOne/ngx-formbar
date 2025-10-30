@@ -1,13 +1,13 @@
 import { RegistrationRecord } from '../types/validation.type';
-import { FormworkConfig } from '../types/provide.type';
+import { FormbarConfig } from '../types/provide.type';
 
 /**
- * Type helper to make it easier to use formwork.config.ts
- * accepts a direct {@link FormworkConfig} object
+ * Type helper to make it easier to use formbar.config.ts
+ * accepts a direct {@link FormbarConfig} object
  */
-export function defineFormworkConfig<
+export function defineFormbarConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
->(config: FormworkConfig<S, A>) {
+>(config: FormbarConfig<S, A>) {
   return config;
 }

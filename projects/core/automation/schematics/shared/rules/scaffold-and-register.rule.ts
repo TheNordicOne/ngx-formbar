@@ -15,13 +15,13 @@ import {
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_VIEW_PROVIDER_HELPER,
 } from '../../../shared/constants';
-import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
 import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { getProject } from '../helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { NgxFormbarAutomationConfig } from '../../../shared/shared-config.type';
 
 export function scaffoldAndRegister(
   options: Schema,
@@ -49,7 +49,7 @@ function mergeOptions(
     ? `${projectRoot}/${options.schematicsConfig ?? ''}`
     : findSchematicsConfig(tree);
 
-  const automationConfig = readFile<NgxFormworkAutomationConfig | null>(
+  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
     tree,
     automationConfigPath,
   );

@@ -1,5 +1,5 @@
-import { NgxFwBaseContent } from '../../lib';
+import { NgxFbBaseContent } from '../../lib';
 
-export function simpleTestIdBuilder(content: NgxFwBaseContent, name: string) {
+export function simpleTestIdBuilder(content: NgxFbBaseContent, name: string) {
   return name;
 }

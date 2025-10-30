@@ -9,7 +9,7 @@ import {
 export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
   const candidates = [
     `/${sourceRoot}/${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`,
-    `/${sourceRoot}/app/formwork.config.ts`,
+    `/${sourceRoot}/app/formbar.config.ts`,
     `/${sourceRoot}/app/app.config.ts`,
   ];
 

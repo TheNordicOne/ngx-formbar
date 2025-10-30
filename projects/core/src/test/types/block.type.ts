@@ -1,6 +1,6 @@
-import { NgxFwBlock } from '../../lib';
+import { NgxFbBlock } from '../../lib';
 
-export interface InfoBlock extends NgxFwBlock {
+export interface InfoBlock extends NgxFbBlock {
   message: string;
   useDefaultTestId?: boolean;
 }

@@ -6,7 +6,7 @@ import {
   input,
   ViewContainerRef,
 } from '@angular/core';
-import { NgxFwBaseContent } from '../types/content.type';
+import { NgxFbBaseContent } from '../types/content.type';
 import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 
 /**
@@ -25,17 +25,17 @@ import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
  * ```html
  * <!-- Used with ngFor to render a list of controls -->
  * @for (control of controls(); track control[0]) {
- *   <ng-template *ngxfwAbstractControl="control" />
+ *   <ng-template *ngxfbAbstractControl="control" />
  * }
  *
  * <!-- Used directly with a specific control -->
- * <ng-template *ngxfwAbstractControl="['name', nameControlConfig]" />
+ * <ng-template *ngxfbAbstractControl="['name', nameControlConfig]" />
  * ```
  */
 @Directive({
-  selector: '[ngxfwAbstractControl]',
+  selector: '[ngxfbAbstractControl]',
 })
-export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent> {
+export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
   private viewContainerRef = inject(ViewContainerRef);
 
   /**
@@ -51,7 +51,7 @@ export class NgxfwAbstractControlDirective<T extends NgxFwBaseContent> {
    * Defines properties like type, validation, and other control-specific settings
    */
   readonly content = input.required<[string, T]>({
-    alias: 'ngxfwAbstractControl',
+    alias: 'ngxfbAbstractControl',
   });
 
   readonly controlName = computed(() => this.content()[0]);

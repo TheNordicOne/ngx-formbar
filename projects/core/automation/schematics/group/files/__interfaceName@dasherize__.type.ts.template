@@ -1,5 +1,5 @@
-import { NgxFwFormGroup } from 'ngx-formwork';
+import { NgxFbFormGroup } from '@ngx-formbar/core';
 
-export interface <%= classify(interfaceName) %> extends NgxFwFormGroup {
+export interface <%= classify(interfaceName) %> extends NgxFbFormGroup {
   type: '<%= key %>';
 }

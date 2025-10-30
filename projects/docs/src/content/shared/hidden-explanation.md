@@ -1,4 +1,4 @@
-By default, the visibility is handled by __formwork__. It will set the `hidden` attribute on your component, if a control or group should not be visible.
+By default, the visibility is handled by __formbar__. It will set the `hidden` attribute on your component, if a control or group should not be visible.
 
 You have the option to handle this by yourself, but can only be configured on a component level.
 It can be useful for when you want to work with `@if` to actually create and destroy components used in the template, or you want to show some placeholder instead.

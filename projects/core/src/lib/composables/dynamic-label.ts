@@ -1,5 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFwControl } from '../types/content.type';
+import { NgxFbControl } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
@@ -11,7 +11,7 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with dynamicLabel property
  * @returns Computed signal that resolves to the evaluated dynamic label string or undefined
  */
-export function withDynamicLabel(content: Signal<NgxFwControl>) {
+export function withDynamicLabel(content: Signal<NgxFbControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 

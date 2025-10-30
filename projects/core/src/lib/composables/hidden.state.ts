@@ -1,19 +1,19 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
   HideStrategy,
-  NgxFwBaseContent,
-  NgxFwContent,
-  NgxFwFormGroup,
+  NgxFbBaseContent,
+  NgxFbContent,
+  NgxFbFormGroup,
   ValueStrategy,
 } from '../types/content.type';
 import { ExpressionService } from '../services/expression.service';
-import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { FormService } from '../services/form.service';
 import { StateHandling } from '../types/registration.type';
 import { SimpleFunction, ValueHandleFunction } from '../types/functions.type';
 import { Program } from 'acorn';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
 import { FormContext } from '../types/expression.type';
+import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
 
 /**
  * Computes a reactive hidden state based on control content
@@ -29,11 +29,11 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with potential hidden expression
  * @returns Computed signal that resolves to boolean hidden state
  */
-export function withHiddenState(content: Signal<NgxFwBaseContent>) {
+export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });
@@ -136,7 +136,7 @@ export function withHiddenAttribute(options: {
  * @param options.valueHandleFunction Function to handle control value based on strategy
  */
 export function hiddenEffect(options: {
-  content: Signal<NgxFwContent>;
+  content: Signal<NgxFbContent>;
   name: Signal<string>;
   controlInstance: Signal<AbstractControl>;
   hiddenSignal: Signal<boolean>;

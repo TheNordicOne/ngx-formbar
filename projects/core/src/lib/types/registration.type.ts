@@ -14,7 +14,7 @@ export type ComponentRegistrationConfig = Record<string, Type<unknown>>;
  * Determines how visibility, disabled, and other component states
  * are managed.
  *
- * - 'auto': Formwork automatically manages the state
+ * - 'auto': Formbar automatically manages the state
  * - 'manual': The component/host manages the state itself
  */
 export type StateHandling = 'auto' | 'manual';

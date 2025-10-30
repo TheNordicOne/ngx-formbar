@@ -3,8 +3,8 @@
 interface Props {
   /** Name of the directory in `examples/` that contains the code for this example. */
   example: string;
-  /** Version of ngx-formworks for this example **/
-  formworksVersion?: string;
+  /** Version of ngx-formbar for this example **/
+  formbarVersion?: string;
   /** Angular Version for this example **/
   ngVersion?: string;
   /** Title for this example to display in the StackBlitz embed. Also used to provide an accessible label for the embed iframe. */
@@ -26,13 +26,13 @@ const {
   clickToLoad,
   showSidebar,
   ngVersion = '19',
-  formworksVersion = 'latest'} = Astro.props;
+  formbarVersion = 'latest'} = Astro.props;
 if (!example) {
   throw new Error('Missing props for `<StackBlitz>` component. `example` is required.');
 }
 
 const embedUrl = new URL(
-  `https://stackblitz.com/github.com/TheNordicOne/ngx-formwork-examples/tree/${formworksVersion}/examples/ng${ngVersion}/${example}`
+  `https://stackblitz.com/github.com/TheNordicOne/ngx-formbar-examples/tree/${formbarVersion}/examples/ng${ngVersion}/${example}`
 );
 
 embedUrl.searchParams.set('embed', '1');

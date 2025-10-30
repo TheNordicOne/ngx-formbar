@@ -10,9 +10,9 @@ import { DiscoverOptions, RegisterContext } from './schema';
 import { registerComponents } from './register-components';
 import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { findConfigPath, findSchematicsConfig, readFile } from '../shared/file';
-import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import { DEFAULT_REGISTRATION_TYPE } from '../../shared/constants';
 import { getProject } from '../shared/helper';
+import { NgxFormbarAutomationConfig } from '../../shared/shared-config.type';
 
 export function register(options: DiscoverOptions): Rule {
   let registerContext: RegisterContext;
@@ -46,7 +46,7 @@ function mergeOptions(
     ? `/${projectRoot}/${options.schematicsConfig}`
     : findSchematicsConfig(tree);
 
-  const automationConfig = readFile<NgxFormworkAutomationConfig | null>(
+  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
     tree,
     automationConfigPath,
   );

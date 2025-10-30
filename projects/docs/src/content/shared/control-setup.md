@@ -3,7 +3,7 @@ Here is an example of a simple text control.
 First create an interface for your control.
 
 ```ts title="text-control.type.ts"
-export interface TextControl extends NgxFwControl {
+export interface TextControl extends NgxFbControl {
   // Unique Key of your control that is used for differentiating controls
   // This can be descriptive like "email-control"
   type: 'text-control';
@@ -37,7 +37,7 @@ Be sure to bind to `[formControlName]` on the actual input element
   ],
   hostDirectives: [
     {
-      directive: NgxfwControlDirective,
+      directive: NgxfbControlDirective,
       inputs: ['content', 'name'],
     }
   ],
@@ -45,7 +45,7 @@ Be sure to bind to `[formControlName]` on the actual input element
 export class TextControlComponent {
   // Inject the Directive to gain access to all public properties
   // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<TextControl> = this.control.content; // The configuration object of the control instance
@@ -73,7 +73,7 @@ Finally, register the control in _app.config.ts_
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       componentRegistrations: {
         text: TextControlComponent
       }

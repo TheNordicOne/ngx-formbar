@@ -1,9 +1,9 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFwFormGroup } from '../types/content.type';
 import { FormService } from '../services/form.service';
 import { ExpressionService } from '../services/expression.service';
 import { Program } from 'acorn';
 import { FormContext } from '../types/expression.type';
+import { NgxFbFormGroup } from '../types/content.type';
 
 /**
  * Computes a dynamic title for a form control based on expression evaluation
@@ -11,7 +11,7 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with dynamicTitle property
  * @returns Computed signal that resolves to the evaluated dynamic title string or undefined
  */
-export function withDynamicTitle(content: Signal<NgxFwFormGroup>) {
+export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 

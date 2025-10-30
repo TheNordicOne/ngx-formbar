@@ -3,7 +3,7 @@ Here is an example of a simple group. Most likely you will only set up one or tw
 First create an interface for your group.
 
 ```ts title="group.type.ts"
-export interface Group extends NgxFwFormGroup {
+export interface Group extends NgxFbFormGroup {
   // Unique Key of your group that is used for differentiating groups
   type: 'group';
 
@@ -19,8 +19,8 @@ Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 
 ```ts title="group.component.ts"  group="group-minimal"
 @Component({
-  selector: 'ngxfw-group',
-  imports: [NgxfwAbstractControlDirective, ReactiveFormsModule],
+  selector: 'ngxfb-group',
+  imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
   templateUrl: './group.component.html',
   viewProviders: [
     {
@@ -30,7 +30,7 @@ Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
   ],
   hostDirectives: [
     {
-      directive: NgxfwGroupDirective,
+      directive: NgxfbGroupDirective,
       inputs: ['content', 'name'],
     }
   ],
@@ -38,12 +38,12 @@ Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 export class GroupComponent {
   // Inject the Directive to gain access to all public properties
   // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
   
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
   readonly name: Signal<string> = this.control.name;
-  readonly controls: Signal<[string, NgxFwContent][]> = this.control.controls;
+  readonly controls: Signal<[string, NgxFbContent][]> = this.control.controls;
 }
 ```
 
@@ -51,7 +51,7 @@ export class GroupComponent {
 <!-- Just an example -->
 <div [formGroupName]="name()">
   @for (content of controls(); track content[0]) {
-    <ng-template *ngxfwAbstractControl="content" />
+    <ng-template *ngxfbAbstractControl="content" />
   }
 </div>
 ```
@@ -62,7 +62,7 @@ Finally, register the group in _app.config.ts_
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       componentRegistrations: {
         group: GroupComponent
       }

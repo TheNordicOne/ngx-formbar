@@ -1,16 +1,16 @@
-# Formwork
+# Formbar
 
-![NPM Version](https://img.shields.io/npm/v/ngx-formwork?logo=npm&label=NPM%20Version)
-![NPM Downloads](https://img.shields.io/npm/dw/ngx-formwork?label=Downloads)
+![NPM Version](https://img.shields.io/npm/v/ngx-formbar?logo=npm&label=NPM%20Version)
+![NPM Downloads](https://img.shields.io/npm/dw/ngx-formbar?label=Downloads)
 
-[![Test and Lint](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/TheNordicOne/ngx-formwork/actions/workflows/lint-and-test.yml)
+[![Test and Lint](https://github.com/TheNordicOne/ngx-formbar/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/TheNordicOne/ngx-formbar/actions/workflows/lint-and-test.yml)
 
 A highly flexible framework for generating declarative reactive forms, based on a configuration.
 
 This package provides a framework for creating Angular Reactive Forms, based on a configuration. This configuration can come from a server in the form of JSON or directly from an object written in TypeScript. It is as close to Angular as possible, to give you the most flexibility, while still taking care of the heavy lifting.
 
 > [!TIP]
-> The full documentation can be found on [ngx-formwork.net](https://ngx-formwork.net)
+> The full documentation can be found on [ngx-formbar.net](https://ngx-formbar.net)
 
 ## Current State
 
@@ -24,18 +24,18 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 Install and configure via Angular schematic:
 
 ```bash
-ng add ngx-formwork
+ng add ngx-formbar
 ```
 
-This will install the package, update your project files, and configure the Formwork provider.
+This will install the package, update your project files, and configure the Formbar provider.
 
 **Manual**
 
 ```bash
-npm install ngx-formwork
+npm install ngx-formbar
 ```
 
-For manual setup, you must provide Formwork in your `app.config.ts` or `AppModule`.
+For manual setup, you must provide Formbar in your `app.config.ts` or `AppModule`.
 
 ## Compatibility
 

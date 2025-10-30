@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NgxFormworkControl",
+  "$id": "NgxFormbarControl",
   "title": "Scaffold Control",
   "type": "object",
   "properties": {
