@@ -1,12 +1,11 @@
 import { computed, inject, Signal } from '@angular/core';
 import {
-  NgxFwAbstractControl,
-  NgxFwFormGroup,
+  NgxFbAbstractControl,
+  NgxFbFormGroup,
   UpdateStrategy,
 } from '../types/content.type';
-
-import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
+import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
 
 /**
  * Creates a computed signal for the control's update strategy
@@ -22,12 +21,12 @@ import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strateg
  * - 'blur': Update when the control loses focus
  * - 'submit': Update only when the form is submitted
  *
- * @param content Signal containing the NgxFwAbstractControl with possible updateOn configuration
+ * @param content Signal containing the NgxFbAbstractControl with possible updateOn configuration
  * @returns Computed signal providing the resolved update strategy
  */
-export function withUpdateStrategy(content: Signal<NgxFwAbstractControl>) {
-  const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>) {
+  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

@@ -15,9 +15,9 @@ import {
   ScriptTarget,
   SourceFile,
 } from 'typescript';
-import { FormworkComponentInfo } from './component-info.type';
 import { JsonObject } from '@angular-devkit/core';
 import { dasherize } from '@angular-devkit/core/src/utils/strings';
+import { FormbarComponentInfo } from './component-info.type';
 
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
 const defaultIncludes = ['**/*.ts'];
@@ -45,7 +45,7 @@ function toComponentInfo(
   files: string[],
   context: SchematicContext,
 ) {
-  const components: FormworkComponentInfo[] = [];
+  const components: FormbarComponentInfo[] = [];
 
   for (const filePath of files) {
     try {
@@ -61,11 +61,11 @@ function toComponentInfo(
         continue;
       }
 
-      const hasNgxFwHints =
+      const hasNgxFbHints =
         fileContent.includes('hostDirectives') ||
-        fileContent.toLowerCase().includes('ngxfw');
+        fileContent.toLowerCase().includes('ngxfb');
 
-      if (!hasNgxFwHints) {
+      if (!hasNgxFbHints) {
         continue;
       }
 
@@ -282,10 +282,10 @@ function globToRegExp(glob: string) {
 }
 
 /**
- * Analyzes a TypeScript source file to find components with Ngx Formwork directives
+ * Analyzes a TypeScript source file to find components with Ngx Formbar directives
  */
 function analyzeSourceFile(sourceFile: SourceFile, filePath: string) {
-  const components: FormworkComponentInfo[] = [];
+  const components: FormbarComponentInfo[] = [];
 
   for (const stmt of sourceFile.statements) {
     if (!isClassDeclaration(stmt)) {
@@ -341,7 +341,7 @@ function extractComponentInfo(
   classNode: ClassDeclaration,
   componentDecorator: Decorator,
   filePath: string,
-): FormworkComponentInfo | undefined {
+): FormbarComponentInfo | undefined {
   if (!isCallExpression(componentDecorator.expression)) {
     return undefined;
   }

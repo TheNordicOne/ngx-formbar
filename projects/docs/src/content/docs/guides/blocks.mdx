@@ -15,7 +15,7 @@ Sometimes you need additional information or functionality within a form. This c
 Run the Angular schematic to scaffold a new block and register it:
 
 ```bash
-ng generate ngx-formwork:block --key <block-key> [--name <ComponentName>]
+ng generate ngx-formbar:block --key <block-key> [--name <ComponentName>]
 ```
 
 See the [Generator Schematics Page](/schematics/generators) for more details.
@@ -25,14 +25,14 @@ See the [Generator Schematics Page](/schematics/generators) for more details.
 
 Here is an example of a simple information block.
 
-First create an interface for your block by extending `NgxFwBlock`.
+First create an interface for your block by extending `NgxFbBlock`.
 
 :::caution
-`NgxFwBlock` has a required property `isControl` which typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types.
+`NgxFbBlock` has a required property `isControl` which typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types.
 :::
 
 ```ts title="info-block.type.ts"
-export interface InfoBlock extends NgxFwBlock {
+export interface InfoBlock extends NgxFbBlock {
   type: 'info-block';
   message: string;
 }
@@ -53,7 +53,7 @@ Then implement the component.
   ],
   hostDirectives: [
     {
-      directive: NgxfwBlockDirective,
+      directive: NgxfbBlockDirective,
       inputs: ['content', 'name'],
     },
   ],
@@ -61,7 +61,7 @@ Then implement the component.
 export class InfoBlockComponent {
   // Inject the Directive to gain access to all public properties
   // Make sure to pass the correct type parameter to get proper type information
-  private readonly blockDirective = inject(NgxfwBlockDirective<InfoBlock>);
+  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
 
   // Explicitly setting a type definition is not required, but some IDEs work better if they are present
   readonly content: Signal<InfoBlock> = this.blockDirective.content;
@@ -84,7 +84,7 @@ Finally, register the block in app.config.ts
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       componentRegistrations: {
         info: InfoBlockComponent,
       },
@@ -106,7 +106,7 @@ Checkout [Configuration](/guides/configuration) for how to configure a Block. A 
   // ...
 })
 export class InfoBlockComponent {
-  private readonly blockDirective = inject(NgxfwBlockDirective<InfoBlock>);
+  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
 
   readonly message = computed(() => this.content().message);
 
@@ -114,7 +114,7 @@ export class InfoBlockComponent {
   readonly isHidden: Signal<unknown> = this.blockDirective.isHidden;
 
   constructor() {
-    // Let formwork know, that you take care of handling visibility
+    // Let formbar know, that you take care of handling visibility
     this.blockDirective.setVisibilityHandling('manual');
   }
 }
@@ -145,13 +145,13 @@ Here is an example of how to access the test ID.
   ],
   hostDirectives: [
     {
-      directive: NgxfwBlockDirective,
+      directive: NgxfbBlockDirective,
       inputs: ['content', 'name'],
     },
   ],
 })
 export class InfoBlockComponent {
-  private readonly blockDirective = inject(NgxfwBlockDirective<InfoBlock>);
+  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
   readonly testId: Signal<string> = this.blockDirective.testId;
   readonly message = computed(() => this.content().message);
 }

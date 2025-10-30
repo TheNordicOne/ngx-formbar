@@ -10,7 +10,7 @@ import {
 import { normalize, strings } from '@angular-devkit/core';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
-export function createFormworkRegistrationsConfig(
+export function createFormbarRegistrationsConfig(
   ruleContext: RuleContext,
 ): Rule {
   return (_, context) => {

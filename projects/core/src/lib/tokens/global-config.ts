@@ -1,21 +1,21 @@
 import { inject, InjectionToken } from '@angular/core';
-import { NgxFwGlobalConfiguration } from '../types/global-configuration.type';
+import { NgxFbGlobalConfiguration } from '../types/global-configuration.type';
 
 export const NGX_FW_DEFAULT_CONFIG =
-  new InjectionToken<NgxFwGlobalConfiguration>('NGX_FW_DEFAULT_CONFIG', {
+  new InjectionToken<NgxFbGlobalConfiguration>('NGX_FW_DEFAULT_CONFIG', {
     providedIn: 'root',
-    factory: () => ({}) as NgxFwGlobalConfiguration,
+    factory: () => ({}) as NgxFbGlobalConfiguration,
   });
 
 export const NGX_FW_CONFIG = new InjectionToken<
-  readonly Partial<NgxFwGlobalConfiguration>[]
+  readonly Partial<NgxFbGlobalConfiguration>[]
 >('NGX_FW_CONFIG', {
   providedIn: 'root',
   factory: () => [],
 });
 
 export const NGX_FW_CONFIG_RESOLVED =
-  new InjectionToken<NgxFwGlobalConfiguration>('NGX_FW_CONFIG_RESOLVED', {
+  new InjectionToken<NgxFbGlobalConfiguration>('NGX_FW_CONFIG_RESOLVED', {
     providedIn: 'root',
     factory: () => {
       const base = inject(NGX_FW_DEFAULT_CONFIG);

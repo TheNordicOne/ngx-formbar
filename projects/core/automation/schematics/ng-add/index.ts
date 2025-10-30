@@ -22,10 +22,10 @@ import {
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
 } from '../../shared/constants';
-import { createFormworkRegistrationsConfig } from './rules/create-formwork-registration-config.rule';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
+import { createFormbarRegistrationsConfig } from './rules/create-formwork-registration-config.rule';
 
 // noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {
@@ -51,7 +51,7 @@ export function ngAdd(options: Schema): Rule {
     const projectRoot = project.sourceRoot ?? project.root;
 
     context.logger.info(
-      `📦 Setting up ngx-formwork in project "${projectName}"...`,
+      `📦 Setting up ngx-formbar in project "${projectName}"...`,
     );
 
     options.registrationStyle ??= DEFAULT_REGISTRATION_TYPE;
@@ -82,7 +82,7 @@ export function ngAdd(options: Schema): Rule {
     };
 
     return chain([
-      createFormworkRegistrationsConfig(ruleContext),
+      createFormbarRegistrationsConfig(ruleContext),
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),
       createHelperFiles(ruleContext),

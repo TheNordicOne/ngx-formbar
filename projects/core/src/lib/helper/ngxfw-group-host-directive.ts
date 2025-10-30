@@ -1,12 +1,10 @@
-import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
-
 /**
- * Configuration for exposing NgxfwGroupDirective in standalone components
+ * Configuration for exposing NgxfbGroupDirective in standalone components
  *
- * This object provides a standardized way to include the NgxfwGroupDirective
+ * This object provides a standardized way to include the NgxfbGroupDirective
  * in Angular standalone components using the hostDirectives feature.
  *
- * @property directive - Reference to the NgxfwGroupDirective class
+ * @property directive - Reference to the NgxfbGroupDirective class
  * @property inputs - Array of input properties to expose from the directive
  *
  * @example
@@ -15,14 +13,14 @@ import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
  *   selector: 'app-custom-group',
  *   standalone: true,
  *   template: '...',
- *   hostDirectives: [ngxfwGroupHostDirective]
+ *   hostDirectives: [ngxfbGroupHostDirective]
  * })
  * export class CustomGroupComponent {
- *   // The component now has access to the NgxfwGroupDirective functionality
+ *   // The component now has access to the NgxfbGroupDirective functionality
  *   // with the 'content' input exposed automatically
  * }
  */
-export const ngxfwGroupHostDirective = {
-  directive: NgxfwGroupDirective,
+export const ngxfbGroupHostDirective = {
+  directive: NgxfbGroupDirective,
   inputs: ['content', 'name'],
 };

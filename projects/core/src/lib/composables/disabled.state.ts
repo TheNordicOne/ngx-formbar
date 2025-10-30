@@ -1,12 +1,12 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import { Program } from 'acorn';
-import { NgxFwAbstractControl, NgxFwFormGroup } from '../types/content.type';
 import { ExpressionService } from '../services/expression.service';
-import { NgxfwGroupDirective } from '../directives/ngxfw-group.directive';
 import { FormService } from '../services/form.service';
 import { StateHandling } from '../types/registration.type';
 import { SimpleFunction } from '../types/functions.type';
 import { FormContext } from '../types/expression.type';
+import { NgxFbAbstractControl, NgxFbFormGroup } from '../types/content.type';
+import { NgxfbGroupDirective } from '../directives/ngxfw-group.directive';
 
 /**
  * Computes a reactive disabled state based on control content
@@ -24,11 +24,11 @@ import { FormContext } from '../types/expression.type';
  * @param content Signal containing control configuration with potential disabled property
  * @returns Computed signal that resolves to boolean disabled state
  */
-export function withDisabledState(content: Signal<NgxFwAbstractControl>) {
+export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

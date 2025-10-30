@@ -165,7 +165,7 @@ export function decoratorArrayPropContainsProviderObject(
 
 export function decoratorHostDirectivesHasInlineDirectiveWithInputs(
   sf: SourceFile,
-  directiveIdentifier = 'NgxfwControlDirective',
+  directiveIdentifier = 'NgxfbControlDirective',
   expectedInputs: string[] = ['content', 'name'],
 ) {
   const arr = getDecoratorArrayProp(sf, 'Component', 'hostDirectives');

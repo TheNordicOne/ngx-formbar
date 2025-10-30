@@ -1,6 +1,6 @@
 ---
-title: Why ngx-formwork?
-keyword: WhyNgxFormworkPage
+title: Why ngx-formbar?
+keyword: WhyNgxFormbarPage
 sidebar:
   order: 1
 ---
@@ -22,4 +22,4 @@ The two most important features are the JSON compatibility and the fact that you
 
 This is for everyone that needs a whole lot of flexibility and control when working with dynamic forms. This is by no means supposed to be a replacement for other solutions and it likely is not a good fit for every projects (or developer).
 
-Setting things up is (probably) about as complex as with other solutions, but of course it requires a little more work to create the components that can actually be used with __ngx-formwork__.
+Setting things up is (probably) about as complex as with other solutions, but of course it requires a little more work to create the components that can actually be used with __ngx-formbar__.

@@ -15,11 +15,11 @@ However, if you want to or have to install it manually, here is the bare minimum
 Run this npm command.
 
 ```bash
-npm install ngx-formwork
+npm install ngx-formbar
 ```
 
-## Providing Formwork
-_ngx-formwork_ is provided and configured in _app.config.ts_.
+## Providing Formbar
+_ngx-formbar_ is provided and configured in _app.config.ts_.
 
 
 ### With Tokens
@@ -28,7 +28,7 @@ _ngx-formwork_ is provided and configured in _app.config.ts_.
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
           // Global update strategy (optional)
           updateOn: 'blur', // or 'change' or 'submit'
 
@@ -71,7 +71,7 @@ export const appConfig: ApplicationConfig = {
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       componentRegistrations: {
         // Component registrations go here
       },
@@ -103,10 +103,10 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-In addition to setting up the `app.config.ts`, you must also add a configuration to let formwork know, that you are using the config registration style.
+In addition to setting up the `app.config.ts`, you must also add a configuration to let formbar know, that you are using the config registration style.
 
 Add this file next to your `app.config.ts`
-```ts title="formwork.config.json"
+```ts title="formbar.config.json"
 {
   "registrationType": "config"
 }

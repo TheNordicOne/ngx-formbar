@@ -15,5 +15,5 @@ If you use the `remove` strategy you **must** ensure that your component does no
 
 This is true even if you use the `auto` visibility state management! This is currently a limitation, for which I have not found a reasonable solution.
 
-Checkout the [GitHub Issue](https://github.com/TheNordicOne/ngx-formwork/issues/64) for more details.
+Checkout the [GitHub Issue](https://github.com/TheNordicOne/ngx-formbar/issues/64) for more details.
 :::

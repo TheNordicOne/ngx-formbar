@@ -20,7 +20,7 @@ A control can be whatever you need it to be. It can be as generic as a `TextCont
 Run the Angular schematic to scaffold a new control and register it:
 
 ```bash
-ng generate ngx-formwork:control --key <control-key> [--name <ComponentName>]
+ng generate ngx-formbar:control --key <control-key> [--name <ComponentName>]
 ```
 
 See the [Generator Schematics Page](/schematics/generators) for more details.
@@ -46,13 +46,13 @@ Checkout [Configuration](/guides/configuration) for how to configure a control.
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly name: Signal<string> = this.control.name;
 
   constructor() {
-    // Let formwork know, that you take care of handling visibility
+    // Let formbar know, that you take care of handling visibility
     this.control.setVisibilityHandling('manual');
   }
 }
@@ -85,7 +85,7 @@ export class TextControlComponent {
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   readonly disabled: Signal<boolean> = this.control.disabled;
   readonly name: Signal<string> = this.control.name;
 }
@@ -109,7 +109,7 @@ export class TextControlComponent {
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   readonly readonly: Signal<boolean> = this.control.readonly;
   readonly name: Signal<string> = this.control.name;
 }
@@ -144,7 +144,7 @@ See [Expressions](/guides/expressions) for details on how expressions work and [
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
 
   // Access the computed dynamic label from the directive.
   // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
@@ -180,7 +180,7 @@ Here is an example of how to access the test ID.
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwControlDirective<TextControl>);
+  private readonly control = inject(NgxfbControlDirective<TextControl>);
   readonly testId: Signal<string> = this.control.testId;
   readonly name: Signal<string> = this.control.name;
 }
@@ -205,7 +205,7 @@ In TypeScript set up a getter
 
 ```ts
 // inject the instance of the directive
-private readonly textControl = inject(NgxfwControlDirective<Control>);
+private readonly textControl = inject(NgxfbControlDirective<Control>);
 
 // Get access to the underlying form textControl}
 get formControl() {

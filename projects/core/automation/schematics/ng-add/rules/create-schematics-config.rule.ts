@@ -8,11 +8,11 @@ import {
 } from '@angular-devkit/schematics';
 import { normalize } from '@angular-devkit/core';
 import { RuleContext } from '../schema';
-import { NgxFormworkAutomationConfig } from '../../../shared/shared-config.type';
 import {
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
 } from '../../../shared/constants';
+import { NgxFormbarAutomationConfig } from '../../../shared/shared-config.type';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (_, context) => {
@@ -33,7 +33,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
 
     context.logger.info('Creating schematics config file');
 
-    const schematicConfig: NgxFormworkAutomationConfig = {};
+    const schematicConfig: NgxFormbarAutomationConfig = {};
 
     if (registrationStyle !== DEFAULT_REGISTRATION_TYPE) {
       schematicConfig.registrationType = registrationStyle;

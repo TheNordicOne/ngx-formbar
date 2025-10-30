@@ -1,8 +1,4 @@
-import {
-  defineFormworkConfig,
-  provideFormwork,
-  UpdateStrategy,
-} from '../../../lib';
+import { UpdateStrategy } from '../../../lib';
 import { TestTextControlComponent } from '../../components/test-text-control/test-text-control.component';
 import { TestGroupComponent } from '../../components/test-group/test-group.component';
 import { Validators } from '@angular/forms';
@@ -16,7 +12,7 @@ import {
 import { TestBlockComponent } from '../../components/test-block/test-block.component';
 import { TestIdBuilderFn } from '../../../lib/types/functions.type';
 
-const formworkConfig = defineFormworkConfig({
+const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
     'test-text-control': TestTextControlComponent,
     'test-group': TestGroupComponent,
@@ -35,12 +31,12 @@ const formworkConfig = defineFormworkConfig({
   },
 });
 
-export const formworkProviders = (
+export const formbarProviders = (
   updateOn?: UpdateStrategy,
   testIdBuilderFn?: TestIdBuilderFn,
 ) =>
-  provideFormwork({
-    ...formworkConfig,
+  provideFormbar({
+    ...formbarConfig,
     updateOn,
     globalConfig: {
       testIdBuilderFn,

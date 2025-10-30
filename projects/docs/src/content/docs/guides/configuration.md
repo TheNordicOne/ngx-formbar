@@ -9,7 +9,7 @@ Once you've registered [Controls](/guides/controls), [Groups](/guides/groups) an
 
 ## Form
 
-The `NgxFwForm<ContentType extends NgxFwBaseContent = NgxFwContent>` interface defines these properties.
+The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbContent>` interface defines these properties.
 
 | Name    | Type                          | Required | Description                                                                                             |
 |---------|-------------------------------|----------|---------------------------------------------------------------------------------------------------------|
@@ -17,7 +17,7 @@ The `NgxFwForm<ContentType extends NgxFwBaseContent = NgxFwContent>` interface d
 
 ### Type Generic
 
-By default, you don't need to pass any type generic to `NgxFwForm`. But if you have set up a [union type](/guides/helper/#union-types), you can pass that to get better type support. 
+By default, you don't need to pass any type generic to `NgxFbForm`. But if you have set up a [union type](/guides/helper/#union-types), you can pass that to get better type support. 
 
 :::note
 If you want to use [Blocks](/guides/blocks) you must either use a [union type](/guides/helper/#union-types) of your own controls or handle TypeScript errors by other mean.
@@ -29,7 +29,7 @@ Following are configuration options that are supported out of the box. When sett
 
 ### Base
 
-The `NgxFwBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
+The `NgxFbBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
 
 | Name            | Type                | Required | Description                                                                                                                                                            |
 |-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -39,7 +39,7 @@ The `NgxFwBaseContent` interface is the foundation for all form controls and gro
 
 ### Abstract Control
 
-Controls and Groups extend the `NgxFwAbstractControl` interface and therefore both have access to these options.
+Controls and Groups extend the `NgxFbAbstractControl` interface and therefore both have access to these options.
 
 | Name            | Type                | Required | Description                                                                                                                                                            |
 |-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -53,7 +53,7 @@ Controls and Groups extend the `NgxFwAbstractControl` interface and therefore bo
 
 ### Control
 
-The following configurations options are only applicable to the interface `NgxFwControl`.
+The following configurations options are only applicable to the interface `NgxFbControl`.
 
 | Name          | Type      | Required | Description                                                                                                                     |
 |---------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -65,17 +65,17 @@ The following configurations options are only applicable to the interface `NgxFw
 
 ### Group
 
-The following configurations options are only applicable to the interface `NgxFwFormGroup<T extends NgxFwBaseContent = NgxFwContent>`.
+The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>`.
 
 | Name     | Type                | Required | Description                                                                    |
 |----------|---------------------|----------|--------------------------------------------------------------------------------|
 | title    | `string`            | No       | Specifies a title for the group                                                |
-| controls | `Record<string, T>` | Yes      | Object mapping keys to `NgxFwContent` that configure the controls of the group |
+| controls | `Record<string, T>` | Yes      | Object mapping keys to `NgxFbContent` that configure the controls of the group |
 
 
 ### Block
 
-The following configurations are only applicable to the interface `NgxFwBlock`.
+The following configurations are only applicable to the interface `NgxFbBlock`.
 
 | Name      | Type    | Required | Description                                                    |
 |-----------|---------|----------|----------------------------------------------------------------|
@@ -93,7 +93,7 @@ This example assumes that additional control types have been registered
 :::
 
 ```ts title="example.form.ts"
-export const exampleForm: NgxFwForm = {
+export const exampleForm: NgxFbForm = {
   content: {
     // Simple fields with no additional configuration
     name: {

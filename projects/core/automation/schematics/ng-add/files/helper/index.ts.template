@@ -1,4 +1,4 @@
-export { ngxfwBlockHostDirective } from './block.host-directive';
-export { ngxfwControlHostDirective } from './control.host-directive';
+export { ngxfbBlockHostDirective } from './block.host-directive';
+export { ngxfbControlHostDirective } from './control.host-directive';
 export { viewProviders } from './view-provider';
-export { ngxfwGroupHostDirective } from './group.host-directive';
+export { ngxfbGroupHostDirective } from './group.host-directive';

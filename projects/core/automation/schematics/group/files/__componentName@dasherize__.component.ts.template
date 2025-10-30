@@ -1,13 +1,13 @@
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
-import { NgxfwAbstractControlDirective, NgxfwGroupDirective } from 'ngx-formwork';
+import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/core';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
 import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
 import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
-  imports: [ReactiveFormsModule, NgxfwAbstractControlDirective],
+  imports: [ReactiveFormsModule, NgxfbAbstractControlDirective],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
   viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
     {
@@ -17,13 +17,13 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
   ]<% } %>,
   hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
     {
-      directive: NgxfwGroupDirective,
+      directive: NgxfbGroupDirective,
       inputs: ['content', 'name'],
     }
   ]<% } %>,
 })
 export class <%= classify(componentClassName) %> {
-  private readonly group = inject(NgxfwGroupDirective<<%= classify(interfaceName) %>>);
+  private readonly group = inject(NgxfbGroupDirective<<%= classify(interfaceName) %>>);
   readonly content: Signal<<%= classify(interfaceName) %>> = this.group.content;
   readonly name: Signal<string> = this.group.name;
 }

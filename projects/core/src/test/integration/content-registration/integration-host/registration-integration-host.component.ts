@@ -1,11 +1,10 @@
 import { Component, input } from '@angular/core';
 import { TestTextControl } from '../../../types/controls.type';
 import { FormService } from '../../../../lib/services/form.service';
-import { NgxfwAbstractControlDirective } from '../../../../lib';
 
 @Component({
-  selector: 'ngxfw-integration-host',
-  imports: [NgxfwAbstractControlDirective],
+  selector: 'ngxfb-integration-host',
+  imports: [NgxfbAbstractControlDirective],
   templateUrl: './registration-integration-host.component.html',
   providers: [FormService],
 })

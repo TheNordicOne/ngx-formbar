@@ -46,8 +46,8 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       insertImport(
         sourceFile,
         appConfigPath,
-        'provideFormwork',
-        'ngx-formwork',
+        'provideFormbar',
+        'ngx-formbar',
         false,
       ),
     ];

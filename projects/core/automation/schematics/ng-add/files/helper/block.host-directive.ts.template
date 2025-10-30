@@ -1,6 +1,6 @@
-import { NgxfwBlockDirective } from 'ngx-formwork';
+import { NgxfbBlockDirective } from '@ngx-formbar/core';
 
-export const ngxfwBlockHostDirective = {
-  directive: NgxfwBlockDirective,
+export const ngxfbBlockHostDirective = {
+  directive: NgxfbBlockDirective,
   inputs: ['content', 'name'],
 };

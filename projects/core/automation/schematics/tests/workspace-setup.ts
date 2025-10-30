@@ -51,8 +51,8 @@ export function provideToken(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
+    "import { provideFormbar } from '@ngx-formbar/core';",
+    "import { formbarConfig } from './formbar.config';",
     "import { componentRegistrationsProvider } from './registrations';",
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -60,7 +60,7 @@ export function provideToken(
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
+    '    provideFormbar(formbarConfig),',
     '    componentRegistrationsProvider,',
     '  ],',
     '};',
@@ -69,8 +69,8 @@ export function provideToken(
 
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
-  const formworkConfigContent = [
-    "import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
+  const formbarConfigContent = [
+    "import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';",
     initialImports,
     '',
     'export const componentRegistrationsProvider = {',
@@ -79,7 +79,7 @@ export function provideToken(
     '};',
   ].join('\n');
 
-  writeTs(appTree, src(registrationsPath), formworkConfigContent);
+  writeTs(appTree, src(registrationsPath), formbarConfigContent);
 }
 
 export function provideTokenNoSplit(
@@ -93,7 +93,7 @@ export function provideTokenNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork, NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';",
+    "import { provideFormbar, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';",
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -101,7 +101,7 @@ export function provideTokenNoSplit(
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork(),',
+    '    provideFormbar(),',
     '    {',
     '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
     `      useValue: new Map([${initialRegistrations}])`,
@@ -125,7 +125,7 @@ export function provideMapInlineNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
+    "import { provideFormbar } from '@ngx-formbar/core';",
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -133,7 +133,7 @@ export function provideMapInlineNoSplit(
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork({',
+    '    provideFormbar({',
     `      componentRegistrations: {${initialRegistrations}}`,
     '    }),',
     '  ],',
@@ -148,7 +148,7 @@ export function provideMap(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
   registrationsPath: string,
-  formworkConfigPath: string,
+  formbarConfigPath: string,
   initialRegistrations = '',
   initialImports = '',
 ) {
@@ -157,8 +157,8 @@ export function provideMap(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
+    "import { provideFormbar } from '@ngx-formbar/core';",
+    "import { formbarConfig } from './formbar.config';",
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -166,7 +166,7 @@ export function provideMap(
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
+    '    provideFormbar(formbarConfig),',
     '  ],',
     '};',
     '',
@@ -174,19 +174,19 @@ export function provideMap(
 
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
-  const formworkConfigContent = [
-    "import { defineFormworkConfig } from 'ngx-formwork';",
+  const formbarConfigContent = [
+    "import { defineFormbarConfig } from '@ngx-formbar/core';",
     "import { componentRegistrations } from './registrations';",
     '',
-    'export const formworkConfig = defineFormworkConfig({',
+    'export const formbarConfig = defineFormbarConfig({',
     '    componentRegistrations,',
     '});',
   ].join('\n');
 
-  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
+  writeTs(appTree, src(formbarConfigPath), formbarConfigContent);
 
   const registrationsContent = [
-    "import { ComponentRegistrationConfig } from 'ngx-formwork';",
+    "import { ComponentRegistrationConfig } from '@ngx-formbar/core';",
     '',
     `export const componentRegistrations: ComponentRegistrationConfig = {${initialRegistrations}};`,
   ].join('\n');
@@ -197,7 +197,7 @@ export function provideMap(
 export function provideMapNoSplit(
   appTree: UnitTestTree,
   appConfigPathRaw: string,
-  formworkConfigPath: string,
+  formbarConfigPath: string,
   initialRegistrations = '',
   initialImports = '',
 ) {
@@ -206,8 +206,8 @@ export function provideMapNoSplit(
     "import { provideRouter } from '@angular/router';",
     "import { appRoutes } from './app.routes';",
     "import { provideHttpClient } from '@angular/common/http';",
-    "import { provideFormwork } from 'ngx-formwork';",
-    "import { formworkConfig } from './formwork.config';",
+    "import { provideFormbar } from '@ngx-formbar/core';",
+    "import { formbarConfig } from './formbar.config';",
     initialImports,
     '',
     'export const appConfig: ApplicationConfig = {',
@@ -215,7 +215,7 @@ export function provideMapNoSplit(
     '    provideZoneChangeDetection({ eventCoalescing: true }),',
     '    provideRouter(appRoutes),',
     '    provideHttpClient(),',
-    '    provideFormwork(formworkConfig),',
+    '    provideFormbar(formbarConfig),',
     '    {',
     '        provide: NGX_FW_COMPONENT_REGISTRATIONS,',
     `        useValue: new Map([${initialRegistrations}])`,
@@ -227,23 +227,23 @@ export function provideMapNoSplit(
 
   writeTs(appTree, app(appConfigPathRaw), appConfigContent);
 
-  const formworkConfigContent = [
-    "import { defineFormworkConfig } from 'ngx-formwork';",
+  const formbarConfigContent = [
+    "import { defineFormbarConfig } from '@ngx-formbar/core';",
     '',
-    'export const formworkConfig = defineFormworkConfig({',
+    'export const formbarConfig = defineFormbarConfig({',
     '    componentRegistrations: {},',
     '});',
   ].join('\n');
 
-  writeTs(appTree, src(formworkConfigPath), formworkConfigContent);
+  writeTs(appTree, src(formbarConfigPath), formbarConfigContent);
 }
 
 export function addHelperIndexFile(appTree: UnitTestTree, helperPath: string) {
   const index = [
-    "export { ngxfwBlockHostDirective } from './block.host-directive';",
-    "export { ngxfwControlHostDirective } from './control.host-directive';",
+    "export { ngxfbBlockHostDirective } from './block.host-directive';",
+    "export { ngxfbControlHostDirective } from './control.host-directive';",
     "export { controlContainerViewProviders } from './control-container.view-provider';",
-    "export { ngxfwGroupHostDirective } from './group.host-directive';",
+    "export { ngxfbGroupHostDirective } from './group.host-directive';",
   ].join('\n');
 
   writeTs(appTree, src(`${helperPath}/index.ts`), index);
@@ -268,7 +268,7 @@ export function createControlComponent(
   const [providers, imports] = providersAndImports;
 
   return `import { Component } from '@angular/core';
-  import { NgxfwControlDirective } from '@ngx-formwork/core';
+  import { NgxfbControlDirective } from '@ngx-formbar/core';
   import { ReactiveFormsModule } from '@angular/forms';
   ${imports}
 
@@ -279,7 +279,7 @@ export function createControlComponent(
   ${providers}
 })
 export class ${className} {
-  private readonly control = inject(NgxfwControlDirective<${classifiedName}Control>);
+  private readonly control = inject(NgxfbControlDirective<${classifiedName}Control>);
 }
   `;
 }
@@ -301,7 +301,7 @@ export const inlineProviders: [string, string] = [
   ],
   hostDirectives: [
     {
-      directive: NgxfwControlDirective,
+      directive: NgxfbControlDirective,
       inputs: ['content', 'name'],
     }
   ],`,
@@ -311,10 +311,10 @@ export const inlineProviders: [string, string] = [
 export const helperProviders: [string, string] = [
   `viewProviders: viewProviders,
   hostDirectives: [
-    ngxfwControlHostDirective
+    ngxfbControlHostDirective
   ],`,
   `import { viewProviders } from '../shared/helper';
-    import { ngxfwControlHostDirective } from '../shared/helper';`,
+    import { ngxfbControlHostDirective } from '../shared/helper';`,
 ];
 
 export function createUnrelatedComponent(name: string, className: string) {

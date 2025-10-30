@@ -1,4 +1,4 @@
-import { ComponentRegistrationConfig } from 'ngx-formwork';
+import { ComponentRegistrationConfig } from '@ngx-formbar/core';
 
 export const componentRegistrations: ComponentRegistrationConfig = {
 };

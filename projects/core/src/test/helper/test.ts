@@ -1,18 +1,16 @@
-import { UpdateStrategy } from '../../lib';
+import { NgxFbForm, TestIdBuilderFn, UpdateStrategy } from '../../lib';
 import { FormIntegrationHostComponent } from '../integration/form/integration-host/form-integration-host.component';
-import { formworkProviders } from '../integration/shared/provide-formwork';
 import { TestTextControl } from '../types/controls.type';
 import { TestGroup } from '../types/group.type';
 import { InfoBlock } from '../types/block.type';
-import { TestIdBuilderFn } from '../../lib/types/functions.type';
-import { NgxFwForm } from '../../lib/types/form.type';
+import { formbarProviders } from '../integration/shared/provide-formwork';
 
 export type TestContent = TestTextControl | TestGroup | InfoBlock;
 /**
  * Base setup function for mounting the form component
  */
 export function setupForm(
-  form: NgxFwForm<TestContent>,
+  form: NgxFbForm<TestContent>,
   options?: {
     defaultUpdateOnStrategy?: UpdateStrategy;
     autoUpdate?: boolean;
@@ -21,13 +19,13 @@ export function setupForm(
 ) {
   cy.mount(FormIntegrationHostComponent, {
     providers: [
-      formworkProviders(
+      formbarProviders(
         options?.defaultUpdateOnStrategy,
         options?.testIdBuilderFn,
       ),
     ],
     componentProperties: {
-      formConfig: form as NgxFwForm,
+      formConfig: form as NgxFbForm,
       autoUpdate: options?.autoUpdate,
     },
   });

@@ -1,17 +1,16 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { NgxFwFormComponent } from '../../../../lib';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NgxFwForm } from '../../../../lib/types/form.type';
+import { NgxFbForm } from '../../../../lib/types/form.type';
 
 @Component({
-  selector: 'ngxfw-form-integration-host',
-  imports: [ReactiveFormsModule, NgxFwFormComponent],
+  selector: 'ngxfb-form-integration-host',
+  imports: [ReactiveFormsModule],
   templateUrl: './form-integration-host.component.html',
 })
 export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
-  readonly formConfig = input.required<NgxFwForm>();
+  readonly formConfig = input.required<NgxFbForm>();
   readonly autoUpdate = input<boolean>(false);
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 

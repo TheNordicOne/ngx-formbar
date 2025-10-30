@@ -5,11 +5,11 @@ sidebar:
   order: 9
 ---
 
-This page describes the different concepts and how everything works. It is not required to understand this for normal usage, but valuable in case you configure _ngx-formwork_ by yourself or just are curios.
+This page describes the different concepts and how everything works. It is not required to understand this for normal usage, but valuable in case you configure _ngx-formbar_ by yourself or just are curios.
 
 ## Registration Types
 
-In _ngx-formwork_ there are two ways to register controls and validators: `token` and `map`.
+In _ngx-formbar_ there are two ways to register controls and validators: `token` and `map`.
 
 The differentiation is only relevant for the schematics, as they use this information to decide what kind of file to expect. This is to reduce the amount of work that needs to be done whenever a schematic tries to register a component.
 
@@ -23,8 +23,8 @@ In the end, all values are provided through Angulars dependency injection. The m
 
 Even though technically nothing prevents you from registering controls and validators through both ways, this should not be done. There is no logic for merging registrations from multiple sources.
 
-If you provide an object based registration to the `provideFormwork` function and in also add the token to the providers array, there are two possible outcomes:
-- You first call `provideFormwork` and then add the token: The registrations from the token win
-- You first add the token, then call `provideFormwork`: The registrations from the object win
+If you provide an object based registration to the `provideFormbar` function and in also add the token to the providers array, there are two possible outcomes:
+- You first call `provideFormbar` and then add the token: The registrations from the token win
+- You first add the token, then call `provideFormbar`: The registrations from the object win
 
 Realistically there should be no reason to use a combination of both, therefore mixing is not supported.

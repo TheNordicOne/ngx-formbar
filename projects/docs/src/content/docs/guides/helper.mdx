@@ -17,7 +17,7 @@ Otherwise, run schematics with the `--hostDirectiveHelperPath` and/or `--viewPro
 
 ### Control Container View Providers
 
-`ControlContainer` is required for all controls and groups that will be used within _ngx-formwork_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
+`ControlContainer` is required for all controls and groups that will be used within _ngx-formbar_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
 
 ```ts title="control-container.view-provider.ts"
 export const controlContainerViewProviders = [
@@ -37,11 +37,11 @@ export const controlContainerViewProviders = [
 
 ### Control Host Directive
 
-This is a convenience helper to apply the `NgxfwControlDirective`.
+This is a convenience helper to apply the `NgxfbControlDirective`.
 
 ```ts title="control.host-directive.ts"
-export const ngxfwControlHostDirective = {
-  directive: NgxfwControlDirective,
+export const ngxfbControlHostDirective = {
+  directive: NgxfbControlDirective,
   inputs: ['content', 'name'],
 };
 ```
@@ -53,18 +53,18 @@ Use it like this:
   // Other component decorator options
   hostDirectives: [
     // Apply here
-    ngxfwControlHostDirective
+    ngxfbControlHostDirective
   ],
 })
 ```
 
 ### Group Host Directive
 
-This is a convenience helper to apply the `NgxfwGroupDirective`.
+This is a convenience helper to apply the `NgxfbGroupDirective`.
 
 ```ts title="group.host-directive.ts"
-export const ngxfwGroupHostDirective = {
-  directive: NgxfwGroupDirective,
+export const ngxfbGroupHostDirective = {
+  directive: NgxfbGroupDirective,
   inputs: ['content', 'name'],
 };
 ```
@@ -76,7 +76,7 @@ Use it like this:
   // Other component decorator options
   hostDirectives: [
     // Apply here
-    ngxfwGroupHostDirective
+    ngxfbGroupHostDirective
   ],
 })
 ```

@@ -1,17 +1,17 @@
 ---
-title: What is ngx-formwork?
-keyword: WhatIsNgxFormworkPage
+title: What is ngx-formbar?
+keyword: WhatIsNgxFormbarPage
 sidebar:
   order: 0
 ---
 
-__ngx-formwork__ generates reactive forms from a JSON or a normal object. It supports dynamically hiding, disabling and marking as readonly with complex expressions.
+__ngx-formbar__ generates reactive forms from a JSON or a normal object. It supports dynamically hiding, disabling and marking as readonly with complex expressions.
 
 The first key focus is on compatibility with JSON, so that the whole form configuration can actually be stored by any means that are compatible with JSON (either by directly saving "as is" or by serializing).
 
 The second key focus is to be as close to Angular as possible. Not just the whole wording, but also in terms of technologies used. You still have full control over the form and use it pretty much like any other form. No additional API to know, just to access the forms value.
 
-_ngx-formwork_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
+_ngx-formbar_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
 
 
 ## What is the motivation?

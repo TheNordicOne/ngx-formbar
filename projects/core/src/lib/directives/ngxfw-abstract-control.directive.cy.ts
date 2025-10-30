@@ -3,19 +3,19 @@ import {
   UnknownContent,
 } from '../../test/types/controls.type';
 import { dummyControlContainer } from '../../test/integration/shared/control-container';
-import { formworkProviders } from '../../test/integration/shared/provide-formwork';
 import { FormService } from '../services/form.service';
 import { TestGroup } from '../../test/types/group.type';
-import { NgxfwAbstractControlDirective } from './ngxfw-abstract-control.directive';
 import { Component, input } from '@angular/core';
-import { NgxFwContent } from '../types/content.type';
+import { NgxfbAbstractControlDirective } from './ngxfw-abstract-control.directive';
+import { NgxFbContent } from '../types/content.type';
+import { formbarProviders } from '../../test/integration/shared/provide-formwork';
 
 @Component({
-  selector: 'ngxfw-host-component',
-  imports: [NgxfwAbstractControlDirective],
-  template: ` <ng-template [ngxfwAbstractControl]="[name(), content()]" />`,
+  selector: 'ngxfb-host-component',
+  imports: [NgxfbAbstractControlDirective],
+  template: ` <ng-template [ngxfbAbstractControl]="[name(), content()]" />`,
 })
-export class HostComponent<T extends NgxFwContent> {
+export class HostComponent<T extends NgxFbContent> {
   readonly content = input.required<T>();
   readonly name = input.required<string>();
 }
@@ -28,7 +28,7 @@ describe('Content Host Component', () => {
     };
 
     cy.mount(HostComponent, {
-      providers: [dummyControlContainer, formworkProviders(), FormService],
+      providers: [dummyControlContainer, formbarProviders(), FormService],
       componentProperties: {
         name: 'some-group',
         content,
@@ -44,7 +44,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(HostComponent, {
-        providers: [dummyControlContainer, formworkProviders(), FormService],
+        providers: [dummyControlContainer, formbarProviders(), FormService],
         componentProperties: {
           name: 'some-group',
           content,
@@ -60,7 +60,7 @@ describe('Content Host Component', () => {
       };
 
       cy.mount(HostComponent, {
-        providers: [dummyControlContainer, formworkProviders(), FormService],
+        providers: [dummyControlContainer, formbarProviders(), FormService],
         componentProperties: {
           name: 'some-control',
           content,

@@ -7,7 +7,7 @@ import { join } from 'path';
 import { Schema } from '../ng-add/schema';
 import {
   BaseGenerateSchematicConfig,
-  NgxFormworkAutomationConfig,
+  NgxFormbarAutomationConfig,
 } from '../../shared/shared-config.type';
 import {
   app,
@@ -42,9 +42,9 @@ describe('ng-add schematic', () => {
   const registrations = app('registrations');
   const helperDir = app('shared/helper');
   const appConfigPath = app('app.config.ts');
-  const formworkConfigPath = app('formwork.config.ts');
-  const formworkConfigImportPath = formworkConfigPath.split('.ts')[0];
-  const schematicsConfigPath = app('formwork.config.json');
+  const formbarConfigPath = app('formbar.config.ts');
+  const formbarConfigImportPath = formbarConfigPath.split('.ts')[0];
+  const schematicsConfigPath = app('formbar.config.json');
 
   async function runAdd(options: Schema = {}) {
     return runner.runSchematic(
@@ -67,24 +67,24 @@ describe('ng-add schematic', () => {
 
     const sf = parseTS(read(twice, appConfigPath));
 
-    expect(countNamedImport(sf, 'ngx-formwork', 'provideFormwork')).toBe(1);
-    expect(countCall(sf, 'provideFormwork')).toBe(1);
+    expect(countNamedImport(sf, 'ngx-formbar', 'provideFormbar')).toBe(1);
+    expect(countCall(sf, 'provideFormbar')).toBe(1);
   });
 
   describe('Default', () => {
-    it('imports provideFormwork from ngx-formwork', async () => {
+    it('imports provideFormbar from ngx-formbar', async () => {
       const tree = await runAdd();
       expect(exists(tree, appConfigPath)).toBe(true);
 
       const sf = parseTS(read(tree, appConfigPath));
-      expect(hasNamedImport(sf, 'ngx-formwork', 'provideFormwork')).toBe(true);
+      expect(hasNamedImport(sf, 'ngx-formbar', 'provideFormbar')).toBe(true);
     });
 
-    it('provides formwork and component registration providers in providers array', async () => {
+    it('provides formbar and component registration providers in providers array', async () => {
       const tree = await runAdd();
       const sf = parseTS(read(tree, appConfigPath));
 
-      expect(providersArrayContainsCall(sf, 'provideFormwork')).toBe(true);
+      expect(providersArrayContainsCall(sf, 'provideFormbar')).toBe(true);
       expect(
         providersArrayContainsIdentifier(sf, 'componentRegistrationsProvider'),
       ).toBe(true);
@@ -109,7 +109,7 @@ describe('ng-add schematic', () => {
       expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(true);
       expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(true);
 
-      expect(exists(tree, formworkConfigPath)).toBe(true);
+      expect(exists(tree, formbarConfigPath)).toBe(true);
     });
 
     it('uses schematic config without values', async () => {
@@ -117,7 +117,7 @@ describe('ng-add schematic', () => {
 
       const schematicsConfig = JSON.parse(
         read(tree, schematicsConfigPath),
-      ) as NgxFormworkAutomationConfig;
+      ) as NgxFormbarAutomationConfig;
 
       expect(schematicsConfig.registrationType).toBeUndefined();
       expect(schematicsConfig.controlRegistrationsPath).toBeUndefined();
@@ -135,15 +135,15 @@ describe('ng-add schematic', () => {
   });
 
   describe('Registration Style Token', () => {
-    it('generates config-based registration files and formwork.config.ts', async () => {
+    it('generates config-based registration files and formbar.config.ts', async () => {
       const tree = await runAdd({ registrationStyle: 'token' });
 
-      const providerConfig = parseTS(read(tree, formworkConfigPath));
+      const providerConfig = parseTS(read(tree, formbarConfigPath));
       const appConfig = parseTS(read(tree, appConfigPath));
 
       const hasComponentRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'componentRegistrations',
         'shorthand',
       );
@@ -172,8 +172,8 @@ describe('ng-add schematic', () => {
       const usesCorrectConfigPath = importForSymbolUsesCorrectRelativePath(
         appConfig,
         appConfigPath,
-        'formworkConfig',
-        formworkConfigImportPath,
+        'formbarConfig',
+        formbarConfigImportPath,
       );
 
       expect(exists(tree, `${registrations}/component-registrations.ts`)).toBe(
@@ -255,7 +255,7 @@ describe('ng-add schematic', () => {
         true,
       );
       expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
-      expect(exists(tree, formworkConfigPath)).toBe(false);
+      expect(exists(tree, formbarConfigPath)).toBe(false);
       expect(hasComponentProviders).toBe(true);
       expect(hasValidatorProviders).toBe(true);
       expect(hasAsyncValidatorProviders).toBe(true);
@@ -334,35 +334,35 @@ describe('ng-add schematic', () => {
   });
 
   describe('Registration Style Config', () => {
-    it('generates config-based registration files and formwork.config.ts', async () => {
+    it('generates config-based registration files and formbar.config.ts', async () => {
       const tree = await runAdd({ registrationStyle: 'config' });
-      const providerConfig = parseTS(read(tree, formworkConfigPath));
+      const providerConfig = parseTS(read(tree, formbarConfigPath));
       const appConfig = parseTS(read(tree, appConfigPath));
 
-      const appConfigUsesFormworkConfig = callObjectArgHasProp(
+      const appConfigUsesFormbarConfig = callObjectArgHasProp(
         appConfig,
-        'provideFormwork',
-        'formworkConfig',
+        'provideFormbar',
+        'formbarConfig',
         'identifier',
       );
 
       const providerConfigHasComponentRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'componentRegistrations',
         'shorthand',
       );
 
       const providerConfigHasValidatorRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'validatorRegistrations',
         'shorthand',
       );
 
       const providerConfigHasAsyncValidatorRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'asyncValidatorRegistrations',
         'shorthand',
       );
@@ -378,7 +378,7 @@ describe('ng-add schematic', () => {
       ).toBe(true);
       expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
-      expect(appConfigUsesFormworkConfig).toBe(true);
+      expect(appConfigUsesFormbarConfig).toBe(true);
 
       expect(providerConfigHasComponentRegistrations).toBe(true);
       expect(providerConfigHasValidatorRegistrations).toBe(true);
@@ -409,25 +409,25 @@ describe('ng-add schematic', () => {
         splitRegistrations: false,
       });
 
-      const providerConfig = parseTS(read(tree, formworkConfigPath));
+      const providerConfig = parseTS(read(tree, formbarConfigPath));
 
       const providerConfigHasComponentRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'componentRegistrations',
         'object',
       );
 
       const providerConfigHasValidatorRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'validatorRegistrations',
         'object',
       );
 
       const providerConfigHasAsyncValidatorRegistrations = callObjectArgHasProp(
         providerConfig,
-        'defineFormworkConfig',
+        'defineFormbarConfig',
         'asyncValidatorRegistrations',
         'object',
       );
@@ -443,7 +443,7 @@ describe('ng-add schematic', () => {
       ).toBe(false);
       expect(exists(tree, `${registrations}/index.ts`)).toBe(false);
 
-      expect(exists(tree, formworkConfigPath)).toBe(true);
+      expect(exists(tree, formbarConfigPath)).toBe(true);
 
       expect(providerConfigHasComponentRegistrations).toBe(true);
       expect(providerConfigHasValidatorRegistrations).toBe(true);
@@ -460,11 +460,11 @@ describe('ng-add schematic', () => {
         registrationsPath,
       });
 
-      const formworkConfig = parseTS(read(tree, formworkConfigPath));
+      const formbarConfig = parseTS(read(tree, formbarConfigPath));
 
       const usesCorrectRelativePath = importForSymbolUsesCorrectRelativePath(
-        formworkConfig,
-        formworkConfigPath,
+        formbarConfig,
+        formbarConfigPath,
         'componentRegistrations',
         finalPath,
       );
@@ -496,21 +496,21 @@ describe('ng-add schematic', () => {
 
         const appConfigHasComponentRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'componentRegistrations',
           'shorthand',
         );
 
         const appConfigHasValidatorRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'validatorRegistrations',
           'shorthand',
         );
 
         const appConfigHasAsyncValidatorRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'asyncValidatorRegistrations',
           'shorthand',
         );
@@ -526,7 +526,7 @@ describe('ng-add schematic', () => {
         ).toBe(true);
         expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
-        expect(exists(tree, formworkConfigPath)).toBe(false);
+        expect(exists(tree, formbarConfigPath)).toBe(false);
 
         expect(appConfigHasComponentRegistrations).toBe(true);
         expect(appConfigHasValidatorRegistrations).toBe(true);
@@ -546,21 +546,21 @@ describe('ng-add schematic', () => {
 
         const appConfigHasComponentRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'componentRegistrations',
           'object',
         );
 
         const appConfigHasValidatorRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'validatorRegistrations',
           'object',
         );
 
         const appConfigHasAsyncValidatorRegistrations = callObjectArgHasProp(
           appConfig,
-          'provideFormwork',
+          'provideFormbar',
           'asyncValidatorRegistrations',
           'object',
         );
@@ -576,7 +576,7 @@ describe('ng-add schematic', () => {
         ).toBe(false);
         expect(exists(tree, `${registrations}/index.ts`)).toBe(false);
 
-        expect(exists(tree, formworkConfigPath)).toBe(false);
+        expect(exists(tree, formbarConfigPath)).toBe(false);
 
         expect(appConfigHasComponentRegistrations).toBe(true);
         expect(appConfigHasValidatorRegistrations).toBe(true);
@@ -649,18 +649,18 @@ describe('ng-add schematic', () => {
           projects: {
             'test-app': {
               schematics: {
-                'ngx-formwork:control'?: BaseGenerateSchematicConfig;
-                'ngx-formwork:group'?: BaseGenerateSchematicConfig;
-                'ngx-formwork:block'?: BaseGenerateSchematicConfig;
+                'ngx-formbar:control'?: BaseGenerateSchematicConfig;
+                'ngx-formbar:group'?: BaseGenerateSchematicConfig;
+                'ngx-formbar:block'?: BaseGenerateSchematicConfig;
               };
             };
           };
         };
 
         const schematicsConfig = angularJson.projects['test-app'].schematics;
-        const controlConfig = schematicsConfig['ngx-formwork:control'];
-        const groupConfig = schematicsConfig['ngx-formwork:group'];
-        const blockConfig = schematicsConfig['ngx-formwork:block'];
+        const controlConfig = schematicsConfig['ngx-formbar:control'];
+        const groupConfig = schematicsConfig['ngx-formbar:group'];
+        const blockConfig = schematicsConfig['ngx-formbar:block'];
 
         expect(controlConfig?.hostDirectiveHelperPath).toBe(helperPath);
         expect(groupConfig?.hostDirectiveHelperPath).toBe(helperPath);
@@ -686,7 +686,7 @@ describe('ng-add schematic', () => {
 
         const schematicsConfig = JSON.parse(
           read(tree, schematicsConfigPath),
-        ) as NgxFormworkAutomationConfig;
+        ) as NgxFormbarAutomationConfig;
 
         expect(schematicsConfig.registrationType).toBe('config');
         expect(schematicsConfig.controlRegistrationsPath).toBe(

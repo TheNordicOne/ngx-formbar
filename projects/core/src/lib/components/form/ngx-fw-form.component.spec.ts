@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { NgxFwFormComponent } from './ngx-fw-form.component';
 import { ControlContainer, FormGroupDirective } from '@angular/forms';
-import { NgxFwBaseContent } from '../../types/content.type';
 import { NGX_FW_COMPONENT_RESOLVER } from '../../tokens/component-resolver';
 import { ComponentRegistrationService } from '../../services/component-registration.service';
+import { NgxFbBaseContent } from '../../types/content.type';
+import { NgxFbFormComponent } from './ngx-fw-form.component';
 
 describe('FormComponent', () => {
-  let component: NgxFwFormComponent<NgxFwBaseContent>;
-  let fixture: ComponentFixture<NgxFwFormComponent<NgxFwBaseContent>>;
+  let component: NgxFbFormComponent<NgxFbBaseContent>;
+  let fixture: ComponentFixture<NgxFbFormComponent<NgxFbBaseContent>>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NgxFwFormComponent],
+      imports: [NgxFbFormComponent],
       providers: [
         {
           provide: NGX_FW_COMPONENT_RESOLVER,
@@ -25,7 +24,7 @@ describe('FormComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(NgxFwFormComponent);
+    fixture = TestBed.createComponent(NgxFbFormComponent);
     fixture.componentRef.setInput('formConfig', { content: {} });
     component = fixture.componentInstance;
 

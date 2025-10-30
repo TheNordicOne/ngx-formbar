@@ -5,7 +5,7 @@ import { Schema } from '../../shared/schema';
 import { updateSchematicConfig } from '../helper';
 
 /**
- * Update angular.json for ngx-formwork schematics
+ * Update angular.json for ngx-formbar schematics
  */
 export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
   return (_, context) => {

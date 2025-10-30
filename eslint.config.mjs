@@ -42,7 +42,7 @@ export default config(
         'error',
         {
           type: 'attribute',
-          prefix: 'ngxfw',
+          prefix: 'ngxfb',
           style: 'camelCase',
         },
       ],
@@ -50,7 +50,7 @@ export default config(
         'error',
         {
           type: 'element',
-          prefix: 'ngxfw',
+          prefix: 'ngxfb',
           style: 'kebab-case',
         },
       ],

@@ -1,4 +1,4 @@
-__formwork__ does not mark a control as `readonly`, because there is no useful API for reactive forms to achieve this. But you can provide an expression, which will be evaluated, and then use that value in your template.
+__formbar__ does not mark a control as `readonly`, because there is no useful API for reactive forms to achieve this. But you can provide an expression, which will be evaluated, and then use that value in your template.
 
 The readonly state is determined using the following priority (`content` could be any of your controls or groups):
 1. If `content.readonly` is a boolean, that value is used directly

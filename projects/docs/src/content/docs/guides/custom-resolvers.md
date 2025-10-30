@@ -7,11 +7,11 @@ sidebar:
 
 # Custom Resolvers
 
-While ngx-formwork provides built-in resolvers for components and validators, you may want to implement custom resolvers for specialized use cases. This guide explains how to create and use custom component and validator resolvers in your application.
+While ngx-formbar provides built-in resolvers for components and validators, you may want to implement custom resolvers for specialized use cases. This guide explains how to create and use custom component and validator resolvers in your application.
 
 ## Understanding Resolvers
 
-In ngx-formwork, resolvers are responsible for providing components and validators to the form system at runtime. The built-in resolvers use Angular's dependency injection to resolve these dependencies from the configured tokens.
+In ngx-formbar, resolvers are responsible for providing components and validators to the form system at runtime. The built-in resolvers use Angular's dependency injection to resolve these dependencies from the configured tokens.
 
 There are two types of resolvers:
 
@@ -24,7 +24,7 @@ To create a custom component resolver, implement the `ComponentResolver` interfa
 
 ```typescript
 import { Signal, Type, computed, Injectable, signal } from '@angular/core';
-import { ComponentResolver } from 'ngx-formwork';
+import { ComponentResolver } from '@ngx-formbar/core';
 
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
@@ -59,7 +59,7 @@ For more complex scenarios, you might want to create a resolver that combines mu
 
 ```typescript
 import { Signal, Type, computed, inject, Injectable } from '@angular/core';
-import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
 
 @Injectable()
 export class HybridComponentResolver implements ComponentResolver {
@@ -97,7 +97,7 @@ Implementing a custom validator resolver follows a similar pattern but requires 
 ```typescript
 import { Signal, Injectable, signal } from '@angular/core';
 import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
-import { ValidatorResolver } from 'ngx-formwork';
+import { ValidatorResolver } from '@ngx-formbar/core';
 
 @Injectable()
 export class AppCustomValidatorResolver implements ValidatorResolver {
@@ -139,18 +139,18 @@ To use your custom resolvers, you need to provide them in your application confi
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
-import { provideFormwork } from 'ngx-formwork';
-import { NGX_FW_COMPONENT_RESOLVER, NGX_VALIDATOR_RESOLVER } from 'ngx-formwork';
+import { provideFormbar } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_RESOLVER, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/core';
 import { AppCustomComponentResolver } from './app-custom-component-resolver';
 import { AppCustomValidatorResolver } from './app-custom-validator-resolver';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Configure formwork
-    provideFormwork(),
+    // Configure formbar
+    provideFormbar(),
     
     // Provide your custom resolvers
-    // These MUST come after provideFormwork()
+    // These MUST come after provideFormbar()
     { 
       provide: NGX_FW_COMPONENT_RESOLVER, 
       useClass: AppCustomComponentResolver 
@@ -160,7 +160,7 @@ export const appConfig: ApplicationConfig = {
       useClass: AppCustomValidatorResolver 
     },
     // In case you need access to methods from your resolver add this
-    // This ensures that you can inject your resolver, get the correct types for it, while still using the same instance that ngx-formwork uses
+    // This ensures that you can inject your resolver, get the correct types for it, while still using the same instance that ngx-formbar uses
     {
       provide: AppCustomComponentResolver,
       useExisting: NGX_FW_COMPONENT_RESOLVER,
@@ -189,7 +189,7 @@ When implementing custom resolvers:
 2. **Immutability**: Always create new Maps when updating signals
 3. **Error Handling**: Add proper error handling for missing components or validators
 4. **Testing**: Create unit tests to verify your resolver's behavior
-5. **Integration**: Ensure smooth integration with existing ngx-formwork configurations
+5. **Integration**: Ensure smooth integration with existing ngx-formbar configurations
 
 ## Debug Tips
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NgxFormworkGroup",
+  "$id": "NgxFormbarGroup",
   "title": "Scaffold Group",
   "type": "object",
   "properties": {

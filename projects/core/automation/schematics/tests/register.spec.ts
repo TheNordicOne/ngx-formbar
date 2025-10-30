@@ -28,13 +28,13 @@ import {
 import { DiscoverOptions } from '../register/schema';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { SourceFile } from 'typescript';
-import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
 import {
   componentRegistrationsMapProviderHasIdentifier,
   directComponentRegistrationsHasIdentifier,
 } from '../shared/ast/registrations';
 import { parseTS } from '../shared/ast/parse';
 import { hasNamedImport } from '../shared/ast/imports';
+import { NgxFormbarAutomationConfig } from '../../shared/shared-config.type';
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
@@ -45,8 +45,8 @@ describe('register schematic', () => {
   };
 
   const appConfigPathRaw = 'app.config.ts';
-  const formworkConfigPath = 'app/formwork.config.ts';
-  const schematicsConfigPath = 'app/formwork.config.json';
+  const formbarConfigPath = 'app/formbar.config.ts';
+  const schematicsConfigPath = 'app/formbar.config.json';
   const registrationsPath = 'app/registrations/component-registrations.ts';
 
   async function runSchematic(options: Partial<DiscoverOptions> = {}) {
@@ -503,11 +503,11 @@ describe('register schematic', () => {
 
     addComponentFiles(appTree, files);
 
-    const schematicsConfig = 'configurations/formwork.config.json';
+    const schematicsConfig = 'configurations/formbar.config.json';
     const nonDefaultRegistrationsPath =
       'app/feature/survey/form/component-registrations.ts';
 
-    const config: NgxFormworkAutomationConfig = {
+    const config: NgxFormbarAutomationConfig = {
       registrationType: 'config',
       controlRegistrationsPath: nonDefaultRegistrationsPath,
       discovery: {
@@ -520,7 +520,7 @@ describe('register schematic', () => {
       appTree,
       appConfigPathRaw,
       nonDefaultRegistrationsPath,
-      formworkConfigPath,
+      formbarConfigPath,
     );
 
     const tree = await runSchematic({
@@ -582,7 +582,7 @@ describe('register schematic', () => {
     ];
 
     addComponentFiles(appTree, files);
-    const config: NgxFormworkAutomationConfig = {
+    const config: NgxFormbarAutomationConfig = {
       registrationType: 'config',
       discovery: {
         include: ['**/components/form/controls/**'],
@@ -591,12 +591,7 @@ describe('register schematic', () => {
     };
 
     writeJson(appTree, src(schematicsConfigPath), config);
-    provideMap(
-      appTree,
-      appConfigPathRaw,
-      registrationsPath,
-      formworkConfigPath,
-    );
+    provideMap(appTree, appConfigPathRaw, registrationsPath, formbarConfigPath);
 
     const tree = await runSchematic();
 

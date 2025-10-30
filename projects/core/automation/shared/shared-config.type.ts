@@ -12,7 +12,7 @@ export interface DiscoveryConfig {
   exclude?: string[];
 }
 
-export interface NgxFormworkAutomationConfig {
+export interface NgxFormbarAutomationConfig {
   registrationType?: RegistrationType;
   controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;

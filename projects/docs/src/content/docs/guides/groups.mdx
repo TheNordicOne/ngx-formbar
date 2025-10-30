@@ -24,7 +24,7 @@ Most of the time you will only need one or two different group types. Where they
 Run the Angular schematic to scaffold a new group and register it:
 
 ```bash
-ng generate ngx-formwork:group --key <group-key> [--name <ComponentName>]
+ng generate ngx-formbar:group --key <group-key> [--name <ComponentName>]
 ```
 
 See the [Generator Schematics Page](/schematics/generators) for more details.
@@ -50,13 +50,13 @@ Checkout [Configuration](/guides/configuration) for how to configure a group.
   // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly name: Signal<string> = this.control.name;
 
   constructor() {
-    // Let formwork know, that you take care of handling visibility
+    // Let formbar know, that you take care of handling visibility
     this.control.setVisibilityHandling('manual')
   }
 }
@@ -69,7 +69,7 @@ export class GroupComponent {
 @if(!isHidden()){
   <div [formGroupName]="name()">
     @for (control of controls(); track control.id) {
-      <ng-template *ngxfwAbstractControl="control" />
+      <ng-template *ngxfbAbstractControl="control" />
     }
   </div>
 }
@@ -92,7 +92,7 @@ export class GroupComponent {
   // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
   readonly disabled: Signal<boolean> = this.control.disabled;
   readonly name: Signal<string> = this.control.name;
 }
@@ -101,7 +101,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-disabled"
 <div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwAbstractControl="control" />
+    <ng-template *ngxfbAbstractControl="control" />
   }
 </div>
 <!-- Only show hint when group is disabled -->
@@ -119,7 +119,7 @@ export class GroupComponent {
   // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
   readonly readonly: Signal<boolean> = this.control.readonly;
   readonly name: Signal<string> = this.control.name;
 }
@@ -128,7 +128,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-readonly"
 <div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwAbstractControl="control" />
+    <ng-template *ngxfbAbstractControl="control" />
   }
 </div>
 @if(readonly()){
@@ -149,7 +149,7 @@ See [Expressions](/guides/expressions) for details on how expressions work and [
   // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
 
   // Access the computed dynamic title from the directive.
   // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
@@ -183,7 +183,7 @@ Here is an example of how to access the test ID.
   // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfwGroupDirective<Group>);
+  private readonly control = inject(NgxfbGroupDirective<Group>);
   readonly testId: Signal<string> = this.control.testId;
   readonly name: Signal<string> = this.control.name;
 }
@@ -192,7 +192,7 @@ export class GroupComponent {
 ```html title="group.component.html" group="group-testid"
 <div [formGroupName]="name()"  [attr.data-testId]="testId() + '-wrapper'">
   @for (control of controls(); track control.id) {
-    <ng-template *ngxfwAbstractControl="control" />
+    <ng-template *ngxfbAbstractControl="control" />
   }
 </div>
 ```
@@ -205,7 +205,7 @@ In TypeScript set up a getter
 
 ```ts
 // inject the instance of the directive
-private readonly group = inject(NgxfwGroupDirective<Group>);
+private readonly group = inject(NgxfbGroupDirective<Group>);
 
 // Get access to the underlying form group}
 get group() {

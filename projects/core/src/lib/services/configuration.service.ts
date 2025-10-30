@@ -5,7 +5,7 @@ import { NGX_FW_CONFIG_RESOLVED } from '../tokens/global-config';
 @Injectable({
   providedIn: 'root',
 })
-export class NgxFwConfigurationService {
+export class NgxFbConfigurationService {
   private readonly _config = inject(NGX_FW_CONFIG_RESOLVED);
 
   get testIdBuilder(): TestIdBuilderFn | undefined {

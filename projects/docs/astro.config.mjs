@@ -6,7 +6,7 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'ngx-formwork',
+      title: 'ngx-formbar',
       lastUpdated: true,
       logo: {
         src: './src/assets/icon.svg',
@@ -15,7 +15,7 @@ export default defineConfig({
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/TheNordicOne/ngx-formwork',
+          href: 'https://github.com/TheNordicOne/ngx-formbar',
         },
       ],
       components: {

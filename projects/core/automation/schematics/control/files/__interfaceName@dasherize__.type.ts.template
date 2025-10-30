@@ -1,6 +1,6 @@
-import { NgxFwControl } from 'ngx-formwork';
+import { NgxFbControl } from '@ngx-formbar/core';
 
-export interface <%= classify(interfaceName) %> extends NgxFwControl {
+export interface <%= classify(interfaceName) %> extends NgxFbControl {
   type: '<%= key %>';
 }
 

@@ -1,6 +1,6 @@
-import { NgxfwGroupDirective } from 'ngx-formwork';
+import { NgxfbGroupDirective } from '@ngx-formbar/core';
 
-export const ngxfwGroupHostDirective = {
-  directive: NgxfwGroupDirective,
+export const ngxfbGroupHostDirective = {
+  directive: NgxfbGroupDirective,
   inputs: ['content', 'name'],
 };

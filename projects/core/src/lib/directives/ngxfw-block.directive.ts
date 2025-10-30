@@ -1,5 +1,4 @@
 import { Directive, inject, input, signal } from '@angular/core';
-import { NgxFwBaseContent } from '../types/content.type';
 import { ControlContainer } from '@angular/forms';
 import { withTestId } from '../composables/testId';
 import {
@@ -8,6 +7,7 @@ import {
 } from '../composables/hidden.state';
 import { StateHandling } from '../types/registration.type';
 import { TestIdBuilderFn } from '../types/functions.type';
+import { NgxFbBaseContent } from '../types/content.type';
 
 /**
  * Core directive for non-form elements that appear in forms.
@@ -28,27 +28,27 @@ import { TestIdBuilderFn } from '../types/functions.type';
  * @Component({
  *   hostDirectives: [
  *     {
- *       directive: NgxfwBlockDirective,
+ *       directive: NgxfbBlockDirective,
  *       inputs: ['content', 'name'],
  *     }
  *   ],
  * })
  * export class InfoBlockComponent {
- *   private readonly blockDirective = inject(NgxfwBlockDirective<InfoBlock>);
+ *   private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
  *   readonly content = this.blockDirective.content;
  *   readonly message = computed(() => this.content().message);
  * }
  * ```
  *
- * @template T Type of the block configuration, must extend NgxFwBaseContent
+ * @template T Type of the block configuration, must extend NgxFbBaseContent
  */
 @Directive({
-  selector: '[ngxfwBlock]',
+  selector: '[ngxfbBlock]',
   host: {
     '[attr.hidden]': 'hiddenAttribute()',
   },
 })
-export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
+export class NgxfbBlockDirective<T extends NgxFbBaseContent> {
   /**
    * Reference to the parent form container.
    * Provides access to the form that contains this block.
@@ -128,7 +128,7 @@ export class NgxfwBlockDirective<T extends NgxFwBaseContent> {
 
   /**
    * Sets the visibility handling strategy.
-   * Determines if visibility should be managed by the component (manual) or by Formwork (auto).
+   * Determines if visibility should be managed by the component (manual) or by Formbar (auto).
    *
    * Use 'manual' when implementing custom visibility handling in your component:
    * ```typescript

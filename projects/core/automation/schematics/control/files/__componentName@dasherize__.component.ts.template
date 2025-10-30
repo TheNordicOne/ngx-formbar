@@ -1,6 +1,6 @@
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
-import { NgxfwControlDirective } from 'ngx-formwork';
+import { NgxfbControlDirective } from '@ngx-formbar/core';
 import { <%= interfaceName %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
 import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
 import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
@@ -17,13 +17,13 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
   ]<% } %>,
   hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
     {
-      directive: NgxfwControlDirective,
+      directive: NgxfbControlDirective,
       inputs: ['content', 'name'],
     }
   ]<% } %>,
 })
 export class <%= classify(componentClassName) %> {
-  private readonly control = inject(NgxfwControlDirective<<%= interfaceName %>>);
+  private readonly control = inject(NgxfbControlDirective<<%= interfaceName %>>);
   readonly content: Signal<<%= interfaceName %>> = this.control.content;
   readonly name: Signal<string> = this.control.name;
 }

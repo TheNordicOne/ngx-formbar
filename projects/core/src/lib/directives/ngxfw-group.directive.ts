@@ -7,7 +7,7 @@ import {
   signal,
   Signal,
 } from '@angular/core';
-import { NgxFwFormGroup, ValueStrategy } from '../types/content.type';
+import { NgxFbFormGroup, ValueStrategy } from '../types/content.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { StateHandling } from '../types/registration.type';
 import {
@@ -27,10 +27,10 @@ import { withDynamicTitle } from '../composables/dynamic-title';
 import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
- * Core directive for creating form groups in ngx-formwork.
+ * Core directive for creating form groups in ngx-formbar.
  *
  * This directive handles the integration between Angular's reactive forms and
- * ngx-formwork's declarative configuration for FormGroups. It manages:
+ * ngx-formbar's declarative configuration for FormGroups. It manages:
  *
  * - Group registration and lifecycle within parent forms
  * - State management (hidden, disabled, readonly)
@@ -45,33 +45,33 @@ import { TestIdBuilderFn } from '../types/functions.type';
  * @Component({
  *   hostDirectives: [
  *     {
- *       directive: NgxfwGroupDirective,
+ *       directive: NgxfbGroupDirective,
  *       inputs: ['content', 'name'],
  *     }
  *   ],
  * })
  * export class GroupComponent {
- *   private readonly control = inject(NgxfwGroupDirective<Group>);
+ *   private readonly control = inject(NgxfbGroupDirective<Group>);
  *   readonly content = this.control.content;
  *   readonly controls = this.control.controls;
  * }
  * ```
  *
- * @template T Type of the group configuration, must extend NgxFwFormGroup
+ * @template T Type of the group configuration, must extend NgxFbFormGroup
  */
 @Directive({
-  selector: '[ngxfwGroup]',
+  selector: '[ngxfbGroup]',
   host: {
     '[attr.hidden]': 'hiddenAttribute()',
   },
 })
-export class NgxfwGroupDirective<T extends NgxFwFormGroup>
+export class NgxfbGroupDirective<T extends NgxFbFormGroup>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
 
-  private readonly parentGroupDirective: NgxfwGroupDirective<NgxFwFormGroup> | null =
-    inject(NgxfwGroupDirective<NgxFwFormGroup>, {
+  private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });
@@ -289,7 +289,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   /**
    * Sets the visibility handling strategy
-   * Determines if visibility should be managed by the component (manual) or by Formwork (auto)
+   * Determines if visibility should be managed by the component (manual) or by Formbar (auto)
    *
    * Use 'manual' when implementing custom visibility handling in your component:
    * ```typescript
@@ -306,7 +306,7 @@ export class NgxfwGroupDirective<T extends NgxFwFormGroup>
 
   /**
    * Sets the disabled handling strategy
-   * Determines if disabled state should be managed by the component (manual) or by Formwork (auto)
+   * Determines if disabled state should be managed by the component (manual) or by Formbar (auto)
    *
    * Use 'manual' when implementing custom disabled state handling in your component:
    * ```typescript

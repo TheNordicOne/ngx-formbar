@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/@angular-devkit/schematics/collection-schema.json",
   "schematics": {
     "ng-add": {
-      "description": "Add ngx-formwork to the project.",
+      "description": "Add ngx-formbar to the project.",
       "factory": "./ng-add/index#ngAdd",
       "schema": "./ng-add/schema.json",
       "hidden": true

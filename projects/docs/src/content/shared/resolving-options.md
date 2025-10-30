@@ -2,6 +2,6 @@ Due to the current implementation and how the default values are set, the option
 
 1. Values from `angular.json`
 2. CLI Options
-3. Values from `formwork.config.json`
+3. Values from `formbar.config.json`
 
-In other words: Values from `formwork.config.json` overwrite values from the CLI Options, which overwrite values from the `angular.json`.
+In other words: Values from `formbar.config.json` overwrite values from the CLI Options, which overwrite values from the `angular.json`.

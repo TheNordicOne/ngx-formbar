@@ -1,5 +1,5 @@
-import { FormworkComponentInfo } from './component-info.type';
 import { RegistrationType } from '../../shared/shared-config.type';
+import { FormbarComponentInfo } from './component-info.type';
 
 export interface DiscoverOptions {
   project?: string;
@@ -11,6 +11,6 @@ export interface DiscoverOptions {
 }
 
 export interface RegisterContext extends DiscoverOptions {
-  components: FormworkComponentInfo[];
+  components: FormbarComponentInfo[];
   registrationType: RegistrationType;
 }

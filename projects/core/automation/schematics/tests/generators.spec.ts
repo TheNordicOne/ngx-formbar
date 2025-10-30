@@ -17,7 +17,7 @@ import {
 } from './workspace-setup';
 import { app, exists, read, src, writeJson } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { NgxFormworkAutomationConfig } from '../../shared/shared-config.type';
+import { NgxFormbarAutomationConfig } from '../../shared/shared-config.type';
 import { parseTS } from '../shared/ast/parse';
 import {
   hasNamedImport,
@@ -37,9 +37,9 @@ import {
 import {
   appConfigProvidersComponentRegistrationsMapHasIdentifier,
   componentRegistrationsMapProviderHasIdentifier,
-  defineFormworkConfigComponentRegistrationsHasIdentifier,
+  defineFormbarConfigComponentRegistrationsHasIdentifier,
   directComponentRegistrationsHasIdentifier,
-  provideFormworkComponentRegistrationsHasIdentifier,
+  provideFormbarComponentRegistrationsHasIdentifier,
 } from '../shared/ast/registrations';
 import {
   DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
@@ -47,9 +47,9 @@ import {
 } from '../../shared/constants';
 
 const appConfigPathRaw = 'app.config.ts';
-const formworkConfigPath = 'app/formwork.config.ts';
+const formbarConfigPath = 'app/formbar.config.ts';
 const registrationsPath = 'app/registrations/component-registrations.ts';
-const schematicsConfigPath = 'app/formwork.config.json';
+const schematicsConfigPath = 'app/formbar.config.json';
 
 describe('control schematic', () => {
   let appTree: UnitTestTree;
@@ -429,7 +429,7 @@ describe('control schematic', () => {
       it('falls back to inline providers and host directive when helpers are not provided', async () => {
         const tree = await runSchematic('control');
         const sf = parseTS(read(tree, defaultComponentOutputPath));
-
+        console.log(read(tree, defaultComponentOutputPath));
         const importsControlContainerFromAngular = hasNamedImport(
           sf,
           '@angular/forms',
@@ -446,14 +446,14 @@ describe('control schematic', () => {
 
         const importsDirective = hasNamedImport(
           sf,
-          'ngx-formwork',
-          'NgxfwControlDirective',
+          '@ngx-formbar/core',
+          'NgxfbControlDirective',
         );
 
         const hasControlDirectiveInDecorator =
           decoratorHostDirectivesHasInlineDirectiveWithInputs(
             sf,
-            'NgxfwControlDirective',
+            'NgxfbControlDirective',
             ['content', 'name'],
           );
 
@@ -575,7 +575,7 @@ describe('control schematic', () => {
 
   describe('with a configuration file', () => {
     it('creates a control with values from configuration', async () => {
-      const config: NgxFormworkAutomationConfig = {
+      const config: NgxFormbarAutomationConfig = {
         control: {
           interfaceSuffix: 'Field',
           componentSuffix: 'Widget',
@@ -619,7 +619,7 @@ describe('control schematic', () => {
     });
 
     it('registers the created control to default location', async () => {
-      const config: NgxFormworkAutomationConfig = {
+      const config: NgxFormbarAutomationConfig = {
         control: {
           interfaceSuffix: 'Field',
           componentSuffix: 'Control',
@@ -662,7 +662,7 @@ describe('control schematic', () => {
     it('registers the created control to configured location', async () => {
       provideToken(appTree, appConfigPathRaw, registrationsPath);
 
-      const config: NgxFormworkAutomationConfig = {
+      const config: NgxFormbarAutomationConfig = {
         control: {
           interfaceSuffix: 'Field',
           componentSuffix: 'Control',
@@ -702,7 +702,7 @@ describe('control schematic', () => {
     });
 
     it('does not register the created control if skipRegistration is set to true', async () => {
-      const config: NgxFormworkAutomationConfig = {
+      const config: NgxFormbarAutomationConfig = {
         control: {
           skipRegistration: true,
         },
@@ -729,19 +729,18 @@ describe('control schematic', () => {
         'EmailControlComponent',
       );
 
-      const hasRegistration =
-        provideFormworkComponentRegistrationsHasIdentifier(
-          registrationsSf,
-          'email',
-          'EmailControlComponent',
-        );
+      const hasRegistration = provideFormbarComponentRegistrationsHasIdentifier(
+        registrationsSf,
+        'email',
+        'EmailControlComponent',
+      );
 
       expect(importsComponent).toBe(false);
       expect(hasRegistration).toBe(false);
     });
 
     it('skips registration if control registrations file is not found', async () => {
-      const config: NgxFormworkAutomationConfig = {
+      const config: NgxFormbarAutomationConfig = {
         control: {
           interfaceSuffix: 'Field',
           componentSuffix: 'Control',
@@ -767,13 +766,13 @@ describe('control schematic', () => {
 
     describe('registration style: map', () => {
       beforeEach(() => {
-        const config: NgxFormworkAutomationConfig = {
+        const config: NgxFormbarAutomationConfig = {
           registrationType: 'config',
         };
         writeJson(appTree, src(schematicsConfigPath), config);
       });
 
-      it('registers the created control in app.config.ts in provideFormwork', async () => {
+      it('registers the created control in app.config.ts in provideFormbar', async () => {
         provideMapInlineNoSplit(appTree, appConfigPathRaw);
         const tree = await runSchematic('control');
         const appConfigSf = parseTS(read(tree, appConfigPath));
@@ -790,7 +789,7 @@ describe('control schematic', () => {
         );
 
         const hasRegistration =
-          provideFormworkComponentRegistrationsHasIdentifier(
+          provideFormbarComponentRegistrationsHasIdentifier(
             appConfigSf,
             'test',
             'TestControlComponent',
@@ -801,24 +800,24 @@ describe('control schematic', () => {
       });
 
       it('registers the created control directly in the registrations config if registrations are not split', async () => {
-        provideMapNoSplit(appTree, appConfigPathRaw, formworkConfigPath);
+        provideMapNoSplit(appTree, appConfigPathRaw, formbarConfigPath);
         const tree = await runSchematic('control');
-        const formworkConfigSf = parseTS(read(tree, src(formworkConfigPath)));
+        const formbarConfigSf = parseTS(read(tree, src(formbarConfigPath)));
 
         const componentImportPath = buildRelativePath(
-          src(formworkConfigPath),
+          src(formbarConfigPath),
           defaultComponentOutputPath,
         );
 
         const importsComponent = hasNamedImport(
-          formworkConfigSf,
+          formbarConfigSf,
           componentImportPath,
           'TestControlComponent',
         );
 
         const hasRegistration =
-          defineFormworkConfigComponentRegistrationsHasIdentifier(
-            formworkConfigSf,
+          defineFormbarConfigComponentRegistrationsHasIdentifier(
+            formbarConfigSf,
             'test',
             'TestControlComponent',
           );
@@ -832,7 +831,7 @@ describe('control schematic', () => {
           appTree,
           appConfigPathRaw,
           registrationsPath,
-          formworkConfigPath,
+          formbarConfigPath,
         );
         const tree = await runSchematic('control');
         const registrationsSf = parseTS(read(tree, src(registrationsPath)));
@@ -859,7 +858,7 @@ describe('control schematic', () => {
       });
 
       it('does not register the created control if skipRegistration is set to true', async () => {
-        const config: NgxFormworkAutomationConfig = {
+        const config: NgxFormbarAutomationConfig = {
           control: {
             skipRegistration: true,
           },
@@ -870,7 +869,7 @@ describe('control schematic', () => {
           appTree,
           appConfigPathRaw,
           registrationsPath,
-          formworkConfigPath,
+          formbarConfigPath,
         );
 
         const tree = await runSchematic('control', {
@@ -879,22 +878,22 @@ describe('control schematic', () => {
           schematicsConfig: schematicsConfigPath,
         });
 
-        const formworkConfigSf = parseTS(read(tree, src(formworkConfigPath)));
+        const formbarConfigSf = parseTS(read(tree, src(formbarConfigPath)));
 
         const componentImportPath = buildRelativePath(
-          src(formworkConfigPath),
+          src(formbarConfigPath),
           app('email/email-control.component.ts'),
         );
 
         const importsComponent = hasNamedImport(
-          formworkConfigSf,
+          formbarConfigSf,
           componentImportPath,
           'EmailControlComponent',
         );
 
         const hasRegistration =
-          provideFormworkComponentRegistrationsHasIdentifier(
-            formworkConfigSf,
+          provideFormbarComponentRegistrationsHasIdentifier(
+            formbarConfigSf,
             'email',
             'EmailControlComponent',
           );
@@ -904,7 +903,7 @@ describe('control schematic', () => {
       });
 
       it('skips registration if control registrations file is not found', async () => {
-        const config: NgxFormworkAutomationConfig = {
+        const config: NgxFormbarAutomationConfig = {
           control: {
             interfaceSuffix: 'Field',
             componentSuffix: 'Control',

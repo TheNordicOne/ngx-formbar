@@ -1,22 +1,22 @@
 ---
-title: Formwork Configuration
+title: Formbar Configuration
 keyword: ImprovementsPage
 sidebar:
   order: 7
 ---
 
-## Formwork Configuration vs. Schematics Configuration
+## Formbar Configuration vs. Schematics Configuration
 
-There are two configuration files used by _ngx-formwork_
+There are two configuration files used by _ngx-formbar_
 
-- Formwork Configuration: `formwork.config.ts`
-- Schematics Configuration: `formwork.config.json`
+- Formbar Configuration: `formbar.config.ts`
+- Schematics Configuration: `formbar.config.json`
 
 The schematics configuration is only used for the schematics and therefore only hold default values. This file is not relevant during runtime. All relevant options are shown on the schematics pages [Generators](/schematics/generators) and [Register](/schematics/register).
 
-## Formwork Configuration Object
+## Formbar Configuration Object
 
-The configuration object that is used by the `provideFormwork` function has these properties
+The configuration object that is used by the `provideFormbar` function has these properties
 
 | Property                    | Type                                           | Required | Description                                   |
 |-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
@@ -24,35 +24,35 @@ The configuration object that is used by the `provideFormwork` function has thes
 | validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
 | asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
 | updateOn                    | 'change' \| 'blur' \ \| 'submit'               | No       | Specifies when to update the control's value. |
-| globalConfig                | NgxFwGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
+| globalConfig                | NgxFbGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
 
-### NgxFwGlobalConfiguration
+### NgxFbGlobalConfiguration
 
 This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
 
 | Property        | Type                                                                       | Required | Description                                              |
 |-----------------|----------------------------------------------------------------------------|----------|----------------------------------------------------------|
-| testIdBuilderFn | (content: NgxFwBaseContent,name: string,parentTestId?: string,) => string; | Yes      | Function that is used to build the test id for a control |
+| testIdBuilderFn | (content: NgxFbBaseContent,name: string,parentTestId?: string,) => string; | Yes      | Function that is used to build the test id for a control |
 
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. _ngx-formwork_ provides multiple approaches to organize your code better.
+Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. _ngx-formbar_ provides multiple approaches to organize your code better.
 
-If you ran `ng add` with default parameters to install _ngx-formwork_ your setup already is using split configurations.
+If you ran `ng add` with default parameters to install _ngx-formbar_ your setup already is using split configurations.
 
 :::info
 This section assumes that you have read and understood the [Registration Concepts](/guides/core-concepts) and now how you need to set the configuration. 
 :::
 
-### Using defineFormworkConfig
+### Using defineFormbarConfig
 
-Create a file next to your _app.config.ts_ with this content to get started. The `defineFormworkConfig` function is a helper that provides type support when defining the configuration in a separate file.
+Create a file next to your _app.config.ts_ with this content to get started. The `defineFormbarConfig` function is a helper that provides type support when defining the configuration in a separate file.
 
-```ts title="formwork.config.ts"
-import { defineFormworkConfig } from 'ngx-formwork';
+```ts title="formbar.config.ts"
+import { defineFormbarConfig } from '@ngx-formbar/core';
 
-export const formworkConfig = defineFormworkConfig({
+export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
     // Component registrations go here
   },
@@ -70,12 +70,12 @@ export const formworkConfig = defineFormworkConfig({
 In _app.config.ts_ use it like this:
 
 ```ts title="app.config.ts"
-import { formworkConfig } from './formwork.config.ts';
+import { formbarConfig } from './formbar.config.ts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork(formworkConfig),
+    provideFormbar(formbarConfig),
   ],
 };
 ```
@@ -96,7 +96,7 @@ When using the DI tokens, be aware of how resolution works:
 
 ```ts title="component-registrations.provider.ts"
 import { Type } from '@angular/core';
-import { NGX_FW_COMPONENT_REGISTRATIONS } from 'ngx-formwork';
+import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
 import { TextControlComponent } from './components/text-control.component';
 import { GroupComponent } from './components/group.component';
 import { InfoBlockComponent } from './components/info-block.component';
@@ -116,7 +116,7 @@ export const componentRegistrationsProvider = {
 
 ```ts title="validator-registrations.provider.ts"
 import { ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from 'ngx-formwork';
+import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/core';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
 import { asyncValidator, asyncGroupValidator } from './async-validators';
@@ -154,8 +154,8 @@ import { validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } f
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork(),
-    // Custom providers MUST come after provideFormwork()
+    provideFormbar(),
+    // Custom providers MUST come after provideFormbar()
     componentRegistrationsProvider,
     validatorRegistrationsProvider,
     asyncValidatorRegistrationsProvider,
@@ -168,7 +168,7 @@ export const appConfig: ApplicationConfig = {
 You can also provide multiple configuration objects that will be merged according to their resolution strategy:
 
 ```ts title="split-configurations.provider.ts"
-import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_CONFIG } from 'ngx-formwork';
+import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_CONFIG } from '@ngx-formbar/core';
 
 // First set of components
 export const baseComponentsProvider = {
@@ -216,7 +216,7 @@ When providing multiple maps with the same token:
 
 ### Traditional Code Splitting
 
-For simpler scenarios, you can still split your registration files by type while using the `provideFormwork()` function.
+For simpler scenarios, you can still split your registration files by type while using the `provideFormbar()` function.
 
 #### Controls Registration
 
@@ -239,19 +239,19 @@ import { componentRegistrations } from './controls.registerations.ts';
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       componentRegistrations,
     }),
   ],
 };
 ```
 
-In _formwork.config.ts_ use it like this
+In _formbar.config.ts_ use it like this
 
 ```ts title="app.config.ts"
 import { componentRegistrations } from './controls.registerations.ts';
 
-export const formworkConfig = defineFormworkConfig({
+export const formbarConfig = defineFormbarConfig({
   // other providers
   componentRegistrations,
 });
@@ -284,7 +284,7 @@ import { validatorRegistrations, asyncValidatorRegistrations } from './validator
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork({
+    provideFormbar({
       validatorRegistrations,
       asyncValidatorRegistrations,
     }),
@@ -292,12 +292,12 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-In _formwork.config.ts_ use it like this
+In _formbar.config.ts_ use it like this
 
-```ts title="formwork.config.ts"
+```ts title="formbar.config.ts"
 import { componentRegistrations } from './controls.registerations.ts';
 
-export const formworkConfig = defineFormworkConfig({
+export const formbarConfig = defineFormbarConfig({
   // other providers
   componentRegistrations: {
     validatorRegistrations,
@@ -307,7 +307,7 @@ export const formworkConfig = defineFormworkConfig({
 ```
 
 :::caution
-Extracting the validator registrations means losing some of the type safety features. Specifically it won't be possible to get warnings when you misspell the key in a reference. It is therefore recommended to keep the validators directly in `defineFormworkConfig` or `provideFormwork` function call.
+Extracting the validator registrations means losing some of the type safety features. Specifically it won't be possible to get warnings when you misspell the key in a reference. It is therefore recommended to keep the validators directly in `defineFormbarConfig` or `provideFormbar` function call.
 
 The following example shows the case where the reference to the `letter` validator is misspelled.
 :::
@@ -316,7 +316,7 @@ The following example shows the case where the reference to the `letter` validat
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
   letter: [letterValidator],
   // ⚠️ letter only spelled with one T.
-  // This will give an TS error in the provideFormwork function, but not in this case
+  // This will give an TS error in the provideFormbar function, but not in this case
   combined: [Validators.required, 'leter'],
 };
 ```
@@ -326,8 +326,8 @@ export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
 For advanced scenarios, you can provide global configuration options using the `NGX_FW_CONFIG` injection token.
 
 ```ts title="global-config.provider.ts"
-import { NGX_FW_CONFIG } from 'ngx-formwork';
-import { TestIdBuilderFn } from 'ngx-formwork';
+import { NGX_FW_CONFIG } from '@ngx-formbar/core';
+import { TestIdBuilderFn } from '@ngx-formbar/core';
 
 // Example test ID builder function
 const testIdBuilder: TestIdBuilderFn = (baseName, controlName) => {
@@ -350,7 +350,7 @@ import { globalConfigProvider } from './global-config.provider';
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
-    provideFormwork(),
+    provideFormbar(),
     globalConfigProvider,
   ],
 };
