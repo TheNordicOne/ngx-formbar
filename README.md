@@ -10,11 +10,6 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 > [!TIP]
 > The full documentation can be found on [ngx-formbar.net](https://docs.ngx-formbar.net)
 
-## Current State
-
-> [!WARNING]
-> This project is still in the making and not ready to be used in production!
-
 ## Installation
 
 **Primary (recommended)**
