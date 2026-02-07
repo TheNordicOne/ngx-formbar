@@ -3,8 +3,9 @@ import {
   NgxFbAbstractControl,
   NgxFbFormGroup,
   UpdateStrategy,
+  resolveUpdateStrategy,
+  NGX_FW_DEFAULT_UPDATE_STRATEGY,
 } from '@ngx-formbar/core';
-import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
 import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
@@ -24,7 +25,7 @@ import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
  * @param content Signal containing the NgxFbAbstractControl with possible updateOn configuration
  * @returns Computed signal providing the resolved update strategy
  */
-export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>) {
+export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>): Signal<UpdateStrategy> {
   const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
@@ -33,14 +34,9 @@ export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>) {
 
   const defaultUpdateStrategy = inject(NGX_FW_DEFAULT_UPDATE_STRATEGY);
 
-  const parentGroupUpdateStrategy: Signal<UpdateStrategy> =
-    computed<UpdateStrategy>(() => {
-      return parentGroupDirective?.updateStrategy();
-    });
-
-  return computed<UpdateStrategy>(() => {
-    return (
-      content().updateOn ?? parentGroupUpdateStrategy() ?? defaultUpdateStrategy
-    );
-  });
+  return resolveUpdateStrategy(
+    computed(() => content().updateOn),
+    computed(() => parentGroupDirective?.updateStrategy()),
+    defaultUpdateStrategy,
+  );
 }

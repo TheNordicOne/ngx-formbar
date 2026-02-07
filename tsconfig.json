@@ -6,9 +6,11 @@
         "./dist/core"
       ],
       "@ngx-formbar/core": [
+        "./projects/core/src/public-api.ts",
         "./dist/core"
       ],
       "@ngx-formbar/reactive-forms": [
+        "./projects/reactive-forms/src/public-api.ts",
         "./dist/reactive-forms"
       ]
     },

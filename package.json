@@ -59,6 +59,7 @@
     "@types/jasmine": "~5.1.7",
     "@types/node": "^18.18.0",
     "angular-eslint": "^19.8.1",
+    "baseline-browser-mapping": "^2.9.19",
     "copyfiles": "^2.4.1",
     "cypress": "^15.2.0",
     "eslint": "^9.22.0",

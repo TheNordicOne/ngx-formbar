@@ -1,7 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
-import { ExpressionService, FormContext, NgxFbFormGroup } from '@ngx-formbar/core';
+import { ExpressionService, FormContext, NgxFbFormGroup, resolveExpression } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { Program } from 'acorn';
 
 /**
  * Computes a dynamic title for a form control based on expression evaluation
@@ -13,41 +12,13 @@ export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 
-  const dynamicTitleAst = computed<Program | null>(() => {
-    const dynamicTitleOption = content().dynamicTitle;
-    if (typeof dynamicTitleOption !== 'string') {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(dynamicTitleOption);
-  });
+  const formContext = computed<FormContext>(
+    () => formService.formValue() ?? (formService.formGroup.value as FormContext),
+  );
 
-  const dynamicTitleFunction = computed(() => {
-    const dynamicTitleOption = content().dynamicTitle;
-    if (typeof dynamicTitleOption !== 'function') {
-      return null;
-    }
-    return dynamicTitleOption;
-  });
-
-  return computed<string | undefined>(() => {
-    const reactiveFormValues = formService.formValue();
-    const currentSynchronousFormValues = formService.formGroup
-      .value as FormContext;
-    const evaluationContext =
-      reactiveFormValues ?? currentSynchronousFormValues;
-
-    const dynamicTitleFn = dynamicTitleFunction();
-
-    if (dynamicTitleFn) {
-      return dynamicTitleFn(evaluationContext);
-    }
-
-    const ast = dynamicTitleAst();
-    if (!ast) {
-      return undefined;
-    }
-
-    const title = expressionService.evaluateExpression(ast, evaluationContext);
-    return title as string | undefined;
-  });
+  return resolveExpression<string>(
+    computed(() => content().dynamicTitle),
+    formContext,
+    expressionService,
+  );
 }

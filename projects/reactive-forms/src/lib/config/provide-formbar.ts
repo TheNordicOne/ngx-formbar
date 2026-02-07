@@ -11,6 +11,7 @@ import {
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_COMPONENT_RESOLVER,
   NGX_FW_CONFIG,
+  NGX_FW_DEFAULT_UPDATE_STRATEGY,
 } from '@ngx-formbar/core';
 import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import {
@@ -20,7 +21,6 @@ import {
   ValidatorKey,
 } from '../types/validation.type';
 import { ValidatorRegistrationService } from '../services/validator-registration.service';
-import { NGX_FW_DEFAULT_UPDATE_STRATEGY } from '../tokens/default-update-strategy';
 import {
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,

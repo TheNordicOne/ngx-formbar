@@ -1,7 +1,12 @@
 import { computed, effect, inject, Signal } from '@angular/core';
-import { NgxFbAbstractControl, ExpressionService, FormContext } from '@ngx-formbar/core';
+import {
+  Expression,
+  ExpressionService,
+  FormContext,
+  NgxFbAbstractControl,
+  resolveExpression,
+} from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { Program } from 'acorn';
 import { AbstractControl, ControlContainer } from '@angular/forms';
 
 export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
@@ -9,43 +14,20 @@ export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
   const expressionService = inject(ExpressionService);
   const parentContainer = inject(ControlContainer);
 
-  const computedValueAst = computed<Program | null>(() => {
-    const computedValueOption = content().computedValue;
-    if (typeof computedValueOption !== 'string') {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(computedValueOption);
-  });
+  const formContext = computed<FormContext>(
+    () => formService.formValue() ?? (parentContainer.value as FormContext),
+  );
 
-  const computedValueFunction = computed(() => {
-    const computedValueOption = content().computedValue;
-    if (typeof computedValueOption !== 'function') {
-      return null;
-    }
-    return computedValueOption;
-  });
-
-  return computed<T | undefined>(() => {
-    const value =
-      formService.formValue() ?? (parentContainer.value as FormContext);
-
-    const computedValueFn = computedValueFunction();
-    if (computedValueFn) {
-      return computedValueFn(value) as T;
-    }
-
-    const ast = computedValueAst();
-    if (!ast) {
-      return undefined;
-    }
-
-    return expressionService.evaluateExpression(ast, value) as T;
-  });
+  return resolveExpression<T>(
+    computed(() => content().computedValue as Expression<T> | T | undefined),
+    formContext,
+    expressionService,
+  );
 }
 
-export function setComputedValueEffect<T>(options: {
+export function setComputedValueEffect(options: {
   controlInstance: Signal<AbstractControl>;
-  computeValueSignal: Signal<T>;
+  computeValueSignal: Signal<unknown>;
 }) {
   const parentContainer = inject(ControlContainer);
   effect(() => {

@@ -1,12 +1,10 @@
-import { computed, effect, inject, Signal, untracked } from '@angular/core';
-import { Program } from 'acorn';
+import { computed, inject, Signal } from '@angular/core';
 import {
   ExpressionService,
-  StateHandling,
-  SimpleFunction,
   FormContext,
   NgxFbAbstractControl,
   NgxFbFormGroup,
+  resolveInheritableExpression,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
@@ -45,57 +43,19 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
     return parentGroup.disabled();
   });
 
-  const disabledAst = computed<Program | null>(() => {
-    const disabledOption = content().disabled;
-    if (typeof disabledOption !== 'string') {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(disabledOption);
-  });
+  const option = computed(() => content().disabled);
 
-  const disabledBool = computed(() => {
-    const disabledOption = content().disabled;
-    if (typeof disabledOption !== 'boolean') {
-      return null;
-    }
-    return disabledOption;
-  });
+  const formContext = computed<FormContext>(
+    () =>
+      formService.formValue() ?? (formService.formGroup.value as FormContext),
+  );
 
-  const disabledFunction = computed(() => {
-    const disabledOption = content().disabled;
-    if (typeof disabledOption !== 'function') {
-      return null;
-    }
-    return disabledOption;
-  });
-
-  return computed<boolean>(() => {
-    const disabledStatic = disabledBool();
-
-    if (disabledStatic !== null) {
-      return disabledStatic;
-    }
-
-    const reactiveFormValues = formService.formValue();
-    const currentSynchronousFormValues = formService.formGroup
-      .value as FormContext;
-    const evaluationContext =
-      reactiveFormValues ?? currentSynchronousFormValues;
-
-    const disableFn = disabledFunction();
-    if (disableFn) {
-      return disableFn(evaluationContext);
-    }
-
-    const ast = disabledAst();
-    if (!ast) {
-      return parentGroupIsDisabled();
-    }
-
-    const disabled =
-      expressionService.evaluateExpression(ast, evaluationContext) ?? false;
-    return disabled as boolean;
-  });
+  return resolveInheritableExpression(
+    option,
+    formContext,
+    expressionService,
+    parentGroupIsDisabled,
+  );
 }
 
 /**
@@ -107,28 +67,4 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
  * @param options.enableFunction Function to call when component should be enabled
  * @param options.disableFunction Function to call when component should be disabled
  */
-export function disabledEffect(options: {
-  disabledSignal: Signal<boolean>;
-  disabledHandlingSignal: Signal<StateHandling>;
-  enableFunction: SimpleFunction;
-  disableFunction: SimpleFunction;
-}) {
-  effect(() => {
-    const disabled = options.disabledSignal();
-    const disabledHandling = options.disabledHandlingSignal();
-
-    if (disabledHandling === 'manual') {
-      return;
-    }
-
-    if (!disabled) {
-      untracked(() => {
-        options.enableFunction();
-      });
-      return;
-    }
-    untracked(() => {
-      options.disableFunction();
-    });
-  });
-}
+export { resolveDisabledEffect as disabledEffect } from '@ngx-formbar/core';

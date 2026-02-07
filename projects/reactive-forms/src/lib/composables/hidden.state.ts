@@ -1,18 +1,19 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
+  ExpressionService,
+  FormContext,
   HideStrategy,
   NgxFbBaseContent,
   NgxFbContent,
   NgxFbFormGroup,
-  ValueStrategy,
-  ExpressionService,
-  StateHandling,
+  resolveHiddenAttribute,
+  resolveHiddenState,
   SimpleFunction,
+  StateHandling,
   ValueHandleFunction,
-  FormContext,
+  ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { Program } from 'acorn';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
 import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
@@ -48,72 +49,14 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
     return parentGroup.isHidden();
   });
 
-  const visibilityAst = computed<Program | null>(() => {
-    const hiddenOption = content().hidden;
-    if (typeof hiddenOption !== 'string') {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(hiddenOption);
-  });
+  const option = computed(() => content().hidden);
 
-  const visibilityFunction = computed(() => {
-    const visibilityOption = content().hidden;
-    if (typeof visibilityOption !== 'function') {
-      return null;
-    }
-    return visibilityOption;
-  });
+  const formContext = computed<FormContext>(
+    () =>
+      formService.formValue() ?? (formService.formGroup.value as FormContext),
+  );
 
-  return computed<boolean>(() => {
-    const reactiveFormValues = formService.formValue();
-    const currentSynchronousFormValues = formService.formGroup
-      .value as FormContext;
-    const evaluationContext =
-      reactiveFormValues ?? currentSynchronousFormValues;
-
-    const visibilityFn = visibilityFunction();
-
-    if (visibilityFn) {
-      return visibilityFn(evaluationContext);
-    }
-
-    const ast = visibilityAst();
-    if (!ast) {
-      return parentGroupIsHidden();
-    }
-
-    const isHidden: boolean =
-      (expressionService.evaluateExpression(ast, evaluationContext) as
-        | boolean
-        | undefined) ?? false;
-    return isHidden || parentGroupIsHidden();
-  });
-}
-
-/**
- * Creates a computed attribute value for hidden DOM elements
- *
- * When visibilityHandling is set to 'auto', this returns a boolean attribute value
- * that can be used with Angular's [attr.hidden] binding. When set to 'manual',
- * it returns null so the attribute is not applied.
- *
- * @param options Configuration object for hidden attribute
- * @param options.hiddenSignal Signal that indicates if the control should be hidden
- * @param options.hiddenHandlingSignal Signal that determines how visibility is managed
- * @returns Computed signal that resolves to attribute value (true or null)
- */
-export function withHiddenAttribute(options: {
-  hiddenSignal: Signal<boolean>;
-  hiddenHandlingSignal: Signal<StateHandling>;
-}) {
-  return computed(() => {
-    const isHidden = options.hiddenSignal();
-    const visibilityHandling = options.hiddenHandlingSignal();
-    if (visibilityHandling !== 'auto') {
-      return null;
-    }
-    return isHidden ? true : null;
-  });
+  return resolveHiddenState(option, formContext, expressionService, parentGroupIsHidden);
 }
 
 /**
@@ -136,6 +79,13 @@ export function withHiddenAttribute(options: {
  * @param options.detachFunction Function to call when control should be detached
  * @param options.valueHandleFunction Function to handle control value based on strategy
  */
+export function withHiddenAttribute(options: {
+  hiddenSignal: Signal<boolean>;
+  hiddenHandlingSignal: Signal<StateHandling>;
+}) {
+  return resolveHiddenAttribute(options);
+}
+
 export function hiddenEffect(options: {
   content: Signal<NgxFbContent>;
   name: Signal<string>;

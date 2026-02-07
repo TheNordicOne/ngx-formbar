@@ -1,5 +1,11 @@
 import { computed, inject, Signal } from '@angular/core';
-import { TestIdBuilderFn, NgxFbBaseContent, NgxFbFormGroup, NgxFbConfigurationService } from '@ngx-formbar/core';
+import {
+  TestIdBuilderFn,
+  NgxFbBaseContent,
+  NgxFbFormGroup,
+  NgxFbConfigurationService,
+  resolveTestId,
+} from '@ngx-formbar/core';
 import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
@@ -26,25 +32,12 @@ export function withTestId(
     });
 
   const globalConfig = inject(NgxFbConfigurationService);
-  const globalTestIdBuilder = globalConfig.testIdBuilder;
 
-  return computed(() => {
-    const contentValue = content();
-    const id = name();
-    const parentGroupTestId = parentGroupDirective?.testId();
-    const builderFn = testIdBuilder();
-
-    if (builderFn) {
-      return builderFn(contentValue, id, parentGroupTestId);
-    }
-
-    if (globalTestIdBuilder) {
-      return globalTestIdBuilder(contentValue, id, parentGroupTestId);
-    }
-
-    if (!parentGroupTestId) {
-      return id;
-    }
-    return [parentGroupTestId, id].join('-');
-  });
+  return resolveTestId(
+    content,
+    name,
+    testIdBuilder,
+    globalConfig.testIdBuilder,
+    computed(() => parentGroupDirective?.testId()),
+  );
 }

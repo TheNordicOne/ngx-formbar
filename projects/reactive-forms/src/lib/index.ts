@@ -9,7 +9,6 @@ export * from './directives/ngxfb-group.directive';
 export * from './directives/ngxfb-block.directive';
 export * from './tokens/validator-registrations';
 export * from './tokens/validator-resolver';
-export * from './tokens/default-update-strategy';
 export * from './composables/computed-value';
 export * from './composables/disabled.state';
 export * from './composables/hidden.state';

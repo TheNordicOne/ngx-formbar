@@ -1,7 +1,12 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFbAbstractControl, NgxFbFormGroup, ExpressionService, FormContext } from '@ngx-formbar/core';
+import {
+  ExpressionService,
+  FormContext,
+  NgxFbAbstractControl,
+  NgxFbFormGroup,
+  resolveInheritableExpression,
+} from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { Program } from 'acorn';
 import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
@@ -38,59 +43,17 @@ export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
     return parentGroup.readonly();
   });
 
-  const readonlyAst = computed<Program | null>(() => {
-    const readonlyOption = content().readonly;
-    if (
-      typeof readonlyOption === 'boolean' ||
-      typeof readonlyOption === 'function'
-    ) {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(readonlyOption);
-  });
+  const option = computed(() => content().readonly);
 
-  const readonlyBool = computed(() => {
-    const readonlyOption = content().readonly;
-    if (typeof readonlyOption !== 'boolean') {
-      return null;
-    }
-    return readonlyOption;
-  });
+  const formContext = computed<FormContext>(
+    () =>
+      formService.formValue() ?? (formService.formGroup.value as FormContext),
+  );
 
-  const readonlyFunction = computed(() => {
-    const readonlyOption = content().readonly;
-    if (typeof readonlyOption !== 'function') {
-      return null;
-    }
-    return readonlyOption;
-  });
-
-  return computed<boolean>(() => {
-    const readonlyStatic = readonlyBool();
-
-    if (readonlyStatic !== null) {
-      return readonlyStatic;
-    }
-
-    const reactiveFormValues = formService.formValue();
-    const currentSynchronousFormValues = formService.formGroup
-      .value as FormContext;
-    const evaluationContext =
-      reactiveFormValues ?? currentSynchronousFormValues;
-
-    const readonlyFn = readonlyFunction();
-
-    if (readonlyFn) {
-      return readonlyFn(evaluationContext);
-    }
-
-    const ast = readonlyAst();
-    if (!ast) {
-      return parentGroupIsReadonly();
-    }
-
-    const readonly =
-      expressionService.evaluateExpression(ast, evaluationContext) ?? false;
-    return readonly as boolean;
-  });
+  return resolveInheritableExpression(
+    option,
+    formContext,
+    expressionService,
+    parentGroupIsReadonly,
+  );
 }
