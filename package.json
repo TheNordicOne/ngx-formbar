@@ -4,8 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve dummy",
-    "build": "ng build core",
-    "postbuild": "cd projects/core && npm run build",
+    "build:core": "ng build core",
+    "postbuild:core": "cd projects/core && npm run build",
+    "build:reactive-forms": "ng build reactive-forms",
+    "build": "npm run build:core && npm run build:reactive-forms",
     "watch": "ng build core --watch --configuration development",
     "test": "ng test",
     "test:component": "npx vitest run --root projects/core --project component",

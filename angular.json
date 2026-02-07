@@ -126,6 +126,47 @@
           }
         }
       }
+    },
+    "reactive-forms": {
+      "projectType": "library",
+      "root": "projects/reactive-forms",
+      "sourceRoot": "projects/reactive-forms/src",
+      "prefix": "ngxfb",
+      "schematics": {
+        "@schematics/angular:component": {
+          "changeDetection": "OnPush"
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/reactive-forms/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/reactive-forms/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/reactive-forms/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@analogjs/vitest-angular:test"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/reactive-forms/**/*.ts",
+              "projects/reactive-forms/**/*.html"
+            ],
+            "eslintConfig": "projects/reactive-forms/eslint.config.mjs"
+          }
+        }
+      }
     }
   },
   "cli": {

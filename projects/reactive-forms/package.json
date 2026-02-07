@@ -1,0 +1,36 @@
+{
+  "name": "@ngx-formbar/reactive-forms",
+  "version": "1.0.0",
+  "peerDependencies": {
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/forms": "^19.0.0",
+    "@ngx-formbar/core": "^1.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "typescript",
+    "reactive-forms",
+    "json-form"
+  ],
+  "author": {
+    "name": "Alexander Pahn",
+    "email": "alexander.pahn@outlook.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheNordicOne/ngx-formbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheNordicOne/ngx-formbar/issues"
+  }
+}

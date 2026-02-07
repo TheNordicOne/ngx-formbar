@@ -2,7 +2,15 @@
   "compileOnSave": false,
   "compilerOptions": {
     "paths": {
-      "core": ["./dist/core"]
+      "core": [
+        "./dist/core"
+      ],
+      "@ngx-formbar/core": [
+        "./dist/core"
+      ],
+      "@ngx-formbar/reactive-forms": [
+        "./dist/reactive-forms"
+      ]
     },
     "outDir": "./dist/out-tsc",
     "strict": true,
