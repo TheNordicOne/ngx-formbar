@@ -14,7 +14,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       passWithNoTests: true,
       projects: [
         defineProject({
-          plugins: [angular(), viteTsConfigPaths()],
+          plugins: [
+            angular(),
+            viteTsConfigPaths({ root: import.meta.dirname }),
+          ],
           test: {
             name: 'component',
             environment: 'jsdom',
