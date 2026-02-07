@@ -3,9 +3,9 @@ import { ExpressionService, FormContext, NgxFbFormGroup, resolveExpression } fro
 import { FormService } from '../services/form.service';
 
 /**
- * Computes a dynamic title for a form control based on expression evaluation
+ * Computes a dynamic title for a form group based on expression evaluation
  *
- * @param content Signal containing control configuration with dynamicTitle property
+ * @param content Signal containing group configuration with dynamicTitle property
  * @returns Computed signal that resolves to the evaluated dynamic title string or undefined
  */
 export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {

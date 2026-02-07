@@ -43,7 +43,3 @@ testem.log
 Thumbs.db
 /cypress/screenshots/
 /projects/core/node_modules/.vite/results.json
-
-
-# NgDoc files
-/ng-doc

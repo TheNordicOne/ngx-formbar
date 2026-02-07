@@ -173,7 +173,7 @@ function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
  * @param validators Array of validator functions or validator keys
  * @param registrations Map of all registered validators
  * @param memo Memoization cache to avoid circular references
- * @param visiting
+ * @param visiting Set tracking visited validator keys to detect circular references
  * @returns Flattened array of validator functions
  */
 function toValidatorFn<T extends RegistrationRecord, V>(

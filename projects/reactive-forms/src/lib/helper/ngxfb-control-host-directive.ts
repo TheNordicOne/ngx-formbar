@@ -19,7 +19,7 @@ import { NgxfbControlDirective } from '../directives/ngxfb-control.directive';
  * })
  * export class CustomControlComponent {
  *   // The component now has access to the NgxfbControlDirective functionality
- *   // with the 'content' input exposed automatically
+ *   // with the 'content' and 'name' inputs exposed automatically
  * }
  */
 export const ngxfbControlHostDirective = {

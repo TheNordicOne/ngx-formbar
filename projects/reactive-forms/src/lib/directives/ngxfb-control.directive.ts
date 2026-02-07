@@ -90,7 +90,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   readonly content = input.required<T>();
 
   /**
-   * Required input for the controls name
+   * Required input for the control's name
    */
   readonly name = input.required<string>();
 
@@ -294,6 +294,8 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    * constructor() {
    *   this.control.setVisibilityHandling('manual');
    * }
+   * ```
+   *
    * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
    */
   setVisibilityHandling(visibilityHandling: StateHandling) {

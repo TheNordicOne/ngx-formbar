@@ -1,8 +1,8 @@
 import { Expression } from './expression.type';
 
 /**
- * The foundation for all form controls and groups. It defines a common set of options
- * that control registration, validation, visibility, and behavior of the form elements.
+ * The foundation for all form controls and groups. It defines the minimal set of
+ * properties shared across all content types: type identification and visibility.
  */
 export interface NgxFbBaseContent {
   /**
@@ -38,14 +38,13 @@ export interface NgxFbAbstractControl extends NgxFbBaseContent {
    */
   disabled?: Expression<boolean> | boolean;
   /**
-   * Specifies how to handle the control when hidden: 'keep' (remains in form model)
-   * or 'remove' (removed from form model).
+   * Specifies how to handle the control when hidden.
+   * @see {@link HideStrategy}
    */
   hideStrategy?: HideStrategy;
   /**
-   * Determines how the control's value is handled when visibility changes:
-   * 'last' (preserves last value), 'default' (reverts to default value),
-   * or 'reset' (clears value).
+   * Determines how the control's value is handled when visibility changes.
+   * @see {@link ValueStrategy}
    */
   valueStrategy?: ValueStrategy;
   /**
@@ -54,8 +53,8 @@ export interface NgxFbAbstractControl extends NgxFbBaseContent {
    */
   readonly?: Expression<boolean> | boolean;
   /**
-   * Specifies when to update the control's value: 'change' (as user types, default),
-   * 'blur' (when control loses focus), or 'submit' (when form is submitted).
+   * Specifies when to update the control's value.
+   * @see {@link UpdateStrategy}
    */
   updateOn?: UpdateStrategy;
   /**
@@ -105,7 +104,7 @@ export interface NgxFbControl extends NgxFbAbstractControl {
    */
   dynamicLabel?: Expression<string>;
   /**
-   * Default value for the control. Should be overwritten with the proper value type of the control.
+   * Default value for the control. Override this type in extending interfaces to match the control's value type.
    */
   defaultValue?: unknown;
   /**

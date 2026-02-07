@@ -19,7 +19,7 @@ import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
  * })
  * export class CustomGroupComponent {
  *   // The component now has access to the NgxfbGroupDirective functionality
- *   // with the 'content' input exposed automatically
+ *   // with the 'content' and 'name' inputs exposed automatically
  * }
  */
 export const ngxfbGroupHostDirective = {
