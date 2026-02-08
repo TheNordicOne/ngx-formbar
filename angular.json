@@ -279,7 +279,7 @@
               "projects/docs/**/*.ts",
               "projects/docs/**/*.html"
             ],
-            "eslintConfig": "projects/docs/eslint.config.js"
+            "eslintConfig": "projects/docs/eslint.config.mjs"
           }
         }
       }

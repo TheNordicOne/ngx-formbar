@@ -3,10 +3,11 @@ import { configs as ngConfigs, processInlineTemplates } from 'angular-eslint';
 import prettierConfig from 'eslint-config-prettier';
 import { configs as jsoncConfigs } from 'eslint-plugin-jsonc';
 import globals from 'globals';
-import { config, configs as tsConfigs } from 'typescript-eslint';
+import { configs as tsConfigs } from 'typescript-eslint';
 import boundaries from 'eslint-plugin-boundaries';
+import { defineConfig } from 'eslint/config';
 
-export default config(
+export default defineConfig(
   { ignores: ['.angular/*', 'dist/*'] },
   {
     name: 'JavaScript',
