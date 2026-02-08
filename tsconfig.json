@@ -41,6 +41,12 @@
     },
     {
       "path": "./tsconfig.cy.json"
+    },
+    {
+      "path": "./projects/docs/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/docs/tsconfig.spec.json"
     }
   ]
 }
