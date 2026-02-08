@@ -54,7 +54,8 @@ export default config(
           style: 'kebab-case',
         },
       ],
-      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+      '@angular-eslint/component-class-suffix': 'off',
       '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
       'no-restricted-syntax': [
         'error',

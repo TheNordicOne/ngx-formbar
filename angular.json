@@ -190,7 +190,8 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "scss",
+          "changeDetection": "OnPush"
         }
       },
       "root": "projects/docs",
@@ -198,7 +199,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@ng-doc/builder:application",
           "options": {
             "browser": "projects/docs/src/main.ts",
             "tsConfig": "projects/docs/tsconfig.app.json",
@@ -206,11 +207,30 @@
             "assets": [
               {
                 "glob": "**/*",
+                "input": "node_modules/@ng-doc/app/assets",
+                "output": "assets/ng-doc/app"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@ng-doc/ui-kit/assets",
+                "output": "assets/ng-doc/ui-kit"
+              },
+              {
+                "glob": "**/*",
+                "input": "ng-doc/docs/assets",
+                "output": "assets/ng-doc"
+              },
+              {
+                "glob": "**/*",
                 "input": "projects/docs/public"
               }
             ],
             "styles": [
+              "node_modules/@ng-doc/app/styles/global.css",
               "projects/docs/src/styles.scss"
+            ],
+            "allowedCommonJsDependencies": [
+              "@ng-doc/core"
             ]
           },
           "configurations": {
@@ -238,7 +258,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@ng-doc/builder:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "docs:build:production"
