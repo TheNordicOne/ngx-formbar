@@ -1,4 +1,9 @@
-import { Component, inject, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TestGroup } from '../../../types/group.type';
 import { FormService } from '../../../../lib/services/form.service';
@@ -9,6 +14,7 @@ import { TestGroupComponent } from '../../../components/test-group/test-group.co
   imports: [ReactiveFormsModule, TestGroupComponent],
   templateUrl: './group-integration-host.component.html',
   providers: [FormService],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);

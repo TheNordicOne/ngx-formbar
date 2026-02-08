@@ -5,7 +5,7 @@ import {
 import { dummyControlContainer } from '../../test/integration/shared/control-container';
 import { FormService } from '../services/form.service';
 import { TestGroup } from '../../test/types/group.type';
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NgxfbAbstractControlDirective, NgxFbContent } from '@ngx-formbar/core';
 import { formbarProviders } from '../../test/integration/shared/provide-formbar';
 
@@ -13,6 +13,7 @@ import { formbarProviders } from '../../test/integration/shared/provide-formbar'
   selector: 'ngxfb-host-component',
   imports: [NgxfbAbstractControlDirective],
   template: ` <ng-template [ngxfbAbstractControl]="[name(), content()]" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HostComponent<T extends NgxFbContent> {
   readonly content = input.required<T>();

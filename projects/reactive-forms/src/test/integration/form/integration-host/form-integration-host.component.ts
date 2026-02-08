@@ -1,4 +1,10 @@
-import { Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgxFbForm } from '@ngx-formbar/core';
@@ -8,6 +14,7 @@ import { NgxfbFormComponent } from '../../../../lib';
   selector: 'ngxfb-form-integration-host',
   imports: [ReactiveFormsModule, NgxfbFormComponent],
   templateUrl: './form-integration-host.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);

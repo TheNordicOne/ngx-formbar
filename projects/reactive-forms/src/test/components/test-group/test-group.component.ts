@@ -1,4 +1,10 @@
-import { Component, effect, inject, Signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  Signal,
+} from '@angular/core';
 import { NgxFbContent } from '@ngx-formbar/core';
 import { TestGroup } from '../../types/group.type';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -12,6 +18,7 @@ import { NgxfbAbstractControlDirective } from '@ngx-formbar/core';
   selector: 'ngxfb-test-group',
   imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
   templateUrl: './test-group.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: controlContainerViewProviders,
   hostDirectives: [ngxfbGroupHostDirective],
 })

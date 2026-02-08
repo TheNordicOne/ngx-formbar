@@ -1,4 +1,4 @@
-import { Component, effect, inject, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, Signal } from '@angular/core';
 import { TestTextControl } from '../../types/controls.type';
 import { ReactiveFormsModule } from '@angular/forms';
 import { controlContainerViewProviders } from '../../../lib/helper/control-container-view-providers';
@@ -10,6 +10,7 @@ import { NgxfbControlDirective } from '../../../lib/directives/ngxfb-control.dir
   selector: 'ngxfb-test-text-control',
   imports: [ReactiveFormsModule],
   templateUrl: './test-text-control.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: controlContainerViewProviders,
   hostDirectives: [ngxfbControlHostDirective],
 })

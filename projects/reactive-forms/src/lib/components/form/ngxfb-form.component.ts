@@ -1,4 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import {
@@ -26,6 +31,7 @@ import {
   imports: [NgxfbAbstractControlDirective],
   templateUrl: './ngxfb-form.component.html',
   providers: [FormService],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: [controlContainerViewProviders],
 })
 export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {

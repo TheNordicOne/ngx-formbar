@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TestTextControl } from '../../../types/controls.type';
 import { FormService } from '../../../../lib/services/form.service';
 import { NgxfbAbstractControlDirective } from '@ngx-formbar/core';
@@ -8,6 +8,7 @@ import { NgxfbAbstractControlDirective } from '@ngx-formbar/core';
   imports: [NgxfbAbstractControlDirective],
   templateUrl: './registration-integration-host.component.html',
   providers: [FormService],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegistrationIntegrationHostComponent {
   readonly content = input.required<TestTextControl>();
