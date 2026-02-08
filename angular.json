@@ -227,10 +227,18 @@
             ],
             "styles": [
               "node_modules/@ng-doc/app/styles/global.css",
+              "node_modules/@ng-doc/app/styles/themes/dark.css",
               "projects/docs/src/styles.scss"
             ],
             "allowedCommonJsDependencies": [
-              "@ng-doc/core"
+              "@ng-doc/core",
+              "dayjs",
+              "dayjs/plugin/isoWeek.js",
+              "dayjs/plugin/customParseFormat.js",
+              "dayjs/plugin/advancedFormat.js",
+              "elkjs/lib/elk.bundled.js",
+              "@braintree/sanitize-url",
+              "cytoscape-cose-bilkent"
             ]
           },
           "configurations": {

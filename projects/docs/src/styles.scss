@@ -19,3 +19,29 @@
   background-color: var(--ng-doc-info);
   color: var(--ng-doc-info-text);
 }
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.version-badge {
+  padding: 0.15em 0.6em;
+  font-size: 0.8em;
+  font-weight: 600;
+  border-radius: 1em;
+  background-color: var(--ng-doc-success);
+  color: var(--ng-doc-success-text);
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  color: var(--ng-doc-text);
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--ng-doc-primary);
+  }
+}
