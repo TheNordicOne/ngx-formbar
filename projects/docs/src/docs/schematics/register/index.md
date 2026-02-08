@@ -1,4 +1,3 @@
-{% raw %}
 While the Generator Schematics, per default, already register every new component, you may not always use them. In those cases you could either manually register them or use this schematic.
 
 ## What does it do
@@ -59,15 +58,6 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
 }
 ```
 
-
 ## Resolving options
 
-Due to the current implementation and how the default values are set, the options are resolved in the following cascading order.
-
-1. Values from `angular.json`
-2. CLI Options
-3. Values from `formbar.config.json`
-
-In other words: Values from `formbar.config.json` overwrite values from the CLI Options, which overwrite values from the `angular.json`.
-
-{% endraw %}
+{% include "../../shared/resolving-options.md" %}
