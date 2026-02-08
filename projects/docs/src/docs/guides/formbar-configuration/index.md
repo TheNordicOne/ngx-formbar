@@ -41,8 +41,7 @@ If you ran `ng add` with default parameters to install _ngx-formbar_ your setup 
 
 Create a file next to your _app.config.ts_ with this content to get started. The `defineFormbarConfig` function is a helper that provides type support when defining the configuration in a separate file.
 
-```ts
-// formbar.config.ts
+```typescript name="formbar.config.ts"
 import { defineFormbarConfig } from '@ngx-formbar/core';
 
 export const formbarConfig = defineFormbarConfig({
@@ -62,8 +61,7 @@ export const formbarConfig = defineFormbarConfig({
 
 In _app.config.ts_ use it like this:
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 import { formbarConfig } from './formbar.config.ts';
 
 export const appConfig: ApplicationConfig = {
@@ -87,8 +85,7 @@ For more advanced code organization, you can leverage Angular's dependency injec
 
 #### Component Registration with Tokens
 
-```ts
-// component-registrations.provider.ts
+```typescript name="component-registrations.provider.ts"
 import { Type } from '@angular/core';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
 import { TextControlComponent } from './components/text-control.component';
@@ -108,8 +105,7 @@ export const componentRegistrationsProvider = {
 
 #### Validator Registration with Tokens
 
-```ts
-// validator-registrations.provider.ts
+```typescript name="validator-registrations.provider.ts"
 import { ValidatorFn, AsyncValidatorFn } from '@angular/forms';
 import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/core';
 import { Validators } from '@angular/forms';
@@ -142,8 +138,7 @@ export const asyncValidatorRegistrationsProvider = {
 
 In _app.config.ts_ use them like this:
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 import { componentRegistrationsProvider } from './component-registrations.provider';
 import { validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from './validator-registrations.provider';
 
@@ -163,8 +158,7 @@ export const appConfig: ApplicationConfig = {
 
 You can also provide multiple configuration objects that will be merged according to their resolution strategy:
 
-```ts
-// split-configurations.provider.ts
+```typescript name="split-configurations.provider.ts"
 import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_CONFIG } from '@ngx-formbar/core';
 
 // First set of components
@@ -218,8 +212,7 @@ For simpler scenarios, you can still split your registration files by type while
 
 Create a file with the following content, at whatever location makes sense.
 
-```ts
-// controls.registrations.ts
+```typescript name="controls.registrations.ts"
 export const componentRegistrations: ComponentRegistrationConfig = {
   'text-control': TextControlComponent,
   group: GroupComponent,
@@ -230,8 +223,7 @@ export const componentRegistrations: ComponentRegistrationConfig = {
 
 In _app.config.ts_ use it like this
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 import { componentRegistrations } from './controls.registrations.ts';
 
 export const appConfig: ApplicationConfig = {
@@ -246,8 +238,7 @@ export const appConfig: ApplicationConfig = {
 
 In _formbar.config.ts_ use it like this
 
-```ts
-// formbar.config.ts
+```typescript name="formbar.config.ts"
 import { componentRegistrations } from './controls.registrations.ts';
 
 export const formbarConfig = defineFormbarConfig({
@@ -260,8 +251,7 @@ export const formbarConfig = defineFormbarConfig({
 
 Create a file with the following content, at whatever location makes sense. You can also further split the files between sync and async validators
 
-```ts
-// validators.registrations.ts
+```typescript name="validators.registrations.ts"
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
   'min-chars': [Validators.minLength(3)],
   letter: [letterValidator],
@@ -278,8 +268,7 @@ export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecor
 
 In _app.config.ts_ use it like this
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 import { validatorRegistrations, asyncValidatorRegistrations } from './validators.registrations.ts';
 
 export const appConfig: ApplicationConfig = {
@@ -295,8 +284,7 @@ export const appConfig: ApplicationConfig = {
 
 In _formbar.config.ts_ use it like this
 
-```ts
-// formbar.config.ts
+```typescript name="formbar.config.ts"
 import { componentRegistrations } from './controls.registrations.ts';
 
 export const formbarConfig = defineFormbarConfig({
@@ -313,8 +301,7 @@ export const formbarConfig = defineFormbarConfig({
 >
 > The following example shows the case where the reference to the `letter` validator is misspelled.
 
-```ts
-// misspelled.validators.registrations.ts
+```typescript name="misspelled.validators.registrations.ts"
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
   letter: [letterValidator],
   // ⚠️ letter only spelled with one T.
@@ -327,8 +314,7 @@ export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
 
 For advanced scenarios, you can provide global configuration options using the `NGX_FW_CONFIG` injection token.
 
-```ts
-// global-config.provider.ts
+```typescript name="global-config.provider.ts"
 import { NGX_FW_CONFIG } from '@ngx-formbar/core';
 import { TestIdBuilderFn } from '@ngx-formbar/core';
 
@@ -347,8 +333,7 @@ export const globalConfigProvider = {
 
 In _app.config.ts_ use it like this:
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 import { globalConfigProvider } from './global-config.provider';
 
 export const appConfig: ApplicationConfig = {

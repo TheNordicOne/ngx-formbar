@@ -83,8 +83,7 @@ Checkout the Validation guide to see how to register validators.
 > **Note**
 > This example assumes that additional control types have been registered
 
-```ts
-// example.form.ts
+```typescript name="example.form.ts"
 export const exampleForm: NgxFbForm = {
   content: {
     // Simple fields with no additional configuration

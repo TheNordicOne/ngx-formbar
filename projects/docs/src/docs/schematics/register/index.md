@@ -24,8 +24,7 @@ There are two ways to set custom default options. This helps repeating the same 
 
 All options are optional, but are listed here in full. You can put any combination of them.
 
-```json
-// formbar.config.json
+```json name="formbar.config.json"
 {
   "registrationType": "map",
   "controlRegistrationsPath": "app/form/registrations.ts",
@@ -43,8 +42,7 @@ You can set default values for any ngx-formbar schematic option in your `angular
 All options are optional, but are listed here in full. You can put any combination of them.
 Note, that compared to `formbar.config.json`, you have to repeat all values.
 
-```json
-// angular.json
+```json name="angular.json"
 {
   "projects": {
     "my-app": {

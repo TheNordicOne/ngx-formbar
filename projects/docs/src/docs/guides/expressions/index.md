@@ -83,7 +83,7 @@ Where:
 
 ### Example
 
-```ts
+```typescript name="example.form.ts"
 // In your form configuration
 {
   type: 'text',

@@ -12,8 +12,7 @@ Otherwise, run schematics with the `--hostDirectiveHelperPath` and/or `--viewPro
 
 `ControlContainer` is required for all controls and groups that will be used within _ngx-formbar_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
 
-```ts
-// control-container.view-provider.ts
+```typescript group="view-provider" name="control-container.view-provider.ts"
 export const controlContainerViewProviders = [
   {
     provide: ControlContainer,
@@ -22,8 +21,7 @@ export const controlContainerViewProviders = [
 ];
 ```
 
-```ts
-// text-control.component.ts || group.component.ts
+```typescript group="view-provider" name="Usage in component" icon="angular"
 @Component({
   // Other component decorator options
   viewProviders: controlContainerViewProviders,
@@ -34,8 +32,7 @@ export const controlContainerViewProviders = [
 
 This is a convenience helper to apply the `NgxfbControlDirective`.
 
-```ts
-// control.host-directive.ts
+```typescript name="control.host-directive.ts"
 export const ngxfbControlHostDirective = {
   directive: NgxfbControlDirective,
   inputs: ['content', 'name'],
@@ -44,8 +41,7 @@ export const ngxfbControlHostDirective = {
 
 Use it like this:
 
-```ts
-// text-control.component.ts
+```typescript name="text-control.component.ts" icon="angular"
 @Component({
   // Other component decorator options
   hostDirectives: [
@@ -59,8 +55,7 @@ Use it like this:
 
 This is a convenience helper to apply the `NgxfbGroupDirective`.
 
-```ts
-// group.host-directive.ts
+```typescript name="group.host-directive.ts"
 export const ngxfbGroupHostDirective = {
   directive: NgxfbGroupDirective,
   inputs: ['content', 'name'],
@@ -69,8 +64,7 @@ export const ngxfbGroupHostDirective = {
 
 Use it like this:
 
-```ts
-// group.component.ts
+```typescript name="group.component.ts" icon="angular"
 @Component({
   // Other component decorator options
   hostDirectives: [
@@ -86,6 +80,6 @@ For official documentation of Union Types checkout the [official docs](https://w
 
 Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
 
-```ts
+```typescript name="app-controls.type.ts"
 export type MyAppControls = TestTextControl | TestGroup | InfoBlock;
 ```

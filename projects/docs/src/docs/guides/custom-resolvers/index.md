@@ -15,7 +15,7 @@ There are two types of resolvers:
 
 To create a custom component resolver, implement the `ComponentResolver` interface:
 
-```typescript
+```typescript name="app-custom-component-resolver.ts"
 import { Signal, Type, computed, Injectable, signal } from '@angular/core';
 import { ComponentResolver } from '@ngx-formbar/core';
 
@@ -50,7 +50,7 @@ export class AppCustomComponentResolver implements ComponentResolver {
 
 For more complex scenarios, you might want to create a resolver that combines multiple sources:
 
-```typescript
+```typescript name="hybrid-component-resolver.ts"
 import { Signal, Type, computed, inject, Injectable } from '@angular/core';
 import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
 
@@ -87,7 +87,7 @@ export class HybridComponentResolver implements ComponentResolver {
 
 Implementing a custom validator resolver follows a similar pattern but requires handling both synchronous and asynchronous validators:
 
-```typescript
+```typescript name="app-custom-validator-resolver.ts"
 import { Signal, Injectable, signal } from '@angular/core';
 import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
 import { ValidatorResolver } from '@ngx-formbar/core';
@@ -130,7 +130,7 @@ export class AppCustomValidatorResolver implements ValidatorResolver {
 
 To use your custom resolvers, you need to provide them in your application configuration:
 
-```typescript
+```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
 import { provideFormbar } from '@ngx-formbar/core';
 import { NGX_FW_COMPONENT_RESOLVER, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/core';

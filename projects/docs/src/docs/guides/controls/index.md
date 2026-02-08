@@ -20,8 +20,7 @@ Here is an example of a simple text control.
 
 First create an interface for your control.
 
-```ts
-// text-control.type.ts
+```typescript name="text-control.type.ts"
 export interface TextControl extends NgxFbControl {
   // Unique Key of your control that is used for differentiating controls
   // This can be descriptive like "email-control"
@@ -41,8 +40,7 @@ Then implement the component.
 > **Warning**
 > Be sure to bind to `[formControlName]` on the actual input element
 
-```ts
-// text-control.component.ts
+```typescript group="text-control" name="text-control.component.ts" icon="angular"
 @Component({
   selector: 'app-text-control',
   imports: [ReactiveFormsModule],
@@ -75,8 +73,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="text-control" name="text-control.component.html"
 <!-- Just an example -->
 <label [htmlFor]="name()">{{ label() }}</label>
 <input
@@ -88,8 +85,7 @@ export class TextControlComponent {
 
 Finally, register the control in _app.config.ts_
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -118,8 +114,7 @@ The hidden state is determined using the following priority (`content` could be 
 2. If no `hidden` expression is defined, the control inherits the hidden state from its parent group
 3. Both conditions can be combined - a control is hidden if either its own condition evaluates to true **OR** its parent group is hidden
 
-```ts
-// text-control.component.ts
+```typescript group="hidden-control" name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -136,8 +131,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="hidden-control" name="text-control.component.html"
 @if(isHidden()){
 <span>Some placeholder you want to use</span>
 } @if(!isHidden()){
@@ -192,8 +186,7 @@ The disabled state is determined using the following priority (`content` could b
 This hierarchical inheritance ensures that child controls are automatically
 disabled when their parent group is disabled, unless explicitly overridden.
 
-```ts
-// text-control.component.ts
+```typescript group="disabled-control" name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -204,8 +197,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="disabled-control" name="text-control.component.html"
 <label [htmlFor]="name()">{{ label() }}</label>
 <input [id]="name()" [formControlName]="name()" />
 <!-- Only show hint when control is disabled -->
@@ -226,8 +218,7 @@ The readonly state is determined using the following priority (`content` could b
 This hierarchical inheritance ensures that child controls are automatically
 set to readonly when their parent group is readonly, unless explicitly overridden.
 
-```ts
-// text-control.component.ts
+```typescript group="readonly-control" name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -238,8 +229,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="readonly-control" name="text-control.component.html"
 <label [htmlFor]="name()">{{ label() }}</label>
 <input
   [id]="name()"
@@ -263,8 +253,7 @@ Your component can access this computed dynamic label via a signal (e.g., this.c
 
 See the Expressions guide for details on how expressions work and the Configuration guide for other configuration options.
 
-```ts
-// text-control.component.ts
+```typescript group="dynamic-label" name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -289,8 +278,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="dynamic-label" name="text-control.component.html"
 <label [htmlFor]="name()"> {{ displayLabel() }} </label>
 <input [id]="name()" [formControlName]="name()" />
 ```
@@ -313,7 +301,7 @@ There are two ways to provide a custom `testIdBuilderFn`:
 
 You can define a global `testIdBuilderFn` when you set up Formbar using `provideFormbar`. This function will be used for all controls unless overridden at the component level.
 
-```ts
+```typescript name="app.config.ts"
 provideFormbar({
   // ...
   globalConfig: {
@@ -330,8 +318,7 @@ Individual components can also define their own testIdBuilderFn. This is done wi
 
 This example demonstrate how to do this for a Control, but it works exactly the same for Groups and Blocks.
 
-```ts
-// text-control.component.ts
+```typescript name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -356,8 +343,7 @@ This system provides flexibility, allowing you to set a general rule for test ID
 
 Here is an example of how to access the test ID.
 
-```ts
-// text-control.component.ts
+```typescript group="test-id-control" name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -368,8 +354,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- text-control.component.html -->
+```html group="test-id-control" name="text-control.component.html"
 <label [htmlFor]="name()" [attr.data-testId]="testId() + '-label'"
   >{{ label() }}</label
 >
@@ -386,7 +371,7 @@ Showing errors works pretty much the same as always. You get access to the form 
 
 In TypeScript set up a getter
 
-```ts
+```typescript name="text-control.component.ts" icon="angular"
 // inject the instance of the directive
 private readonly textControl = inject(NgxfbControlDirective<Control>);
 
@@ -398,7 +383,7 @@ get formControl() {
 
 Then, in your template you can do something like this
 
-```html
+```html name="text-control.component.html"
 @if(formControl?.hasError('required')) {
 <span>Required</span>
 }

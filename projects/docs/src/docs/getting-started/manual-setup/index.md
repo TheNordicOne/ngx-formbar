@@ -18,8 +18,7 @@ _ngx-formbar_ is provided and configured in _app.config.ts_.
 
 ### With Tokens
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -62,8 +61,7 @@ export const appConfig: ApplicationConfig = {
 
 ### With Configuration Object
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -102,8 +100,7 @@ export const appConfig: ApplicationConfig = {
 In addition to setting up the `app.config.ts`, you must also add a configuration to let formbar know, that you are using the config registration style.
 
 Add this file next to your `app.config.ts`
-```json
-// formbar.config.json
+```json name="formbar.config.json"
 {
   "registrationType": "config"
 }

@@ -10,8 +10,7 @@ To make the validators available to **formbar** they need to be registered. You 
 
 You can register (async) validators under any name you want. Note, that you have to register async validators under a different property.
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -41,8 +40,7 @@ Combining validators is as easy as adding them in the same array. This is also p
 > **Note**
 > You can use an existing validator registration by referring to it via its key.
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -64,8 +62,7 @@ When writing your form configuration, you can add multiple validators for your c
 
 To use a validator for a control, you refer to it by its key.
 
-```ts
-// example.form.ts
+```typescript name="example.form.ts"
 export const exampleForm: NgxFbContent[] = [
   {
     type: 'text',
@@ -99,8 +96,7 @@ _ngx-formbar_ uses the standard Angular validator functions. That means that wri
 
 This example uses a forbidden letter validator, that ensure the letter "A" is not used.
 
-```ts
-// forbidden-letter.validator.ts
+```typescript name="forbidden-letter.validator.ts"
 export function forbiddenLetterAValidator(
   control: AbstractControl<unknown>,
 ): ValidationErrors | null {
@@ -120,8 +116,7 @@ export function forbiddenLetterAValidator(
 ```
 
 You can then register this validator under any name you want.
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 validatorRegistrations: {
   'forbidden-letter-a': [forbiddenLetterAValidator]
 }
@@ -136,8 +131,7 @@ This example uses a validator, that ensure the text contains the word "async".
 > Async validators usually do some checks on the server.
 > For this example we only pretend to do so by creating a dummy observable
 
-```ts
-// async.validator.ts
+```typescript name="async.validator.ts"
 export function asyncValidator(
   control: AbstractControl<string | undefined | null>,
 ): Observable<ValidationErrors | null> {
@@ -150,8 +144,7 @@ export function asyncValidator(
 ```
 
 You can then register this validator under any name you want
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 asyncValidatorRegistrations: {
   async: [asyncValidator]
 }

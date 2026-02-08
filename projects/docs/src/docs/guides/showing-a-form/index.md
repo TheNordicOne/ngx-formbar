@@ -1,7 +1,6 @@
 You build the form as usual. This gives you full access to the underlying form object, and you can do everything you normally can.
 
-```ts
-// some-feature.component.ts
+```typescript group="showing-form" name="some-feature.component.ts" icon="angular"
 @Component({
   selector: 'app-some-form',
   imports: [ReactiveFormsModule, NgxfbFormComponent],
@@ -32,8 +31,7 @@ export class FormIntegrationHostComponent {
 }
 ```
 
-```html
-<!-- some-feature.component.html -->
+```html group="showing-form" name="some-feature.component.html"
 <!-- Just normal form binding -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
 

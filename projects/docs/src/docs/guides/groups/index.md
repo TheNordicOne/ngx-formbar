@@ -24,8 +24,7 @@ Here is an example of a simple group. Most likely you will only set up one or tw
 
 First create an interface for your group.
 
-```ts
-// group.type.ts
+```typescript name="group.type.ts"
 export interface Group extends NgxFbFormGroup {
   // Unique Key of your group that is used for differentiating groups
   type: 'group';
@@ -39,8 +38,7 @@ Then implement the component.
 > **Warning**
 > Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 
-```ts
-// group.component.ts
+```typescript group="group-component" name="group.component.ts" icon="angular"
 @Component({
   selector: 'ngxfb-group',
   imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
@@ -70,8 +68,7 @@ export class GroupComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="group-component" name="group.component.html"
 <!-- Just an example -->
 <div [formGroupName]="name()">
   @for (content of controls(); track content[0]) {
@@ -82,8 +79,7 @@ export class GroupComponent {
 
 Finally, register the group in _app.config.ts_
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -112,8 +108,7 @@ The hidden state is determined using the following priority (`content` could be 
 2. If no `hidden` expression is defined, the control inherits the hidden state from its parent group
 3. Both conditions can be combined - a control is hidden if either its own condition evaluates to true **OR** its parent group is hidden
 
-```ts
-// group.component.ts
+```typescript group="hidden-group" name="group.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -130,8 +125,7 @@ export class GroupComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="hidden-group" name="group.component.html"
 @if(isHidden()){
   <span>Some placeholder you want to use</span>
 }
@@ -188,8 +182,7 @@ The disabled state is determined using the following priority (`content` could b
 This hierarchical inheritance ensures that child controls are automatically
 disabled when their parent group is disabled, unless explicitly overridden.
 
-```ts
-// group.component.ts
+```typescript group="disabled-group" name="group.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -200,8 +193,7 @@ export class GroupComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="disabled-group" name="group.component.html"
 <div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfbAbstractControl="control" />
@@ -225,8 +217,7 @@ The readonly state is determined using the following priority (`content` could b
 This hierarchical inheritance ensures that child controls are automatically
 set to readonly when their parent group is readonly, unless explicitly overridden.
 
-```ts
-// group.component.ts
+```typescript group="readonly-group" name="group.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -237,8 +228,7 @@ export class GroupComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="readonly-group" name="group.component.html"
 <div [formGroupName]="name()">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfbAbstractControl="control" />
@@ -257,8 +247,7 @@ Your component can access this computed dynamic title via a signal (e.g., this.c
 
 See the Expressions guide for details on how expressions work and the Configuration guide for other configuration options.
 
-```ts
-// group.component.ts
+```typescript group="dynamic-title" name="group.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -282,8 +271,7 @@ export class TextControlComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="dynamic-title" name="group.component.html"
 <span> {{ displayTitle() }} </span>
 ```
 
@@ -305,7 +293,7 @@ There are two ways to provide a custom `testIdBuilderFn`:
 
 You can define a global `testIdBuilderFn` when you set up Formbar using `provideFormbar`. This function will be used for all controls unless overridden at the component level.
 
-```ts
+```typescript name="app.config.ts"
 provideFormbar({
   // ...
   globalConfig: {
@@ -322,8 +310,7 @@ Individual components can also define their own testIdBuilderFn. This is done wi
 
 This example demonstrate how to do this for a Control, but it works exactly the same for Groups and Blocks.
 
-```ts
-// text-control.component.ts
+```typescript name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -347,8 +334,7 @@ This system provides flexibility, allowing you to set a general rule for test ID
 
 Here is an example of how to access the test ID.
 
-```ts
-// group.component.ts
+```typescript group="test-id-group" name="group.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -359,8 +345,7 @@ export class GroupComponent {
 }
 ```
 
-```html
-<!-- group.component.html -->
+```html group="test-id-group" name="group.component.html"
 <div [formGroupName]="name()"  [attr.data-testId]="testId() + '-wrapper'">
   @for (control of controls(); track control.id) {
     <ng-template *ngxfbAbstractControl="control" />
@@ -374,7 +359,7 @@ Showing errors works pretty much the same as always. You get access to the form 
 
 In TypeScript set up a getter
 
-```ts
+```typescript name="group.component.ts" icon="angular"
 // inject the instance of the directive
 private readonly group = inject(NgxfbGroupDirective<Group>);
 
@@ -386,7 +371,7 @@ get group() {
 
 Then, in your template you can do something like this
 
-```html
+```html name="group.component.html"
 @if(group?.hasError('required')) {
   <span>Required</span>
 }

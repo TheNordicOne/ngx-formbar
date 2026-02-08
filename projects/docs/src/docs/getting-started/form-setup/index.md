@@ -16,8 +16,7 @@ Once you've registered controls and optionally validators, you write a configura
 
 This example is written in TypeScript
 
-```ts
-// example.form.ts
+```typescript name="example.form.ts"
 export const exampleForm: NgxFbForm = {
   content: {
     name: {
@@ -51,8 +50,7 @@ This is just simple example. For more details go to the Configuration guide.
 
 You build the form as usual. This gives you full access to the underlying form object, and you can do everything you normally can.
 
-```ts
-// some-feature.component.ts
+```typescript group="showing-form" name="some-feature.component.ts" icon="angular"
 @Component({
   selector: 'app-some-form',
   imports: [ReactiveFormsModule, NgxfbFormComponent],
@@ -83,8 +81,7 @@ export class FormIntegrationHostComponent {
 }
 ```
 
-```html
-<!-- some-feature.component.html -->
+```html group="showing-form" name="some-feature.component.html"
 <!-- Just normal form binding -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
 

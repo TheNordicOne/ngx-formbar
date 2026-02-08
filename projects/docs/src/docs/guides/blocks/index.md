@@ -21,8 +21,7 @@ First create an interface for your block by extending `NgxFbBlock`.
 > **Warning**
 > `NgxFbBlock` has a required property `isControl` which typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types.
 
-```ts
-// info-block.type.ts
+```typescript name="info-block.type.ts"
 export interface InfoBlock extends NgxFbBlock {
   type: 'info-block';
   message: string;
@@ -31,8 +30,7 @@ export interface InfoBlock extends NgxFbBlock {
 
 Then implement the component.
 
-```ts
-// info-block.component.ts
+```typescript group="info-block" name="info-block.component.ts" icon="angular"
 @Component({
   selector: 'app-info-block',
   imports: [],
@@ -66,15 +64,13 @@ export class InfoBlockComponent {
 }
 ```
 
-```html
-<!-- info-block.component.html -->
+```html group="info-block" name="info-block.component.html"
 <p>{{ message() }}</p>
 ```
 
 Finally, register the block in app.config.ts
 
-```ts
-// app.config.ts
+```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -103,8 +99,7 @@ The hidden state is determined using the following priority (`content` could be 
 2. If no `hidden` expression is defined, the control inherits the hidden state from its parent group
 3. Both conditions can be combined - a control is hidden if either its own condition evaluates to true **OR** its parent group is hidden
 
-```ts
-// info-block.component.ts
+```typescript group="hidden-block" name="info-block.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -123,8 +118,7 @@ export class InfoBlockComponent {
 }
 ```
 
-```html
-<!-- info-block.component.html -->
+```html group="hidden-block" name="info-block.component.html"
 @if(!isHidden()){
 <p>{{ message() }}</p>
 }
@@ -148,7 +142,7 @@ There are two ways to provide a custom `testIdBuilderFn`:
 
 You can define a global `testIdBuilderFn` when you set up Formbar using `provideFormbar`. This function will be used for all controls unless overridden at the component level.
 
-```ts
+```typescript name="app.config.ts"
 provideFormbar({
   // ...
   globalConfig: {
@@ -165,8 +159,7 @@ Individual components can also define their own testIdBuilderFn. This is done wi
 
 This example demonstrate how to do this for a Control, but it works exactly the same for Groups and Blocks.
 
-```ts
-// text-control.component.ts
+```typescript name="text-control.component.ts" icon="angular"
 @Component({
   // ...
 })
@@ -190,8 +183,7 @@ This system provides flexibility, allowing you to set a general rule for test ID
 
 Here is an example of how to access the test ID.
 
-```ts
-// info-block.component.ts
+```typescript group="test-id-block" name="info-block.component.ts" icon="angular"
 @Component({
   selector: 'app-info-block',
   imports: [],
@@ -216,8 +208,7 @@ export class InfoBlockComponent {
 }
 ```
 
-```html
-<!-- info-block.component.html -->
+```html group="test-id-block" name="info-block.component.html"
 <p [attr.data-testId]="testId()">{{ message() }}</p>
 ```
 
