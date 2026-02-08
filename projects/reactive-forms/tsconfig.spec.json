@@ -2,10 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/spec",
-    "types": ["vitest/globals"],
-    "target": "es2016"
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "automation/schematics/**/*.spec.ts", "automation/schematics/**/*.d.ts" ],
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"],
   "exclude": [
     "../../cypress/**/*.ts",
     "../../cypress.config.ts"

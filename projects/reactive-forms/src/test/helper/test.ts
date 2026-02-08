@@ -1,11 +1,9 @@
 import { NgxFbForm, TestIdBuilderFn, UpdateStrategy } from '@ngx-formbar/core';
 import { FormIntegrationHostComponent } from '../integration/form/integration-host/form-integration-host.component';
-import { TestTextControl } from '../types/controls.type';
-import { TestGroup } from '../types/group.type';
-import { InfoBlock } from '../types/block.type';
 import { formbarProviders } from '../integration/shared/provide-formbar';
+import { TestContent } from '../types/content.type';
 
-export type TestContent = TestTextControl | TestGroup | InfoBlock;
+export type { TestContent };
 /**
  * Base setup function for mounting the form component
  */

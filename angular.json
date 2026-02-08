@@ -31,7 +31,10 @@
           "defaultConfiguration": "production"
         },
         "test": {
-          "builder": "@analogjs/vitest-angular:test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "browsers": ["chromium", "firefox"]
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
@@ -113,7 +116,10 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@analogjs/vitest-angular:test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "browsers": ["chromium", "firefox"]
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
@@ -154,7 +160,10 @@
           "defaultConfiguration": "production"
         },
         "test": {
-          "builder": "@analogjs/vitest-angular:test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "browsers": ["chromium", "firefox"]
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

@@ -10,7 +10,6 @@
     "build": "npm run build:core && npm run build:reactive-forms",
     "watch": "ng build core --watch --configuration development",
     "test": "ng test",
-    "test:component": "npx vitest run --root projects/core --project component",
     "test:node": "npx vitest run --root projects/core --project node",
     "lint": "ng lint",
     "prepare": "husky",
@@ -48,11 +47,12 @@
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@eslint/js": "^9.22.0",
-    "@schematics/angular": "^19.2.16",
+    "@schematics/angular": "^21.1.3",
     "@types/express": "^4.17.17",
     "@types/glob": "^7.2.0",
     "@types/jasmine": "~5.1.7",
     "@types/node": "^25.2.2",
+    "@vitest/browser-playwright": "^4.0.18",
     "angular-eslint": "^19.8.1",
     "baseline-browser-mapping": "^2.9.19",
     "copyfiles": "^2.4.1",
@@ -68,14 +68,10 @@
     "husky": "^9.1.7",
     "jasmine-core": "~5.6.0",
     "jsdom": "^28.0.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
     "ng-packagr": "^21.1.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.26.0"
+    "typescript-eslint": "^8.26.0",
+    "vitest": "^4.0.18"
   }
 }

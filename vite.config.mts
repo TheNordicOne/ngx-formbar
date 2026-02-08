@@ -1,7 +1,5 @@
 /// <reference types="vitest" />
 
-import angular from '@analogjs/vite-plugin-angular';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
 import type { ConfigEnv } from 'vite';
 import { defineConfig } from 'vite';
 import { defineProject } from 'vitest/config';
@@ -14,23 +12,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       passWithNoTests: true,
       projects: [
         defineProject({
-          plugins: [
-            angular(),
-            viteTsConfigPaths({ root: import.meta.dirname }),
-          ],
-          test: {
-            name: 'component',
-            environment: 'jsdom',
-            setupFiles: ['src/test-setup.ts'],
-            globals: true,
-            include: ['**/*.spec.ts'],
-            exclude: ['**/builders/**'],
-          },
-        }),
-        defineProject({
           test: {
             name: 'node',
-            include: ['**/builders/**/*.spec.ts'],
+            include: ['**/automation/**/*.spec.ts'],
             setupFiles: ['src/node-test-setup.ts'],
             environment: 'node',
             globals: true,

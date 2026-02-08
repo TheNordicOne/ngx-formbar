@@ -1,5 +1,5 @@
 import { NgxFbForm } from '@ngx-formbar/core';
-import { TestContent } from './test';
+import { TestContent } from '../types/content.type';
 
 describe('Type Safety', () => {
   it('should not have any TS errors when using default type generic', () => {

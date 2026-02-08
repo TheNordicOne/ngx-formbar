@@ -1,5 +1,5 @@
 import { NgxFbFormGroup } from '@ngx-formbar/core';
-import { TestContent } from '../helper/test';
+import { TestContent } from './content.type';
 
 export interface TestGroup extends NgxFbFormGroup<TestContent> {
   type: 'test-group';
