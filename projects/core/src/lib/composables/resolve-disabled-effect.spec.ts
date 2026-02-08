@@ -20,7 +20,7 @@ describe('resolveDisabledEffect', () => {
         disableFunction: disableFn,
       });
 
-      TestBed.flushEffects();
+      TestBed.tick();
 
       expect(disableFn).toHaveBeenCalled();
       expect(enableFn).not.toHaveBeenCalled();
@@ -39,7 +39,7 @@ describe('resolveDisabledEffect', () => {
         disableFunction: disableFn,
       });
 
-      TestBed.flushEffects();
+      TestBed.tick();
 
       expect(enableFn).toHaveBeenCalled();
       expect(disableFn).not.toHaveBeenCalled();
@@ -58,7 +58,7 @@ describe('resolveDisabledEffect', () => {
         disableFunction: disableFn,
       });
 
-      TestBed.flushEffects();
+      TestBed.tick();
 
       expect(enableFn).not.toHaveBeenCalled();
       expect(disableFn).not.toHaveBeenCalled();
@@ -78,11 +78,11 @@ describe('resolveDisabledEffect', () => {
         disableFunction: disableFn,
       });
 
-      TestBed.flushEffects();
+      TestBed.tick();
       expect(enableFn).toHaveBeenCalledTimes(1);
 
       disabled.set(true);
-      TestBed.flushEffects();
+      TestBed.tick();
       expect(disableFn).toHaveBeenCalledTimes(1);
     });
   });
@@ -100,11 +100,11 @@ describe('resolveDisabledEffect', () => {
         disableFunction: disableFn,
       });
 
-      TestBed.flushEffects();
+      TestBed.tick();
       expect(disableFn).not.toHaveBeenCalled();
 
       handling.set('auto');
-      TestBed.flushEffects();
+      TestBed.tick();
       expect(disableFn).toHaveBeenCalledTimes(1);
     });
   });

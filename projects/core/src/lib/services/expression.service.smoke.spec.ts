@@ -16,11 +16,11 @@ describe('ExpressionService Smoke Test', () => {
 
     complexContext = createComplexContext();
 
-    vi.spyOn(console, 'log').mockImplementation((...args) => {
+    vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       console.info('SMOKE-TEST:', ...args);
     });
 
-    vi.spyOn(console, 'error').mockImplementation((...args) => {
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
       console.warn('SMOKE-TEST ERROR:', ...args);
     });
   });

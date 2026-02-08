@@ -16,7 +16,13 @@ describe('resolveTestId', () => {
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(undefined);
       const parentTestId = signal<string | undefined>(undefined);
 
-      const result = resolveTestId(content, name, testIdBuilder, undefined, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        undefined,
+        parentTestId,
+      );
       expect(result()).toBe('firstName');
     });
   });
@@ -28,7 +34,13 @@ describe('resolveTestId', () => {
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(undefined);
       const parentTestId = signal<string | undefined>('personalData');
 
-      const result = resolveTestId(content, name, testIdBuilder, undefined, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        undefined,
+        parentTestId,
+      );
       expect(result()).toBe('personalData-firstName');
     });
   });
@@ -37,11 +49,17 @@ describe('resolveTestId', () => {
     TestBed.runInInjectionContext(() => {
       const content = signal<NgxFbBaseContent>({ type: 'input' });
       const name = signal('firstName');
-      const customBuilder: TestIdBuilderFn = (c, n, p) => `custom_${n}`;
+      const customBuilder: TestIdBuilderFn = (c, n) => `custom_${n}`;
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(customBuilder);
       const parentTestId = signal<string | undefined>('parent');
 
-      const result = resolveTestId(content, name, testIdBuilder, undefined, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        undefined,
+        parentTestId,
+      );
       expect(result()).toBe('custom_firstName');
     });
   });
@@ -55,7 +73,13 @@ describe('resolveTestId', () => {
         p ? `${p}__${n}` : n;
       const parentTestId = signal<string | undefined>('form');
 
-      const result = resolveTestId(content, name, testIdBuilder, globalBuilder, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        globalBuilder,
+        parentTestId,
+      );
       expect(result()).toBe('form__firstName');
     });
   });
@@ -69,7 +93,13 @@ describe('resolveTestId', () => {
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(localBuilder);
       const parentTestId = signal<string | undefined>(undefined);
 
-      const result = resolveTestId(content, name, testIdBuilder, globalBuilder, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        globalBuilder,
+        parentTestId,
+      );
       expect(result()).toBe('local-firstName');
     });
   });
@@ -81,7 +111,13 @@ describe('resolveTestId', () => {
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(undefined);
       const parentTestId = signal<string | undefined>(undefined);
 
-      const result = resolveTestId(content, name, testIdBuilder, undefined, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        undefined,
+        parentTestId,
+      );
       expect(result()).toBe('firstName');
 
       name.set('lastName');
@@ -96,7 +132,13 @@ describe('resolveTestId', () => {
       const testIdBuilder = signal<TestIdBuilderFn | undefined>(undefined);
       const parentTestId = signal<string | undefined>(undefined);
 
-      const result = resolveTestId(content, name, testIdBuilder, undefined, parentTestId);
+      const result = resolveTestId(
+        content,
+        name,
+        testIdBuilder,
+        undefined,
+        parentTestId,
+      );
       expect(result()).toBe('field');
 
       parentTestId.set('group');
