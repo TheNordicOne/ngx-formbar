@@ -21,9 +21,11 @@
 }
 
 .navbar-right {
+  --gap: 1rem;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--gap);
+  margin-inline-start: var(--gap);
 }
 
 .version-badge {
