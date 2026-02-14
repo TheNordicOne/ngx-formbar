@@ -1,0 +1,13 @@
+@if (!isHidden()) {
+  <div class="inline-input">
+    <label [htmlFor]="name()">{{ label() }}</label>
+    <input
+      type="file"
+      [id]="name()"
+      [formControlName]="name()"
+      [readonly]="readonly()"
+      [multiple]="multiple()"
+      [accept]="accept()"
+    />
+  </div>
+}

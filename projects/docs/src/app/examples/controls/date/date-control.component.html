@@ -1,0 +1,13 @@
+@if (!isHidden()) {
+  <div class="inline-input">
+    <label [htmlFor]="name()">{{ label() }}</label>
+    <input
+      type="date"
+      [id]="name()"
+      [formControlName]="name()"
+      [readonly]="readonly()"
+      [min]="minDate()"
+      [max]="maxDate()"
+    />
+  </div>
+}

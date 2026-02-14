@@ -1,0 +1,12 @@
+@if (!isHidden()) {
+  <div class="inline-input">
+    <label [htmlFor]="name()">{{ label() }}</label>
+    <input
+      type="number"
+      [id]="name()"
+      [min]="min()"
+      [max]="max()"
+      [formControlName]="name()"
+    />
+  </div>
+}

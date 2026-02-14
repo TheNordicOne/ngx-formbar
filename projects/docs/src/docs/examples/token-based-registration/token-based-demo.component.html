@@ -1,0 +1,7 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit($event)">
+  <ngxfb-form [formConfig]="formContent" />
+  <div class="form-actions">
+    <button type="submit">Print to console</button>
+    <button type="button" (click)="reset()">Reset</button>
+  </div>
+</form>

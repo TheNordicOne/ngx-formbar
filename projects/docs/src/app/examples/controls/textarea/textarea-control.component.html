@@ -1,0 +1,13 @@
+@if (!isHidden()) {
+  <div class="inline-input">
+    <label [htmlFor]="name()">{{ label() }}</label>
+    <textarea
+      [id]="name()"
+      [placeholder]="placeholder() ?? ''"
+      [formControlName]="name()"
+      [readonly]="readonly()"
+      [rows]="rows()"
+      [maxlength]="maxLength()"
+    ></textarea>
+  </div>
+}

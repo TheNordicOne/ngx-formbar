@@ -1,5 +1,103 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* ===== Form example styles ===== */
+
+/* Inline label + input layout */
+.inline-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+
+  > label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ng-doc-text);
+  }
+
+  > input,
+  > select,
+  > textarea {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    border: 1px solid var(--ng-doc-border-color);
+    border-radius: 0.375rem;
+    background: var(--ng-doc-background);
+    color: var(--ng-doc-text);
+    transition: border-color 0.15s;
+    max-width: 24rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--ng-doc-primary);
+      box-shadow: 0 0 0 2px rgba(21, 88, 214, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &[readonly] {
+      background: var(--ng-doc-base-1);
+      cursor: default;
+    }
+  }
+
+  > input[type="checkbox"] {
+    width: auto;
+    max-width: none;
+  }
+
+  > div {
+    /* radio group wrapper */
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+
+    > input[type="radio"] {
+      margin: 0;
+    }
+
+    > input[type="checkbox"] {
+      margin: 0;
+    }
+
+    > label {
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--ng-doc-text);
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+/* Fieldset groups */
+fieldset {
+  border: 1px solid var(--ng-doc-border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem 1rem;
+  margin: 0 0 0.75rem;
+
+  > legend {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ng-doc-text);
+    padding: 0 0.25rem;
+  }
+}
+
+/* Note block */
+app-note-control > div {
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 .badge {
   display: inline-block;
   padding: 0.1em 0.6em;
