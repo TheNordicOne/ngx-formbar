@@ -9,7 +9,7 @@ However, if you want to or have to install it manually, here is the bare minimum
 Run this npm command.
 
 ```bash
-npm install ngx-formbar
+npm install @ngx-formbar/core @ngx-formbar/reactive-forms
 ```
 
 ## Providing Formbar

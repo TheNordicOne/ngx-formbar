@@ -90,7 +90,7 @@ Implementing a custom validator resolver follows a similar pattern but requires 
 ```typescript name="app-custom-validator-resolver.ts"
 import { Signal, Injectable, signal } from '@angular/core';
 import { AsyncValidatorFn, ValidatorFn, Validators } from '@angular/forms';
-import { ValidatorResolver } from '@ngx-formbar/core';
+import { ValidatorResolver } from '@ngx-formbar/reactive-forms';
 
 @Injectable()
 export class AppCustomValidatorResolver implements ValidatorResolver {
@@ -132,8 +132,8 @@ To use your custom resolvers, you need to provide them in your application confi
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
-import { provideFormbar } from '@ngx-formbar/core';
-import { NGX_FW_COMPONENT_RESOLVER, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
+import { provideFormbar, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/reactive-forms';
 import { AppCustomComponentResolver } from './app-custom-component-resolver';
 import { AppCustomValidatorResolver } from './app-custom-validator-resolver';
 

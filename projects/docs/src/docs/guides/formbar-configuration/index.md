@@ -42,7 +42,7 @@ If you ran `ng add` with default parameters to install _ngx-formbar_ your setup 
 Create a file next to your _app.config.ts_ with this content to get started. The `defineFormbarConfig` function is a helper that provides type support when defining the configuration in a separate file.
 
 ```typescript name="formbar.config.ts"
-import { defineFormbarConfig } from '@ngx-formbar/core';
+import { defineFormbarConfig } from '@ngx-formbar/reactive-forms';
 
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
@@ -107,7 +107,7 @@ export const componentRegistrationsProvider = {
 
 ```typescript name="validator-registrations.provider.ts"
 import { ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/core';
+import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
 import { asyncValidator, asyncGroupValidator } from './async-validators';
@@ -159,7 +159,8 @@ export const appConfig: ApplicationConfig = {
 You can also provide multiple configuration objects that will be merged according to their resolution strategy:
 
 ```typescript name="split-configurations.provider.ts"
-import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_CONFIG } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_CONFIG } from '@ngx-formbar/core';
+import { NGX_FW_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
 
 // First set of components
 export const baseComponentsProvider = {
