@@ -20,7 +20,7 @@ import {
   ScriptTarget,
 } from 'typescript';
 import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
-import { PACKAGE_NAME } from '../../../shared/constants';
+import { REACTIVE_FORMS_PACKAGE_NAME } from '../../../shared/constants';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
@@ -48,7 +48,7 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
         sourceFile,
         appConfigPath,
         'provideFormbar',
-        PACKAGE_NAME,
+        REACTIVE_FORMS_PACKAGE_NAME,
         false,
       ),
     ];

@@ -27,7 +27,10 @@ import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
 } from '../shared/ast/imports';
-import { DEFAULT_HELPER_PATH, PACKAGE_NAME } from '../../shared/constants';
+import {
+  DEFAULT_HELPER_PATH,
+  REACTIVE_FORMS_PACKAGE_NAME,
+} from '../../shared/constants';
 
 const COLLECTION_PATH = join(
   __dirname,
@@ -67,7 +70,7 @@ describe('ng-add schematic', () => {
 
     const sf = parseTS(read(twice, appConfigPath));
 
-    expect(countNamedImport(sf, PACKAGE_NAME, 'provideFormbar')).toBe(1);
+    expect(countNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar')).toBe(1);
     expect(countCall(sf, 'provideFormbar')).toBe(1);
   });
 
@@ -77,7 +80,7 @@ describe('ng-add schematic', () => {
       expect(exists(tree, appConfigPath)).toBe(true);
 
       const sf = parseTS(read(tree, appConfigPath));
-      expect(hasNamedImport(sf, PACKAGE_NAME, 'provideFormbar')).toBe(true);
+      expect(hasNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar')).toBe(true);
     });
 
     it('provides formbar and component registration providers in providers array', async () => {

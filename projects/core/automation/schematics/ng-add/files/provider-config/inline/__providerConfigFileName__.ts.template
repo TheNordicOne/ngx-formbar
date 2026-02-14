@@ -1,4 +1,4 @@
-import { defineFormbarConfig } from '@ngx-formbar/core';
+import { defineFormbarConfig } from '@ngx-formbar/reactive-forms';
 
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {},<%if (includeSyncValidators){ %>, validatorRegistrations: {}

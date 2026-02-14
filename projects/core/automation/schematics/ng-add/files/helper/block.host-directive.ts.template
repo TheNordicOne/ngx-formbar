@@ -1,4 +1,4 @@
-import { NgxfbBlockDirective } from '@ngx-formbar/core';
+import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
 
 export const ngxfbBlockHostDirective = {
   directive: NgxfbBlockDirective,

@@ -1,4 +1,4 @@
-import { NgxfbControlDirective } from '@ngx-formbar/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
 
 export const ngxfbControlHostDirective = {
   directive: NgxfbControlDirective,

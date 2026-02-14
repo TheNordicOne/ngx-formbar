@@ -21,7 +21,8 @@ import {
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,
-  PACKAGE_NAME,
+  CORE_PACKAGE_NAME,
+  REACTIVE_FORMS_PACKAGE_NAME,
 } from '../../shared/constants';
 import { RuleContext } from './schema';
 import {
@@ -56,7 +57,7 @@ export function updateSchematicConfig(
     projectDef.extensions['schematics'] ??= {};
     const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
 
-    const schematicKey = `${PACKAGE_NAME}:${schematicName}`;
+    const schematicKey = `${CORE_PACKAGE_NAME}:${schematicName}`;
     const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
     schematicsExt[schematicKey] = {
       ...existingConfig,
@@ -374,6 +375,7 @@ function createMapProviderExpression(tokenName: string) {
 
 function addStandaloneRegistrationProvider(
   tokenName: string,
+  packageName: string,
   sourceFile: SourceFile,
   ruleContext: RuleContext,
   existingElements: Expression[],
@@ -383,7 +385,7 @@ function addStandaloneRegistrationProvider(
   const { appConfigPath } = ruleContext;
 
   extraChanges.push(
-    insertImport(sourceFile, appConfigPath, tokenName, PACKAGE_NAME, false),
+    insertImport(sourceFile, appConfigPath, tokenName, packageName, false),
   );
 
   if (!checkTokenProviderExists(existingElements, tokenName)) {
@@ -478,6 +480,7 @@ function handleStandaloneTokens(
 
   addStandaloneRegistrationProvider(
     NGX_FW_COMPONENT_REGISTRATIONS,
+    CORE_PACKAGE_NAME,
     sourceFile,
     ruleContext,
     existingElements,
@@ -488,6 +491,7 @@ function handleStandaloneTokens(
   if (includeSyncValidators) {
     addStandaloneRegistrationProvider(
       NGX_FW_VALIDATOR_REGISTRATIONS,
+      REACTIVE_FORMS_PACKAGE_NAME,
       sourceFile,
       ruleContext,
       existingElements,
@@ -499,6 +503,7 @@ function handleStandaloneTokens(
   if (includeAsyncValidators) {
     addStandaloneRegistrationProvider(
       NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+      REACTIVE_FORMS_PACKAGE_NAME,
       sourceFile,
       ruleContext,
       existingElements,

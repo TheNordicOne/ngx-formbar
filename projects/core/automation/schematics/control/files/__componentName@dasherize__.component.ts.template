@@ -1,6 +1,6 @@
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
-import { NgxfbControlDirective } from '@ngx-formbar/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
 import { <%= interfaceName %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
 import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
 import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>

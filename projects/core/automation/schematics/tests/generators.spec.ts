@@ -44,7 +44,7 @@ import {
 import {
   DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
   DEFAULT_VIEW_PROVIDER_HELPER,
-  PACKAGE_NAME,
+  REACTIVE_FORMS_PACKAGE_NAME,
 } from '../../shared/constants';
 
 const appConfigPathRaw = 'app.config.ts';
@@ -447,7 +447,7 @@ describe('control schematic', () => {
 
         const importsDirective = hasNamedImport(
           sf,
-          PACKAGE_NAME,
+          REACTIVE_FORMS_PACKAGE_NAME,
           'NgxfbControlDirective',
         );
 
