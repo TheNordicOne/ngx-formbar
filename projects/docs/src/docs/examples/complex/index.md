@@ -1,64 +1,22 @@
 
 
-This example extends the basic maintenance form with advanced features:
-
-- **Computed values** — Fields whose values are derived from other fields (e.g., total cost, SLA deadline, priority score)
-- **Function expressions** — `computedValue` using arrow functions for complex logic
-- **Dynamic titles** — Group legends that change based on form state (e.g., `"Details — hvac"`)
-- **Dynamic labels** — Control labels that adapt to context (e.g., `"Impact Score (required)"` when urgency is critical)
-- **`updateOn`** — Per-control change detection strategy (`change`, `blur`)
-- **`hideStrategy`** — Choose between `remove` (destroy control) and `keep` (preserve value)
-- **`valueStrategy`** — Choose between `reset` (clear on hide) and `last` (keep last value)
-- **`disabled` / `readonly` expressions** — Conditional interactivity based on other fields
-
-## Key Highlights
-
-### Computed Values with Functions
-
-```typescript
-totalCost: {
-  type: 'text',
-  readonly: true,
-  computedValue: (v) => {
-    const rate = Number(v.costs?.hourlyRate ?? 0);
-    const hours = Number(v.costs?.laborHours ?? 0);
-    const materials = Number(v.costs?.materialCosts ?? 0);
-    return `${(rate * hours + materials).toFixed(2)} ${v.costs?.currency ?? 'EUR'}`;
-  },
-}
-```
-
-### Dynamic Titles with String Expressions
-
-```typescript
-details: {
-  type: 'group',
-  dynamicTitle: "'Issue Details' + (details && details.category ? ' — ' + details.category : '')",
-  // ...
-}
-```
-
-### Hide + Value Strategy
-
-```typescript
-assetOther: {
-  type: 'text',
-  hidden: 'details.affectedAsset !== "other"',
-  hideStrategy: 'keep',    // keep the control in the form
-  valueStrategy: 'last',   // preserve the last entered value
-}
-```
-
-## Live Demo
-
-{{ NgDocActions.demo("ComplexDemoComponent") }}
-
-## Form Configuration Used
+Advanced form features including computed values, dynamic titles/labels, hide strategies, and conditional interactivity.
 
 <details>
-<summary>complex-maintenance-form.ts (click to expand)</summary>
+<summary>Form Configuration (click to expand)</summary>
 
 ```typescript file="./../../../app/examples/forms/complex-maintenance-form.ts"
 ```
 
 </details>
+
+{{ NgDocActions.demo("ComplexDemoComponent") }}
+
+## Concepts Used
+
+- **Computed values** — total cost is derived from hourly rate, labor hours, and material costs using a function expression ([Expressions](/guides/expressions))
+- **Dynamic titles** — group legends update to show the selected category, e.g. `"Issue Details — hvac"` ([Groups](/guides/groups))
+- **Dynamic labels** — the impact score label appends `"(required)"` when urgency is critical ([Controls](/guides/controls))
+- **`hideStrategy` / `valueStrategy`** — the "other asset" field stays in the form when hidden and preserves its last value ([Controls](/guides/controls))
+- **`updateOn`** — per-control change detection set to `blur` for text inputs and `change` for selects ([Controls](/guides/controls))
+- **`disabled` / `readonly` expressions** — fields become readonly or disabled based on other field values ([Expressions](/guides/expressions))

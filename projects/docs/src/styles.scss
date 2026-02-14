@@ -135,6 +135,11 @@ app-note-control > div {
   color: var(--ng-doc-success-text);
 }
 
+/* Details/summary toggle */
+summary {
+  cursor: pointer;
+}
+
 .github-link {
   display: flex;
   align-items: center;
