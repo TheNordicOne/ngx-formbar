@@ -2,14 +2,14 @@ import {
   NgDocNavbarComponent,
   NgDocRootComponent,
   NgDocSidebarComponent,
-  NgDocThemeToggleComponent
+  NgDocThemeToggleComponent,
 } from '@ng-doc/app';
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-root',
+  selector: 'docs-root',
   imports: [
     RouterOutlet,
     NgDocRootComponent,

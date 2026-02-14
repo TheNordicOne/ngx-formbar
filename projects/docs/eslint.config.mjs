@@ -2,7 +2,7 @@
 import { defineConfig } from 'eslint/config';
 import rootConfig from '../../eslint.config.mjs';
 
-export default defineConfig([
+export default defineConfig(
   ...rootConfig,
   {
     files: ['**/*.ts'],
@@ -11,7 +11,7 @@ export default defineConfig([
         'error',
         {
           type: 'attribute',
-          prefix: 'app',
+          prefix: 'docs',
           style: 'camelCase',
         },
       ],
@@ -19,7 +19,7 @@ export default defineConfig([
         'error',
         {
           type: 'element',
-          prefix: 'app',
+          prefix: 'docs',
           style: 'kebab-case',
         },
       ],
@@ -29,4 +29,4 @@ export default defineConfig([
     files: ['**/*.html'],
     rules: {},
   },
-]);
+);

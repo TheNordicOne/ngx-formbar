@@ -1,5 +1,8 @@
 import eslint from '@eslint/js';
-import { configs as ngConfigs, processInlineTemplates } from 'angular-eslint';
+import {
+  configs as ngConfigs,
+  processInlineTemplates,
+} from 'angular-eslint';
 import prettierConfig from 'eslint-config-prettier';
 import { configs as jsoncConfigs } from 'eslint-plugin-jsonc';
 import globals from 'globals';
@@ -105,6 +108,7 @@ export default defineConfig(
     extends: [...ngConfigs.templateAll, ...ngConfigs.templateAccessibility],
     rules: {
       '@angular-eslint/template/i18n': 'off',
+      '@angular-eslint/template/prefer-self-closing-tags': 'error',
       // Turning this off to be able to use signals
       // There currently is no way to differentiate between a signal and a function call, other thant adding prefixes or suffixes
       '@angular-eslint/template/no-call-expression': 'off',
