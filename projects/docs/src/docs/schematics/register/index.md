@@ -46,7 +46,7 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
   "projects": {
     "my-app": {
       "schematics": {
-        "@ngx-formbar/core:register": {
+        "@ngx-formbar/schematics:register": {
           "registrationType": "map",
           "controlRegistrationsPath": "app/form/registrations.ts",
           "include": ["**/components/form/controls/**"],

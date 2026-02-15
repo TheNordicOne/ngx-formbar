@@ -60,7 +60,7 @@ If an `index.ts` exists, it will use this for the import. Otherwise, it falls ba
 Run:
 
 ```bash
-ng generate @ngx-formbar/core:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
@@ -75,7 +75,7 @@ For implementation details and advanced usage, see the Controls guide.
 Run:
 
 ```bash
-ng generate @ngx-formbar/core:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
@@ -90,7 +90,7 @@ For implementation details and advanced usage, see the Groups guide.
 Run:
 
 ```bash
-ng generate @ngx-formbar/core:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
 ```
 
 This will:
@@ -145,7 +145,7 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
   "projects": {
     "my-app": {
       "schematics": {
-        "@ngx-formbar/core:control": {
+        "@ngx-formbar/schematics:control": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"Type",
@@ -153,7 +153,7 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
           "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
-        "@ngx-formbar/core:group": {
+        "@ngx-formbar/schematics:group": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"GroupType",
@@ -161,7 +161,7 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
           "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
-        "@ngx-formbar/core:block": {
+        "@ngx-formbar/schematics:block": {
           "controlRegistrationsPath": "app/form/registrations.ts",
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"BlockType",

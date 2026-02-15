@@ -12,6 +12,12 @@ Run this npm command.
 npm install @ngx-formbar/core @ngx-formbar/reactive-forms
 ```
 
+> **Note**
+> If you want to use the generator schematics (control, group, block, register), also install `@ngx-formbar/schematics` as a dev dependency:
+> ```bash
+> npm install -D @ngx-formbar/schematics
+> ```
+
 ## Providing Formbar
 _ngx-formbar_ is provided and configured in _app.config.ts_.
 

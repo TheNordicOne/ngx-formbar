@@ -7,12 +7,13 @@ At this time this package is only compatible with Angular 19.2.1 or above.
 Running the following command will install _ngx-formbar_.
 
 ```shell
-ng add @ngx-formbar/core
+ng add @ngx-formbar/reactive-forms
 ```
 
 By default, the following things will be done
 
-- Add _ngx-formbar_ as a dependency
+- Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
+- Install `@ngx-formbar/schematics` as a dev dependency (for component generators)
 - Create a registration configuration file
 - Setup token based registration including
   - barrel export
@@ -51,6 +52,7 @@ By default, the following things will be done
 | --useSchematicConfig      | boolean             | No       | `true`                    | Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in `angular.json`.                                                                    |
 | --schematicsConfigPath    | string              | No       | `app`                     | Where the schematics config should be placed, relative to the project root.                                                                                                                                               |
 | --schematicConfigFileName | string              | No       | `formbar.config.json`    | Name of the schematic config file.                                                                                                                                                                                        |
+| --installSchematics       | boolean             | No       | `true`                   | Whether to install `@ngx-formbar/schematics` as a dev dependency for component generators (control, group, block).                                                                                                       |
 
 
 ## Manual Installation
