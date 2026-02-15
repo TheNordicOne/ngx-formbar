@@ -21,7 +21,7 @@ import {
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,
-} from '@ngx-formbar/setup';
+} from '../../_setup';
 import {
   CORE_PACKAGE_NAME,
   REACTIVE_FORMS_PACKAGE_NAME,
@@ -32,7 +32,7 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
 import { SchematicsException } from '@angular-devkit/schematics';
-import { isCallee } from '@ngx-formbar/setup';
+import { isCallee } from '../../_setup';
 
 export function updateSchematicConfig(
   schematicName: string,

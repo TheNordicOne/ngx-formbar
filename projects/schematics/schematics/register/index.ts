@@ -16,7 +16,7 @@ import {
   DEFAULT_REGISTRATION_TYPE,
   getProject,
   NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
+} from '../../_setup';
 
 export function register(options: DiscoverOptions): Rule {
   let registerContext: RegisterContext;

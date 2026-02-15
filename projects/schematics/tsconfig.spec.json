@@ -9,6 +9,7 @@
   },
   "include": [
     "schematics/**/*",
-    "shared/**/*"
+    "shared/**/*",
+    "_setup/**/*"
   ]
 }

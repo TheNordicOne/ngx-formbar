@@ -21,9 +21,6 @@
       ],
       "schematics": [
         "./dist/schematics"
-      ],
-      "@ngx-formbar/setup": [
-        "./dist/setup"
       ]
     },
     "outDir": "./dist/out-tsc",
@@ -59,9 +56,6 @@
     },
     {
       "path": "./projects/docs/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/setup/tsconfig.json"
     },
     {
       "path": "./projects/reactive-forms/tsconfig.schematics.json"

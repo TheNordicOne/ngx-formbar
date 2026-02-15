@@ -24,14 +24,10 @@
     "types": [
       "node"
     ],
-    "paths": {
-      "@ngx-formbar/setup": [
-        "../../dist/setup"
-      ]
-    }
   },
   "include": [
-    "schematics/**/*"
+    "schematics/**/*",
+    "_setup/**/*"
   ],
   "exclude": [
     "schematics/*/files/**/*",

@@ -1,4 +1,4 @@
-import { RegistrationType } from '@ngx-formbar/setup';
+import { RegistrationType } from '../../_setup';
 
 export interface Schema {
   project?: string;

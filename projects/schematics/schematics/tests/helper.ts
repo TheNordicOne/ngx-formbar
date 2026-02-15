@@ -16,7 +16,7 @@ import {
   SyntaxKind,
 } from 'typescript';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { isCallee, getMapArguments } from '@ngx-formbar/setup';
+import { isCallee, getMapArguments } from '../../_setup';
 import { normalize } from '@angular-devkit/core';
 
 // Path helpers

@@ -23,7 +23,7 @@ import {
   DEFAULT_REGISTRATIONS_PATH,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
-} from '@ngx-formbar/setup';
+} from '../../_setup';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';

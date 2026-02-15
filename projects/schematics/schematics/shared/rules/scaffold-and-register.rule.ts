@@ -14,7 +14,7 @@ import {
   getProject,
   DEFAULT_REGISTRATION_TYPE,
   NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
+} from '../../../_setup';
 import {
   DEFAULT_BLOCK_HOST_PROVIDER_HELPER,
   DEFAULT_CONTROL_HOST_PROVIDER_HELPER,

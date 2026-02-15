@@ -11,7 +11,7 @@ import {
   parseTS,
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
-} from '@ngx-formbar/setup';
+} from '../../_setup';
 import {
   app,
   callObjectArgHasProp,

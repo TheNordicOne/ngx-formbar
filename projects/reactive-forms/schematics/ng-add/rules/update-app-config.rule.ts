@@ -9,7 +9,7 @@ import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   findVariableWithObjectLiteral,
   isObjectLiteralWithProperty,
-} from '@ngx-formbar/setup';
+} from '../../../_setup';
 
 import {
   createSourceFile,

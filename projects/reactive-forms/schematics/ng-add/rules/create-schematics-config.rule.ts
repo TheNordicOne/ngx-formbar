@@ -12,7 +12,7 @@ import {
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
   NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
+} from '../../../_setup';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (_, context) => {
