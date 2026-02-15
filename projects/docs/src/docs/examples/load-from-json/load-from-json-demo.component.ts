@@ -10,7 +10,7 @@ import { FormControls } from '../../../app/examples/helper/form.type';
   selector: 'docs-load-from-json-demo',
   imports: [NgxfbFormComponent, ReactiveFormsModule],
   templateUrl: './load-from-json-demo.component.html',
-  styleUrl: '../demo.styles.css',
+
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoadFromJsonDemoComponent {
@@ -19,7 +19,9 @@ export class LoadFromJsonDemoComponent {
 
   protected readonly form = this.formBuilder.group({});
   protected readonly formContent = toSignal(
-    this.httpClient.get<NgxFbForm<FormControls>>('/examples/maintenanceForm.json'),
+    this.httpClient.get<NgxFbForm<FormControls>>(
+      '/examples/maintenanceForm.json',
+    ),
   );
 
   protected onSubmit(event: Event) {

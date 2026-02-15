@@ -11,7 +11,7 @@ import { DropdownControlComponent } from '../../../app/examples/controls/dropdow
   selector: 'docs-custom-resolver-demo',
   imports: [NgxfbFormComponent, ReactiveFormsModule],
   templateUrl: './custom-resolver-demo.component.html',
-  styleUrl: '../demo.styles.css',
+
   providers: [
     {
       provide: NGX_FW_COMPONENT_RESOLVER,

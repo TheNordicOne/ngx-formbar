@@ -10,7 +10,7 @@ import { FormControls } from '../../../app/examples/helper/form.type';
   selector: 'docs-very-large-form-demo',
   imports: [NgxfbFormComponent, ReactiveFormsModule],
   templateUrl: './very-large-form-demo.component.html',
-  styleUrl: '../demo.styles.css',
+
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VeryLargeFormDemoComponent {
@@ -20,7 +20,8 @@ export class VeryLargeFormDemoComponent {
   protected readonly form = this.formBuilder.group({});
 
   protected useForm(key: 'maintenance' | 'computed') {
-    this.formContent = key === 'computed' ? highlyComputedForm : maintenanceFormLarge;
+    this.formContent =
+      key === 'computed' ? highlyComputedForm : maintenanceFormLarge;
   }
 
   protected onSubmit(event: Event) {

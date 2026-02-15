@@ -1,15 +1,17 @@
 @if (!isHidden()) {
   <div class="inline-input">
     <label [htmlFor]="name()">{{ label() }}</label>
-    <div>
+    <div class="radio-group">
       @for (option of options(); track option) {
-        <input
-          type="radio"
-          [id]="option.id"
-          [value]="option.value"
-          [formControlName]="name()"
-        />
-        <label [htmlFor]="option.id">{{ option.label }}</label>
+        <div class="radio-option">
+          <input
+            type="radio"
+            [id]="option.id"
+            [value]="option.value"
+            [formControlName]="name()"
+          />
+          <label [htmlFor]="option.id">{{ option.label }}</label>
+        </div>
       }
     </div>
   </div>

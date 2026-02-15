@@ -7,7 +7,7 @@ import { complexMaintenanceForm } from '../../../app/examples/forms/complex-main
   selector: 'docs-complex-demo',
   imports: [NgxfbFormComponent, ReactiveFormsModule],
   templateUrl: './complex-demo.component.html',
-  styleUrl: '../demo.styles.css',
+
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComplexDemoComponent {

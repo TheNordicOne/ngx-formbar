@@ -7,7 +7,7 @@ import { maintenanceForm } from '../../../app/examples/forms/maintenance-form';
   selector: 'docs-token-based-demo',
   imports: [NgxfbFormComponent, ReactiveFormsModule],
   templateUrl: './token-based-demo.component.html',
-  styleUrl: '../demo.styles.css',
+
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TokenBasedDemoComponent {

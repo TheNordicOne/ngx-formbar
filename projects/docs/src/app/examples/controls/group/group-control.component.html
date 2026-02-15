@@ -1,6 +1,6 @@
 @if (!isHidden()) {
   <ng-container [formGroupName]="name()">
-    <fieldset>
+    <fieldset class="demo-form-group">
       <legend>{{ legend() }}</legend>
       @for (content of controls(); track content[0]) {
         <ng-template *ngxfbAbstractControl="content" />

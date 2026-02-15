@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
 import { NoteControl } from './note-control.type';
 import { ngxfbBlockHostDirective, viewProviders } from '../../helper';
@@ -20,7 +25,9 @@ export class NoteControlComponent {
 
   protected readonly content = this.block.content;
   protected readonly message = computed(() => this.content().message);
-  protected readonly severity = computed(() => this.content().severity ?? 'info');
+  protected readonly severity = computed(
+    () => this.content().severity ?? 'info',
+  );
 
   protected readonly color = computed(() => {
     switch (this.severity()) {
