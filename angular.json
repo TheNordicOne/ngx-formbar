@@ -291,6 +291,42 @@
           }
         }
       }
+    },
+    "schematics": {
+      "projectType": "library",
+      "root": "projects/schematics",
+      "sourceRoot": "projects/schematics/src",
+      "prefix": "ngxfbs",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/schematics/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/schematics/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/schematics/tsconfig.spec.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/schematics/**/*.ts",
+              "projects/schematics/**/*.html"
+            ],
+            "eslintConfig": "projects/schematics/eslint.config.mjs"
+          }
+        }
+      }
     }
   },
   "cli": {
