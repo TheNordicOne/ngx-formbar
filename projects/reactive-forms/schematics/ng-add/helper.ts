@@ -18,6 +18,7 @@ import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { JsonObject, normalize } from '@angular-devkit/core';
 import {
+  isCallee,
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,
@@ -32,7 +33,6 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
 import { SchematicsException } from '@angular-devkit/schematics';
-import { isCallee } from '../../_setup';
 
 export function updateSchematicConfig(
   schematicName: string,
@@ -41,7 +41,7 @@ export function updateSchematicConfig(
 ) {
   return updateWorkspace((workspace: WorkspaceDefinition) => {
     const targetProject =
-      projectName ?? (workspace.extensions['defaultProject'] as string);
+      projectName ?? (workspace.extensions.defaultProject as string);
 
     if (!targetProject) {
       throw new SchematicsException(
@@ -56,8 +56,8 @@ export function updateSchematicConfig(
       );
     }
 
-    projectDef.extensions['schematics'] ??= {};
-    const schematicsExt = projectDef.extensions['schematics'] as JsonObject;
+    projectDef.extensions.schematics ??= {};
+    const schematicsExt = projectDef.extensions.schematics as JsonObject;
 
     const schematicKey = `${CORE_PACKAGE_NAME}:${schematicName}`;
     const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;

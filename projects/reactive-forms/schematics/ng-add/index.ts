@@ -34,7 +34,7 @@ export function ngAdd(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
     const projectName =
-      options.project ?? (workspace.extensions['defaultProject'] as string);
+      options.project ?? (workspace.extensions.defaultProject as string);
 
     if (!projectName) {
       throw new SchematicsException(
