@@ -14,8 +14,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         defineProject({
           test: {
             name: 'node',
-            include: ['**/automation/**/*.spec.ts'],
-            setupFiles: ['src/node-test-setup.ts'],
+            include: ['**/schematics/**/*.spec.ts'],
+            setupFiles: ['node-test-setup.ts'],
             environment: 'node',
             globals: true,
           },
