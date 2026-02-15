@@ -13,19 +13,19 @@ The configuration object that is used by the `provideFormbar` function has these
 
 | Property                    | Type                                           | Required | Description                                   |
 |-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
-| componentRegistrations      | Record<string, Type<unknown>>                  | Yes      | Mapping between keys and controls.            |
+| componentRegistrations      | Record<string, Type<unknown>>                  | No       | Mapping between keys and controls.            |
 | validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
 | asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
-| updateOn                    | 'change' \| 'blur' \| 'submit'                | No       | Specifies when to update the control's value. |
+| updateOn                    | 'change' \| 'blur' \| 'submit'                 | No       | Specifies when to update the control's value. |
 | globalConfig                | NgxFbGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
 
 ### NgxFbGlobalConfiguration
 
 This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
 
-| Property        | Type                                                                       | Required | Description                                              |
-|-----------------|----------------------------------------------------------------------------|----------|----------------------------------------------------------|
-| testIdBuilderFn | (content: NgxFbBaseContent,name: string,parentTestId?: string,) => string; | Yes      | Function that is used to build the test id for a control |
+| Property        | Type                                                                                      | Required | Description                                              |
+|-----------------|-------------------------------------------------------------------------------------------|----------|----------------------------------------------------------|
+| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string \| undefined` | No       | Function that is used to build the test id for a control |
 
 
 ## Code Splitting
@@ -184,7 +184,7 @@ export const extraComponentsProvider = {
 export const baseConfigProvider = {
   provide: NGX_FW_CONFIG,
   useValue: {
-    testIdBuilderFn: (baseName, controlName) => `${baseName}-${controlName}`,
+    testIdBuilderFn: (content, name, parentTestId) => `${parentTestId ? parentTestId + '-' : ''}${name}`,
   },
 };
 
@@ -320,8 +320,8 @@ import { NGX_FW_CONFIG } from '@ngx-formbar/core';
 import { TestIdBuilderFn } from '@ngx-formbar/core';
 
 // Example test ID builder function
-const testIdBuilder: TestIdBuilderFn = (baseName, controlName) => {
-  return `${baseName}-${controlName}`;
+const testIdBuilder: TestIdBuilderFn = (content, name, parentTestId) => {
+  return `${parentTestId ? parentTestId + '-' : ''}${name}`;
 };
 
 export const globalConfigProvider = {

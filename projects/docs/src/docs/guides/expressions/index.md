@@ -28,17 +28,19 @@ The evaluator supports a range of node types:
 - `ChainExpression` for using optional chaining operator
 
 ## Supported Operators
-- **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`
+- **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `\*\*` (exponentiation)
 - **Comparison Operators:** `<`, `>`, `<=`, `>=`
 - **Equality Operators:** `==`, `!=`, `===`, `!==` (follow JavaScript behavior)
 - **Bitwise Operators:** `|`, `&`, `^`, `<<`, `>>`, `>>>`
 - **Logical Operations:** `&&`, `||`, `??`
+- **Membership:** `in` (checks if a property exists in an object)
+- **Unary Operators:** `-`, `+`, `!`, `~`, `typeof`, `void`
 - **Safe Method Calls:** When calling methods on objects, the evaluator checks against a whitelist of safe methods (provided for strings, numbers, booleans, and arrays). This ensures that only approved operations are executed.
 
 ## Limitations
 
 - **Restricted Syntax:**
-  Complex function bodies or block statements in arrow functions are not supported. Only simple expression-based arrow functions are allowed.
+  Arrow functions only support a limited set of body types: `Identifier`, `MemberExpression`, `CallExpression`, `BinaryExpression`, `LogicalExpression`, `TemplateLiteral`, and simple `BlockStatement`. Complex function bodies are not supported.
 
 - **Restricted Node Types:**
   Some JavaScript features are not supported to maintain security and simplicity, such as update expressions, assignments, and using `this` or `super`.
@@ -48,7 +50,7 @@ The evaluator supports a range of node types:
 
 ## Function-based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`). This offers a more powerful and type-safe way to define dynamic behavior.
+In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more powerful and type-safe way to define dynamic behavior.
 
 ### Signature
 
@@ -68,6 +70,7 @@ Where:
   - readonly: `boolean`
   - computedValue: `unknown` (it should return the same type of value as your control uses)
   - dynamicLabel: `string`
+  - dynamicTitle: `string`
 
 
 ### Advantages

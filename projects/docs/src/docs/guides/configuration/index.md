@@ -23,46 +23,48 @@ Following are configuration options that are supported out of the box. When sett
 
 The `NgxFbBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
 
-| Name            | Type                | Required | Description                                                                                                                                                            |
-|-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| type            | `string`            | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                      |
-| hidden          | `string`            | No       | A string expression that determines when the control should be hidden. This condition is evaluated at runtime against the whole form object.                           |
+| Name   | Type                  | Required | Description                                                                                                                                                                       |
+|--------|-----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type   | `string`              | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                                 |
+| hidden | `Expression<boolean>` | No       | An expression that determines when the control should be hidden. Can be a string expression evaluated at runtime against the form object, or a function receiving the form value. |
 
 
 ### Abstract Control
 
 Controls and Groups extend the `NgxFbAbstractControl` interface and therefore both have access to these options.
 
-| Name            | Type                | Required | Description                                                                                                                                                            |
-|-----------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| validators      | `string[]`          | No       | Array of strings representing names of synchronous validators that apply to the control. These can be registered globally with a validator registration object.        |
-| asyncValidators | `string[]`          | No       | Similar to validators, but for asynchronous validation logic that may involve API calls or other deferred operations.                                                  |
-| disabled        | `string \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean value or a string expression that evaluates against the form object.                                  |
-| hideStrategy    | `HideStrategy`      | No       | Specifies how to handle the control when hidden: 'keep' (remains in form model) or 'remove' (removed from form model).                                                 |
-| valueStrategy   | `ValueStrategy`     | No       | Determines how the control's value is handled when visibility changes: 'last' (preserves last value), 'default' (reverts to default value), or 'reset' (clears value). |
-| readonly        | `string \| boolean` | No       | Indicates if the control is read-only (displayed but not modifiable). Accepts either a boolean value or a string expression for dynamic evaluation.                    |
-| updateOn        | `UpdateStrategy`    | No       | Specifies when to update the control's value: 'change' (as user types, default), 'blur' (when control loses focus), or 'submit' (when form is submitted).              |
+| Name            | Type                             | Required | Description                                                                                                                                                               |
+|-----------------|----------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| validators      | `string[]`                       | No       | Array of strings representing names of synchronous validators that apply to the control. These can be registered globally with a validator registration object.           |
+| asyncValidators | `string[]`                       | No       | Similar to validators, but for asynchronous validation logic that may involve API calls or other deferred operations.                                                     |
+| disabled        | `Expression<boolean> \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean, a string expression, or a function receiving the form value.                                            |
+| hideStrategy    | `HideStrategy`                   | No       | Specifies how to handle the control when hidden: 'keep' (remains in form model) or 'remove' (removed from form model).                                                    |
+| valueStrategy   | `ValueStrategy`                  | No       | Determines how the control's value is handled when visibility changes: 'last' (preserves last value), 'default' (reverts to default value), or 'reset' (clears value).    |
+| readonly        | `Expression<boolean> \| boolean` | No       | Indicates if the control is read-only (displayed but not modifiable). Can be a boolean, a string expression, or a function receiving the form value.                      |
+| updateOn        | `UpdateStrategy`                 | No       | Specifies when to update the control's value: 'change' (as user types, default), 'blur' (when control loses focus), or 'submit' (when form is submitted).                 |
+| computedValue   | `Expression<unknown>`            | No       | A value that is automatically derived and set for the control. Can be a string expression or a function. It will overwrite user input if one of its dependencies changes. |
 
 ### Control
 
 The following configurations options are only applicable to the interface `NgxFbControl`.
 
-| Name          | Type      | Required | Description                                                                                                                     |
-|---------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------|
-| label         | `string`  | Yes      | Specifies the label for the control                                                                                             |
-| defaultValue  | `unknown` | No       | Should be overwritten with the proper value type of the control                                                                 |
-| nonNullable   | `boolean` | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API                        |
-| computedValue | `string`  | No       | A value that is automatically derived and set for the control. It will overwrite user input if one of its dependencies changes. |
+| Name          | Type                  | Required | Description                                                                                                  |
+|---------------|-----------------------|----------|--------------------------------------------------------------------------------------------------------------|
+| label         | `string`              | No       | Specifies the label for the control                                                                          |
+| dynamicLabel  | `Expression<string>`  | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
+| defaultValue  | `unknown`             | No       | Should be overwritten with the proper value type of the control                                              |
+| nonNullable   | `boolean`             | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API     |
 
 
 ### Group
 
 The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>`.
 
-| Name     | Type                | Required | Description                                                                    |
-|----------|---------------------|----------|--------------------------------------------------------------------------------|
-| title    | `string`            | No       | Specifies a title for the group                                                |
-| controls | `Record<string, T>` | Yes      | Object mapping keys to `NgxFbContent` that configure the controls of the group |
+| Name         | Type                 | Required | Description                                                                                                   |
+|--------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
+| title        | `string`             | No       | Specifies a title for the group                                                                               |
+| dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value.  |
+| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbContent` that configure the controls of the group                                |
 
 
 ### Block
