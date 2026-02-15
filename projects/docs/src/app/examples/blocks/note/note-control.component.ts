@@ -12,6 +12,7 @@ import { ngxfbBlockHostDirective, viewProviders } from '../../helper';
   selector: 'docs-note-control',
   imports: [],
   templateUrl: './note-control.component.html',
+  styleUrl: './note-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   host: {

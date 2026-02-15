@@ -18,6 +18,7 @@ import { RouterOutlet } from '@angular/router';
     NgDocThemeToggleComponent,
   ],
   templateUrl: './app.html',
+  styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {

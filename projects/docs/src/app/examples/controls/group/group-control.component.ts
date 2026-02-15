@@ -9,6 +9,7 @@ import { ngxfbGroupHostDirective, viewProviders } from '../../helper';
   selector: 'docs-group-control',
   imports: [ReactiveFormsModule, NgxfbAbstractControlDirective],
   templateUrl: './group-control.component.html',
+  styleUrl: './group-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbGroupHostDirective],
