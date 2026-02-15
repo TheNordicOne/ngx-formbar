@@ -51,94 +51,6 @@
         }
       }
     },
-    "dummy": {
-      "projectType": "application",
-      "schematics": {},
-      "root": "projects/dummy",
-      "sourceRoot": "projects/dummy/src",
-      "prefix": "app",
-      "architect": {
-        "build": {
-          "builder": "@angular/build:application",
-          "options": {
-            "outputPath": "dist/dummy",
-            "index": "projects/dummy/src/index.html",
-            "browser": "projects/dummy/src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
-            "tsConfig": "projects/dummy/tsconfig.app.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "projects/dummy/public"
-              }
-            ],
-            "styles": [
-              "projects/dummy/src/styles.css"
-            ],
-            "scripts": []
-          },
-          "configurations": {
-            "production": {
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
-                }
-              ],
-              "outputHashing": "all"
-            },
-            "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve": {
-          "builder": "@angular/build:dev-server",
-          "configurations": {
-            "production": {
-              "buildTarget": "dummy:build:production"
-            },
-            "development": {
-              "buildTarget": "dummy:build:development"
-            }
-          },
-          "defaultConfiguration": "development"
-        },
-        "extract-i18n": {
-          "builder": "@angular/build:extract-i18n"
-        },
-        "test": {
-          "builder": "@angular/build:unit-test",
-          "options": {
-            "browsers": [
-              "chromium",
-              "firefox"
-            ]
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/dummy/**/*.ts",
-              "projects/dummy/**/*.html"
-            ],
-            "eslintConfig": "projects/dummy/eslint.config.mjs"
-          }
-        }
-      }
-    },
     "reactive-forms": {
       "projectType": "library",
       "root": "projects/reactive-forms",
@@ -288,22 +200,6 @@
               "projects/docs/**/*.html"
             ],
             "eslintConfig": "projects/docs/eslint.config.mjs"
-          }
-        }
-      }
-    },
-    "setup": {
-      "projectType": "library",
-      "root": "projects/setup",
-      "sourceRoot": "projects/setup",
-      "architect": {
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/setup/**/*.ts"
-            ],
-            "eslintConfig": "./eslint.config.mjs"
           }
         }
       }
