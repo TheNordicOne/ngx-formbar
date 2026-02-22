@@ -1,7 +1,20 @@
-name: Publish
+name: Publish to npm
+
 on:
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      release_tag:
+        description: 'GitHub release tag (e.g. @ngx-formbar/core@1.1.0)'
+        required: true
+        type: string
+      dist_tag:
+        description: 'npm dist-tag'
+        required: true
+        type: choice
+        options:
+          - latest
+          - next
+        default: 'latest'
 
 jobs:
   publish:
@@ -23,10 +36,10 @@ jobs:
 
       - name: Download Release Assets
         run: |
-          gh release download ${{ github.event.release.tag_name }} \
+          gh release download "${{ inputs.release_tag }}" \
             --pattern "*.tgz"
 
-      - name: Publish to NPM
-        run: npm publish *.tgz --provenance --access public
+      - name: Publish to npm
+        run: npm publish *.tgz --provenance --access public --tag ${{ inputs.dist_tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

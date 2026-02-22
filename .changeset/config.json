@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "TheNordicOne/ngx-formbar" }],
+  "commit": false,
+  "fixed": [],
+  "linked": [["@ngx-formbar/core", "@ngx-formbar/reactive-forms"]],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  }
+}

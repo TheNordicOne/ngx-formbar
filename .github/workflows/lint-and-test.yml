@@ -7,9 +7,15 @@ on:
       - develop
       - 'release/**'
     paths:
-      - 'projects/core'
+      - 'projects/core/**'
+      - 'projects/reactive-forms/**'
+      - 'projects/schematics/**'
+      - 'angular.json'
+      - 'tsconfig*.json'
+      - 'eslint.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
-  workflow_call:
 
 jobs:
 
@@ -31,15 +37,13 @@ jobs:
       - name: Build (required for schematic tests)
         run: npm run build
 
-      - name: Show contents of schematics folder
+      - name: Run component tests
         run: |
-          echo "=== dist/core ==="
-          ls -lR dist/core/schematics
-        shell: bash
+          npx vitest run --root projects/core --project component
+          npx vitest run --root projects/reactive-forms --project component
 
-      - name: Run tests
-        run: |
-          npm run test:component
-          npm run test:node
-          npm run cypress:run
+      - name: Run node tests
+        run: npx vitest run --project node
 
+      - name: Run Cypress tests
+        run: npx cypress run --component
