@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "schematics": "./schematics/collection.json",
   "scripts": {
-    "prebuild": "copyfiles -u 2 \"../setup/**/*.ts\" \"_setup/\"",
     "build": "tsc -p tsconfig.schematics.json",
     "postbuild": "copyfiles \"schematics/*/schema.json\" \"schematics/**/files/**/*\" \"schematics/collection.json\" \"../../dist/schematics/\""
   },

@@ -15,8 +15,7 @@
     "tslib": "^2.3.0"
   },
   "scripts": {
-    "prebuild:schematics": "copyfiles -u 2 \"../setup/**/*.ts\" \"_setup/\"",
-    "build:schematics": "npm run prebuild:schematics && tsc -p tsconfig.schematics.json",
+    "build:schematics": "tsc -p tsconfig.schematics.json",
     "postbuild:schematics": "copyfiles \"schematics/*/schema.json\" \"schematics/**/files/**/*\" \"schematics/collection.json\" \"../../dist/reactive-forms/\""
   },
   "devDependencies": {
