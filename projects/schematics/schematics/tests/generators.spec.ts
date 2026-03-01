@@ -34,7 +34,7 @@ import {
   defineFormbarConfigComponentRegistrationsHasIdentifier,
   directComponentRegistrationsHasIdentifier,
   provideFormbarComponentRegistrationsHasIdentifier,
-} from '../../_setup';
+} from '@ngx-formbar/setup';
 import {
   DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
   DEFAULT_VIEW_PROVIDER_HELPER,

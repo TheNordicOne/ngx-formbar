@@ -14,7 +14,7 @@ import {
   registrationNodeHasKey,
   registrationNodeUsesIdentifier,
   updateMapEntries,
-} from '../../../_setup';
+} from '@ngx-formbar/setup';
 
 export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
   return (tree, context) => {

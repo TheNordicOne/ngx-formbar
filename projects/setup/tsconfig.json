@@ -15,7 +15,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "rootDir": ".",
-    "outDir": "../../dist/schematics",
+    "outDir": "./dist",
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -23,18 +23,13 @@
     "target": "es6",
     "types": [
       "node"
-    ],
-    "paths": {
-      "@ngx-formbar/setup": ["../setup/dist/index.d.ts"]
-    }
+    ]
   },
   "include": [
-    "schematics/**/*",
-    "shared/**/*"
+    "**/*.ts"
   ],
   "exclude": [
-    "schematics/*/files/**/*",
     "**/*.spec.ts",
-    "schematics/tests/**/*"
+    "dist"
   ]
 }

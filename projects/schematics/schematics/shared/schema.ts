@@ -1,7 +1,7 @@
 import {
   BaseGenerateSchematicConfig,
   RegistrationType,
-} from '../../_setup';
+} from '@ngx-formbar/setup';
 
 export interface Schema extends BaseGenerateSchematicConfig {
   name?: string;

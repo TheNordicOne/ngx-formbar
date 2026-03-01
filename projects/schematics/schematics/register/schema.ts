@@ -1,4 +1,4 @@
-import { RegistrationType } from '../../_setup';
+import { RegistrationType } from '@ngx-formbar/setup';
 import { FormbarComponentInfo } from './component-info.type';
 
 export interface DiscoverOptions {

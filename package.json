@@ -5,10 +5,11 @@
     "ng": "ng",
     "build:core": "ng build core",
     "build:reactive-forms": "ng build reactive-forms && cd projects/reactive-forms && npm run build:schematics",
+    "build:setup": "cd projects/setup && npm run build",
     "build:schematics": "cd projects/schematics && npm run build",
     "start:docs": "ng serve docs",
     "build:docs": "ng build docs",
-    "build": "npm run build:core && npm run build:reactive-forms && npm run build:schematics",
+    "build": "npm run build:core && npm run build:setup && npm run build:reactive-forms && npm run build:schematics",
     "watch": "ng build core --watch --configuration development",
     "test": "ng test",
     "test:node": "npx vitest run --project node",
@@ -21,7 +22,8 @@
   "workspaces": [
     "projects/core",
     "projects/reactive-forms",
-    "projects/schematics"
+    "projects/schematics",
+    "projects/setup"
   ],
   "license": "MIT",
   "private": true,

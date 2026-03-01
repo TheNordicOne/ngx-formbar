@@ -6,6 +6,9 @@
     "build": "tsc -p tsconfig.schematics.json",
     "postbuild": "copyfiles \"schematics/*/schema.json\" \"schematics/**/files/**/*\" \"schematics/collection.json\" \"../../dist/schematics/\""
   },
+  "dependencies": {
+    "@ngx-formbar/setup": "^0.0.1"
+  },
   "devDependencies": {
     "@angular-devkit/schematics": "file:../../node_modules/@angular-devkit/schematics",
     "@schematics/angular": "file:../../node_modules/@schematics/angular",

@@ -31,7 +31,7 @@ import {
   parseTS,
   hasNamedImport,
   NgxFormbarAutomationConfig,
-} from '../../_setup';
+} from '@ngx-formbar/setup';
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;

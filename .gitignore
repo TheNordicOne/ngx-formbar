@@ -45,8 +45,6 @@ Thumbs.db
 /projects/core/node_modules/.vite/results.json
 
 
-# Shared setup source (copied during build)
-**/projects/*/_setup
 
 # NgDoc files
 /ng-doc

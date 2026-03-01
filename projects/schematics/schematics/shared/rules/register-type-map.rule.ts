@@ -12,7 +12,7 @@ import {
   componentRegistrationsObjectHasKey,
   componentRegistrationsObjectUsesIdentifier,
   findComponentRegistrationsObject,
-} from '../../../_setup';
+} from '@ngx-formbar/setup';
 
 export function registerTypeConfig(
   ruleContext: RegisterComponentContext,
