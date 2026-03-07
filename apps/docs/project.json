@@ -2,12 +2,12 @@
   "name": "@ngx-formbar/docs",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "prefix": "app",
+  "prefix": "doc",
   "sourceRoot": "apps/docs/src",
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@ng-doc/builder:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/docs",
@@ -17,10 +17,29 @@
         "assets": [
           {
             "glob": "**/*",
+            "input": "node_modules/@ng-doc/app/assets",
+            "output": "assets/ng-doc/app"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/@ng-doc/ui-kit/assets",
+            "output": "assets/ng-doc/ui-kit"
+          },
+          {
+            "glob": "**/*",
+            "input": "ng-doc/@ngx-formbar/docs/assets",
+            "output": "assets/ng-doc"
+          },
+          {
+            "glob": "**/*",
             "input": "apps/docs/public"
           }
         ],
-        "styles": ["apps/docs/src/styles.scss"]
+        "styles": [
+          "node_modules/@ng-doc/app/styles/global.css",
+          "apps/docs/src/styles.scss"
+        ],
+        "allowedCommonJsDependencies": ["@ng-doc/core"]
       },
       "configurations": {
         "production": {
@@ -28,7 +47,7 @@
             {
               "type": "initial",
               "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
@@ -48,7 +67,7 @@
     },
     "serve": {
       "continuous": true,
-      "executor": "@angular/build:dev-server",
+      "executor": "@ng-doc/builder:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "@ngx-formbar/docs:build:production"

@@ -1,10 +1,8 @@
-import nx from '@nx/eslint-plugin';
+import { defineConfig } from 'eslint/config';
 import baseConfig from '../../eslint.config.mjs';
 
-export default [
+export default defineConfig(
   ...baseConfig,
-  ...nx.configs['flat/angular'],
-  ...nx.configs['flat/angular-template'],
   {
     files: ['**/*.ts'],
     rules: {
@@ -12,7 +10,7 @@ export default [
         'error',
         {
           type: 'attribute',
-          prefix: 'app',
+          prefix: 'docs',
           style: 'camelCase',
         },
       ],
@@ -20,7 +18,7 @@ export default [
         'error',
         {
           type: 'element',
-          prefix: 'app',
+          prefix: 'docs',
           style: 'kebab-case',
         },
       ],
@@ -28,7 +26,6 @@ export default [
   },
   {
     files: ['**/*.html'],
-    // Override or add rules here
     rules: {},
   },
-];
+);

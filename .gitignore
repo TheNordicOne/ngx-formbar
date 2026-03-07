@@ -44,3 +44,7 @@ Thumbs.db
 .angular
 
 __screenshots__/
+
+
+# NgDoc files
+/ng-doc
