@@ -1,4 +1,0 @@
-import { ComponentRegistrationConfig } from '@ngx-formbar/core';
-
-export const componentRegistrations: ComponentRegistrationConfig = {
-};

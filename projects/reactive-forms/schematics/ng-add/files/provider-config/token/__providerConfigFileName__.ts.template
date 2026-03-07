@@ -1,4 +1,0 @@
-import { defineFormbarConfig } from '@ngx-formbar/reactive-forms';
-
-export const formbarConfig = defineFormbarConfig({});
-

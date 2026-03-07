@@ -1,5 +1,0 @@
-import { NgxFbFormGroup } from '@ngx-formbar/core';
-
-export interface <%= classify(interfaceName) %> extends NgxFbFormGroup {
-  type: '<%= key %>';
-}

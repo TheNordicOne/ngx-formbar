@@ -1,3 +1,0 @@
-export { componentRegistrationsProvider } from './component-registrations';<%if (includeSyncValidators){ %>
-export { validatorRegistrationsProvider } from './validator-registrations';<% } %><%if (includeAsyncValidators){ %>
-export { asyncValidatorRegistrationsProvider } from './async-validator-registrations';<% } %>

@@ -1,5 +1,6 @@
-# Ignore artifacts:
-build
-coverage
-
-*.mdx
+# Add files here to ignore them from prettier formatting
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
+.angular
