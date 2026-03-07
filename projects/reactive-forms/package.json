@@ -2,9 +2,9 @@
   "name": "@ngx-formbar/reactive-forms",
   "version": "1.0.0",
   "peerDependencies": {
-    "@angular/common": "^19.0.0",
-    "@angular/core": "^19.0.0",
-    "@angular/forms": "^19.0.0",
+    "@angular/common": ">=19.0.0 <22.0.0",
+    "@angular/core": ">=19.0.0 <22.0.0",
+    "@angular/forms": ">=19.0.0 <22.0.0",
     "@ngx-formbar/core": "^1.0.0"
   },
   "schematics": "./schematics/collection.json",
