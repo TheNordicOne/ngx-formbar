@@ -1,0 +1,15 @@
+{
+  "name": "@ngx-formbar/examples",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^21.1.0",
+    "@angular/core": "^21.1.0",
+    "@angular/forms": "^21.1.0",
+    "@ngx-formbar/core": "^0.0.1",
+    "@ngx-formbar/reactive-forms": "^0.0.1"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

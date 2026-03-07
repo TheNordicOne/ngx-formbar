@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbForm } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
-import { maintenanceFormLarge } from '../../../app/examples/forms/maintenance-form-large';
-import { highlyComputedForm } from '../../../app/examples/forms/highly-computed-form';
-import { FormControls } from '../../../app/examples/helper/form.type';
+import {
+  maintenanceFormLarge,
+  highlyComputedForm,
+  ExampleControls,
+} from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-very-large-form-demo',
@@ -16,7 +18,7 @@ import { FormControls } from '../../../app/examples/helper/form.type';
 export class VeryLargeFormDemoComponent {
   private readonly formBuilder = inject(FormBuilder);
 
-  protected formContent: NgxFbForm<FormControls> = maintenanceFormLarge;
+  protected formContent: NgxFbForm<ExampleControls> = maintenanceFormLarge;
   protected readonly form = this.formBuilder.group({});
 
   protected useForm(key: 'maintenance' | 'computed') {

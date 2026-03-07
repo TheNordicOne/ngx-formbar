@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
-import { maintenanceForm } from '../../../app/examples/forms/maintenance-form';
-import { HybridComponentResolver } from '../../../app/examples/resolvers/hybrid-component-resolver';
-import { RadioControlComponent } from '../../../app/examples/controls/radio/radio-control.component';
-import { DropdownControlComponent } from '../../../app/examples/controls/dropdown/dropdown-control.component';
+import {
+  maintenanceForm,
+  HybridComponentResolver,
+  RadioControlComponent,
+  DropdownControlComponent,
+} from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-custom-resolver-demo',

@@ -5,7 +5,7 @@ Performance testing with large forms and cascading computations — switch betwe
 <details>
 <summary>Large Maintenance Form Configuration (click to expand)</summary>
 
-```typescript file="./../../../app/examples/forms/maintenance-form-large.ts"
+```typescript file="./../../../../../examples/src/lib/forms/maintenance-form-large.ts"
 ```
 
 </details>
@@ -13,7 +13,7 @@ Performance testing with large forms and cascading computations — switch betwe
 <details>
 <summary>Highly Computed Form Configuration (click to expand)</summary>
 
-```typescript file="./../../../app/examples/forms/highly-computed-form.ts"
+```typescript file="./../../../../../examples/src/lib/forms/highly-computed-form.ts"
 ```
 
 </details>

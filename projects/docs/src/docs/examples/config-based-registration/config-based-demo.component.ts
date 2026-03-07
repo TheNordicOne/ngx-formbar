@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
-import { maintenanceForm } from '../../../app/examples/forms/maintenance-form';
+import { maintenanceForm } from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-config-based-demo',

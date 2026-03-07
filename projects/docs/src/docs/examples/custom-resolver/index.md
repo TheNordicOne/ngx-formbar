@@ -5,7 +5,7 @@ Swapping components at runtime using a custom `ComponentResolver` — the urgenc
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
-```typescript file="./../../../app/examples/forms/maintenance-form.ts"
+```typescript file="./../../../../../examples/src/lib/forms/maintenance-form.ts"
 ```
 
 </details>

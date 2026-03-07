@@ -220,6 +220,42 @@
           }
         }
       }
+    },
+    "examples": {
+      "projectType": "library",
+      "root": "projects/examples",
+      "sourceRoot": "projects/examples/src",
+      "prefix": "ngxfb-examples",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/examples/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/examples/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/examples/tsconfig.spec.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/examples/**/*.ts",
+              "projects/examples/**/*.html"
+            ],
+            "eslintConfig": "projects/examples/eslint.config.mjs"
+          }
+        }
+      }
     }
   },
   "cli": {

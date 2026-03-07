@@ -5,7 +5,7 @@ Advanced form features including computed values, dynamic titles/labels, hide st
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
-```typescript file="./../../../app/examples/forms/complex-maintenance-form.ts"
+```typescript file="./../../../../../examples/src/lib/forms/complex-maintenance-form.ts"
 ```
 
 </details>

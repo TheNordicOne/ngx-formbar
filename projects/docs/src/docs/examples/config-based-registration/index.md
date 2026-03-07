@@ -5,7 +5,7 @@ Registering components, validators, and async validators through a single `defin
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
-```typescript file="./../../../app/examples/forms/maintenance-form.ts"
+```typescript file="./../../../../../examples/src/lib/forms/maintenance-form.ts"
 ```
 
 </details>

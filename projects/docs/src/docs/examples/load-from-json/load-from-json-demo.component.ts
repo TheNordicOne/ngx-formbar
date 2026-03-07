@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgxFbForm } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
-import { FormControls } from '../../../app/examples/helper/form.type';
+import { ExampleControls } from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-load-from-json-demo',
@@ -19,7 +19,7 @@ export class LoadFromJsonDemoComponent {
 
   protected readonly form = this.formBuilder.group({});
   protected readonly formContent = toSignal(
-    this.httpClient.get<NgxFbForm<FormControls>>(
+    this.httpClient.get<NgxFbForm<ExampleControls>>(
       '/examples/maintenanceForm.json',
     ),
   );

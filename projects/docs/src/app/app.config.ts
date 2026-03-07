@@ -3,14 +3,9 @@ import { NG_DOC_ROUTING, provideNgDocContext } from "@ng-doc/generated";
 import { provideHttpClient, withInterceptorsFromDi, withFetch } from "@angular/common/http";
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
-import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { provideExamples } from '@ngx-formbar/examples';
 
 import { routes } from './app.routes';
-import {
-  componentRegistrations,
-  validatorRegistrations,
-  asyncValidatorRegistrations,
-} from './examples/registrations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,10 +19,6 @@ export const appConfig: ApplicationConfig = {
         provideSearchEngine(NgDocDefaultSearchEngine),
         providePageSkeleton(NG_DOC_DEFAULT_PAGE_SKELETON),
         provideMainPageProcessor(NG_DOC_DEFAULT_PAGE_PROCESSORS),
-        provideFormbar({
-          componentRegistrations,
-          validatorRegistrations,
-          asyncValidatorRegistrations,
-        }),
+        provideExamples(),
     ]
 };

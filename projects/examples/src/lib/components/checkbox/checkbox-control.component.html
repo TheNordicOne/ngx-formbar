@@ -1,0 +1,20 @@
+@if (!isHidden()) {
+  <div class="inline-input" [attr.data-testId]="testId()">
+    <label [htmlFor]="name()" [attr.data-testId]="`${testId()}-label`">{{
+      label()
+    }}</label>
+    <div>
+      <input
+        type="checkbox"
+        [id]="name()"
+        [formControlName]="name()"
+        [attr.data-testId]="`${testId()}-input`"
+      />
+    </div>
+    @for (error of errors() | keyvalue; track error.key) {
+      <span [attr.data-testId]="`${testId()}-validation-error-${error.key}`">
+        {{ error.value === true ? error.key : error.value }}
+      </span>
+    }
+  </div>
+}
