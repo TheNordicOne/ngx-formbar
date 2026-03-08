@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@ng-doc/generated": ["./ng-doc/@ngx-formbar/docs/index.ts"],
-      "@ng-doc/generated/*": ["./ng-doc/@ngx-formbar/docs/*"]
+      "@ng-doc/generated/*": ["./ng-doc/@ngx-formbar/docs/*"],
+      "@ngx-formbar/core": ["libs/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "ng-doc.config.ts"]
