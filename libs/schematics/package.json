@@ -2,10 +2,17 @@
   "name": "@ngx-formbar/schematics",
   "version": "0.0.1",
   "type": "commonjs",
-  "main": "./src/index.js",
+  "main": "./index.cjs",
   "types": "./src/index.d.ts",
+  "schematics": "./lib/collection.json",
   "dependencies": {
     "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@angular-devkit/core": ">=18.0.0",
+    "@angular-devkit/schematics": ">=18.0.0",
+    "@schematics/angular": ">=18.0.0",
+    "typescript": ">=5.4.0"
   },
   "license": "MIT",
   "keywords": [
