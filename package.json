@@ -36,6 +36,8 @@
     "@nx/eslint-plugin": "22.5.4",
     "@nx/js": "22.5.4",
     "@nx/playwright": "22.5.4",
+    "@nx/vite": "22.5.4",
+    "@nx/vitest": "22.5.4",
     "@nx/web": "22.5.4",
     "@nx/workspace": "22.5.4",
     "@playwright/test": "^1.36.0",
@@ -43,7 +45,9 @@
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
+    "@types/node": "20.19.9",
     "@typescript-eslint/utils": "^8.40.0",
+    "@vitest/coverage-v8": "^4.0.0",
     "angular-eslint": "^21.0.1",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.8.0",
@@ -61,6 +65,7 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0",
     "verdaccio": "^6.0.5",
+    "vite": "^7.0.0",
     "vitest": "^4.0.8"
   },
   "nx": {

@@ -19,7 +19,8 @@
       "@ng-doc/generated/*": ["./ng-doc/@ngx-formbar/docs/*"],
       "@ngx-formbar/core": ["libs/core/src/index.ts"],
       "@ngx-formbar/reactive-forms": ["libs/reactive-forms/src/index.ts"],
-      "@ngx-formbar/examples": ["libs/examples/src/index.ts"]
+      "@ngx-formbar/examples": ["libs/examples/src/index.ts"],
+      "@ngx-formbar/schematics": ["libs/schematics/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "ng-doc.config.ts"]

@@ -48,3 +48,4 @@ __screenshots__/
 
 # NgDoc files
 /ng-doc
+vitest.config.*.timestamp*
