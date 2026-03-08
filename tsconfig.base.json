@@ -17,7 +17,8 @@
     "paths": {
       "@ng-doc/generated": ["./ng-doc/@ngx-formbar/docs/index.ts"],
       "@ng-doc/generated/*": ["./ng-doc/@ngx-formbar/docs/*"],
-      "@ngx-formbar/core": ["libs/core/src/index.ts"]
+      "@ngx-formbar/core": ["libs/core/src/index.ts"],
+      "@ngx-formbar/reactive-forms": ["libs/reactive-forms/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "ng-doc.config.ts"]
