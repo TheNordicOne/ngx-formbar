@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "ng-add": {
+      "description": "Add @ngx-formbar/reactive-forms to the project.",
+      "factory": "./index.cjs#ngAdd",
+      "schema": "./ng-add/schema.json",
+      "hidden": true
+    }
+  }
+}

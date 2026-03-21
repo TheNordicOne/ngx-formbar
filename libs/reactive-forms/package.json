@@ -5,6 +5,10 @@
     "@angular/common": "^21.1.0",
     "@angular/core": "^21.1.0"
   },
+  "schematics": "./schematics/collection.json",
+  "ng-add": {
+    "save": "dependencies"
+  },
   "sideEffects": false,
   "license": "MIT",
   "keywords": [

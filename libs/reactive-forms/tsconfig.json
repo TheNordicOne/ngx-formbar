@@ -29,6 +29,9 @@
     },
     {
       "path": "./.storybook/tsconfig.json"
+    },
+    {
+      "path": "./tsconfig.schematics.json"
     }
   ]
 }

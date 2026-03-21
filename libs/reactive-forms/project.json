@@ -28,7 +28,48 @@
       },
       "defaultConfiguration": "production"
     },
+    "build-schematics": {
+      "dependsOn": ["build"],
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}/schematics"],
+      "options": {
+        "outputPath": "dist/libs/reactive-forms/schematics",
+        "main": "libs/reactive-forms/schematics/ng-add/index.ts",
+        "tsConfig": "libs/reactive-forms/tsconfig.schematics.json",
+        "platform": "node",
+        "format": ["cjs"],
+        "bundle": true,
+        "declaration": false,
+        "generatePackageJson": false,
+        "external": ["@angular-devkit/*", "@schematics/*", "typescript"],
+        "assets": [
+          {
+            "input": "libs/reactive-forms/schematics",
+            "glob": "collection.json",
+            "output": "."
+          },
+          {
+            "input": "libs/reactive-forms/schematics/ng-add",
+            "glob": "schema.json",
+            "output": "./ng-add"
+          },
+          {
+            "input": "libs/reactive-forms/schematics/ng-add",
+            "glob": "**/*.template",
+            "output": "./ng-add"
+          }
+        ]
+      }
+    },
+    "clean-schematics": {
+      "dependsOn": ["build-schematics"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -f dist/{projectRoot}/schematics/package.json"
+      }
+    },
     "nx-release-publish": {
+      "dependsOn": ["clean-schematics"],
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }
