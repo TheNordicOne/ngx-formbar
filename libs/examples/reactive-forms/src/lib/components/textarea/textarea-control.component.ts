@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-textarea-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './textarea-control.component.html',
+  styleUrl: './textarea-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

@@ -15,6 +15,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-checkbox-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './checkbox-control.component.html',
+  styleUrl: './checkbox-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

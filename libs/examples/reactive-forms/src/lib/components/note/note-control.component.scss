@@ -1,7 +1,7 @@
 .note-block {
   border: 1px solid var(--color);
   background-color: var(--background);
-  padding: var(--form-spacing-sm);
+  padding: 0.5rem;
   color: hsl(0, 0%, 24%);
-  border-radius: var(--form-input-border-radius);
+  border-radius: 0.375rem;
 }

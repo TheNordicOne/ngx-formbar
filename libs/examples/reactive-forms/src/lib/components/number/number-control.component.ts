@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-number-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './number-control.component.html',
+  styleUrl: './number-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

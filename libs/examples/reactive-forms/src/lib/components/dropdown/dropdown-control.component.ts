@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-dropdown-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './dropdown-control.component.html',
+  styleUrl: './dropdown-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

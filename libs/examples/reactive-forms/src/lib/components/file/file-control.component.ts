@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-file-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './file-control.component.html',
+  styleUrl: './file-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

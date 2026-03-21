@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-date-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './date-control.component.html',
+  styleUrl: './date-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

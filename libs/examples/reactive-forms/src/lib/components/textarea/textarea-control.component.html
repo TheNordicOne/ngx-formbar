@@ -1,6 +1,6 @@
 @if (!isHidden()) {
-  <div class="inline-input" [attr.data-testId]="testId()">
-    <label [htmlFor]="name()" [attr.data-testId]="`${testId()}-label`">{{ label() }}</label>
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
     <textarea
       [id]="name()"
       [placeholder]="placeholder() ?? ''"
@@ -8,10 +8,10 @@
       [readonly]="readonly()"
       [rows]="rows()"
       [maxlength]="maxLength()"
-      [attr.data-testId]="`${testId()}-input`"
+      [attr.data-testid]="`${testId()}-input`"
     ></textarea>
     @for (error of errors() | keyvalue; track error.key) {
-      <span [attr.data-testId]="`${testId()}-validation-error-${error.key}`">
+      <span [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
         {{ error.value === true ? error.key : error.value }}
       </span>
     }

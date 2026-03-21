@@ -1,6 +1,6 @@
 @if (!isHidden()) {
-  <div class="inline-input" [attr.data-testId]="testId()">
-    <label [htmlFor]="name()" [attr.data-testId]="`${testId()}-label`">{{ label() }}</label>
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
     <input
       type="text"
       [id]="name()"
@@ -8,13 +8,13 @@
       [title]="hint()"
       [formControlName]="name()"
       [attr.readonly]="readonly() || null"
-      [attr.data-testId]="`${testId()}-input`"
+      [attr.data-testid]="`${testId()}-input`"
     />
     @if (hint()) {
-      <span [attr.data-testId]="`${testId()}-hint`">{{ hint() }}</span>
+      <span [attr.data-testid]="`${testId()}-hint`">{{ hint() }}</span>
     }
     @for (error of errors() | keyvalue; track error.key) {
-      <span [attr.data-testId]="`${testId()}-validation-error-${error.key}`">
+      <span [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
         {{ error.value === true ? error.key : error.value }}
       </span>
     }

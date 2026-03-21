@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-radio-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './radio-control.component.html',
+  styleUrl: './radio-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],

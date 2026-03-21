@@ -14,6 +14,7 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-text-control',
   imports: [ReactiveFormsModule, KeyValuePipe],
   templateUrl: './text-control.component.html',
+  styleUrl: './text-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
   hostDirectives: [ngxfbControlHostDirective],
