@@ -1,19 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { applicationConfig } from '@storybook/angular';
 import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { NgxFbBaseContent } from '@ngx-formbar/core';
 import { StoryFormHostComponent } from './story-form-host.component';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-async function clearAndType(canvas: any, testId: string, value: string) {
-  const input = canvas.getByTestId(testId);
-  await userEvent.clear(input);
-  await userEvent.type(input, value);
-}
 
 const meta: Meta<StoryFormHostComponent> = {
   title: 'Reactive Forms/Form Rendering',
@@ -91,33 +81,27 @@ export const FormContent: Story = {
   play: async ({ canvas }) => {
     await waitFor(async () => {
       // Top-level text controls render with default values
-      await expect(canvas.getByTestId('first-input')).toHaveValue('default-first');
-      await expect(canvas.getByTestId('second-input')).toHaveValue('default-second');
-      await expect(canvas.getByTestId('third-input')).toHaveValue('default-third');
-      await expect(canvas.getByTestId('fourth-input')).toHaveValue('default-fourth');
-      await expect(canvas.getByTestId('fifth-input')).toHaveValue('default-fifth');
+      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveValue('default-first');
+      await expect(canvas.getByRole('textbox', { name: 'Second' })).toHaveValue('default-second');
+      await expect(canvas.getByRole('textbox', { name: 'Third' })).toHaveValue('default-third');
+      await expect(canvas.getByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
+      await expect(canvas.getByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
 
       // Note block renders its message
-      await expect(canvas.getByTestId('block')).toHaveTextContent(
-        'This is an information',
-      );
+      await expect(canvas.getByText('This is an information')).toBeInTheDocument();
 
       // First group with legend
-      await expect(canvas.getByTestId('first-group-title')).toHaveTextContent(
-        'First Group',
-      );
-      await expect(canvas.getByTestId('first-group-grouped-first-input')).toHaveValue(
+      await expect(canvas.getByRole('group', { name: 'First Group' })).toBeInTheDocument();
+      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).toHaveValue(
         'default-grouped-first',
       );
 
       // Nested group with legend
       await expect(
-        canvas.getByTestId('first-group-nested-group-title'),
-      ).toHaveTextContent('Nested Group');
+        canvas.getByRole('group', { name: 'Nested Group' }),
+      ).toBeInTheDocument();
       await expect(
-        canvas.getByTestId(
-          'first-group-nested-group-nested-second-input',
-        ),
+        canvas.getByRole('textbox', { name: 'Nested Second label' }),
       ).toHaveValue('default-nested-second');
     });
   },
@@ -171,33 +155,33 @@ export const PatchAndReset: Story = {
   play: async ({ canvas, userEvent }) => {
     // Verify default values are rendered
     await waitFor(async () => {
-      await expect(canvas.getByTestId('first-input')).toHaveValue('default-first');
-      await expect(canvas.getByTestId('second-input')).toHaveValue('default-second');
-      await expect(canvas.getByTestId('third-input')).toHaveValue('default-third');
-      await expect(canvas.getByTestId('fourth-input')).toHaveValue('default-fourth');
-      await expect(canvas.getByTestId('fifth-input')).toHaveValue('default-fifth');
+      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveValue('default-first');
+      await expect(canvas.getByRole('textbox', { name: 'Second' })).toHaveValue('default-second');
+      await expect(canvas.getByRole('textbox', { name: 'Third' })).toHaveValue('default-third');
+      await expect(canvas.getByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
+      await expect(canvas.getByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
     });
 
     // Patch values
-    await userEvent.click(canvas.getByTestId('patch'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Patch' }));
 
     await waitFor(async () => {
-      await expect(canvas.getByTestId('first-input')).toHaveValue('patched-first');
-      await expect(canvas.getByTestId('second-input')).toHaveValue('patched-second');
-      await expect(canvas.getByTestId('third-input')).toHaveValue('patched-third');
-      await expect(canvas.getByTestId('fourth-input')).toHaveValue('patched-fourth');
-      await expect(canvas.getByTestId('fifth-input')).toHaveValue('patched-fifth');
+      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveValue('patched-first');
+      await expect(canvas.getByRole('textbox', { name: 'Second' })).toHaveValue('patched-second');
+      await expect(canvas.getByRole('textbox', { name: 'Third' })).toHaveValue('patched-third');
+      await expect(canvas.getByRole('textbox', { name: 'Fourth' })).toHaveValue('patched-fourth');
+      await expect(canvas.getByRole('textbox', { name: 'Fifth' })).toHaveValue('patched-fifth');
     });
 
     // Reset — nullable controls clear, nonNullable controls revert to defaults
-    await userEvent.click(canvas.getByTestId('reset'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Reset' }));
 
     await waitFor(async () => {
-      await expect(canvas.getByTestId('first-input')).toHaveValue('');
-      await expect(canvas.getByTestId('second-input')).toHaveValue('');
-      await expect(canvas.getByTestId('third-input')).toHaveValue('');
-      await expect(canvas.getByTestId('fourth-input')).toHaveValue('default-fourth');
-      await expect(canvas.getByTestId('fifth-input')).toHaveValue('default-fifth');
+      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveValue('');
+      await expect(canvas.getByRole('textbox', { name: 'Second' })).toHaveValue('');
+      await expect(canvas.getByRole('textbox', { name: 'Third' })).toHaveValue('');
+      await expect(canvas.getByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
+      await expect(canvas.getByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
     });
   },
 };
@@ -219,7 +203,7 @@ export const ContentRegistration: Story = {
   },
   play: async ({ canvas }) => {
     await waitFor(async () => {
-      await expect(canvas.getByTestId('control')).toBeInTheDocument();
+      await expect(canvas.getByRole('textbox', { name: 'Test' })).toBeInTheDocument();
     });
   },
 };
@@ -403,14 +387,10 @@ export const ControlProperties: Story = {
   },
   play: async ({ canvas }) => {
     await waitFor(async () => {
-      await expect(canvas.getByTestId('first')).toBeInTheDocument();
-      await expect(canvas.getByTestId('first-label')).toHaveTextContent(
-        'First label',
-      );
-      await expect(canvas.getByTestId('first-hint')).toHaveTextContent(
-        'This is a hint',
-      );
-      await expect(canvas.getByTestId('first-input')).toHaveValue(
+      await expect(canvas.getByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+      await expect(canvas.getByText('First label')).toBeInTheDocument();
+      await expect(canvas.getByText('This is a hint')).toBeInTheDocument();
+      await expect(canvas.getByRole('textbox', { name: 'First label' })).toHaveValue(
         'First Default',
       );
     });
@@ -435,14 +415,10 @@ export const NoDefaultValue: Story = {
   },
   play: async ({ canvas }) => {
     await waitFor(async () => {
-      await expect(canvas.getByTestId('first')).toBeInTheDocument();
-      await expect(canvas.getByTestId('first-label')).toHaveTextContent(
-        'First label',
-      );
-      await expect(canvas.getByTestId('first-hint')).toHaveTextContent(
-        'This is a hint',
-      );
-      await expect(canvas.getByTestId('first-input')).toHaveValue('');
+      await expect(canvas.getByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+      await expect(canvas.getByText('First label')).toBeInTheDocument();
+      await expect(canvas.getByText('This is a hint')).toBeInTheDocument();
+      await expect(canvas.getByRole('textbox', { name: 'First label' })).toHaveValue('');
     });
   },
 };
@@ -512,26 +488,38 @@ export const SubmitFormValues: Story = {
       },
     },
   },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, userEvent }) => {
     // Clear and type custom values into all controls
-    await clearAndType(canvas, 'first-input', 'This is the first control');
-    await clearAndType(canvas, 'second-input', 'I entered something here');
-    await clearAndType(canvas, 'third-input', 'Here is some value');
-    await clearAndType(canvas, 'fourth-input', 'Go Fourth');
-    await clearAndType(canvas, 'fifth-input', 'Something');
-    await clearAndType(
-      canvas,
-      'first-group-grouped-first-input',
-      'Grouped Input',
-    );
-    await clearAndType(
-      canvas,
-      'first-group-nested-group-nested-second-input',
-      'Nested Grouped Input',
-    );
+    const firstInput = canvas.getByRole('textbox', { name: 'First' });
+    await userEvent.clear(firstInput);
+    await userEvent.type(firstInput, 'This is the first control');
+
+    const secondInput = canvas.getByRole('textbox', { name: 'Second' });
+    await userEvent.clear(secondInput);
+    await userEvent.type(secondInput, 'I entered something here');
+
+    const thirdInput = canvas.getByRole('textbox', { name: 'Third' });
+    await userEvent.clear(thirdInput);
+    await userEvent.type(thirdInput, 'Here is some value');
+
+    const fourthInput = canvas.getByRole('textbox', { name: 'Fourth' });
+    await userEvent.clear(fourthInput);
+    await userEvent.type(fourthInput, 'Go Fourth');
+
+    const fifthInput = canvas.getByRole('textbox', { name: 'Fifth' });
+    await userEvent.clear(fifthInput);
+    await userEvent.type(fifthInput, 'Something');
+
+    const groupedFirstInput = canvas.getByRole('textbox', { name: 'Grouped First label' });
+    await userEvent.clear(groupedFirstInput);
+    await userEvent.type(groupedFirstInput, 'Grouped Input');
+
+    const nestedSecondInput = canvas.getByRole('textbox', { name: 'Nested Second label' });
+    await userEvent.clear(nestedSecondInput);
+    await userEvent.type(nestedSecondInput, 'Nested Grouped Input');
 
     // Click submit button
-    await userEvent.click(canvas.getByTestId('submit'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
 
     // Verify rendered form values
     await waitFor(async () => {

@@ -22,26 +22,6 @@ function formConfig(
   return { content };
 }
 
-async function typeInField(
-  canvas: any,
-  userEvent: any,
-  testId: string,
-  value: string,
-) {
-  const input = canvas.getByTestId(testId);
-  await userEvent.clear(input);
-  await userEvent.type(input, value);
-}
-
-async function clearField(canvas: any, userEvent: any, testId: string) {
-  const input = canvas.getByTestId(testId);
-  await userEvent.clear(input);
-}
-
-async function clickSubmit(canvas: any, userEvent: any) {
-  await userEvent.click(canvas.getByTestId('submit'));
-}
-
 // ---------------------------------------------------------------------------
 // Group — Keep & Last (attribute hiding)
 // ---------------------------------------------------------------------------
@@ -88,21 +68,30 @@ export const GroupKeepLast: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childDefaultField = canvas.getByRole('textbox', { name: 'Child with default strategy' });
+    const childResetField = canvas.getByRole('textbox', { name: 'Child with reset strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'keepLastGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'keepLastGroup-childDefaultField-input', 'Custom child default value');
-    await typeInField(canvas, userEvent, 'keepLastGroup-childResetField-input', 'Custom child reset value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childDefaultField);
+    await userEvent.type(childDefaultField, 'Custom child default value');
+    await userEvent.clear(childResetField);
+    await userEvent.type(childResetField, 'Custom child reset value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('keepLastGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Keep and use last value')).not.toBeVisible();
     });
 
     // Submit and check rendered values according to strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's last value strategy
       await expect(canvas.getByTestId('keepLastGroup.childField-value')).toHaveTextContent('Custom child value');
@@ -115,10 +104,10 @@ export const GroupKeepLast: Story = {
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('keepLastGroup.childField-value')).toHaveTextContent('Custom child value');
       await expect(canvas.getByTestId('keepLastGroup.childDefaultField-value')).toHaveTextContent('default-child-default');
@@ -173,30 +162,39 @@ export const GroupRemoveLast: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childDefaultField = canvas.getByRole('textbox', { name: 'Child with default strategy' });
+    const childResetField = canvas.getByRole('textbox', { name: 'Child with reset strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'removeLastGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'removeLastGroup-childDefaultField-input', 'Custom child default value');
-    await typeInField(canvas, userEvent, 'removeLastGroup-childResetField-input', 'Custom child reset value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childDefaultField);
+    await userEvent.type(childDefaultField, 'Custom child default value');
+    await userEvent.clear(childResetField);
+    await userEvent.type(childResetField, 'Custom child reset value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('removeLastGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Remove but remember last value')).not.toBeVisible();
     });
 
     // Submit — group values should not exist in rendered output (remove strategy)
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.queryByTestId('removeLastGroup.childField-value')).not.toBeInTheDocument();
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit and verify values are handled according to their strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's last value strategy
       await expect(canvas.getByTestId('removeLastGroup.childField-value')).toHaveTextContent('Custom child value');
@@ -256,30 +254,39 @@ export const GroupRemoveDefault: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childLastField = canvas.getByRole('textbox', { name: 'Child with last strategy' });
+    const childResetField = canvas.getByRole('textbox', { name: 'Child with reset strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'removeDefaultGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'removeDefaultGroup-childLastField-input', 'Custom child last value');
-    await typeInField(canvas, userEvent, 'removeDefaultGroup-childResetField-input', 'Custom child reset value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childLastField);
+    await userEvent.type(childLastField, 'Custom child last value');
+    await userEvent.clear(childResetField);
+    await userEvent.type(childResetField, 'Custom child reset value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute
     await waitFor(async () => {
-      await expect(canvas.getByTestId('removeDefaultGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Remove but use default value')).not.toBeVisible();
     });
 
     // Submit — group values should not exist in rendered output (remove strategy)
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.queryByTestId('removeDefaultGroup.childField-value')).not.toBeInTheDocument();
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit and verify values are handled according to their strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's default value strategy
       await expect(canvas.getByTestId('removeDefaultGroup.childField-value')).toHaveTextContent('default-child');
@@ -339,30 +346,39 @@ export const GroupRemoveReset: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childLastField = canvas.getByRole('textbox', { name: 'Child with last strategy' });
+    const childDefaultField = canvas.getByRole('textbox', { name: 'Child with default strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'removeResetGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'removeResetGroup-childLastField-input', 'Custom child last value');
-    await typeInField(canvas, userEvent, 'removeResetGroup-childDefaultField-input', 'Custom child default value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childLastField);
+    await userEvent.type(childLastField, 'Custom child last value');
+    await userEvent.clear(childDefaultField);
+    await userEvent.type(childDefaultField, 'Custom child default value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute
     await waitFor(async () => {
-      await expect(canvas.getByTestId('removeResetGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Remove and reset value')).not.toBeVisible();
     });
 
     // Submit — group values should not exist in rendered output (remove strategy)
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.queryByTestId('removeResetGroup.childField-value')).not.toBeInTheDocument();
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit and verify values are handled according to their strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's reset value strategy (reset produces empty string)
       await expect(canvas.getByTestId('removeResetGroup.childField-value')).toHaveTextContent('');
@@ -422,21 +438,30 @@ export const GroupKeepDefault: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childLastField = canvas.getByRole('textbox', { name: 'Child with last strategy' });
+    const childResetField = canvas.getByRole('textbox', { name: 'Child with reset strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'keepDefaultGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'keepDefaultGroup-childLastField-input', 'Custom child last value');
-    await typeInField(canvas, userEvent, 'keepDefaultGroup-childResetField-input', 'Custom child reset value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childLastField);
+    await userEvent.type(childLastField, 'Custom child last value');
+    await userEvent.clear(childResetField);
+    await userEvent.type(childResetField, 'Custom child reset value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('keepDefaultGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Keep but use default value')).not.toBeVisible();
     });
 
     // Submit and check rendered values according to strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's default value strategy
       await expect(canvas.getByTestId('keepDefaultGroup.childField-value')).toHaveTextContent('default-child');
@@ -449,10 +474,10 @@ export const GroupKeepDefault: Story = {
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('keepDefaultGroup.childField-value')).toHaveTextContent('default-child');
       await expect(canvas.getByTestId('keepDefaultGroup.childLastField-value')).toHaveTextContent('Custom child last value');
@@ -507,21 +532,30 @@ export const GroupKeepReset: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childLastField = canvas.getByRole('textbox', { name: 'Child with last strategy' });
+    const childDefaultField = canvas.getByRole('textbox', { name: 'Child with default strategy' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'keepResetGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'keepResetGroup-childLastField-input', 'Custom child last value');
-    await typeInField(canvas, userEvent, 'keepResetGroup-childDefaultField-input', 'Custom child default value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childLastField);
+    await userEvent.type(childLastField, 'Custom child last value');
+    await userEvent.clear(childDefaultField);
+    await userEvent.type(childDefaultField, 'Custom child default value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('keepResetGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Keep but reset value')).not.toBeVisible();
     });
 
     // Submit and check rendered values according to strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Child inherits parent's reset value strategy (reset produces empty string)
       await expect(canvas.getByTestId('keepResetGroup.childField-value')).toHaveTextContent('');
@@ -534,10 +568,10 @@ export const GroupKeepReset: Story = {
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('keepResetGroup.childField-value')).toHaveTextContent('');
       await expect(canvas.getByTestId('keepResetGroup.childLastField-value')).toHaveTextContent('Custom child last value');
@@ -593,30 +627,37 @@ export const ParentRemovePrecedence: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const parentField = canvas.getByRole('textbox', { name: 'Parent field' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'parentRemove-parentRemoveField-input', 'Custom parent value');
-    await typeInField(canvas, userEvent, 'parentRemove-childKeep-childKeepField-input', 'Custom child value');
+    await userEvent.clear(parentField);
+    await userEvent.type(parentField, 'Custom parent value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute
     await waitFor(async () => {
-      await expect(canvas.getByTestId('parentRemove-title')).not.toBeVisible();
+      await expect(canvas.getByText('Parent with Remove Strategy')).not.toBeVisible();
     });
 
     // Submit — group values should not exist in rendered output (remove strategy)
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.queryByTestId('parentRemove.parentRemoveField-value')).not.toBeInTheDocument();
       await expect(canvas.queryByTestId('parentRemove.childKeep.childKeepField-value')).not.toBeInTheDocument();
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit and verify values are restored with 'last' strategy
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('parentRemove.parentRemoveField-value')).toHaveTextContent('Custom parent value');
       await expect(canvas.getByTestId('parentRemove.childKeep.childKeepField-value')).toHaveTextContent('Custom child value');
@@ -669,30 +710,37 @@ export const InheritedStrategies: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const parentField = canvas.getByRole('textbox', { name: 'Parent field' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'parentGroup-parentField-input', 'Custom parent value');
-    await typeInField(canvas, userEvent, 'parentGroup-childGroup-childField-input', 'Custom child value');
+    await userEvent.clear(parentField);
+    await userEvent.type(parentField, 'Custom parent value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('parentGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Parent Group - Keep & Last')).not.toBeVisible();
     });
 
     // Submit and check rendered values — both keep last (custom values)
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('parentGroup.parentField-value')).toHaveTextContent('Custom parent value');
       await expect(canvas.getByTestId('parentGroup.childGroup.childField-value')).toHaveTextContent('Custom child value');
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('parentGroup.parentField-value')).toHaveTextContent('Custom parent value');
       await expect(canvas.getByTestId('parentGroup.childGroup.childField-value')).toHaveTextContent('Custom child value');
@@ -746,20 +794,27 @@ export const StrategyOverride: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const parentField = canvas.getByRole('textbox', { name: 'Parent field' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+
     // Fill fields with custom values
-    await typeInField(canvas, userEvent, 'parentGroup-parentField-input', 'Custom parent value');
-    await typeInField(canvas, userEvent, 'parentGroup-childGroup-childField-input', 'Custom child value');
+    await userEvent.clear(parentField);
+    await userEvent.type(parentField, 'Custom parent value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('parentGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Parent Group - Keep & Last')).not.toBeVisible();
     });
 
     // Submit and check rendered values
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Parent keeps last (custom value)
       await expect(canvas.getByTestId('parentGroup.parentField-value')).toHaveTextContent('Custom parent value');
@@ -769,10 +824,10 @@ export const StrategyOverride: Story = {
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('parentGroup.parentField-value')).toHaveTextContent('Custom parent value');
       await expect(canvas.getByTestId('parentGroup.childGroup.childField-value')).toHaveTextContent('default-child');
@@ -853,22 +908,33 @@ export const ThreeLevelInheritance: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
+    const triggerInput = canvas.getByRole('textbox', { name: 'Type "hide" to hide everything' });
+    const grandparentField = canvas.getByRole('textbox', { name: 'Grandparent field' });
+    const parentField = canvas.getByRole('textbox', { name: 'Parent field' });
+    const childField = canvas.getByRole('textbox', { name: 'Child field' });
+    const childOverrideField = canvas.getByRole('textbox', { name: 'Child override field' });
+
     // Fill all fields with custom values
-    await typeInField(canvas, userEvent, 'grandparentGroup-grandparentField-input', 'Custom grandparent value');
-    await typeInField(canvas, userEvent, 'grandparentGroup-parentGroup-parentField-input', 'Custom parent value');
-    await typeInField(canvas, userEvent, 'grandparentGroup-parentGroup-childGroup-childField-input', 'Custom child value');
-    await typeInField(canvas, userEvent, 'grandparentGroup-parentGroup-childGroupWithOverride-childOverrideField-input', 'Custom child override value');
+    await userEvent.clear(grandparentField);
+    await userEvent.type(grandparentField, 'Custom grandparent value');
+    await userEvent.clear(parentField);
+    await userEvent.type(parentField, 'Custom parent value');
+    await userEvent.clear(childField);
+    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(childOverrideField);
+    await userEvent.type(childOverrideField, 'Custom child override value');
 
     // Hide the group
-    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
 
     // Group is hidden via [hidden] attribute but stays in the DOM
     await waitFor(async () => {
-      await expect(canvas.getByTestId('grandparentGroup-title')).not.toBeVisible();
+      await expect(canvas.getByText('Grandparent Group - Keep & Default')).not.toBeVisible();
     });
 
     // Submit and check rendered values according to strategies
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       // Grandparent field uses grandparent's default strategy
       await expect(canvas.getByTestId('grandparentGroup.grandparentField-value')).toHaveTextContent('default-grandparent');
@@ -884,10 +950,10 @@ export const ThreeLevelInheritance: Story = {
     });
 
     // Show fields again
-    await clearField(canvas, userEvent, 'hideControl-input');
+    await userEvent.clear(triggerInput);
 
     // Submit again and verify values are maintained
-    await clickSubmit(canvas, userEvent);
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
     await waitFor(async () => {
       await expect(canvas.getByTestId('grandparentGroup.grandparentField-value')).toHaveTextContent('default-grandparent');
       await expect(canvas.getByTestId('grandparentGroup.parentGroup.parentField-value')).toHaveTextContent('Custom parent value');

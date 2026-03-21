@@ -135,7 +135,7 @@ export function asyncValidator(
   if (containsText(value, 'async')) {
     return of(null);
   }
-  return of({ async: { value } });
+  return of({ async: 'Value must contain "async"' });
 }
 
 export function asyncGroupValidator(
@@ -147,12 +147,16 @@ export function asyncGroupValidator(
   }
   if (typeof value !== 'object') {
     const includesAsync = containsText(value, 'sync');
-    return includesAsync ? of(null) : of({ async: { value } });
+    return includesAsync
+      ? of(null)
+      : of({ async: 'At least one value must contain "sync"' });
   }
 
   const values = Object.values(value);
   const someValueIncludesAsync = values.some((v) => containsText(v, 'sync'));
-  return someValueIncludesAsync ? of(null) : of({ async: { value } });
+  return someValueIncludesAsync
+    ? of(null)
+    : of({ async: 'At least one value must contain "sync"' });
 }
 
 function containsText(value: unknown, text: string) {

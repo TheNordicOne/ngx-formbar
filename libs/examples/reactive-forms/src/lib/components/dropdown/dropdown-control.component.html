@@ -14,7 +14,15 @@
     </select>
     @for (error of errors | keyvalue; track error.key) {
       <span [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
-        {{ error.value === true ? error.key : error.value }}
+        @if (error.key === 'minlength') {
+          Minimum {{ error.value.requiredLength }} characters required
+        } @else if (error.key === 'required') {
+          Required
+        } @else if (error.value === true) {
+          {{ error.key }}
+        } @else {
+          {{ error.value }}
+        }
       </span>
     }
   </div>

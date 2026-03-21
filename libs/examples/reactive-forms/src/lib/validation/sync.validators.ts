@@ -218,7 +218,7 @@ export function letterValidator(
   if (containsText(value, 'a')) {
     return null;
   }
-  return { letter: { value } };
+  return { letter: 'Must contain the letter "a"' };
 }
 
 export function noDuplicateValuesValidator(
@@ -240,7 +240,9 @@ export function noDuplicateValuesValidator(
     return true;
   });
 
-  return duplicates.length > 0 ? { duplicates: true } : null;
+  return duplicates.length > 0
+    ? { duplicates: 'No duplicate values allowed' }
+    : null;
 }
 
 export function forbiddenLetterAValidator(
@@ -252,12 +254,16 @@ export function forbiddenLetterAValidator(
   }
   if (typeof value !== 'object') {
     const includesA = containsText(value, 'a');
-    return includesA ? { forbiddenLetterA: { value } } : null;
+    return includesA
+      ? { forbiddenLetterA: 'The letter "A" is not allowed' }
+      : null;
   }
 
   const values = Object.values(value);
   const someValueIncludesA = values.some((v) => containsText(v, 'a'));
-  return someValueIncludesA ? { forbiddenLetterA: { value } } : null;
+  return someValueIncludesA
+    ? { forbiddenLetterA: 'The letter "A" is not allowed' }
+    : null;
 }
 
 function containsText(value: unknown, text: string) {
