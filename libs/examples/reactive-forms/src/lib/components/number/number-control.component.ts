@@ -34,9 +34,9 @@ export class NumberControlComponent {
   );
   protected readonly min = computed(() => this.content().min);
   protected readonly max = computed(() => this.content().max ?? null);
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;

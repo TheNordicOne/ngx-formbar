@@ -32,9 +32,9 @@ export class GroupControlComponent {
   protected readonly legend = computed(
     () => this.dynamicTitle() ?? this.content().legend ?? '',
   );
-  protected readonly errors = computed(
-    () => this.group.formGroup?.errors ?? {},
-  );
+  protected get errors() {
+    return this.group.formGroup?.errors ?? {};
+  }
 
   protected get formGroup() {
     return this.group.formGroup;

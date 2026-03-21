@@ -37,9 +37,9 @@ export class TextareaControlComponent {
   protected readonly maxLength = computed(
     () => this.content().maxLength ?? null,
   );
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;

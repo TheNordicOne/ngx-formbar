@@ -10,7 +10,7 @@
       [maxlength]="maxLength()"
       [attr.data-testid]="`${testId()}-input`"
     ></textarea>
-    @for (error of errors() | keyvalue; track error.key) {
+    @for (error of errors | keyvalue; track error.key) {
       <span [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
         {{ error.value === true ? error.key : error.value }}
       </span>

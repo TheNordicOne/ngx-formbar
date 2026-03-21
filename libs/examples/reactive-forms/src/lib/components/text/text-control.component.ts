@@ -34,9 +34,9 @@ export class TextControlComponent {
   );
   protected readonly hint = computed(() => this.content().hint);
   protected readonly placeholder = computed(() => this.content().placeHolder);
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;

@@ -33,9 +33,9 @@ export class CheckboxControlComponent {
   protected readonly label = computed(
     () => this.dynamicLabel() ?? this.content().label,
   );
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;

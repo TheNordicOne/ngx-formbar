@@ -34,9 +34,9 @@ export class FileControlComponent {
   );
   protected readonly multiple = computed(() => this.content().multiple);
   protected readonly accept = computed(() => this.content().accept);
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;

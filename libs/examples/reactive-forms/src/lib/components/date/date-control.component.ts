@@ -34,9 +34,9 @@ export class DateControlComponent {
   );
   protected readonly minDate = computed(() => this.content().minDate);
   protected readonly maxDate = computed(() => this.content().maxDate);
-  protected readonly errors = computed(
-    () => this.control.formControl?.errors ?? {},
-  );
+  protected get errors() {
+    return this.control.formControl?.errors ?? {};
+  }
 
   protected get formControl() {
     return this.control.formControl;
