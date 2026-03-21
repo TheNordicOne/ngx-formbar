@@ -243,3 +243,108 @@ export const ControlRemoveReset: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Control — Keep & Default
+// ---------------------------------------------------------------------------
+
+export const ControlKeepDefault: Story = {
+  name: 'Control — Keep & Default',
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      keepDefaultField: {
+        type: 'text',
+        label: 'Keep but use default value',
+        defaultValue: 'default-keep-default',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'default',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom keep & default value';
+    const defaultValue = 'default-keep-default';
+
+    // Fill the field with a custom value
+    await typeInField(canvas, userEvent, 'keepDefaultField-input', customValue);
+
+    // Hide the field
+    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+
+    // Verify field is removed from DOM
+    await waitFor(async () => {
+      await expect(canvas.queryByTestId('keepDefaultField-input')).not.toBeInTheDocument();
+    });
+
+    // Value reverts to default in the form model (keep + default strategy)
+    await clickSubmit(canvas, userEvent);
+    await waitFor(async () => {
+      await expect(getFormValue()['keepDefaultField']).toBe(defaultValue);
+    });
+
+    // Show field again
+    await clearField(canvas, userEvent, 'hideControl-input');
+
+    // Verify field appears with the default value
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('keepDefaultField-input')).toHaveValue(defaultValue);
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Control — Keep & Reset
+// ---------------------------------------------------------------------------
+
+export const ControlKeepReset: Story = {
+  name: 'Control — Keep & Reset',
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      keepResetField: {
+        type: 'text',
+        label: 'Keep but reset value',
+        defaultValue: 'default-keep-reset',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'reset',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom keep & reset value';
+
+    // Fill the field with a custom value
+    await typeInField(canvas, userEvent, 'keepResetField-input', customValue);
+
+    // Hide the field
+    await typeInField(canvas, userEvent, 'hideControl-input', 'hide');
+
+    // Verify field is removed from DOM
+    await waitFor(async () => {
+      await expect(canvas.queryByTestId('keepResetField-input')).not.toBeInTheDocument();
+    });
+
+    // Value is reset to empty in the form model (keep + reset strategy)
+    await clickSubmit(canvas, userEvent);
+    await waitFor(async () => {
+      await expect(getFormValue()['keepResetField']).toBeNull();
+    });
+
+    // Show field again
+    await clearField(canvas, userEvent, 'hideControl-input');
+
+    // Verify field appears with empty value (reset)
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('keepResetField-input')).toHaveValue('');
+    });
+  },
+};
+

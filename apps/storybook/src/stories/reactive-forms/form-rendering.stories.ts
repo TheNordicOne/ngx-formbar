@@ -1,9 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import { applicationConfig } from '@storybook/angular';
 import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { NgxFbBaseContent } from '@ngx-formbar/core';
 import { StoryFormHostComponent } from './story-form-host.component';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+async function clearAndType(canvas: any, testId: string, value: string) {
+  const input = canvas.getByTestId(testId);
+  await userEvent.clear(input);
+  await userEvent.type(input, value);
+}
 
 const meta: Meta<StoryFormHostComponent> = {
   title: 'Reactive Forms/Form Rendering',
@@ -369,6 +379,183 @@ export const CustomTestIdBuilder: Story = {
           'root-group-first-group-group-nested-group-text-first-input',
         ),
       ).toBeInTheDocument();
+
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// ControlProperties
+// ---------------------------------------------------------------------------
+
+export const ControlProperties: Story = {
+  args: {
+    formConfig: {
+      content: {
+        first: {
+          type: 'text',
+          label: 'First label',
+          hint: 'This is a hint',
+          defaultValue: 'First Default',
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('first')).toBeInTheDocument();
+      await expect(canvas.getByTestId('first-label')).toHaveTextContent(
+        'First label',
+      );
+      await expect(canvas.getByTestId('first-hint')).toHaveTextContent(
+        'This is a hint',
+      );
+      await expect(canvas.getByTestId('first-input')).toHaveValue(
+        'First Default',
+      );
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// NoDefaultValue
+// ---------------------------------------------------------------------------
+
+export const NoDefaultValue: Story = {
+  args: {
+    formConfig: {
+      content: {
+        first: {
+          type: 'text',
+          label: 'First label',
+          hint: 'This is a hint',
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('first')).toBeInTheDocument();
+      await expect(canvas.getByTestId('first-label')).toHaveTextContent(
+        'First label',
+      );
+      await expect(canvas.getByTestId('first-hint')).toHaveTextContent(
+        'This is a hint',
+      );
+      await expect(canvas.getByTestId('first-input')).toHaveValue('');
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// SubmitFormValues
+// ---------------------------------------------------------------------------
+
+export const SubmitFormValues: Story = {
+  args: {
+    formConfig: {
+      content: {
+        first: {
+          type: 'text',
+          label: 'First',
+          defaultValue: 'default-first',
+        },
+        second: {
+          type: 'text',
+          label: 'Second',
+          defaultValue: 'default-second',
+        },
+        third: {
+          type: 'text',
+          label: 'Third',
+          defaultValue: 'default-third',
+        },
+        fourth: {
+          type: 'text',
+          label: 'Fourth',
+          defaultValue: 'default-fourth',
+          nonNullable: true,
+        },
+        fifth: {
+          type: 'text',
+          label: 'Fifth',
+          defaultValue: 'default-fifth',
+          nonNullable: true,
+        },
+        block: {
+          type: 'note',
+          message: 'This is an information',
+          isControl: false,
+        },
+        'first-group': {
+          type: 'group',
+          legend: 'First Group',
+          controls: {
+            'grouped-first': {
+              type: 'text',
+              label: 'Grouped First label',
+              defaultValue: 'default-grouped-first',
+            },
+            'nested-group': {
+              type: 'group',
+              legend: 'Nested Group',
+              controls: {
+                'nested-second': {
+                  type: 'text',
+                  label: 'Nested Second label',
+                  defaultValue: 'default-nested-second',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    // Clear and type custom values into all controls
+    await clearAndType(canvas, 'first-input', 'This is the first control');
+    await clearAndType(canvas, 'second-input', 'I entered something here');
+    await clearAndType(canvas, 'third-input', 'Here is some value');
+    await clearAndType(canvas, 'fourth-input', 'Go Fourth');
+    await clearAndType(canvas, 'fifth-input', 'Something');
+    await clearAndType(
+      canvas,
+      'first-group-grouped-first-input',
+      'Grouped Input',
+    );
+    await clearAndType(
+      canvas,
+      'first-group-nested-group-nested-second-input',
+      'Nested Grouped Input',
+    );
+
+    // Click submit button
+    await userEvent.click(canvas.getByTestId('submit'));
+
+    // Verify rendered form values
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('first-value')).toHaveTextContent(
+        'This is the first control',
+      );
+      await expect(canvas.getByTestId('second-value')).toHaveTextContent(
+        'I entered something here',
+      );
+      await expect(canvas.getByTestId('third-value')).toHaveTextContent(
+        'Here is some value',
+      );
+      await expect(canvas.getByTestId('fourth-value')).toHaveTextContent(
+        'Go Fourth',
+      );
+      await expect(canvas.getByTestId('fifth-value')).toHaveTextContent(
+        'Something',
+      );
+      await expect(
+        canvas.getByTestId('first-group.grouped-first-value'),
+      ).toHaveTextContent('Grouped Input');
+      await expect(
+        canvas.getByTestId('first-group.nested-group.nested-second-value'),
+      ).toHaveTextContent('Nested Grouped Input');
     });
   },
 };

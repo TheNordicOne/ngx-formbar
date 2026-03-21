@@ -864,6 +864,14 @@ export const DynamicLabels: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Helper functions for stories
+// ---------------------------------------------------------------------------
+
+function getGreeting(name: string): string {
+  return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+}
+
 export const DynamicTitles: Story = {
   args: formConfig({
     source: {
@@ -921,6 +929,609 @@ export const DynamicTitles: Story = {
       );
       await expect(canvas.getByTestId('parentGroup-childControl-label')).toHaveTextContent(
         'Child: Updated',
+      );
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Computed Value – Additional Stories
+// ---------------------------------------------------------------------------
+
+export const BuiltInFunctionCalls: Story = {
+  args: formConfig({
+    raw: { type: 'text', label: 'Raw', defaultValue: 'mixedCase' },
+    upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'upper-input')).toHaveValue('MIXEDCASE');
+    });
+  },
+};
+
+export const ComputedPriority: Story = {
+  args: formConfig({
+    mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'mix-input')).toHaveValue('SHUTDOWN');
+    });
+  },
+};
+
+export const ManualOverride: Story = {
+  args: formConfig({
+    part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
+    part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
+    combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Verify initial computed value
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('AB');
+    });
+
+    // Manually override the computed field
+    await clearAndType(userEvent, getInput(canvas, 'combo-input'), 'CUSTOM');
+    await userEvent.tab();
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('CUSTOM');
+    });
+
+    // Change a dependency – combo should revert to computed
+    await userEvent.type(getInput(canvas, 'part1-input'), 'X');
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('AXB');
+    });
+  },
+};
+
+export const ManualOverridePersistence: Story = {
+  args: formConfig({
+    part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
+    part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
+    combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
+    unrelated: { type: 'text', label: 'Unrelated' },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Verify initial computed value
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('AB');
+    });
+
+    // Manually override the computed field
+    await clearAndType(userEvent, getInput(canvas, 'combo-input'), 'ManualEntry');
+    await userEvent.tab();
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('ManualEntry');
+    });
+
+    // Typing into an unrelated field should NOT reset the override
+    await clearAndType(userEvent, getInput(canvas, 'unrelated-input'), 'Not relevant');
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('ManualEntry');
+    });
+
+    // Changing a dependency resets the override
+    await clearAndType(userEvent, getInput(canvas, 'part1-input'), 'X');
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'combo-input')).toHaveValue('XB');
+    });
+  },
+};
+
+export const CascadingManualOverride: Story = {
+  args: formConfig({
+    level0_override: { type: 'text', label: 'Level 0', defaultValue: 'Initial' },
+    level1_override: { type: 'text', label: 'Level 1', computedValue: 'level0_override + "-L1"' },
+    level2_override: { type: 'text', label: 'Level 2', computedValue: 'level1_override + "-L2"' },
+    level3_override: { type: 'text', label: 'Level 3', computedValue: 'level2_override + "-L3"' },
+    level4_override: { type: 'text', label: 'Level 4', computedValue: 'level3_override + "-L4"' },
+    level5_override: { type: 'text', label: 'Level 5', computedValue: 'level4_override + "-L5"' },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Verify initial cascaded values
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'level5_override-input')).toHaveValue(
+        'Initial-L1-L2-L3-L4-L5',
+      );
+    });
+
+    // Manually override level5
+    await clearAndType(userEvent, getInput(canvas, 'level5_override-input'), 'ManualOverride');
+    await userEvent.tab();
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'level5_override-input')).toHaveValue('ManualOverride');
+    });
+
+    // Change the base – level5 should revert to computed
+    await clearAndType(userEvent, getInput(canvas, 'level0_override-input'), 'ChangedBase');
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'level5_override-input')).toHaveValue(
+        'ChangedBase-L1-L2-L3-L4-L5',
+      );
+      // Verify all intermediate levels updated too
+      await expect(getInput(canvas, 'level1_override-input')).toHaveValue('ChangedBase-L1');
+      await expect(getInput(canvas, 'level2_override-input')).toHaveValue('ChangedBase-L1-L2');
+      await expect(getInput(canvas, 'level3_override-input')).toHaveValue('ChangedBase-L1-L2-L3');
+      await expect(getInput(canvas, 'level4_override-input')).toHaveValue(
+        'ChangedBase-L1-L2-L3-L4',
+      );
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Expression – Additional Stories
+// ---------------------------------------------------------------------------
+
+export const ComplexArithmeticExpressions: Story = {
+  args: formConfig({
+    valueA: { type: 'text', label: 'Value A', defaultValue: '10' },
+    valueB: { type: 'text', label: 'Value B', defaultValue: '20' },
+    valueC: { type: 'text', label: 'Value C', defaultValue: '30' },
+    hiddenByComplexExpression: {
+      type: 'text',
+      label: 'Hidden by complex expression',
+      hidden: '+valueA + +valueB > +valueC',
+      defaultValue: 'Should be hidden initially',
+    },
+    visibleByComplexExpression: {
+      type: 'text',
+      label: 'Visible by complex expression',
+      hidden: '+valueA * +valueB < +valueC',
+      defaultValue: 'Should be visible initially',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Initial: 10+20>30 is false → visible. 10*20<30 is false → visible.
+    await waitFor(async () => {
+      await expect(
+        canvas.getByTestId('hiddenByComplexExpression-input'),
+      ).toBeInTheDocument();
+      await expect(
+        canvas.getByTestId('visibleByComplexExpression-input'),
+      ).toBeInTheDocument();
+    });
+
+    // Set valueA to 20: 20+20>30=true → hidden. 20*20<30=false → visible.
+    await clearAndType(userEvent, getInput(canvas, 'valueA-input'), '20');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('hiddenByComplexExpression-input'),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.getByTestId('visibleByComplexExpression-input'),
+      ).toBeInTheDocument();
+    });
+
+    // Set valueC to 500: 20*20<500=true → hidden.
+    await clearAndType(userEvent, getInput(canvas, 'valueC-input'), '500');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('visibleByComplexExpression-input'),
+      ).not.toBeInTheDocument();
+    });
+  },
+};
+
+export const MultipleDependencies: Story = {
+  args: formConfig({
+    showCondition: { type: 'text', label: 'Show Condition', defaultValue: 'no' },
+    secondCondition: { type: 'text', label: 'Second Condition', defaultValue: 'no' },
+    conditionalField: {
+      type: 'text',
+      label: 'Conditional Field',
+      hidden: 'showCondition !== "yes" || secondCondition !== "yes"',
+      defaultValue: 'Only visible when both conditions are "yes"',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Initially hidden (both 'no')
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('conditionalField-input'),
+      ).not.toBeInTheDocument();
+    });
+
+    // Set showCondition to 'yes' → still hidden (secondCondition is 'no')
+    await clearAndType(userEvent, getInput(canvas, 'showCondition-input'), 'yes');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('conditionalField-input'),
+      ).not.toBeInTheDocument();
+    });
+
+    // Set secondCondition to 'yes' → now visible
+    await clearAndType(userEvent, getInput(canvas, 'secondCondition-input'), 'yes');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByTestId('conditionalField-input'),
+      ).toBeInTheDocument();
+    });
+
+    // Set showCondition to 'no' → hidden again
+    await clearAndType(userEvent, getInput(canvas, 'showCondition-input'), 'no');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('conditionalField-input'),
+      ).not.toBeInTheDocument();
+    });
+  },
+};
+
+export const FunctionHiddenKeepStrategy: Story = {
+  args: formConfig({
+    triggerFieldFuncKeep: {
+      type: 'text',
+      label: 'Type "hide" to hide target (keep)',
+      defaultValue: '',
+    },
+    targetFieldFuncKeep: {
+      type: 'text',
+      label: 'Target Field (Function Hidden, Keep)',
+      hidden: (formValue: FormContext) => formValue['triggerFieldFuncKeep'] === 'hide',
+      hideStrategy: 'keep',
+      defaultValue: 'I can be hidden by a function (kept in DOM)',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Initially visible
+    await waitFor(async () => {
+      await expect(
+        canvas.getByTestId('targetFieldFuncKeep-input'),
+      ).toBeInTheDocument();
+    });
+
+    // Type 'hide' → hidden (not in document)
+    await clearAndType(userEvent, getInput(canvas, 'triggerFieldFuncKeep-input'), 'hide');
+
+    await waitFor(async () => {
+      await expect(
+        canvas.queryByTestId('targetFieldFuncKeep-input'),
+      ).not.toBeInTheDocument();
+    });
+
+    // Clear → visible again
+    await userEvent.clear(getInput(canvas, 'triggerFieldFuncKeep-input'));
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByTestId('targetFieldFuncKeep-input'),
+      ).toBeInTheDocument();
+    });
+  },
+};
+
+export const ExternalFunctionCall: Story = {
+  args: formConfig({
+    nameForLabel: { type: 'text', label: 'Name', defaultValue: 'User' },
+    targetFieldLabelFunc: {
+      type: 'text',
+      dynamicLabel: (formValue: FormContext): string => {
+        const name = (formValue['nameForLabel'] as string | undefined) ?? '';
+        return getGreeting(name);
+      },
+      defaultValue: 'Some value',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Verify initial label
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('targetFieldLabelFunc-label')).toHaveTextContent(
+        'Greeting for User',
+      );
+    });
+
+    // Clear name, type 'Alice' → label updates
+    await clearAndType(userEvent, getInput(canvas, 'nameForLabel-input'), 'Alice');
+
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('targetFieldLabelFunc-label')).toHaveTextContent(
+        'Greeting for Alice',
+      );
+    });
+
+    // Clear name → label shows Guest
+    await userEvent.clear(getInput(canvas, 'nameForLabel-input'));
+
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('targetFieldLabelFunc-label')).toHaveTextContent(
+        'Greeting for Guest',
+      );
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Disabled/Readonly – Additional Stories
+// ---------------------------------------------------------------------------
+
+export const GroupDisabledWithOverride: Story = {
+  args: formConfig({
+    first: {
+      type: 'text',
+      label: 'First',
+      defaultValue: 'default-first',
+      disabled: true,
+    },
+    'first-group': {
+      type: 'group',
+      legend: 'First Group',
+      disabled: true,
+      controls: {
+        'grouped-first': {
+          type: 'text',
+          label: 'Grouped First',
+          defaultValue: 'default-grouped-first',
+        },
+        'grouped-overwritten': {
+          type: 'text',
+          label: 'Grouped Overwritten',
+          defaultValue: 'default-grouped-overwritten',
+          disabled: false,
+        },
+        'nested-group': {
+          type: 'group',
+          legend: 'Nested Group',
+          controls: {
+            'nested-second': {
+              type: 'text',
+              label: 'Nested Second',
+              defaultValue: 'default-nested-second',
+            },
+            'nested-overwritten': {
+              type: 'text',
+              label: 'Nested Overwritten',
+              defaultValue: 'default-nested-overwritten',
+              disabled: false,
+            },
+          },
+        },
+      },
+    },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-overwritten-input')).not.toBeDisabled();
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-overwritten-input'),
+      ).not.toBeDisabled();
+    });
+  },
+};
+
+export const InitialDisabledState: Story = {
+  args: formConfig({
+    disableControl: {
+      type: 'text',
+      label: 'Type "disable"',
+      defaultValue: 'disable',
+    },
+    first: {
+      type: 'text',
+      label: 'First',
+      defaultValue: 'default-first',
+      disabled: 'disableControl === "disable"',
+    },
+    'first-group': {
+      type: 'group',
+      legend: 'First Group',
+      disabled: 'disableControl === "disable"',
+      controls: {
+        'grouped-first': {
+          type: 'text',
+          label: 'Grouped First',
+          defaultValue: 'default-grouped-first',
+        },
+        'nested-group': {
+          type: 'group',
+          legend: 'Nested Group',
+          controls: {
+            'nested-second': {
+              type: 'text',
+              label: 'Nested Second',
+              defaultValue: 'default-nested-second',
+            },
+          },
+        },
+      },
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Initially all disabled (defaultValue matches condition)
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toBeDisabled();
+    });
+
+    // Clear disableControl → all become enabled
+    await userEvent.clear(getInput(canvas, 'disableControl-input'));
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).not.toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).not.toBeDisabled();
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-second-input'),
+      ).not.toBeDisabled();
+    });
+  },
+};
+
+export const GroupReadonlyWithOverride: Story = {
+  args: formConfig({
+    first: {
+      type: 'text',
+      label: 'First',
+      defaultValue: 'default-first',
+      readonly: true,
+    },
+    'first-group': {
+      type: 'group',
+      legend: 'First Group',
+      readonly: true,
+      controls: {
+        'grouped-first': {
+          type: 'text',
+          label: 'Grouped First',
+          defaultValue: 'default-grouped-first',
+        },
+        'grouped-overwritten': {
+          type: 'text',
+          label: 'Grouped Overwritten',
+          defaultValue: 'default-grouped-overwritten',
+          readonly: false,
+        },
+        'nested-group': {
+          type: 'group',
+          legend: 'Nested Group',
+          controls: {
+            'nested-second': {
+              type: 'text',
+              label: 'Nested Second',
+              defaultValue: 'default-nested-second',
+            },
+            'nested-overwritten': {
+              type: 'text',
+              label: 'Nested Overwritten',
+              defaultValue: 'default-nested-overwritten',
+              readonly: false,
+            },
+          },
+        },
+      },
+    },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).toHaveAttribute('readonly');
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toHaveAttribute(
+        'readonly',
+      );
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-second-input'),
+      ).toHaveAttribute('readonly');
+      await expect(
+        getInput(canvas, 'first-group-grouped-overwritten-input'),
+      ).not.toHaveAttribute('readonly');
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-overwritten-input'),
+      ).not.toHaveAttribute('readonly');
+    });
+  },
+};
+
+export const InitialReadonlyState: Story = {
+  args: formConfig({
+    readonlyControl: {
+      type: 'text',
+      label: 'Type "readonly"',
+      defaultValue: 'readonly',
+    },
+    first: {
+      type: 'text',
+      label: 'First',
+      defaultValue: 'default-first',
+      readonly: 'readonlyControl === "readonly"',
+    },
+    'first-group': {
+      type: 'group',
+      legend: 'First Group',
+      readonly: 'readonlyControl === "readonly"',
+      controls: {
+        'grouped-first': {
+          type: 'text',
+          label: 'Grouped First',
+          defaultValue: 'default-grouped-first',
+        },
+        'nested-group': {
+          type: 'group',
+          legend: 'Nested Group',
+          controls: {
+            'nested-second': {
+              type: 'text',
+              label: 'Nested Second',
+              defaultValue: 'default-nested-second',
+            },
+          },
+        },
+      },
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // Initially all readonly (defaultValue matches condition)
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).toHaveAttribute('readonly');
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toHaveAttribute(
+        'readonly',
+      );
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-second-input'),
+      ).toHaveAttribute('readonly');
+    });
+
+    // Clear readonlyControl → all become not readonly
+    await userEvent.clear(getInput(canvas, 'readonlyControl-input'));
+
+    await waitFor(async () => {
+      await expect(getInput(canvas, 'first-input')).not.toHaveAttribute('readonly');
+      await expect(
+        getInput(canvas, 'first-group-grouped-first-input'),
+      ).not.toHaveAttribute('readonly');
+      await expect(
+        getInput(canvas, 'first-group-nested-group-nested-second-input'),
+      ).not.toHaveAttribute('readonly');
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Dynamic Properties – Additional Stories
+// ---------------------------------------------------------------------------
+
+export const StaticLabelFallback: Story = {
+  args: formConfig({
+    target: { type: 'text', label: 'Purely Static Label' },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('target-label')).toHaveTextContent(
+        'Purely Static Label',
+      );
+    });
+  },
+};
+
+export const StaticTitleFallback: Story = {
+  args: formConfig({
+    targetGroup: {
+      type: 'group',
+      legend: 'Purely Static Title',
+      controls: {},
+    },
+  }),
+  play: async ({ canvas }) => {
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('targetGroup-title')).toHaveTextContent(
+        'Purely Static Title',
       );
     });
   },

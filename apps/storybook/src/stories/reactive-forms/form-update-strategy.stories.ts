@@ -267,3 +267,103 @@ export const NestedGroupInheritance: Story = {
     });
   },
 };
+
+// -- ExplicitPerControlStrategies --
+// Tests explicit updateOn strategies on individual controls without a global default.
+
+export const ExplicitPerControlStrategies: Story = {
+  args: {
+    autoUpdate: true,
+    formConfig: {
+      content: {
+        'change-control': { type: 'text', label: 'Change Control', updateOn: 'change' },
+        'blur-control': { type: 'text', label: 'Blur Control', updateOn: 'blur' },
+        'submit-control': { type: 'text', label: 'Submit Control', updateOn: 'submit' },
+      },
+    } satisfies NgxFbForm,
+  },
+  play: async ({ canvas, userEvent }) => {
+    // Change strategy — updates immediately
+    const changeInput = canvas.getByTestId('change-control-input');
+    await userEvent.clear(changeInput);
+    await userEvent.type(changeInput, 'change-text');
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('change-control-value')).toHaveTextContent('change-text');
+    });
+
+    // Blur strategy — updates only on blur
+    const blurInput = canvas.getByTestId('blur-control-input');
+    await userEvent.clear(blurInput);
+    await userEvent.type(blurInput, 'blur-text');
+    await expect(canvas.getByTestId('blur-control-value')).toHaveTextContent('');
+    await userEvent.tab();
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('blur-control-value')).toHaveTextContent('blur-text');
+    });
+
+    // Submit strategy — updates only on submit
+    const submitInput = canvas.getByTestId('submit-control-input');
+    await userEvent.clear(submitInput);
+    await userEvent.type(submitInput, 'submit-text');
+    await userEvent.tab();
+    await expect(canvas.queryByTestId('submit-control-value')).not.toHaveTextContent('submit-text');
+    await userEvent.click(canvas.getByTestId('submit'));
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('submit-control-value')).toHaveTextContent('submit-text');
+    });
+  },
+};
+
+// -- GlobalDefaultWithNestedGroups --
+// Tests global default strategy interacting with nested group overrides.
+
+export const GlobalDefaultWithNestedGroups: Story = {
+  decorators: [
+    applicationConfig({
+      providers: [provideReactiveFormsExamples({ updateOn: 'blur' })],
+    }),
+  ],
+  args: {
+    autoUpdate: true,
+    formConfig: {
+      content: {
+        'root-group': {
+          type: 'group',
+          controls: {
+            'child-control': { type: 'text', label: 'Child Control' },
+            'child-group': {
+              type: 'group',
+              updateOn: 'change',
+              controls: {
+                'grandchild-control': { type: 'text', label: 'Grandchild Control' },
+              },
+            },
+          },
+        },
+      },
+    } satisfies NgxFbForm,
+  },
+  play: async ({ canvas, userEvent }) => {
+    // child-control inherits global default (blur)
+    const childInput = canvas.getByTestId('root-group-child-control-input');
+    await userEvent.clear(childInput);
+    await userEvent.type(childInput, 'child-text');
+    await expect(canvas.queryByTestId('root-group.child-control-value')).not.toBeInTheDocument();
+    await userEvent.tab();
+    await waitFor(async () => {
+      await expect(canvas.getByTestId('root-group.child-control-value')).toHaveTextContent(
+        'child-text',
+      );
+    });
+
+    // grandchild-control inherits change from child-group override
+    const grandchildInput = canvas.getByTestId('root-group-child-group-grandchild-control-input');
+    await userEvent.clear(grandchildInput);
+    await userEvent.type(grandchildInput, 'grandchild-text');
+    await waitFor(async () => {
+      await expect(
+        canvas.getByTestId('root-group.child-group.grandchild-control-value'),
+      ).toHaveTextContent('grandchild-text');
+    });
+  },
+};
