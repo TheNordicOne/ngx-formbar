@@ -4,16 +4,16 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { KeyValuePipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
 import { NgxfbAbstractControlDirective } from '@ngx-formbar/core';
 import { GroupControl } from '@ngx-formbar/examples';
 import { ngxfbGroupHostDirective, viewProviders } from '../../helpers';
+import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
 
 @Component({
   selector: 'ngxfb-examples-group-control',
-  imports: [ReactiveFormsModule, NgxfbAbstractControlDirective, KeyValuePipe],
+  imports: [ReactiveFormsModule, NgxfbAbstractControlDirective, ValidationErrorsComponent],
   templateUrl: './group-control.component.html',
   styleUrl: './group-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

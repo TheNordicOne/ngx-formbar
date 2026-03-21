@@ -4,15 +4,15 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { KeyValuePipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
 import { TextareaControl } from '@ngx-formbar/examples';
 import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
+import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
 
 @Component({
   selector: 'ngxfb-examples-textarea-control',
-  imports: [ReactiveFormsModule, KeyValuePipe],
+  imports: [ReactiveFormsModule, ValidationErrorsComponent],
   templateUrl: './textarea-control.component.html',
   styleUrl: './textarea-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

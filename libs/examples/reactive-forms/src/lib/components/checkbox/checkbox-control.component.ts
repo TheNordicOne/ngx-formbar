@@ -4,16 +4,15 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { KeyValuePipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
 import { CheckboxControl } from '@ngx-formbar/examples';
-
 import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
+import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
 
 @Component({
   selector: 'ngxfb-examples-checkbox-control',
-  imports: [ReactiveFormsModule, KeyValuePipe],
+  imports: [ReactiveFormsModule, ValidationErrorsComponent],
   templateUrl: './checkbox-control.component.html',
   styleUrl: './checkbox-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
