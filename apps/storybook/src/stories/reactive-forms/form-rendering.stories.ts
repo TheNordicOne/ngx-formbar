@@ -18,6 +18,9 @@ type Story = StoryObj<StoryFormHostComponent>;
 // ---------------------------------------------------------------------------
 
 export const FormContent: Story = {
+  parameters: {
+    docs: { description: { story: 'Renders all content types with default values, including nested groups.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -112,6 +115,9 @@ export const FormContent: Story = {
 // ---------------------------------------------------------------------------
 
 export const PatchAndReset: Story = {
+  parameters: {
+    docs: { description: { story: 'Patches form values and resets, verifying nullable vs nonNullable behavior.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -191,6 +197,9 @@ export const PatchAndReset: Story = {
 // ---------------------------------------------------------------------------
 
 export const ContentRegistration: Story = {
+  parameters: {
+    docs: { description: { story: 'Verifies that registered content renders in the form.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -213,6 +222,9 @@ export const ContentRegistration: Story = {
 // ---------------------------------------------------------------------------
 
 export const DefaultTestId: Story = {
+  parameters: {
+    docs: { description: { story: 'Verifies the default testId naming convention across nesting levels.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -282,6 +294,9 @@ export const DefaultTestId: Story = {
 // ---------------------------------------------------------------------------
 
 export const CustomTestIdBuilder: Story = {
+  parameters: {
+    docs: { description: { story: 'Verifies a custom testIdBuilderFn overrides the default naming.' } },
+  },
   decorators: [
     applicationConfig({
       providers: [
@@ -373,6 +388,9 @@ export const CustomTestIdBuilder: Story = {
 // ---------------------------------------------------------------------------
 
 export const ControlProperties: Story = {
+  parameters: {
+    docs: { description: { story: 'Renders a control with label, hint, and default value.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -402,6 +420,9 @@ export const ControlProperties: Story = {
 // ---------------------------------------------------------------------------
 
 export const NoDefaultValue: Story = {
+  parameters: {
+    docs: { description: { story: 'Renders a control without a default value.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -428,6 +449,9 @@ export const NoDefaultValue: Story = {
 // ---------------------------------------------------------------------------
 
 export const SubmitFormValues: Story = {
+  parameters: {
+    docs: { description: { story: 'Fills all fields and submits, verifying the rendered form values.' } },
+  },
   args: {
     formConfig: {
       content: {

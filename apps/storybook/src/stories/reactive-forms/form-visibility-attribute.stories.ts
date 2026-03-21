@@ -28,6 +28,9 @@ function formConfig(
 
 export const GroupKeepLast: Story = {
   name: 'Group — Keep & Last',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with last value — group stays in DOM, values preserved.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -122,6 +125,9 @@ export const GroupKeepLast: Story = {
 
 export const GroupRemoveLast: Story = {
   name: 'Group — Remove & Last',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with last value — group removed, values restored on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -214,6 +220,9 @@ export const GroupRemoveLast: Story = {
 
 export const GroupRemoveDefault: Story = {
   name: 'Group — Remove & Default',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with default value — reverts to defaults on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -306,6 +315,9 @@ export const GroupRemoveDefault: Story = {
 
 export const GroupRemoveReset: Story = {
   name: 'Group — Remove & Reset',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with reset — clears values on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -398,6 +410,9 @@ export const GroupRemoveReset: Story = {
 
 export const GroupKeepDefault: Story = {
   name: 'Group — Keep & Default',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with default value — reverts to defaults when hidden.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -492,6 +507,9 @@ export const GroupKeepDefault: Story = {
 
 export const GroupKeepReset: Story = {
   name: 'Group — Keep & Reset',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with reset — clears values when hidden.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -586,6 +604,9 @@ export const GroupKeepReset: Story = {
 
 export const ParentRemovePrecedence: Story = {
   name: 'Group — Parent Remove Precedence',
+  parameters: {
+    docs: { description: { story: 'Parent remove strategy takes precedence over child keep.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -671,6 +692,9 @@ export const ParentRemovePrecedence: Story = {
 
 export const InheritedStrategies: Story = {
   name: 'Group — Inherited Strategies',
+  parameters: {
+    docs: { description: { story: 'Child group inherits parent\'s keep & last strategies.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -754,6 +778,9 @@ export const InheritedStrategies: Story = {
 
 export const StrategyOverride: Story = {
   name: 'Group — Strategy Override',
+  parameters: {
+    docs: { description: { story: 'Child group overrides parent\'s value strategy.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -841,6 +868,9 @@ export const StrategyOverride: Story = {
 
 export const ThreeLevelInheritance: Story = {
   name: 'Group — Three-Level Inheritance',
+  parameters: {
+    docs: { description: { story: 'Three-level hierarchy with strategy overrides at each level.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {

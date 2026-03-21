@@ -15,6 +15,9 @@ type Story = StoryObj<StoryFormHostComponent>;
 // ---------------------------------------------------------------------------
 
 export const SingleValidator: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates a single minLength validator triggers and clears.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -56,6 +59,9 @@ export const SingleValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const MultipleValidators: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates multiple independent validators on one control.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -116,6 +122,9 @@ export const MultipleValidators: Story = {
 // ---------------------------------------------------------------------------
 
 export const CombinedValidator: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates a combined validator that applies minLength, required, and letter rules.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -174,6 +183,9 @@ export const CombinedValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const AsyncValidator: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates async validators run after sync validators pass.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -241,6 +253,9 @@ export const AsyncValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const GroupContent: Story = {
+  parameters: {
+    docs: { description: { story: 'Renders a group with nested groups and controls.' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -287,6 +302,9 @@ export const GroupContent: Story = {
 // ---------------------------------------------------------------------------
 
 export const GroupValidator: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates group-level sync validators (no-duplicates, forbidden-letter-a).' } },
+  },
   args: {
     formConfig: {
       content: {
@@ -356,6 +374,9 @@ export const GroupValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const GroupAsyncValidator: Story = {
+  parameters: {
+    docs: { description: { story: 'Validates a group-level async validator.' } },
+  },
   args: {
     formConfig: {
       content: {

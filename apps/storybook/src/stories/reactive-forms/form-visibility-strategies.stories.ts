@@ -32,6 +32,9 @@ function getFormValue(): Record<string, unknown> {
 
 export const ControlKeepLast: Story = {
   name: 'Control — Keep & Last',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with last value — control removed from view, value preserved in model.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -84,6 +87,9 @@ export const ControlKeepLast: Story = {
 
 export const ControlRemoveLast: Story = {
   name: 'Control — Remove & Last',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with last value — control removed from DOM and model, restored on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -136,6 +142,9 @@ export const ControlRemoveLast: Story = {
 
 export const ControlRemoveDefault: Story = {
   name: 'Control — Remove & Default',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with default — reverts to default value on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -189,6 +198,9 @@ export const ControlRemoveDefault: Story = {
 
 export const ControlRemoveReset: Story = {
   name: 'Control — Remove & Reset',
+  parameters: {
+    docs: { description: { story: 'Remove strategy with reset — clears to null on show.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -245,6 +257,9 @@ export const ControlRemoveReset: Story = {
 
 export const ControlKeepDefault: Story = {
   name: 'Control — Keep & Default',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with default — reverts to default when hidden.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {
@@ -302,6 +317,9 @@ export const ControlKeepDefault: Story = {
 
 export const ControlKeepReset: Story = {
   name: 'Control — Keep & Reset',
+  parameters: {
+    docs: { description: { story: 'Keep strategy with reset — clears to null when hidden.' } },
+  },
   args: {
     formConfig: formConfig({
       hideControl: {

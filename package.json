@@ -44,6 +44,7 @@
     "@nx/workspace": "22.5.4",
     "@playwright/test": "^1.36.0",
     "@schematics/angular": "~21.1.0",
+    "@storybook/addon-docs": "^10.3.1",
     "@storybook/angular": "10.2.16",
     "@storybook/test-runner": "^0.24.3",
     "@swc-node/register": "~1.11.1",

@@ -27,6 +27,9 @@ function formConfig(
 // ---------------------------------------------------------------------------
 
 export const StaticDisabled: Story = {
+  parameters: {
+    docs: { description: { story: 'Static disabled: true disables controls and inherits through groups.' } },
+  },
   args: formConfig({
     first: {
       type: 'text',
@@ -68,6 +71,9 @@ export const StaticDisabled: Story = {
 };
 
 export const ConditionalDisabled: Story = {
+  parameters: {
+    docs: { description: { story: 'Conditional expression toggles disabled state reactively.' } },
+  },
   args: formConfig({
     disableControl: {
       type: 'text',
@@ -139,6 +145,9 @@ export const ConditionalDisabled: Story = {
 // ---------------------------------------------------------------------------
 
 export const StaticReadonly: Story = {
+  parameters: {
+    docs: { description: { story: 'Static readonly: true applies the readonly attribute.' } },
+  },
   args: formConfig({
     first: {
       type: 'text',
@@ -184,6 +193,9 @@ export const StaticReadonly: Story = {
 };
 
 export const ConditionalReadonly: Story = {
+  parameters: {
+    docs: { description: { story: 'Conditional expression toggles readonly state reactively.' } },
+  },
   args: formConfig({
     readonlyControl: {
       type: 'text',
@@ -267,6 +279,9 @@ export const ConditionalReadonly: Story = {
 // ---------------------------------------------------------------------------
 
 export const FunctionExpressions: Story = {
+  parameters: {
+    docs: { description: { story: 'Function-based expressions for hidden, disabled, readonly, computed, and dynamic labels.' } },
+  },
   args: formConfig({
     triggerField: {
       type: 'text',
@@ -403,6 +418,9 @@ export const FunctionExpressions: Story = {
 };
 
 export const DeepHierarchyVisibility: Story = {
+  parameters: {
+    docs: { description: { story: 'Hidden expressions across three levels of nesting with mixed strategies.' } },
+  },
   args: formConfig({
     toggleControl: {
       type: 'text',
@@ -518,6 +536,9 @@ export const DeepHierarchyVisibility: Story = {
 };
 
 export const CrossGroupDependencies: Story = {
+  parameters: {
+    docs: { description: { story: 'A field in one group depends on a field in another group.' } },
+  },
   args: formConfig({
     branchA: {
       type: 'group',
@@ -587,6 +608,9 @@ export const CrossGroupDependencies: Story = {
 // ---------------------------------------------------------------------------
 
 export const ComputedValue: Story = {
+  parameters: {
+    docs: { description: { story: 'String concatenation, numeric computation, and fallback expressions.' } },
+  },
   args: formConfig({
     firstName: {
       type: 'text',
@@ -676,6 +700,9 @@ export const ComputedValue: Story = {
 };
 
 export const CascadingComputed: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed values cascade through five levels.' } },
+  },
   args: formConfig({
     level0: {
       type: 'text',
@@ -752,6 +779,9 @@ export const CascadingComputed: Story = {
 };
 
 export const ComputedWithValueStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed values interact with keep + last/default/reset strategies.' } },
+  },
   args: formConfig({
     toggle: { type: 'text', label: 'Toggle (type "hide")' },
     dep: {
@@ -841,6 +871,9 @@ export const ComputedWithValueStrategy: Story = {
 // ---------------------------------------------------------------------------
 
 export const DynamicLabels: Story = {
+  parameters: {
+    docs: { description: { story: 'Dynamic label expressions update when the source field changes.' } },
+  },
   args: formConfig({
     source: {
       type: 'text',
@@ -885,6 +918,9 @@ function getGreeting(name: string): string {
 }
 
 export const DynamicTitles: Story = {
+  parameters: {
+    docs: { description: { story: 'Dynamic titles on groups and labels on controls update reactively.' } },
+  },
   args: formConfig({
     source: {
       type: 'text',
@@ -941,6 +977,9 @@ export const DynamicTitles: Story = {
 // ---------------------------------------------------------------------------
 
 export const BuiltInFunctionCalls: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed expression calls .toUpperCase() on a field value.' } },
+  },
   args: formConfig({
     raw: { type: 'text', label: 'Raw', defaultValue: 'mixedCase' },
     upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
@@ -953,6 +992,9 @@ export const BuiltInFunctionCalls: Story = {
 };
 
 export const ComputedPriority: Story = {
+  parameters: {
+    docs: { description: { story: 'computedValue takes priority over defaultValue.' } },
+  },
   args: formConfig({
     mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
   }),
@@ -964,6 +1006,9 @@ export const ComputedPriority: Story = {
 };
 
 export const ManualOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'User can override a computed value; changing a dependency resets it.' } },
+  },
   args: formConfig({
     part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
     part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
@@ -996,6 +1041,9 @@ export const ManualOverride: Story = {
 };
 
 export const ManualOverridePersistence: Story = {
+  parameters: {
+    docs: { description: { story: 'Manual override persists when changing unrelated fields.' } },
+  },
   args: formConfig({
     part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
     part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
@@ -1040,6 +1088,9 @@ export const ManualOverridePersistence: Story = {
 };
 
 export const CascadingManualOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'Manual override on the deepest cascading level resets on base change.' } },
+  },
   args: formConfig({
     level0_override: { type: 'text', label: 'Level 0', defaultValue: 'Initial' },
     level1_override: { type: 'text', label: 'Level 1', computedValue: 'level0_override + "-L1"' },
@@ -1096,6 +1147,9 @@ export const CascadingManualOverride: Story = {
 // ---------------------------------------------------------------------------
 
 export const ComplexArithmeticExpressions: Story = {
+  parameters: {
+    docs: { description: { story: 'Arithmetic operators in hidden expressions (+, *, comparisons).' } },
+  },
   args: formConfig({
     valueA: { type: 'text', label: 'Value A', defaultValue: '10' },
     valueB: { type: 'text', label: 'Value B', defaultValue: '20' },
@@ -1152,6 +1206,9 @@ export const ComplexArithmeticExpressions: Story = {
 };
 
 export const MultipleDependencies: Story = {
+  parameters: {
+    docs: { description: { story: 'Multiple conditions with logical OR in a hidden expression.' } },
+  },
   args: formConfig({
     showCondition: { type: 'text', label: 'Show Condition', defaultValue: 'no' },
     secondCondition: { type: 'text', label: 'Second Condition', defaultValue: 'no' },
@@ -1205,6 +1262,9 @@ export const MultipleDependencies: Story = {
 };
 
 export const FunctionHiddenKeepStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Function-based hidden expression with keep strategy.' } },
+  },
   args: formConfig({
     triggerFieldFuncKeep: {
       type: 'text',
@@ -1250,6 +1310,9 @@ export const FunctionHiddenKeepStrategy: Story = {
 };
 
 export const ExternalFunctionCall: Story = {
+  parameters: {
+    docs: { description: { story: 'Dynamic label uses an external helper function.' } },
+  },
   args: formConfig({
     nameForLabel: { type: 'text', label: 'Name', defaultValue: 'User' },
     targetFieldLabelFunc: {
@@ -1290,6 +1353,9 @@ export const ExternalFunctionCall: Story = {
 // ---------------------------------------------------------------------------
 
 export const GroupDisabledWithOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'Group disabled with individual controls overriding to enabled.' } },
+  },
   args: formConfig({
     first: {
       type: 'text',
@@ -1345,6 +1411,9 @@ export const GroupDisabledWithOverride: Story = {
 };
 
 export const InitialDisabledState: Story = {
+  parameters: {
+    docs: { description: { story: 'Initial state matches disabled condition from default value.' } },
+  },
   args: formConfig({
     disableControl: {
       type: 'text',
@@ -1401,6 +1470,9 @@ export const InitialDisabledState: Story = {
 };
 
 export const GroupReadonlyWithOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'Group readonly with individual controls overriding to editable.' } },
+  },
   args: formConfig({
     first: {
       type: 'text',
@@ -1458,6 +1530,9 @@ export const GroupReadonlyWithOverride: Story = {
 };
 
 export const InitialReadonlyState: Story = {
+  parameters: {
+    docs: { description: { story: 'Initial state matches readonly condition from default value.' } },
+  },
   args: formConfig({
     readonlyControl: {
       type: 'text',
@@ -1520,6 +1595,9 @@ export const InitialReadonlyState: Story = {
 // ---------------------------------------------------------------------------
 
 export const StaticLabelFallback: Story = {
+  parameters: {
+    docs: { description: { story: 'Static label renders when no dynamic label is set.' } },
+  },
   args: formConfig({
     target: { type: 'text', label: 'Purely Static Label' },
   }),
@@ -1531,6 +1609,9 @@ export const StaticLabelFallback: Story = {
 };
 
 export const StaticTitleFallback: Story = {
+  parameters: {
+    docs: { description: { story: 'Static group title renders when no dynamic title is set.' } },
+  },
   args: formConfig({
     targetGroup: {
       type: 'group',

@@ -17,6 +17,9 @@ type Story = StoryObj<StoryFormHostComponent>;
 // Default Angular behavior: form control updates on every keystroke.
 
 export const DefaultChangeStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Default Angular behavior — form updates on every keystroke.' } },
+  },
   args: {
     autoUpdate: true,
     formConfig: {
@@ -45,6 +48,9 @@ export const DefaultChangeStrategy: Story = {
 // Global blur: typing doesn't update the form, blur does.
 
 export const GlobalBlurStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Global blur strategy — form updates only on blur.' } },
+  },
   decorators: [
     applicationConfig({
       providers: [provideReactiveFormsExamples({ updateOn: 'blur' })],
@@ -83,6 +89,9 @@ export const GlobalBlurStrategy: Story = {
 // Global submit: form only updates on form submission.
 
 export const GlobalSubmitStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Global submit strategy — form updates only on submit.' } },
+  },
   decorators: [
     applicationConfig({
       providers: [provideReactiveFormsExamples({ updateOn: 'submit' })],
@@ -123,6 +132,9 @@ export const GlobalSubmitStrategy: Story = {
 // Global strategy is 'submit', but one control overrides to 'change'.
 
 export const ControlOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'A control overrides the global submit strategy with change.' } },
+  },
   decorators: [
     applicationConfig({
       providers: [provideReactiveFormsExamples({ updateOn: 'submit' })],
@@ -182,6 +194,9 @@ export const ControlOverride: Story = {
 // but can override it at any level.
 
 export const NestedGroupInheritance: Story = {
+  parameters: {
+    docs: { description: { story: 'Nested groups inherit and override the parent updateOn strategy.' } },
+  },
   args: {
     autoUpdate: true,
     formConfig: {
@@ -270,6 +285,9 @@ export const NestedGroupInheritance: Story = {
 // Tests explicit updateOn strategies on individual controls without a global default.
 
 export const ExplicitPerControlStrategies: Story = {
+  parameters: {
+    docs: { description: { story: 'Each control explicitly sets its own updateOn strategy.' } },
+  },
   args: {
     autoUpdate: true,
     formConfig: {
@@ -316,6 +334,9 @@ export const ExplicitPerControlStrategies: Story = {
 // Tests global default strategy interacting with nested group overrides.
 
 export const GlobalDefaultWithNestedGroups: Story = {
+  parameters: {
+    docs: { description: { story: 'Global blur default with a nested group overriding to change.' } },
+  },
   decorators: [
     applicationConfig({
       providers: [provideReactiveFormsExamples({ updateOn: 'blur' })],
