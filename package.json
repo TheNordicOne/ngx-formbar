@@ -45,6 +45,7 @@
     "@playwright/test": "^1.36.0",
     "@schematics/angular": "~21.1.0",
     "@storybook/angular": "10.2.16",
+    "@storybook/test-runner": "^0.24.3",
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
