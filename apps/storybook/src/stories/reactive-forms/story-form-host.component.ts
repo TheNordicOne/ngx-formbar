@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { NgxFbForm } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
 
@@ -24,6 +25,7 @@ export class StoryFormHostComponent {
 
   readonly formConfig = input.required<NgxFbForm>();
   readonly patchData = input<Record<string, unknown>>({});
+  readonly autoUpdate = input(false);
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 
   form: FormGroup = this.formBuilder.group({});
@@ -31,19 +33,20 @@ export class StoryFormHostComponent {
   constructor() {
     StoryFormHostComponent.lastInstance = this;
 
-    this.form.statusChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      this.onSubmit();
-    });
+    this.form.statusChanges
+      .pipe(
+        filter(() => this.autoUpdate()),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.onSubmit());
   }
 
   reset() {
     this.form.reset();
-    this.onSubmit();
   }
 
   patchValue() {
     this.form.patchValue(this.patchData());
-    this.onSubmit();
   }
 
   onSubmit() {

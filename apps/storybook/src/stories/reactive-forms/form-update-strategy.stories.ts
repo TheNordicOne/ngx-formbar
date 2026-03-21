@@ -18,6 +18,7 @@ type Story = StoryObj<StoryFormHostComponent>;
 
 export const DefaultChangeStrategy: Story = {
   args: {
+    autoUpdate: true,
     formConfig: {
       content: {
         'default-control': {
@@ -50,6 +51,7 @@ export const GlobalBlurStrategy: Story = {
     }),
   ],
   args: {
+    autoUpdate: true,
     formConfig: {
       content: {
         control: {
@@ -87,6 +89,7 @@ export const GlobalSubmitStrategy: Story = {
     }),
   ],
   args: {
+    autoUpdate: true,
     formConfig: {
       content: {
         control: {
@@ -126,6 +129,7 @@ export const ControlOverride: Story = {
     }),
   ],
   args: {
+    autoUpdate: true,
     formConfig: {
       content: {
         'default-control': {
@@ -179,6 +183,7 @@ export const ControlOverride: Story = {
 
 export const NestedGroupInheritance: Story = {
   args: {
+    autoUpdate: true,
     formConfig: {
       content: {
         'root-group': {
@@ -215,7 +220,7 @@ export const NestedGroupInheritance: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // -- Grandchild inheriting 'submit' through nested groups --
-    const grandchildInput = canvas.getByTestId('grandchild-control-input');
+    const grandchildInput = canvas.getByTestId('root-group-child-group-grandchild-control-input');
     await userEvent.clear(grandchildInput);
     await userEvent.type(grandchildInput, 'grandchild-text');
     await userEvent.tab();
@@ -238,7 +243,7 @@ export const NestedGroupInheritance: Story = {
 
     // -- Grandchild inheriting 'blur' from overridden parent group --
     const overrideInput = canvas.getByTestId(
-      'grandchild-override-control-input',
+      'root-group-override-group-grandchild-override-control-input',
     );
     await userEvent.clear(overrideInput);
     await userEvent.type(overrideInput, 'override-grandchild-text');

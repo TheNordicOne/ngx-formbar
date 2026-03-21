@@ -34,6 +34,12 @@ export class TextControlComponent {
   );
   protected readonly hint = computed(() => this.content().hint);
   protected readonly placeholder = computed(() => this.content().placeHolder);
+  protected readonly structurallyHidden = computed(
+    () => this.content().hideMode !== 'attribute' && this.isHidden(),
+  );
+  protected readonly attributeHidden = computed(
+    () => this.content().hideMode === 'attribute' && this.isHidden(),
+  );
   protected get errors() {
     return this.control.formControl?.errors ?? {};
   }

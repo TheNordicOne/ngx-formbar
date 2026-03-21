@@ -74,8 +74,8 @@ export const StaticDisabled: Story = {
   play: async ({ canvas }) => {
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).toBeDisabled();
-      await expect(getInput(canvas, 'grouped-first-input')).toBeDisabled();
-      await expect(getInput(canvas, 'nested-second-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toBeDisabled();
     });
   },
 };
@@ -120,8 +120,8 @@ export const ConditionalDisabled: Story = {
     // Initially not disabled
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).not.toBeDisabled();
-      await expect(getInput(canvas, 'grouped-first-input')).not.toBeDisabled();
-      await expect(getInput(canvas, 'nested-second-input')).not.toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).not.toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).not.toBeDisabled();
     });
 
     // Type "disable" to trigger the expression
@@ -129,8 +129,8 @@ export const ConditionalDisabled: Story = {
 
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).toBeDisabled();
-      await expect(getInput(canvas, 'grouped-first-input')).toBeDisabled();
-      await expect(getInput(canvas, 'nested-second-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toBeDisabled();
     });
 
     // Clear the trigger to re-enable
@@ -142,8 +142,8 @@ export const ConditionalDisabled: Story = {
 
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).not.toBeDisabled();
-      await expect(getInput(canvas, 'grouped-first-input')).not.toBeDisabled();
-      await expect(getInput(canvas, 'nested-second-input')).not.toBeDisabled();
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).not.toBeDisabled();
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).not.toBeDisabled();
     });
   },
 };
@@ -187,10 +187,10 @@ export const StaticReadonly: Story = {
   play: async ({ canvas }) => {
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).toHaveAttribute('readonly');
-      await expect(getInput(canvas, 'grouped-first-input')).toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toHaveAttribute(
         'readonly',
       );
-      await expect(getInput(canvas, 'nested-second-input')).toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toHaveAttribute(
         'readonly',
       );
     });
@@ -237,10 +237,10 @@ export const ConditionalReadonly: Story = {
     // Initially not readonly
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).not.toHaveAttribute('readonly');
-      await expect(getInput(canvas, 'grouped-first-input')).not.toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).not.toHaveAttribute(
         'readonly',
       );
-      await expect(getInput(canvas, 'nested-second-input')).not.toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).not.toHaveAttribute(
         'readonly',
       );
     });
@@ -254,10 +254,10 @@ export const ConditionalReadonly: Story = {
 
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).toHaveAttribute('readonly');
-      await expect(getInput(canvas, 'grouped-first-input')).toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).toHaveAttribute(
         'readonly',
       );
-      await expect(getInput(canvas, 'nested-second-input')).toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).toHaveAttribute(
         'readonly',
       );
     });
@@ -271,10 +271,10 @@ export const ConditionalReadonly: Story = {
 
     await waitFor(async () => {
       await expect(getInput(canvas, 'first-input')).not.toHaveAttribute('readonly');
-      await expect(getInput(canvas, 'grouped-first-input')).not.toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-grouped-first-input')).not.toHaveAttribute(
         'readonly',
       );
-      await expect(getInput(canvas, 'nested-second-input')).not.toHaveAttribute(
+      await expect(getInput(canvas, 'first-group-nested-group-nested-second-input')).not.toHaveAttribute(
         'readonly',
       );
     });
@@ -492,9 +492,9 @@ export const DeepHierarchyVisibility: Story = {
   play: async ({ canvas, userEvent }) => {
     // Initially all fields should be visible
     await waitFor(async () => {
-      await expect(canvas.getByTestId('level2AField-input')).toBeInTheDocument();
-      await expect(canvas.getByTestId('level3AField-input')).toBeInTheDocument();
-      await expect(canvas.getByTestId('level3BField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2A-level2AField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2B-level3A-level3AField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2B-level3B-level3BField-input')).toBeInTheDocument();
     });
 
     // Hide fields with the toggle control
@@ -503,29 +503,29 @@ export const DeepHierarchyVisibility: Story = {
     // Fields with hidden condition should be hidden
     await waitFor(async () => {
       await expect(
-        canvas.queryByTestId('level2AField-input'),
+        canvas.queryByTestId('level1-level2A-level2AField-input'),
       ).not.toBeInTheDocument();
       await expect(
-        canvas.queryByTestId('level3AField-input'),
+        canvas.queryByTestId('level1-level2B-level3A-level3AField-input'),
       ).not.toBeInTheDocument();
       await expect(
-        canvas.queryByTestId('level1.level2B.level3B-group'),
+        canvas.queryByTestId('level1-level2B-level3B-group'),
       ).not.toBeInTheDocument();
     });
 
     // Fields without hidden condition should still be visible
     await expect(canvas.getByTestId('rootField-input')).toBeInTheDocument();
-    await expect(canvas.getByTestId('level1Field-input')).toBeInTheDocument();
-    await expect(canvas.getByTestId('level2BField-input')).toBeInTheDocument();
+    await expect(canvas.getByTestId('level1-level1Field-input')).toBeInTheDocument();
+    await expect(canvas.getByTestId('level1-level2B-level2BField-input')).toBeInTheDocument();
 
     // Show fields again by clearing the toggle control
     await userEvent.clear(getInput(canvas, 'toggleControl-input'));
 
     // All fields should be visible again
     await waitFor(async () => {
-      await expect(canvas.getByTestId('level2AField-input')).toBeInTheDocument();
-      await expect(canvas.getByTestId('level3AField-input')).toBeInTheDocument();
-      await expect(canvas.getByTestId('level3BField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2A-level2AField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2B-level3A-level3AField-input')).toBeInTheDocument();
+      await expect(canvas.getByTestId('level1-level2B-level3B-level3BField-input')).toBeInTheDocument();
     });
   },
 };
@@ -566,27 +566,27 @@ export const CrossGroupDependencies: Story = {
     // Initially dependent field should be hidden
     await waitFor(async () => {
       await expect(
-        canvas.queryByTestId('dependentField-input'),
+        canvas.queryByTestId('branchB-nestedGroup-dependentField-input'),
       ).not.toBeInTheDocument();
     });
 
     // Set the toggle field value to "show"
-    await clearAndType(userEvent, getInput(canvas, 'toggleField-input'), 'show');
+    await clearAndType(userEvent, getInput(canvas, 'branchA-toggleField-input'), 'show');
 
     // Dependent field should now be visible
     await waitFor(async () => {
       await expect(
-        canvas.getByTestId('dependentField-input'),
+        canvas.getByTestId('branchB-nestedGroup-dependentField-input'),
       ).toBeInTheDocument();
     });
 
     // Change toggle field to something else
-    await clearAndType(userEvent, getInput(canvas, 'toggleField-input'), 'hide');
+    await clearAndType(userEvent, getInput(canvas, 'branchA-toggleField-input'), 'hide');
 
     // Dependent field should be hidden again
     await waitFor(async () => {
       await expect(
-        canvas.queryByTestId('dependentField-input'),
+        canvas.queryByTestId('branchB-nestedGroup-dependentField-input'),
       ).not.toBeInTheDocument();
     });
   },
@@ -621,7 +621,10 @@ export const ComputedValue: Story = {
     square: {
       type: 'text',
       label: 'Square',
-      computedValue: '+base * +base',
+      computedValue: (ctx: FormContext): number => {
+        const b = Number(ctx['base']);
+        return b * b;
+      },
     },
     maybeEmpty: {
       type: 'text',
@@ -902,7 +905,7 @@ export const DynamicTitles: Story = {
       await expect(canvas.getByTestId('parentGroup-title')).toHaveTextContent(
         'Parent: Initial',
       );
-      await expect(canvas.getByTestId('childControl-label')).toHaveTextContent(
+      await expect(canvas.getByTestId('parentGroup-childControl-label')).toHaveTextContent(
         'Child: Initial',
       );
     });
@@ -916,7 +919,7 @@ export const DynamicTitles: Story = {
       await expect(canvas.getByTestId('parentGroup-title')).toHaveTextContent(
         'Parent: Updated',
       );
-      await expect(canvas.getByTestId('childControl-label')).toHaveTextContent(
+      await expect(canvas.getByTestId('parentGroup-childControl-label')).toHaveTextContent(
         'Child: Updated',
       );
     });
