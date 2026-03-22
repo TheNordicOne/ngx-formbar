@@ -32,7 +32,7 @@ import {
 
 const COLLECTION_PATH = join(
   __dirname,
-  '../../../../dist/reactive-forms/schematics/collection.json',
+  '../../../../dist/libs/reactive-forms/schematics/collection.json',
 );
 
 describe('ng-add schematic', () => {

@@ -11,7 +11,7 @@ import { CORE_PACKAGE_NAME, REACTIVE_FORMS_PACKAGE_NAME } from '../shared/consta
 
 export const COLLECTION_PATH = join(
   __dirname,
-  '../../../../dist/reactive-forms/schematics/collection.json',
+  '../../../../dist/libs/reactive-forms/schematics/collection.json',
 );
 
 export async function setupWorkspace(runner: SchematicTestRunner) {
