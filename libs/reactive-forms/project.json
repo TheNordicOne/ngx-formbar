@@ -76,7 +76,15 @@
     },
     "test": {
       "executor": "@nx/angular:unit-test",
-      "options": {}
+      "options": {
+        "watch": false
+      }
+    },
+    "test-schematics": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "config": "libs/reactive-forms/vitest.config.schematics.mts"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
