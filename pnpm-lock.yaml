@@ -38,6 +38,12 @@ importers:
       '@ng-doc/ui-kit':
         specifier: 21.0.0
         version: 21.0.0(9eccf2c1ae9fc79948424e00ec87f5c9)
+      acorn:
+        specifier: ^8.14.1
+        version: 8.16.0
+      eval-estree-expression:
+        specifier: ^3.0.0
+        version: 3.0.1
       rxjs:
         specifier: ~7.8.0
         version: 7.8.2
@@ -6211,6 +6217,9 @@ packages:
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
+
+  eval-estree-expression@3.0.1:
+    resolution: {integrity: sha512-zTLKGbiVdQYp4rQkSoXPibrFf5ZoPn6jzExegRLEQ13F+FSxu5iLgaRH6hlDs2kWSUa6vp8yD20cdJi0me6pEw==}
 
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
@@ -18099,6 +18108,8 @@ snapshots:
   esutils@2.0.3: {}
 
   etag@1.8.1: {}
+
+  eval-estree-expression@3.0.1: {}
 
   event-target-shim@5.0.1: {}
 
