@@ -55,3 +55,6 @@ storybook-static
 .claude/worktrees
 .claude/settings.local.json
 /.claude/settings.json
+
+# act (local GitHub Actions runner)
+.secrets

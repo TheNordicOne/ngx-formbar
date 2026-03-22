@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "act:lint-build-test": "act push -W .github/workflows/lint-build-test.yml",
+    "act:version-pr": "act workflow_dispatch -W .github/workflows/version-pr.yml --input dry-run=true",
+    "act:release": "act workflow_dispatch -W .github/workflows/release-packages.yml --input dry-run=true",
+    "act:prerelease": "act workflow_dispatch -W .github/workflows/prerelease-packages.yml --input dry-run=true"
   },
   "private": true,
   "packageManager": "pnpm@10.30.3",

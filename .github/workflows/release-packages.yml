@@ -5,12 +5,20 @@ on:
     branches:
       - main
     types: [closed]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run build and version detection without publishing
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
     if: >-
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.title, 'chore: version packages')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, 'chore: version packages'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -18,6 +26,7 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry-run || false }}
 
     steps:
       - name: Checkout repository
@@ -38,6 +47,7 @@ jobs:
         run: npx nx run-many -t build
 
       - name: Create git tags and GitHub releases
+        if: env.DRY_RUN != 'true'
         run: |
           declare -A PACKAGES=(
             ["@ngx-formbar/core"]="libs/core/package.json"
@@ -73,11 +83,25 @@ jobs:
           done
 
       - name: Publish to npm
+        if: env.DRY_RUN != 'true'
         run: npx nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Dry-run summary
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
+          echo "::group::Package versions that would be released"
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json; do
+            name=$(node -p "require('./${pkg_json}').name")
+            version=$(node -p "require('./${pkg_json}').version")
+            echo "  $name@$version"
+          done
+          echo "::endgroup::"
+
   deploy-docs:
+    if: ${{ !(inputs.dry-run || false) }}
     needs: release
     uses: ./.github/workflows/publish-docs.yml
     with:

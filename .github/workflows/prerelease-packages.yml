@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - 'release/**'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run without publishing or pushing changes
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +24,7 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry-run || false }}
 
     steps:
       - name: Checkout repository
@@ -45,6 +53,7 @@ jobs:
         run: npx nx release changelog --skip-publish
 
       - name: Commit and push version changes
+        if: env.DRY_RUN != 'true'
         run: |
           git add .
           git commit -m "chore: version packages (prerelease)" --allow-empty
@@ -54,6 +63,7 @@ jobs:
         run: npx nx run-many -t build
 
       - name: Create git tags and GitHub pre-releases
+        if: env.DRY_RUN != 'true'
         run: |
           declare -A PACKAGES=(
             ["@ngx-formbar/core"]="libs/core/package.json"
@@ -98,11 +108,25 @@ jobs:
           done
 
       - name: Publish to npm
+        if: env.DRY_RUN != 'true'
         run: npx nx release publish --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Dry-run summary
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry-run mode — skipped commit, push, tagging, GitHub releases, and npm publish"
+          echo "::group::Pre-release versions"
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json; do
+            name=$(node -p "require('./${pkg_json}').name")
+            version=$(node -p "require('./${pkg_json}').version")
+            echo "  $name@$version"
+          done
+          echo "::endgroup::"
+
   deploy-docs:
+    if: ${{ !(inputs.dry-run || false) }}
     needs: prerelease
     uses: ./.github/workflows/publish-docs.yml
     with:

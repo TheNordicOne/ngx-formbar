@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run without creating branches, commits, or PRs
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -20,6 +27,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BRANCH: chore/version-packages
+      DRY_RUN: ${{ inputs.dry-run || false }}
 
     steps:
       - name: Checkout repository
@@ -48,10 +56,13 @@ jobs:
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "::group::Changed files"
+            git status --short
+            echo "::endgroup::"
           fi
 
       - name: Create branch, commit, and push
-        if: steps.changes.outputs.has_changes == 'true'
+        if: steps.changes.outputs.has_changes == 'true' && env.DRY_RUN != 'true'
         run: |
           git checkout -B "$BRANCH"
           git add .
@@ -59,7 +70,7 @@ jobs:
           git push origin "$BRANCH" --force
 
       - name: Create or update PR
-        if: steps.changes.outputs.has_changes == 'true'
+        if: steps.changes.outputs.has_changes == 'true' && env.DRY_RUN != 'true'
         run: |
           PR_NUMBER=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
 
@@ -77,3 +88,11 @@ jobs:
             gh pr edit "$PR_NUMBER" \
               --body "$BODY"
           fi
+
+      - name: Dry-run summary
+        if: steps.changes.outputs.has_changes == 'true' && env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry-run mode — skipped branch creation, commit, push, and PR"
+          echo "::group::Version diff"
+          git diff
+          echo "::endgroup::"
