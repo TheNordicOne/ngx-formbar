@@ -6,7 +6,7 @@
   "types": "./src/index.d.ts",
   "schematics": "./lib/collection.json",
   "dependencies": {
-    "@ngx-formbar/setup": "^0.0.1"
+    "@ngx-formbar/setup": "workspace:^"
   },
   "peerDependencies": {
     "@angular-devkit/core": ">=18.0.0",
