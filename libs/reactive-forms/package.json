@@ -5,12 +5,12 @@
     "@ngx-formbar/setup": "workspace:^"
   },
   "peerDependencies": {
-    "@angular-devkit/core": ">=18.0.0",
-    "@angular-devkit/schematics": ">=18.0.0",
-    "@angular/core": "^21.1.0",
-    "@angular/forms": "^21.1.0",
+    "@angular-devkit/core": ">=19.0.0 <22.0.0",
+    "@angular-devkit/schematics": ">=19.0.0 <22.0.0",
+    "@angular/core": ">=19.0.0 <22.0.0",
+    "@angular/forms": ">=19.0.0 <22.0.0",
     "@ngx-formbar/core": "workspace:^",
-    "@schematics/angular": ">=18.0.0",
+    "@schematics/angular": ">=19.0.0 <22.0.0",
     "typescript": ">=5.4.0"
   },
   "schematics": "./schematics/collection.json",

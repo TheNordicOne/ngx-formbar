@@ -8,10 +8,10 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@angular-devkit/core": ">=21.0.0",
-    "@angular-devkit/schematics": ">=21.0.0",
-    "@schematics/angular": ">=21.0.0",
-    "typescript": ">=5.9.0"
+    "@angular-devkit/core": ">=19.0.0 <22.0.0",
+    "@angular-devkit/schematics": ">=19.0.0 <22.0.0",
+    "@schematics/angular": ">=19.0.0 <22.0.0",
+    "typescript": ">=5.4.0"
   },
   "publishConfig": {
     "access": "public"
