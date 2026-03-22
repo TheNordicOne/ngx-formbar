@@ -8,6 +8,12 @@ uplinks:
     maxage: 60m
 
 packages:
+  '@ngx-formbar/*':
+    access: $all
+    publish: $all
+    unpublish: $all
+    # no proxy — always serve from local storage
+
   '**':
     # give all users (including non-authenticated users) full access
     # because it is a local registry
