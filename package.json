@@ -7,7 +7,9 @@
     "act:lint-build-test": "act push -W .github/workflows/lint-build-test.yml",
     "act:version-pr": "act workflow_dispatch -W .github/workflows/version-pr.yml --input dry-run=true",
     "act:release": "act workflow_dispatch -W .github/workflows/release-packages.yml --input dry-run=true",
-    "act:prerelease": "act workflow_dispatch -W .github/workflows/prerelease-packages.yml --input dry-run=true"
+    "act:prerelease": "act workflow_dispatch -W .github/workflows/prerelease-packages.yml --input dry-run=true",
+    "start-registry": "npx nx local-registry",
+    "publish-local": "nx run-many -t build && nx release version --specifier 0.0.0-local.$(date +%s) --git-commit false --git-tag false --first-release && nx release publish --registry http://localhost:4873 --tag local --first-release"
   },
   "private": true,
   "packageManager": "pnpm@10.30.3",

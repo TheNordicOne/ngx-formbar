@@ -58,3 +58,4 @@ storybook-static
 
 # act (local GitHub Actions runner)
 .secrets
+/.verdaccio/htpasswd
