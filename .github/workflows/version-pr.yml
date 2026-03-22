@@ -1,0 +1,79 @@
+name: Version PR
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore: version packages') }}
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: chore/version-packages
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate version bumps
+        run: npx nx release version --skip-publish
+
+      - name: Generate changelogs
+        run: npx nx release changelog --skip-publish
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create branch, commit, and push
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git checkout -B "$BRANCH"
+          git add .
+          git commit -m "chore: version packages"
+          git push origin "$BRANCH" --force
+
+      - name: Create or update PR
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          PR_NUMBER=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
+
+          BODY="This PR was auto-generated. It contains version bumps and changelog updates based on conventional commits.
+
+          **Updated at:** $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          if [ -z "$PR_NUMBER" ]; then
+            gh pr create \
+              --title "chore: version packages" \
+              --body "$BODY" \
+              --base main \
+              --head "$BRANCH"
+          else
+            gh pr edit "$PR_NUMBER" \
+              --body "$BODY"
+          fi

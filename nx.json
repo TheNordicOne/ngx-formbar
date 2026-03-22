@@ -15,7 +15,7 @@
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/tsconfig.storybook.json"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/lint-build-test.yml"]
   },
   "targetDefaults": {
     "@angular/build:application": {
@@ -108,8 +108,22 @@
     }
   },
   "release": {
+    "projects": [
+      "@ngx-formbar/core",
+      "@ngx-formbar/reactive-forms",
+      "@ngx-formbar/schematics"
+    ],
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build"
+      "preVersionCommand": "pnpm dlx nx run-many -t build",
+      "conventionalCommits": true
+    },
+    "changelog": {
+      "workspaceChangelog": false,
+      "projectChangelogs": true
+    },
+    "git": {
+      "commit": false,
+      "tag": false
     }
   }
 }

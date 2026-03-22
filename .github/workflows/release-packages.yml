@@ -1,0 +1,85 @@
+name: Release Packages
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+jobs:
+  release:
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, 'chore: version packages')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Build all packages
+        run: npx nx run-many -t build
+
+      - name: Create git tags and GitHub releases
+        run: |
+          declare -A PACKAGES=(
+            ["@ngx-formbar/core"]="libs/core/package.json"
+            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
+            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+          )
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+              continue
+            fi
+
+            echo "Creating release for $tag"
+            git tag "$tag"
+          done
+
+          git push origin --tags
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            gh release create "$tag" \
+              --title "$tag" \
+              --generate-notes \
+              --latest=false || echo "Release $tag already exists, skipping"
+          done
+
+      - name: Publish to npm
+        run: npx nx release publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy-docs:
+    needs: release
+    uses: ./.github/workflows/publish-docs.yml
+    with:
+      environment: production
+    secrets: inherit

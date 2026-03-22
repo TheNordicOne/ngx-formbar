@@ -1,0 +1,46 @@
+name: Lint, Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+        with:
+          playwright: 'true'
+
+      - name: Lint, test, and build
+        run: npx nx run-many -t lint test build
+
+      - name: Build Storybook
+        run: npx nx run storybook:build-storybook:ci
+
+      - name: Test Storybook
+        run: |
+          npx http-server dist/storybook --port 4400 --silent &
+          npx wait-on http://localhost:4400
+          npx nx run storybook:test-storybook

@@ -1,0 +1,71 @@
+name: Publish Docs
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Deployment environment (production or preview)'
+        required: true
+        type: string
+    secrets:
+      DOCS_FTP_SERVER:
+        required: true
+      DOCS_FTP_USERNAME:
+        required: true
+      DOCS_FTP_PASSWORD:
+        required: true
+      DOCS_FTP_NEXT_USERNAME:
+        required: true
+      DOCS_FTP_NEXT_PASSWORD:
+        required: true
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - production
+          - preview
+        default: production
+
+jobs:
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Build documentation
+        run: npx nx build @ngx-formbar/docs
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: Determine FTP credentials
+        id: ftp
+        run: |
+          if [ "${{ inputs.environment }}" = "preview" ]; then
+            echo "username=${{ secrets.DOCS_FTP_NEXT_USERNAME }}" >> "$GITHUB_OUTPUT"
+            echo "password=${{ secrets.DOCS_FTP_NEXT_PASSWORD }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "username=${{ secrets.DOCS_FTP_USERNAME }}" >> "$GITHUB_OUTPUT"
+            echo "password=${{ secrets.DOCS_FTP_PASSWORD }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to FTP
+        run: |
+          echo "machine ${{ secrets.DOCS_FTP_SERVER }}" > ~/.netrc
+          echo "login ${{ steps.ftp.outputs.username }}" >> ~/.netrc
+          echo "password ${{ steps.ftp.outputs.password }}" >> ~/.netrc
+          chmod 600 ~/.netrc
+
+          lftp -c "set ssl:verify-certificate no; \
+                  open ${{ secrets.DOCS_FTP_SERVER }}; \
+                  lcd ./dist/apps/docs/browser/; \
+                  mirror --reverse --delete --verbose . /"

@@ -1,0 +1,110 @@
+name: Pre-release Packages
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Version packages (prerelease)
+        run: npx nx release version prerelease --preid next
+
+      - name: Generate changelogs
+        run: npx nx release changelog --skip-publish
+
+      - name: Commit and push version changes
+        run: |
+          git add .
+          git commit -m "chore: version packages (prerelease)" --allow-empty
+          git push
+
+      - name: Build all packages
+        run: npx nx run-many -t build
+
+      - name: Create git tags and GitHub pre-releases
+        run: |
+          declare -A PACKAGES=(
+            ["@ngx-formbar/core"]="libs/core/package.json"
+            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
+            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+          )
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if [[ "$version" != *"-next."* ]]; then
+              echo "$pkg version $version is not a pre-release, skipping"
+              continue
+            fi
+
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+              continue
+            fi
+
+            echo "Creating pre-release for $tag"
+            git tag "$tag"
+          done
+
+          git push origin --tags
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if [[ "$version" != *"-next."* ]]; then
+              continue
+            fi
+
+            gh release create "$tag" \
+              --title "$tag" \
+              --prerelease \
+              --latest=false || echo "Release $tag already exists, skipping"
+          done
+
+      - name: Publish to npm
+        run: npx nx release publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy-docs:
+    needs: prerelease
+    uses: ./.github/workflows/publish-docs.yml
+    with:
+      environment: preview
+    secrets: inherit
