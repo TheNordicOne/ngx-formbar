@@ -355,24 +355,35 @@ function checkTokenProviderExists(
   });
 }
 
-function createMapProviderExpression(tokenName: string) {
-  return factory.createObjectLiteralExpression(
-    [
-      factory.createPropertyAssignment(
-        factory.createIdentifier('provide'),
-        factory.createIdentifier(tokenName),
+function createMapProviderExpression(
+  tokenName: string,
+  isMultiProvider = false,
+) {
+  const properties: PropertyAssignment[] = [
+    factory.createPropertyAssignment(
+      factory.createIdentifier('provide'),
+      factory.createIdentifier(tokenName),
+    ),
+    factory.createPropertyAssignment(
+      factory.createIdentifier('useValue'),
+      factory.createNewExpression(
+        factory.createIdentifier('Map'),
+        undefined,
+        [factory.createArrayLiteralExpression([], false)],
       ),
+    ),
+  ];
+
+  if (isMultiProvider) {
+    properties.push(
       factory.createPropertyAssignment(
-        factory.createIdentifier('useValue'),
-        factory.createNewExpression(
-          factory.createIdentifier('Map'),
-          undefined,
-          [factory.createArrayLiteralExpression([], false)],
-        ),
+        factory.createIdentifier('multi'),
+        factory.createTrue(),
       ),
-    ],
-    true,
-  );
+    );
+  }
+
+  return factory.createObjectLiteralExpression(properties, true);
 }
 
 function addStandaloneRegistrationProvider(
@@ -383,6 +394,7 @@ function addStandaloneRegistrationProvider(
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
+  isMultiProvider = false,
 ) {
   const { appConfigPath } = ruleContext;
 
@@ -391,7 +403,7 @@ function addStandaloneRegistrationProvider(
   );
 
   if (!checkTokenProviderExists(existingElements, tokenName)) {
-    const provider = createMapProviderExpression(tokenName);
+    const provider = createMapProviderExpression(tokenName, isMultiProvider);
     newElements.push(provider);
   }
 }
@@ -499,6 +511,7 @@ function handleStandaloneTokens(
       existingElements,
       newElements,
       extraChanges,
+      true,
     );
   }
 
@@ -511,6 +524,7 @@ function handleStandaloneTokens(
       existingElements,
       newElements,
       extraChanges,
+      true,
     );
   }
 }

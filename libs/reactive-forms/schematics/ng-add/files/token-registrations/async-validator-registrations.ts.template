@@ -4,5 +4,6 @@ import { NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-form
 export const asyncValidatorRegistrationsProvider = {
   provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   useValue: new Map<string, AsyncValidatorFn[]>([
-  ])
+  ]),
+  multi: true,
 };
