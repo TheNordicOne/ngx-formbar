@@ -47,7 +47,7 @@ export function createFormbarRegistrationsConfig(
     );
 
     return mergeWith(
-      apply(url(`./files/provider-config/${template}`), [
+      apply(url(`./ng-add/files/provider-config/${template}`), [
         applyTemplates({
           includeSyncValidators,
           includeAsyncValidators,

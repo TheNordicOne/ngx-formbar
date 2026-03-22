@@ -45,7 +45,7 @@ export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
     }
 
     return mergeWith(
-      apply(url('./files/config-registrations'), [
+      apply(url('./ng-add/files/config-registrations'), [
         includeTemplates(templatesToInclude),
         applyTemplates({
           includeSyncValidators,

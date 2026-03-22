@@ -45,7 +45,7 @@ export function createTokenRegistrationFiles(ruleContext: RuleContext): Rule {
     }
 
     return mergeWith(
-      apply(url('./files/token-registrations'), [
+      apply(url('./ng-add/files/token-registrations'), [
         includeTemplates(templatesToInclude),
         applyTemplates({
           includeSyncValidators,

@@ -57,7 +57,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     }
 
     return mergeWith(
-      apply(url('./files/schematics-config'), [
+      apply(url('./ng-add/files/schematics-config'), [
         applyTemplates({
           schematicConfigFileName,
           schematicConfig: JSON.stringify(schematicConfig, null, 2),

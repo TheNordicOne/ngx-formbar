@@ -23,7 +23,7 @@ export function createHelperFiles(ruleContext: RuleContext): Rule {
     context.logger.info('Creating helper files');
 
     return mergeWith(
-      apply(url('./files/helper'), [
+      apply(url('./ng-add/files/helper'), [
         applyTemplates({}),
         move(normalize(`${projectRoot}/${helperPath}`)),
       ]),
