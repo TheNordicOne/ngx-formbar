@@ -2,7 +2,7 @@
   "name": "@ngx-formbar/core",
   "version": "1.0.0",
   "peerDependencies": {
-    "@angular/core": ">=19.0.0 <22.0.0"
+    "@angular/core": ">=19.2.0 <22.0.0"
   },
   "dependencies": {
     "acorn": "^8.14.1"
