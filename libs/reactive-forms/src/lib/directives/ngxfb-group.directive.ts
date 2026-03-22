@@ -265,7 +265,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    * Use this to access validation state, errors, and other FormGroup methods
    */
   get formGroup() {
-    return this.parentFormGroup?.get(this.name()) as FormControl | null;
+    return this.parentFormGroup?.get(this.name()) as FormGroup | null;
   }
 
   constructor() {
