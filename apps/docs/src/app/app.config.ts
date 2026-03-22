@@ -18,6 +18,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -38,5 +39,6 @@ export const appConfig: ApplicationConfig = {
     provideSearchEngine(NgDocDefaultSearchEngine),
     providePageSkeleton(NG_DOC_DEFAULT_PAGE_SKELETON),
     provideMainPageProcessor(NG_DOC_DEFAULT_PAGE_PROCESSORS),
+    provideReactiveFormsExamples(),
   ],
 };
