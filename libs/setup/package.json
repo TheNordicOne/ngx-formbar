@@ -1,7 +1,6 @@
 {
   "name": "@ngx-formbar/setup",
   "version": "0.0.1",
-  "private": true,
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -13,5 +12,20 @@
     "@angular-devkit/schematics": ">=21.0.0",
     "@schematics/angular": ">=21.0.0",
     "typescript": ">=5.9.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Alexander Pahn",
+    "email": "alexander.pahn@proton.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheNordicOne/ngx-formbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheNordicOne/ngx-formbar/issues"
   }
 }

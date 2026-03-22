@@ -111,7 +111,8 @@
     "projects": [
       "@ngx-formbar/core",
       "@ngx-formbar/reactive-forms",
-      "@ngx-formbar/schematics"
+      "@ngx-formbar/schematics",
+      "@ngx-formbar/setup"
     ],
     "version": {
       "preVersionCommand": "pnpm dlx nx run-many -t build",

@@ -1,9 +1,17 @@
 {
   "name": "@ngx-formbar/reactive-forms",
   "version": "1.0.0",
+  "dependencies": {
+    "@ngx-formbar/core": "^1.0.0",
+    "@ngx-formbar/setup": "^0.0.1"
+  },
   "peerDependencies": {
-    "@angular/common": "^21.1.0",
-    "@angular/core": "^21.1.0"
+    "@angular-devkit/core": ">=18.0.0",
+    "@angular-devkit/schematics": ">=18.0.0",
+    "@angular/core": "^21.1.0",
+    "@angular/forms": "^21.1.0",
+    "@schematics/angular": ">=18.0.0",
+    "typescript": ">=5.4.0"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {

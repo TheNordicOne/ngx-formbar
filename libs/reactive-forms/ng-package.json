@@ -3,5 +3,9 @@
   "dest": "../../dist/libs/reactive-forms",
   "lib": {
     "entryFile": "src/index.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@ngx-formbar/core",
+    "@ngx-formbar/setup"
+  ]
 }
