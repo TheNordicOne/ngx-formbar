@@ -80,7 +80,7 @@ export function importForSymbolUsesCorrectRelativePath(
       return;
     }
 
-    if (clause.name && clause.name.text === symbolName) {
+    if (clause.name?.text === symbolName) {
       found = true;
       return;
     }

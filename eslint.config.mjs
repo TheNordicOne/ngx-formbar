@@ -122,7 +122,10 @@ export default defineConfig(
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '@ng-doc/generated',
+          ],
           depConstraints: [
             {
               sourceTag: '*',

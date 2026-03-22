@@ -38,7 +38,7 @@ export class StoryFormHostComponent {
         filter(() => this.autoUpdate()),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.onSubmit());
+      .subscribe(() => { this.onSubmit(); });
   }
 
   reset() {
