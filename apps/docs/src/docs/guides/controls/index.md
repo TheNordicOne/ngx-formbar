@@ -5,7 +5,7 @@ A control can be whatever you need it to be. It can be as generic as a `TextCont
 Run the Angular schematic to scaffold a new control and register it:
 
 ```bash
-ng generate @ngx-formbar/core:control --key <control-key> [--name <ComponentName>]
+ng generate @ngx-formbar/schematics:control --key <control-key> [--name <ComponentName>]
 ```
 
 See the Generators page for more details.
@@ -20,6 +20,8 @@ Here is an example of a simple text control.
 First create an interface for your control.
 
 ```typescript name="text-control.type.ts"
+import { NgxFbControl } from '@ngx-formbar/core';
+
 export interface TextControl extends NgxFbControl {
   // Unique Key of your control that is used for differentiating controls
   // This can be descriptive like "email-control"
@@ -41,6 +43,11 @@ Then implement the component.
 
 {% raw %}
 ```typescript group="text-control" name="text-control.component.ts" icon="angular"
+import { Component, Signal, computed, inject } from '@angular/core';
+import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   selector: 'app-text-control',
   imports: [ReactiveFormsModule],
@@ -87,6 +94,10 @@ export class TextControlComponent {
 Finally, register the control in _app.config.ts_
 
 ```typescript name="app.config.ts"
+import { ApplicationConfig } from '@angular/core';
+import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { TextControlComponent } from './text-control.component';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -109,6 +120,10 @@ Checkout the Configuration guide for how to configure a control.
 
 {% raw %}
 ```typescript group="hidden-control" name="text-control.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   // ...
 })
@@ -146,6 +161,10 @@ export class TextControlComponent {
 
 {% raw %}
 ```typescript group="disabled-control" name="text-control.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   // ...
 })
@@ -172,6 +191,10 @@ export class TextControlComponent {
 
 {% raw %}
 ```typescript group="readonly-control" name="text-control.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   // ...
 })
@@ -209,6 +232,10 @@ See the Expressions guide for details on how expressions work and the Configurat
 
 {% raw %}
 ```typescript group="dynamic-label" name="text-control.component.ts" icon="angular"
+import { Signal, computed, inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   // ...
 })
@@ -219,7 +246,7 @@ export class TextControlComponent {
   // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
   readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
 
-  readonly staticConfigLabel: Signal<string> = this.control.label;
+  readonly staticConfigLabel = computed(() => this.content().label);
   readonly name: Signal<string> = this.control.name;
 
   readonly displayLabel = computed(() => {
@@ -245,6 +272,10 @@ export class TextControlComponent {
 
 {% raw %}
 ```typescript group="test-id-control" name="text-control.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
 @Component({
   // ...
 })
@@ -274,6 +305,9 @@ Showing errors works pretty much the same as always. You get access to the form 
 In TypeScript set up a getter
 
 ```typescript name="text-control.component.ts" icon="angular"
+import { inject } from '@angular/core';
+import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+
 // inject the instance of the directive
 private readonly textControl = inject(NgxfbControlDirective<Control>);
 
@@ -290,3 +324,32 @@ Then, in your template you can do something like this
 <span>Required</span>
 }
 ```
+
+## Directive Reference
+
+The `NgxfbControlDirective<T>` exposes the following public properties and methods:
+
+| Property / Method                 | Type                                     | Description                                                               |
+|-----------------------------------|------------------------------------------|---------------------------------------------------------------------------|
+| `content`                         | `InputSignal<T>`                         | The configuration object of the control instance.                         |
+| `name`                            | `InputSignal<string>`                    | The control's name (the key used in the configuration).                   |
+| `isHidden`                        | `Signal<boolean>`                        | Whether the control is currently hidden.                                  |
+| `hiddenAttribute`                 | `Signal<string \| null>`                 | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
+| `disabled`                        | `Signal<boolean>`                        | Whether the control is currently disabled.                                |
+| `readonly`                        | `Signal<boolean>`                        | Whether the control is currently readonly.                                |
+| `dynamicLabel`                    | `Signal<string \| undefined>`            | The computed dynamic label, if a `dynamicLabel` expression is configured. |
+| `testId`                          | `Signal<string \| undefined>`            | The computed test ID for the control.                                     |
+| `hideStrategy`                    | `Signal<string \| undefined>`            | The control's hide strategy (`'keep'` or `'remove'`).                     |
+| `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The control's value strategy (`'last'`, `'default'`, or `'reset'`).       |
+| `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the control.                             |
+| `formControl`                     | `FormControl \| null`                    | Getter for the underlying `FormControl` instance.                         |
+| `setVisibilityHandling(handling)` | `(StateHandling) => void`                | Sets visibility handling to `'auto'` or `'manual'`.                       |
+
+### Advanced
+
+| Property / Method | Type | Description |
+|---|---|---|
+| `parentFormGroup` | `FormGroup \| null` | Getter for the parent `FormGroup` containing this control. |
+| `parentValueStrategy` | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance. |
+| `setDisabledHandling(handling)` | `(StateHandling) => void` | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
+| `setTestIdBuilderFn(fn)` | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this control only. |

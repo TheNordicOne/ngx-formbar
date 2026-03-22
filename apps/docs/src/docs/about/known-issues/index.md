@@ -1,4 +1,4 @@
-Just like any other package, _ngx-formbar_ also some known issues. Below you find a list including a link to a GitHub issue, if it exists.
+Just like any other package, _ngx-formbar_ also has some known issues. Below you find a list including a link to a GitHub issue, if it exists.
 This list is not exhaustive, so also check the [GitHub Issues](https://github.com/TheNordicOne/ngx-formbar/issues) for anything not listed here.
 
 - <span class="badge badge--bug">Bug</span> [Using auto visibility state management in combination with hide strategy "remove" results in error](https://github.com/TheNordicOne/ngx-formbar/issues/64)

@@ -23,9 +23,9 @@ The configuration object that is used by the `provideFormbar` function has these
 
 This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
 
-| Property        | Type                                                                                      | Required | Description                                              |
-|-----------------|-------------------------------------------------------------------------------------------|----------|----------------------------------------------------------|
-| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string \| undefined` | No       | Function that is used to build the test id for a control |
+| Property        | Type                                                                         | Required | Description                                              |
+|-----------------|------------------------------------------------------------------------------|----------|----------------------------------------------------------|
+| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test id for a control |
 
 
 ## Code Splitting
@@ -123,6 +123,7 @@ export const validatorRegistrationsProvider = {
     ['forbidden-letter-a', [forbiddenLetterAValidator]],
     // more registrations...
   ]),
+  multi: true,
 };
 
 // Asynchronous validators
@@ -133,6 +134,7 @@ export const asyncValidatorRegistrationsProvider = {
     ['async-group', [asyncGroupValidator]],
     // more registrations...
   ]),
+  multi: true,
 };
 ```
 
@@ -186,15 +188,7 @@ export const baseConfigProvider = {
   useValue: {
     testIdBuilderFn: (content, name, parentTestId) => `${parentTestId ? parentTestId + '-' : ''}${name}`,
   },
-};
-
-export const moduleConfigProvider = {
-  provide: NGX_FW_CONFIG,
-  useValue: {
-    extraSettings: {
-      theme: 'dark',
-    },
-  },
+  multi: true,
 };
 ```
 
@@ -287,13 +281,12 @@ In _formbar.config.ts_ use it like this
 
 ```typescript name="formbar.config.ts"
 import { componentRegistrations } from './controls.registrations.ts';
+import { validatorRegistrations, asyncValidatorRegistrations } from './validators.registrations.ts';
 
 export const formbarConfig = defineFormbarConfig({
-  // other providers
-  componentRegistrations: {
-    validatorRegistrations,
-    asyncValidatorRegistrations,
-  },
+  componentRegistrations,
+  validatorRegistrations,
+  asyncValidatorRegistrations,
 });
 ```
 
@@ -329,6 +322,7 @@ export const globalConfigProvider = {
   useValue: {
     testIdBuilderFn: testIdBuilder,
   },
+  multi: true,
 };
 ```
 

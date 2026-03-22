@@ -34,7 +34,7 @@ export const exampleForm: NgxFbForm = {
         username: {
           type: 'text',
           label: 'Username',
-          default: 'UsernameSuggestion123',
+          defaultValue: 'UsernameSuggestion123',
         },
       },
     },
@@ -42,7 +42,7 @@ export const exampleForm: NgxFbForm = {
 };
 ```
 
-As you can see the configuration is just an array of controls and/or groups/blocks. Every item in that array will be registered on the top-level of the form. Items within the `controls` property of a group will be registered within that group.
+As you can see the configuration is just an object of controls and/or groups/blocks. Every entry in that object will be registered on the top-level of the form. Items within the `controls` property of a group will be registered within that group.
 
 This is just simple example. For more details go to the Configuration guide.
 

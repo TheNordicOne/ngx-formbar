@@ -29,7 +29,7 @@
 The following are features and improvements that are planned for future versions.
 
 - Registering validators via DI tokens supports cross-referencing analog to registration via config
-- Support for Signal Based Form (work will beginn once they are stable)
+- Support for Signal Based Form (work will begin once they are stable)
 
 ### Open Feature Ideas
 

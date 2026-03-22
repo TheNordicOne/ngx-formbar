@@ -8,7 +8,7 @@ Most of the time you will only need one or two different group types. Where they
 Run the Angular schematic to scaffold a new group and register it:
 
 ```bash
-ng generate @ngx-formbar/core:group --key <group-key> [--name <ComponentName>]
+ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentName>]
 ```
 
 See the Generators page for more details.
@@ -24,6 +24,8 @@ Here is an example of a simple group. Most likely you will only set up one or tw
 First create an interface for your group.
 
 ```typescript name="group.type.ts"
+import { NgxFbFormGroup } from '@ngx-formbar/core';
+
 export interface Group extends NgxFbFormGroup {
   // Unique Key of your group that is used for differentiating groups
   type: 'group';
@@ -38,6 +40,12 @@ Then implement the component.
 > Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 
 ```typescript group="group-component" name="group.component.ts" icon="angular"
+import { Component, Signal, inject } from '@angular/core';
+import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
+import { NgxfbAbstractControlDirective, NgxFbContent } from '@ngx-formbar/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   selector: 'ngxfb-group',
   imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
@@ -79,6 +87,10 @@ export class GroupComponent {
 Finally, register the group in _app.config.ts_
 
 ```typescript name="app.config.ts"
+import { ApplicationConfig } from '@angular/core';
+import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { GroupComponent } from './group.component';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
@@ -100,6 +112,10 @@ Checkout the Configuration guide for how to configure a group.
 {% include "../../shared/hidden-intro.md" %}
 
 ```typescript group="hidden-group" name="group.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   // ...
 })
@@ -122,8 +138,8 @@ export class GroupComponent {
 }
 @if(!isHidden()){
   <div [formGroupName]="name()">
-    @for (control of controls(); track control.id) {
-      <ng-template *ngxfbAbstractControl="control" />
+    @for (content of controls(); track content[0]) {
+      <ng-template *ngxfbAbstractControl="content" />
     }
   </div>
 }
@@ -138,6 +154,10 @@ export class GroupComponent {
 {% include "../../shared/disabled-intro.md" %}
 
 ```typescript group="disabled-group" name="group.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   // ...
 })
@@ -150,8 +170,8 @@ export class GroupComponent {
 
 ```html group="disabled-group" name="group.component.html"
 <div [formGroupName]="name()">
-  @for (control of controls(); track control.id) {
-    <ng-template *ngxfbAbstractControl="control" />
+  @for (content of controls(); track content[0]) {
+    <ng-template *ngxfbAbstractControl="content" />
   }
 </div>
 <!-- Only show hint when group is disabled -->
@@ -165,6 +185,10 @@ export class GroupComponent {
 {% include "../../shared/readonly-intro.md" %}
 
 ```typescript group="readonly-group" name="group.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   // ...
 })
@@ -177,8 +201,8 @@ export class GroupComponent {
 
 ```html group="readonly-group" name="group.component.html"
 <div [formGroupName]="name()">
-  @for (control of controls(); track control.id) {
-    <ng-template *ngxfbAbstractControl="control" />
+  @for (content of controls(); track content[0]) {
+    <ng-template *ngxfbAbstractControl="content" />
   }
 </div>
 @if(readonly()){
@@ -196,17 +220,21 @@ See the Expressions guide for details on how expressions work and the Configurat
 
 {% raw %}
 ```typescript group="dynamic-title" name="group.component.ts" icon="angular"
+import { Signal, computed, inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   // ...
 })
-export class TextControlComponent {
+export class GroupComponent {
   private readonly control = inject(NgxfbGroupDirective<Group>);
 
   // Access the computed dynamic title from the directive.
   // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
   readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
 
-  readonly staticConfigTitle: Signal<string> = this.control.title;
+  readonly staticConfigTitle: Signal<string | undefined> = this.control.title;
 
   readonly displayTitle = computed(() => {
     const dynamic = this.dynamicTitle();
@@ -229,6 +257,10 @@ export class TextControlComponent {
 {% include "../../shared/test-id.md" %}
 
 ```typescript group="test-id-group" name="group.component.ts" icon="angular"
+import { Signal, inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
+
 @Component({
   // ...
 })
@@ -241,8 +273,8 @@ export class GroupComponent {
 
 ```html group="test-id-group" name="group.component.html"
 <div [formGroupName]="name()"  [attr.data-testId]="testId() + '-wrapper'">
-  @for (control of controls(); track control.id) {
-    <ng-template *ngxfbAbstractControl="control" />
+  @for (content of controls(); track content[0]) {
+    <ng-template *ngxfbAbstractControl="content" />
   }
 </div>
 ```
@@ -254,19 +286,54 @@ Showing errors works pretty much the same as always. You get access to the form 
 In TypeScript set up a getter
 
 ```typescript name="group.component.ts" icon="angular"
-// inject the instance of the directive
-private readonly group = inject(NgxfbGroupDirective<Group>);
+import { inject } from '@angular/core';
+import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
 
-// Get access to the underlying form group}
-get group() {
-  return this.group.formControl
+// inject the instance of the directive
+private readonly groupDirective = inject(NgxfbGroupDirective<Group>);
+
+// Get access to the underlying form group
+get formGroup() {
+  return this.groupDirective.formGroup
 }
 ```
 
 Then, in your template you can do something like this
 
 ```html name="group.component.html"
-@if(group?.hasError('required')) {
+@if(formGroup?.hasError('required')) {
   <span>Required</span>
 }
 ```
+
+## Directive Reference
+
+The `NgxfbGroupDirective<T>` exposes the following public properties and methods:
+
+| Property / Method                 | Type                                     | Description                                                               |
+|-----------------------------------|------------------------------------------|---------------------------------------------------------------------------|
+| `content`                         | `InputSignal<T>`                         | The configuration object of the group instance.                           |
+| `name`                            | `InputSignal<string>`                    | The group's name (the key used in the configuration).                     |
+| `controls`                        | `Signal<[string, NgxFbContent][]>`       | The child controls as key-value pairs from the group's `controls` config. |
+| `isHidden`                        | `Signal<boolean>`                        | Whether the group is currently hidden.                                    |
+| `hiddenAttribute`                 | `Signal<string \| null>`                 | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
+| `disabled`                        | `Signal<boolean>`                        | Whether the group is currently disabled.                                  |
+| `readonly`                        | `Signal<boolean>`                        | Whether the group is currently readonly.                                  |
+| `title`                           | `Signal<string \| undefined>`            | The static title from the group's configuration.                          |
+| `dynamicTitle`                    | `Signal<string \| undefined>`            | The computed dynamic title, if a `dynamicTitle` expression is configured. |
+| `testId`                          | `Signal<string \| undefined>`            | The computed test ID for the group.                                       |
+| `hideStrategy`                    | `Signal<string \| undefined>`            | The group's hide strategy (`'keep'` or `'remove'`).                       |
+| `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The group's value strategy (`'last'`, `'default'`, or `'reset'`).         |
+| `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the group.                               |
+| `formGroup`                       | `FormGroup \| null`                      | Getter for the underlying `FormGroup` instance.                           |
+| `setVisibilityHandling(handling)` | `(StateHandling) => void`                | Sets visibility handling to `'auto'` or `'manual'`.                       |
+
+### Advanced
+
+| Property / Method | Type | Description |
+|---|---|---|
+| `parentFormGroup` | `FormGroup \| null` | Getter for the parent `FormGroup` containing this group. |
+| `parentValueStrategy` | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance. |
+| `setDisabledHandling(handling)` | `(StateHandling) => void` | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
+| `setTestIdBuilderFn(fn)` | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this group only. |

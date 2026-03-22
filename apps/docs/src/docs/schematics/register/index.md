@@ -25,7 +25,7 @@ All options are optional, but are listed here in full. You can put any combinati
 
 ```json name="formbar.config.json"
 {
-  "registrationType": "map",
+  "registrationType": "token",
   "controlRegistrationsPath": "app/form/registrations.ts",
   "discovery": {
     "include": ["&#42;&#42;/components/form/controls/&#42;&#42;"],
@@ -47,7 +47,7 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
     "my-app": {
       "schematics": {
         "@ngx-formbar/schematics:register": {
-          "registrationType": "map",
+          "registrationType": "token",
           "controlRegistrationsPath": "app/form/registrations.ts",
           "include": ["**/components/form/controls/**"],
           "exclude": ["**/components/form/controls/secret/**"]

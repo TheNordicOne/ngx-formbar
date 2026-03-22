@@ -63,16 +63,17 @@ When writing your form configuration, you can add multiple validators for your c
 To use a validator for a control, you refer to it by its key.
 
 ```typescript name="example.form.ts"
-export const exampleForm: NgxFbContent[] = [
-  {
-    type: 'text',
-    id: 'username',
-    label: 'Username',
-    default: 'UsernameSuggestion123',
-    validators: ['min5Characters', 'required', 'blacklist'],
-    asyncValidators: ['usernameIsFreeValidator'],
+export const exampleForm: NgxFbForm = {
+  content: {
+    username: {
+      type: 'text',
+      label: 'Username',
+      defaultValue: 'UsernameSuggestion123',
+      validators: ['min5Characters', 'required', 'blacklist'],
+      asyncValidators: ['usernameIsFreeValidator'],
+    }
   }
-]
+};
 ```
 
 ## Default Validators

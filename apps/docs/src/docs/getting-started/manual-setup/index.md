@@ -40,7 +40,7 @@ export const appConfig: ApplicationConfig = {
         {
           provide: NGX_FW_COMPONENT_REGISTRATIONS,
           useValue: new Map([
-            // Component registrations go her
+            // Component registrations go here
           ])
         },
         // All tokens below are optional
@@ -54,12 +54,14 @@ export const appConfig: ApplicationConfig = {
             // Validators.email
             // Validators.nullValidator
           ]),
+          multi: true,
         },
         {
           provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
           useValue: new Map([
             // Async Validator registrations go here
           ]),
+          multi: true,
         }
   ]
 };

@@ -8,4 +8,4 @@ This package provides a framework for creating Angular Reactive Forms, based on 
 
 ## Documentation
 
-For installation options, guides, examples and API reference, visit the full documentation at [ngx-formbar.net](https://docs.ngx-formbar.net).
+For installation options, guides, examples and API reference, visit the full documentation at [docs.ngx-formbar.net](https://docs.ngx-formbar.net).

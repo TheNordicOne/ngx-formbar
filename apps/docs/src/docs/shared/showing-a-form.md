@@ -11,7 +11,7 @@ export class FormIntegrationHostComponent {
   private readonly formBuilder = inject(FormBuilder);
 
   // This is our form configuration. It doesn't have to be passed as an input. You could also have a service that gets this or just import it from a file.
-  readonly formContent = input.required<NgxFbContent[]>();
+  readonly formContent = input.required<NgxFbForm>();
 
   // Building a form with an empty group. All controls and groups are self-registering
   // You can also add additional hardcoded control if you want

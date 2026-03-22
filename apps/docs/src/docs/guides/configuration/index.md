@@ -78,7 +78,7 @@ The following configurations are only applicable to the interface `NgxFbBlock`.
 
 ## Full Example
 
-As you can see the configuration is just an array of controls and/or groups. Every item in that array will be registered on the top-level of the form.
+As you can see the configuration is just an object of controls and/or groups. Every entry in that object will be registered on the top-level of the form.
 
 Checkout the Validation guide to see how to register validators.
 
@@ -135,20 +135,20 @@ export const exampleForm: NgxFbForm = {
         username: {
           type: 'text',
           label: 'Username',
-          default: 'UsernameSuggestion123',
+          defaultValue: 'UsernameSuggestion123',
           validators: ['min5Characters'],
           asyncValidators: ['usernameIsFreeValidator'],
         },
         repositories: {
           type: 'numeric',
           label: 'Repositories to create',
-          default: 1,
+          defaultValue: 1,
         },
         // Example how a configuration for a dropdown could look like
         repoTemplate: {
           type: 'dropdown',
           label: 'Template',
-          default: 'none',
+          defaultValue: 'none',
           options: [
             {
               id: 'template-1',
@@ -166,7 +166,7 @@ export const exampleForm: NgxFbForm = {
               value: 'doc',
             },
             {
-              id: 'template-3',
+              id: 'template-4',
               label: 'Note Management',
               value: 'note',
             },
@@ -175,7 +175,7 @@ export const exampleForm: NgxFbForm = {
         sendConfirmation: {
           type: 'checkbox',
           label: 'Send confirmation mail',
-          default: true,
+          defaultValue: true,
         },
         confirmationMailTarget: {
           type: 'email',
@@ -187,12 +187,12 @@ export const exampleForm: NgxFbForm = {
         editProjectId: {
           type: 'checkbox',
           label: 'Edit Project ID',
-          default: false,
+          defaultValue: false,
         },
         projectId: {
           type: 'text',
           label: 'Project ID',
-          default: '123456789',
+          defaultValue: '123456789',
           hidden: '!repo.editProjectId',
           hideStrategy: 'keep',
           valueStrategy: 'reset',
