@@ -46,10 +46,10 @@ export function range1to10(c: AbstractControl): ValidationErrors | null {
   }
   const n = toNumber(v);
   if (!Number.isFinite(n)) {
-    return { range: { min: 1, max: 10 } };
+    return { range: 'Must be between 1 and 10' };
   }
   if (n < 1 || n > 10) {
-    return { range: { min: 1, max: 10 } };
+    return { range: 'Must be between 1 and 10' };
   }
   return null;
 }
@@ -61,10 +61,10 @@ export function range1to480(c: AbstractControl): ValidationErrors | null {
   }
   const n = toNumber(v);
   if (!Number.isFinite(n)) {
-    return { range: { min: 1, max: 480 } };
+    return { range: 'Must be between 1 and 480' };
   }
   if (n < 1 || n > 480) {
-    return { range: { min: 1, max: 480 } };
+    return { range: 'Must be between 1 and 480' };
   }
   return null;
 }

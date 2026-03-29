@@ -22,7 +22,7 @@ export function emailDomainAllowed(c: AbstractControl) {
       if (allowed.includes(domain)) {
         return null;
       }
-      return { emailDomainAllowed: { allowed, domain } };
+      return { emailDomainAllowed: `Domain "${domain}" is not allowed` };
     }),
   );
 }
@@ -57,7 +57,7 @@ export function roomExists(c: AbstractControl) {
       if (exists) {
         return null;
       }
-      return { roomExists: { building, floor, room } };
+      return { roomExists: `Room "${String(room)}" not found in ${String(building)}-${String(floor)}` };
     }),
   );
 }
@@ -88,7 +88,7 @@ export function unitKnownAtLocation(c: AbstractControl) {
       if (list.includes(String(v))) {
         return null;
       }
-      return { unitKnownAtLocation: { building, unitId: String(v) } };
+      return { unitKnownAtLocation: `Unit "${String(v)}" not found in building ${String(building)}` };
     }),
   );
 }
@@ -115,12 +115,12 @@ export function approverActive(c: AbstractControl) {
         return null;
       }
       if (suspendedIds.has(id)) {
-        return { approverActive: { status: 'suspended', id } };
+        return { approverActive: `Approver "${id}" is suspended` };
       }
       if (onLeaveIds.has(id)) {
-        return { approverActive: { status: 'onLeave', id } };
+        return { approverActive: `Approver "${id}" is on leave` };
       }
-      return { approverActive: { status: 'unknown', id } };
+      return { approverActive: `Approver "${id}" not found` };
     }),
   );
 }
