@@ -53,7 +53,7 @@ import {
 } from '@ngx-formbar/reactive-forms';
 ```
 
-## Step 3: Update `provideFormbar` import
+## Step 3: Update provideFormbar import
 
 The `provideFormbar` function moved to the reactive-forms package. Its signature and usage are unchanged.
 
@@ -69,7 +69,7 @@ import { provideFormbar } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
 ```
 
-## Step 4: Update `defineFormbarConfig` import
+## Step 4: Update defineFormbarConfig import
 
 If you use the `defineFormbarConfig` type helper, update its import path.
 
@@ -145,7 +145,7 @@ ng generate @ngx-formbar/schematics:block
 
 If you have scripts or CI commands that reference the old schematic package name, update those as well.
 
-## What stays in `@ngx-formbar/core`
+## What stays in @ngx-formbar/core
 
 The following imports remain in `@ngx-formbar/core` and do **not** need to change:
 

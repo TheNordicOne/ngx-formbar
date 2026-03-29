@@ -1,10 +1,10 @@
 ## v2.0.0
 
 ### Overview
-
+ 
 New package containing all reactive forms functionality, split from `@ngx-formbar/core`.
 
-### Added
+### Added 
 
 - **Components:** `NgxfbFormComponent`
 - **Directives:** `NgxfbControlDirective`, `NgxfbGroupDirective`, `NgxfbBlockDirective`
@@ -19,4 +19,5 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 
 ### Migration
 
-No migration steps required. This is a new package — install it to replace the reactive forms functionality previously in `@ngx-formbar/core`. See **Migrating from v1** for details.
+No migration steps required. This is a new package — install it to replace the reactive forms functionality previously in `@ngx-formbar/core`. See [Migrating from v1](/changelog/migrating-from-v1) for details.
+ 
