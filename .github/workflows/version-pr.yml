@@ -22,7 +22,7 @@ concurrency:
 jobs:
   version:
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.event.head_commit.message, 'chore: version packages') }}
+    if: "!startsWith(github.event.head_commit.message, 'chore: version packages')"
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
