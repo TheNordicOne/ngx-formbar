@@ -37,6 +37,9 @@ export class FileControlComponent {
   protected get errors() {
     return this.control.formControl?.errors ?? {};
   }
+  protected get dirty() {
+    return this.control.formControl?.dirty ?? false;
+  }
 
   protected get formControl() {
     return this.control.formControl;

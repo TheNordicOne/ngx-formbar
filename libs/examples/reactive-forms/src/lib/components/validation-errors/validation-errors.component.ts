@@ -12,4 +12,5 @@ import type { ValidationErrors } from '@angular/forms';
 export class ValidationErrorsComponent {
   readonly errors = input<ValidationErrors | null>({});
   readonly testId = input.required<string>();
+  readonly dirty = input.required<boolean>();
 }

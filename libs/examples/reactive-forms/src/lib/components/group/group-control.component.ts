@@ -41,6 +41,9 @@ export class GroupControlComponent {
   protected get errors() {
     return this.group.formGroup?.errors ?? {};
   }
+  protected get dirty() {
+    return this.group.formGroup?.dirty ?? false;
+  }
 
   protected get formGroup() {
     return this.group.formGroup;
