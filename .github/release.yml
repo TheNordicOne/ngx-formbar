@@ -1,20 +1,20 @@
 changelog:
   categories:
-    - title: Breaking Changes 🛠
+    - title: Breaking Changes
       labels:
         - breaking-change
-    - title: New Features 🎉
+    - title: New Features
       labels:
         - enhancement
         - feature
-    - title: Bug Fixes 🐛
+    - title: Bug Fixes
       labels:
         - bug
         - fix
-    - title: Documentation 📚
+    - title: Documentation
       labels:
         - documentation
-    - title: Dependencies and Maintenance 🔧
+    - title: Dependencies & Maintenance
       labels:
         - dependencies
         - maintenance

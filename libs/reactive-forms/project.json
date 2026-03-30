@@ -1,0 +1,98 @@
+{
+  "name": "@ngx-formbar/reactive-forms",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/reactive-forms/src",
+  "prefix": "ngxfb",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": [
+        {
+          "path": "dist/{projectRoot}",
+          "preserveLocalDependencyProtocols": false
+        }
+      ],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["reactive-forms"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "libs/reactive-forms/ng-package.json",
+        "tsConfig": "libs/reactive-forms/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/reactive-forms/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "build-schematics": {
+      "dependsOn": ["build"],
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}/schematics"],
+      "options": {
+        "outputPath": "dist/libs/reactive-forms/schematics",
+        "main": "libs/reactive-forms/schematics/ng-add/index.ts",
+        "tsConfig": "libs/reactive-forms/tsconfig.schematics.json",
+        "platform": "node",
+        "format": ["cjs"],
+        "bundle": true,
+        "declaration": false,
+        "generatePackageJson": false,
+        "external": ["@angular-devkit/*", "@schematics/*", "typescript"],
+        "assets": [
+          {
+            "input": "libs/reactive-forms/schematics",
+            "glob": "collection.json",
+            "output": "."
+          },
+          {
+            "input": "libs/reactive-forms/schematics/ng-add",
+            "glob": "schema.json",
+            "output": "./ng-add"
+          },
+          {
+            "input": "libs/reactive-forms/schematics/ng-add",
+            "glob": "**/*.template",
+            "output": "./ng-add"
+          }
+        ]
+      }
+    },
+    "clean-schematics": {
+      "dependsOn": ["build-schematics"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -f dist/{projectRoot}/schematics/package.json"
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["clean-schematics"],
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "@nx/angular:unit-test",
+      "options": {
+        "watch": false
+      }
+    },
+    "test-schematics": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "config": "libs/reactive-forms/vitest.config.schematics.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

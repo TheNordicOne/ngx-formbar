@@ -1,9 +1,0 @@
-import { defineFormbarConfig } from '@ngx-formbar/core';
-import { componentRegistrations<%if (includeSyncValidators){ %>, validatorRegistrations<% } %><%if (includeAsyncValidators){ %>, asyncValidatorRegistrations<% } %> } from '<%= registrationsPath %>';
-
-export const formbarConfig = defineFormbarConfig({
-  componentRegistrations<%if (includeSyncValidators){ %>,
-  validatorRegistrations<% } %><%if (includeAsyncValidators){ %>,
-  asyncValidatorRegistrations<% } %>
-});
-

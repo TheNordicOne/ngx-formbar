@@ -1,0 +1,31 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ng-doc/generated": ["./ng-doc/@ngx-formbar/docs/index.ts"],
+      "@ng-doc/generated/*": ["./ng-doc/@ngx-formbar/docs/*"],
+      "@ngx-formbar/core": ["libs/core/src/index.ts"],
+      "@ngx-formbar/reactive-forms": ["libs/reactive-forms/src/index.ts"],
+      "@ngx-formbar/examples": ["libs/examples/src/index.ts"],
+      "@ngx-formbar/schematics": ["libs/schematics/src/index.ts"],
+      "@ngx-formbar/setup": ["libs/setup/src/index.ts"],
+      "@ngx-formbar/examples/reactive-forms": [
+        "libs/examples/reactive-forms/src/index.ts"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp", "ng-doc.config.ts"]
+}

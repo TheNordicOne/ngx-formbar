@@ -1,0 +1,9 @@
+Just like any other package, _ngx-formbar_ also has some known issues. Below you find a list including a link to a GitHub issue, if it exists.
+This list is not exhaustive, so also check the [GitHub Issues](https://github.com/TheNordicOne/ngx-formbar/issues) for anything not listed here.
+
+- <span class="badge badge--bug">Bug</span> [Using auto visibility state management in combination with hide strategy "remove" results in error](https://github.com/TheNordicOne/ngx-formbar/issues/64)
+  - This requires further input from the community, to make an informed decision and implement a solution that fits most needs.
+- <span class="badge badge--improvement">Improvement</span> [Registering validators per token prevents from referencing other validators by key since we get the whole map.](https://github.com/TheNordicOne/ngx-formbar/issues/65)
+  - Not a bug, but limits the usefulness of validator registrations via DI token. The purpose of the DI token is to provide the values in exactly the shape as they are required.
+- <span class="badge badge--improvement">Improvement</span> [Type safety in expression functions](https://github.com/TheNordicOne/ngx-formbar/issues/75)
+  - At this point it is not clear what the best solution would be

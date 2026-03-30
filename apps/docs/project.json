@@ -1,0 +1,96 @@
+{
+  "name": "@ngx-formbar/docs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "doc",
+  "sourceRoot": "apps/docs/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@ng-doc/builder:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/docs",
+        "browser": "apps/docs/src/main.ts",
+        "tsConfig": "apps/docs/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "node_modules/@ng-doc/app/assets",
+            "output": "assets/ng-doc/app"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/@ng-doc/ui-kit/assets",
+            "output": "assets/ng-doc/ui-kit"
+          },
+          {
+            "glob": "**/*",
+            "input": "ng-doc/@ngx-formbar/docs/assets",
+            "output": "assets/ng-doc"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/docs/public"
+          }
+        ],
+        "styles": [
+          "node_modules/@ng-doc/app/styles/global.css",
+          "apps/docs/src/styles.scss"
+        ],
+        "allowedCommonJsDependencies": ["@ng-doc/core"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "2mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@ng-doc/builder:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "@ngx-formbar/docs:build:production"
+        },
+        "development": {
+          "buildTarget": "@ngx-formbar/docs:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "dependsOn": ["build"]
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "@ngx-formbar/docs:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/docs/browser",
+        "spa": true
+      }
+    }
+  }
+}

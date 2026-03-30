@@ -1,0 +1,23 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <ngxfb-form [formConfig]="formConfig()" />
+  <div class="story-actions">
+    <button data-testid="submit" type="submit">Submit</button>
+    <button data-testid="patch" type="button" (click)="patchValue()">
+      Patch
+    </button>
+    <button data-testid="reset" type="button" (click)="reset()">
+      Reset
+    </button>
+  </div>
+</form>
+
+@if (formValues().length > 0) {
+  <div class="story-form-values" data-testid="form-values">
+    @for (entry of formValues(); track entry.path) {
+      <div>
+        <span [attr.data-testid]="`${entry.path}-path`">{{ entry.path }}: </span>
+        <span [attr.data-testid]="`${entry.path}-value`">{{ entry.value }}</span>
+      </div>
+    }
+  </div>
+}

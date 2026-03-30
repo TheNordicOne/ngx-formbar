@@ -1,0 +1,12 @@
+@let formConfig = formContent();
+@if (formConfig) {
+  <form class="demo-form" [formGroup]="form" (ngSubmit)="onSubmit($event)">
+    <ngxfb-form class="demo-form-content" [formConfig]="formConfig" />
+    <div class="form-actions">
+      <button type="submit">Print to console</button>
+      <button type="button" (click)="reset()">Reset</button>
+    </div>
+  </form>
+} @else {
+  <p>Loading form configuration...</p>
+}

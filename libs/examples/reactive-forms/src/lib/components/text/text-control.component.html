@@ -1,0 +1,18 @@
+@if (!structurallyHidden()) {
+  <div class="inline-input" [hidden]="attributeHidden()" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+    <input
+      type="text"
+      [id]="name()"
+      [placeholder]="placeholder() ?? ''"
+      [title]="hint()"
+      [formControlName]="name()"
+      [attr.readonly]="readonly() || null"
+      [attr.data-testid]="`${testId()}-input`"
+    />
+    @if (hint()) {
+      <span [attr.data-testid]="`${testId()}-hint`">{{ hint() }}</span>
+    }
+    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
+  </div>
+}

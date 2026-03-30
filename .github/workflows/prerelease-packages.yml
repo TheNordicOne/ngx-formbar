@@ -1,0 +1,131 @@
+name: Pre-release Packages
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run without publishing or pushing changes
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry-run || false }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Version packages and generate changelogs (prerelease)
+        run: npx nx release prerelease --preid next --skip-publish
+
+      - name: Commit and push version changes
+        if: env.DRY_RUN != 'true'
+        run: |
+          git add .
+          git commit -m "chore: version packages (prerelease)" --allow-empty
+          git push
+
+      - name: Build all packages
+        run: npx nx run-many -t build
+
+      - name: Create git tags and GitHub pre-releases
+        if: env.DRY_RUN != 'true'
+        run: |
+          declare -A PACKAGES=(
+            ["@ngx-formbar/core"]="libs/core/package.json"
+            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
+            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+          )
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if [[ "$version" != *"-next."* ]]; then
+              echo "$pkg version $version is not a pre-release, skipping"
+              continue
+            fi
+
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+              continue
+            fi
+
+            echo "Creating pre-release for $tag"
+            git tag "$tag"
+          done
+
+          git push origin --tags
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if [[ "$version" != *"-next."* ]]; then
+              continue
+            fi
+
+            gh release create "$tag" \
+              --title "$tag" \
+              --prerelease \
+              --latest=false || echo "Release $tag already exists, skipping"
+          done
+
+      - name: Publish to npm
+        if: env.DRY_RUN != 'true'
+        run: npx nx release publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Dry-run summary
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry-run mode — skipped commit, push, tagging, GitHub releases, and npm publish"
+          echo "::group::Pre-release versions"
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json; do
+            name=$(node -p "require('./${pkg_json}').name")
+            version=$(node -p "require('./${pkg_json}').version")
+            echo "  $name@$version"
+          done
+          echo "::endgroup::"
+
+  deploy-docs:
+    if: ${{ !(inputs.dry-run || false) }}
+    needs: prerelease
+    uses: ./.github/workflows/publish-docs.yml
+    with:
+      environment: preview
+    secrets: inherit

@@ -11,7 +11,7 @@ assignees: TheNordicOne
 A clear and concise description of what the bug is.
 
 **To Reproduce**
-Provide 
+Provide
 - at least minimal form configuration, including all relevant details.
 - or better yet: Provide a minimal repo.
 - Steps to reproduce the behavior

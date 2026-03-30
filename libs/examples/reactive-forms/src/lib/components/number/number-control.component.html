@@ -1,0 +1,15 @@
+@if (!isHidden()) {
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+    <input
+      type="number"
+      [id]="name()"
+      [min]="min()"
+      [max]="max()"
+      [formControlName]="name()"
+      [attr.readonly]="readonly() || null"
+      [attr.data-testid]="`${testId()}-input`"
+    />
+    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
+  </div>
+}

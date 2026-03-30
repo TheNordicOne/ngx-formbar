@@ -1,0 +1,16 @@
+@if (!isHidden()) {
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{
+      label()
+    }}</label>
+    <div>
+      <input
+        type="checkbox"
+        [id]="name()"
+        [formControlName]="name()"
+        [attr.data-testid]="`${testId()}-input`"
+      />
+    </div>
+    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
+  </div>
+}

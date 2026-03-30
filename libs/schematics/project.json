@@ -1,0 +1,67 @@
+{
+  "name": "@ngx-formbar/schematics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/schematics/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": [
+        {
+          "path": "dist/{projectRoot}",
+          "preserveLocalDependencyProtocols": false
+        }
+      ],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["schematics"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/schematics",
+        "main": "libs/schematics/src/index.ts",
+        "additionalEntryPoints": [
+          "libs/schematics/src/lib/control/index.ts",
+          "libs/schematics/src/lib/group/index.ts",
+          "libs/schematics/src/lib/block/index.ts",
+          "libs/schematics/src/lib/register/index.ts"
+        ],
+        "tsConfig": "libs/schematics/tsconfig.lib.json",
+        "platform": "node",
+        "format": ["cjs"],
+        "bundle": true,
+        "declaration": true,
+        "external": ["@angular-devkit/*", "@schematics/*", "typescript"],
+        "assets": [
+          "libs/schematics/*.md",
+          {
+            "input": "libs/schematics/src",
+            "glob": "**/collection.json",
+            "output": "."
+          },
+          {
+            "input": "libs/schematics/src",
+            "glob": "**/schema.json",
+            "output": "."
+          },
+          {
+            "input": "libs/schematics/src",
+            "glob": "**/*.template",
+            "output": "."
+          }
+        ]
+      }
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}

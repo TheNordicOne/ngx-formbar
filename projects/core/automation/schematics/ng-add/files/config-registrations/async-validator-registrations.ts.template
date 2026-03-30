@@ -1,4 +1,0 @@
-import { AsyncValidatorConfig, RegistrationRecord } from '@ngx-formbar/core';
-
-export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
-};

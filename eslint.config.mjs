@@ -1,23 +1,28 @@
 import eslint from '@eslint/js';
-import { configs as ngConfigs, processInlineTemplates } from 'angular-eslint';
+import nx from '@nx/eslint-plugin';
+import {
+  configs as ngConfigs,
+  processInlineTemplates,
+} from 'angular-eslint';
 import prettierConfig from 'eslint-config-prettier';
-import { configs as jsoncConfigs } from 'eslint-plugin-jsonc';
-import globals from 'globals';
-import { config, configs as tsConfigs } from 'typescript-eslint';
-import boundaries from 'eslint-plugin-boundaries';
+import { defineConfig } from 'eslint/config';
+import { configs as tsConfigs } from 'typescript-eslint';
 
-export default config(
-  { ignores: ['.angular/*', 'dist/*'] },
+export default defineConfig(
+  ...nx.configs['flat/base'],
+  { ignores: ['**/dist', '**/out-tsc', '.angular/*'] },
   {
     name: 'JavaScript',
-    files: ['**/*.js'],
+    files: ['**/*.js', '**/*.mjs'],
+    extends: [eslint.configs.recommended, prettierConfig],
+  },
+  {
+    name: 'CommonJS',
+    files: ['**/*.cjs'],
     extends: [eslint.configs.recommended, prettierConfig],
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
+      sourceType: 'commonjs',
     },
-    rules: {},
   },
   {
     name: 'TypeScript',
@@ -54,7 +59,8 @@ export default config(
           style: 'kebab-case',
         },
       ],
-      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+      '@angular-eslint/component-class-suffix': 'off',
       '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
       'no-restricted-syntax': [
         'error',
@@ -103,8 +109,9 @@ export default config(
     extends: [...ngConfigs.templateAll, ...ngConfigs.templateAccessibility],
     rules: {
       '@angular-eslint/template/i18n': 'off',
+      '@angular-eslint/template/prefer-self-closing-tags': 'error',
       // Turning this off to be able to use signals
-      // There currently is no way to differentiate between a signal and a function call, other thant adding prefixes or suffixes
+      // There currently is no way to differentiate between a signal and a function call, other than adding prefixes or suffixes
       '@angular-eslint/template/no-call-expression': 'off',
     },
   },
@@ -116,96 +123,21 @@ export default config(
     },
   },
   {
-    name: 'json',
-    files: ['**/*.json'],
-    extends: [
-      ...jsoncConfigs['flat/recommended-with-jsonc'],
-      ...jsoncConfigs['flat/prettier'],
-    ],
-    rules: {},
-  },
-  {
-    name: 'Boundaries',
-    plugins: {
-      boundaries,
-    },
-    settings: {
-      'import/resolver': {
-        typescript: {
-          alwaysTryTypes: true,
-        },
-      },
-      'boundaries/dependency-nodes': ['import', 'dynamic-import'],
-      'boundaries/include': ['projects/**/lib/**/*', 'projects/**/test/**/*'],
-      'boundaries/elements': [
-        {
-          type: 'shared',
-          mode: 'full',
-          pattern: ['projects/shared/**/*'],
-        },
-        {
-          type: 'component-test',
-          mode: 'full',
-          capture: ['project'],
-          pattern: [
-            'projects/**/lib/*/**/*.cy.ts',
-            'projects/**/lib/*/**/*.spec.ts',
-          ],
-        },
-        {
-          type: 'project',
-          mode: 'full',
-          capture: ['project'],
-          pattern: ['projects/**/lib/*/**/*', 'projects/**/lib/*'],
-        },
-        {
-          type: 'core',
-          mode: 'full',
-          pattern: ['projects/**/lib/core/**/*'],
-        },
-        {
-          type: 'test',
-          mode: 'full',
-          pattern: ['projects/**/test/*/**/*', 'projects/**/test/*'],
-        },
-        {
-          type: 'index',
-          mode: 'file',
-          pattern: ['index.ts'],
-        },
-      ],
-    },
+    name: 'Nx Module Boundaries',
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      'boundaries/no-unknown': ['error'],
-      'boundaries/no-unknown-files': ['error'],
-      'boundaries/element-types': [
+      '@nx/enforce-module-boundaries': [
         'error',
         {
-          default: 'disallow',
-          rules: [
+          enforceBuildableLibDependency: true,
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '@ng-doc/generated',
+          ],
+          depConstraints: [
             {
-              from: ['shared'],
-              allow: ['shared'],
-            },
-            {
-              from: ['project'],
-              allow: ['shared', ['project', { project: '${from.project}' }]],
-            },
-            {
-              from: ['core'],
-              allow: ['shared'],
-            },
-            {
-              from: ['test'],
-              allow: ['test', 'root', 'core', 'project', 'shared', 'index'],
-            },
-            {
-              from: ['component-test'],
-              allow: [
-                'test',
-                'shared',
-                ['project', { project: '${from.project}' }],
-              ],
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
             },
           ],
         },

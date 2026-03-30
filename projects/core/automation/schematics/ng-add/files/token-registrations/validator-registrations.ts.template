@@ -1,8 +1,0 @@
-import { ValidatorFn } from '@angular/forms';
-import { NGX_FW_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/core';
-
-export const validatorRegistrationsProvider = {
-  provide: NGX_FW_VALIDATOR_REGISTRATIONS,
-  useValue: new Map<string, ValidatorFn[]>([
-  ])
-};

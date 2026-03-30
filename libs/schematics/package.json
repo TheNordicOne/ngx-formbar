@@ -1,0 +1,35 @@
+{
+  "name": "@ngx-formbar/schematics",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "./index.cjs",
+  "types": "./src/index.d.ts",
+  "schematics": "./lib/collection.json",
+  "dependencies": {
+    "@ngx-formbar/setup": "workspace:^"
+  },
+  "peerDependencies": {
+    "@angular-devkit/core": ">=19.2.0 <22.0.0",
+    "@angular-devkit/schematics": ">=19.2.0 <22.0.0",
+    "@schematics/angular": ">=19.2.0 <22.0.0",
+    "typescript": ">=5.4.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "typescript",
+    "schematics",
+    "ngx-formbar"
+  ],
+  "author": {
+    "name": "Alexander Pahn",
+    "email": "alexander.pahn@proton.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheNordicOne/ngx-formbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheNordicOne/ngx-formbar.issues"
+  }
+}

@@ -1,0 +1,109 @@
+name: Release Packages
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run build and version detection without publishing
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, 'chore: version packages'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry-run || false }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Build all packages
+        run: npx nx run-many -t build
+
+      - name: Create git tags and GitHub releases
+        if: env.DRY_RUN != 'true'
+        run: |
+          declare -A PACKAGES=(
+            ["@ngx-formbar/core"]="libs/core/package.json"
+            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
+            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+          )
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+              continue
+            fi
+
+            echo "Creating release for $tag"
+            git tag "$tag"
+          done
+
+          git push origin --tags
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            gh release create "$tag" \
+              --title "$tag" \
+              --generate-notes \
+              --latest=false || echo "Release $tag already exists, skipping"
+          done
+
+      - name: Publish to npm
+        if: env.DRY_RUN != 'true'
+        run: npx nx release publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Dry-run summary
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
+          echo "::group::Package versions that would be released"
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json; do
+            name=$(node -p "require('./${pkg_json}').name")
+            version=$(node -p "require('./${pkg_json}').version")
+            echo "  $name@$version"
+          done
+          echo "::endgroup::"
+
+  deploy-docs:
+    if: ${{ !(inputs.dry-run || false) }}
+    needs: release
+    uses: ./.github/workflows/publish-docs.yml
+    with:
+      environment: production
+    secrets: inherit

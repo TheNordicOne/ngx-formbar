@@ -1,0 +1,15 @@
+@if (!isHidden()) {
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+    <textarea
+      [id]="name()"
+      [placeholder]="placeholder() ?? ''"
+      [formControlName]="name()"
+      [readonly]="readonly()"
+      [rows]="rows()"
+      [maxlength]="maxLength()"
+      [attr.data-testid]="`${testId()}-input`"
+    ></textarea>
+    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
+  </div>
+}
