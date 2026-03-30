@@ -57,6 +57,9 @@
     },
     "build-storybook": {
       "cache": true
+    },
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"]
     }
   },
   "plugins": [
@@ -119,7 +122,7 @@
       "tag": false
     },
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build",
+      "preVersionCommand": "npx nx run-many -t build && npx nx run @ngx-formbar/reactive-forms:clean-schematics",
       "conventionalCommits": true
     },
     "changelog": {

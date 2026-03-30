@@ -17,6 +17,9 @@
   "ng-add": {
     "save": "dependencies"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "license": "MIT",
   "keywords": [

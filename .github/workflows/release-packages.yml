@@ -44,7 +44,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Build all packages
-        run: npx nx run-many -t build
+        run: npx nx run-many -t build --skip-nx-cache
 
       - name: Create git tags and GitHub releases
         if: env.DRY_RUN != 'true'
@@ -84,9 +84,7 @@ jobs:
 
       - name: Publish to npm
         if: env.DRY_RUN != 'true'
-        run: npx nx release publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx nx release publish --provenance
 
       - name: Dry-run summary
         if: env.DRY_RUN == 'true'
