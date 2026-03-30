@@ -109,7 +109,7 @@ Releases are fully automated via GitHub Actions.
 ### Standard Releases
 
 1. Commits land on `main` via squash-merged PRs
-2. On every push to `main`, the **Version PR** workflow runs:
+2. When ready to release, manually trigger the **Version PR** workflow (Actions > Version PR > Run workflow):
    - Calculates version bumps from conventional commit messages
    - Generates changelogs
    - Creates or updates a PR titled `chore: version packages`
@@ -121,13 +121,15 @@ Releases are fully automated via GitHub Actions.
 
 ### Pre-releases
 
-Pre-releases are published from `release/**` branches:
+Pre-releases use `release/**` branches as a trigger mechanism — all development still happens on `main`:
 
-1. Push to a `release/**` branch (e.g. `release/v3`)
+1. Push `main` to a release branch: `git push origin main:release/v3`
 2. The **Pre-release Packages** workflow runs:
    - Bumps versions with a `-next.X` suffix
    - Publishes to npm under the `next` dist-tag
    - Deploys documentation to the preview environment
+3. To publish another prerelease after more changes land on `main`, force-push again: `git push origin main:release/v3 --force`
+4. Once the stable release is published, delete the release branch
 
 Consumers can install pre-releases with:
 
