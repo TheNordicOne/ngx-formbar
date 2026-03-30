@@ -13,8 +13,16 @@ export default defineConfig(
   { ignores: ['**/dist', '**/out-tsc', '.angular/*'] },
   {
     name: 'JavaScript',
-    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    files: ['**/*.js', '**/*.mjs'],
     extends: [eslint.configs.recommended, prettierConfig],
+  },
+  {
+    name: 'CommonJS',
+    files: ['**/*.cjs'],
+    extends: [eslint.configs.recommended, prettierConfig],
+    languageOptions: {
+      sourceType: 'commonjs',
+    },
   },
   {
     name: 'TypeScript',
