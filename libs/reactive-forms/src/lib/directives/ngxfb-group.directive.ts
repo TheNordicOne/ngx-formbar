@@ -9,11 +9,11 @@ import {
 } from '@angular/core';
 import {
   NgxFbFormGroup,
-  ValueStrategy,
   StateHandling,
   TestIdBuilderFn,
+  ValueStrategy,
 } from '@ngx-formbar/core';
-import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
+import { ControlContainer, FormGroup } from '@angular/forms';
 import {
   disabledEffect,
   withDisabledState,
