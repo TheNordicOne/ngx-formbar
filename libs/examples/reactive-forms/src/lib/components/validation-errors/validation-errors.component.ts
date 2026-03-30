@@ -6,6 +6,7 @@ import type { ValidationErrors } from '@angular/forms';
   selector: 'ngxfb-examples-validation-errors',
   imports: [KeyValuePipe],
   templateUrl: './validation-errors.component.html',
+  styleUrl: './validation-errors.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ValidationErrorsComponent {

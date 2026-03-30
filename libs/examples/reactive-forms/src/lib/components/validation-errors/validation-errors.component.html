@@ -1,5 +1,5 @@
 @for (error of errors() | keyvalue; track error.key) {
-  <span [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
+  <span class="validation-error" [attr.data-testid]="`${testId()}-validation-error-${error.key}`">
     @if (error.key === 'minlength') {
       Minimum {{ error.value.requiredLength }} characters required
     } @else if (error.key === 'required') {
