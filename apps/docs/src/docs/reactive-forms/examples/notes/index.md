@@ -3,7 +3,7 @@ All examples use minimal styling and share the same set of control components,
 validators, and form configurations. The differences lie in **how things are wired up**.
 
 Each example page includes a live, interactive demo rendered directly in the docs,
-along with code blocks explaining the setup.
+along with the form configuration.
 
 ## What Each Example Demonstrates
 
