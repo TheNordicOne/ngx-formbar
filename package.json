@@ -12,6 +12,9 @@
     "publish-local": "nx run-many -t build --skip-nx-cache && nx release version --specifier 0.0.0-local.$(date +%s) --git-commit false --git-tag false --first-release && nx release publish --registry http://localhost:4873 --tag local --first-release"
   },
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "packageManager": "pnpm@10.30.3",
   "dependencies": {
     "@angular/common": "~21.1.0",
