@@ -15,7 +15,7 @@ import {
   provideTokenNoSplit,
   setupWorkspace,
 } from './workspace-setup';
-import { app, exists, read, src, writeJson } from './helper';
+import { app, exists, hasDynamicImportOf, read, src, writeJson } from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   appConfigProvidersComponentRegistrationsMapHasIdentifier,
@@ -519,14 +519,8 @@ describe('control schematic', () => {
         read(tree, src(registrationsPath)),
       );
 
-      const componentImportPath = buildRelativePath(
-        src(registrationsPath),
-        defaultComponentOutputPath,
-      );
-
-      const importsComponent = hasNamedImport(
+      const importsComponent = hasDynamicImportOf(
         componentRegistrationsSf,
-        componentImportPath,
         'TestControlComponent',
       );
 
@@ -545,14 +539,8 @@ describe('control schematic', () => {
       const tree = await runSchematic('control');
       const appConfigSf = parseTS(read(tree, appConfigPath));
 
-      const componentImportPath = buildRelativePath(
-        appConfigPath,
-        defaultComponentOutputPath,
-      );
-
-      const importsComponent = hasNamedImport(
+      const importsComponent = hasDynamicImportOf(
         appConfigSf,
-        componentImportPath,
         'TestControlComponent',
       );
 
@@ -633,14 +621,8 @@ describe('control schematic', () => {
         read(tree, src(registrationsPath)),
       );
 
-      const componentImportPath = buildRelativePath(
-        src(registrationsPath),
-        app('email/email-control.component.ts'),
-      );
-
-      const importsComponent = hasNamedImport(
+      const importsComponent = hasDynamicImportOf(
         componentRegistrationsSf,
-        componentImportPath,
         'EmailControlComponent',
       );
 
@@ -675,14 +657,8 @@ describe('control schematic', () => {
 
       const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
-      const componentImportPath = buildRelativePath(
-        src(registrationsPath),
-        app('email/email-control.component.ts'),
-      );
-
-      const importsComponent = hasNamedImport(
+      const importsComponent = hasDynamicImportOf(
         registrationsSf,
-        componentImportPath,
         'EmailControlComponent',
       );
 
@@ -713,14 +689,8 @@ describe('control schematic', () => {
 
       const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
-      const componentImportPath = buildRelativePath(
-        src(registrationsPath),
-        app('email/email-control.component.ts'),
-      );
-
-      const importsComponent = hasNamedImport(
+      const importsComponent = hasDynamicImportOf(
         registrationsSf,
-        componentImportPath,
         'EmailControlComponent',
       );
 
@@ -772,14 +742,8 @@ describe('control schematic', () => {
         const tree = await runSchematic('control');
         const appConfigSf = parseTS(read(tree, appConfigPath));
 
-        const componentImportPath = buildRelativePath(
-          appConfigPath,
-          defaultComponentOutputPath,
-        );
-
-        const importsComponent = hasNamedImport(
+        const importsComponent = hasDynamicImportOf(
           appConfigSf,
-          componentImportPath,
           'TestControlComponent',
         );
 
@@ -799,14 +763,8 @@ describe('control schematic', () => {
         const tree = await runSchematic('control');
         const formbarConfigSf = parseTS(read(tree, src(formbarConfigPath)));
 
-        const componentImportPath = buildRelativePath(
-          src(formbarConfigPath),
-          defaultComponentOutputPath,
-        );
-
-        const importsComponent = hasNamedImport(
+        const importsComponent = hasDynamicImportOf(
           formbarConfigSf,
-          componentImportPath,
           'TestControlComponent',
         );
 
@@ -831,14 +789,8 @@ describe('control schematic', () => {
         const tree = await runSchematic('control');
         const registrationsSf = parseTS(read(tree, src(registrationsPath)));
 
-        const componentImportPath = buildRelativePath(
-          src(registrationsPath),
-          defaultComponentOutputPath,
-        );
-
-        const importsComponent = hasNamedImport(
+        const importsComponent = hasDynamicImportOf(
           registrationsSf,
-          componentImportPath,
           'TestControlComponent',
         );
 
@@ -875,14 +827,8 @@ describe('control schematic', () => {
 
         const formbarConfigSf = parseTS(read(tree, src(formbarConfigPath)));
 
-        const componentImportPath = buildRelativePath(
-          src(formbarConfigPath),
-          app('email/email-control.component.ts'),
-        );
-
-        const importsComponent = hasNamedImport(
+        const importsComponent = hasDynamicImportOf(
           formbarConfigSf,
-          componentImportPath,
           'EmailControlComponent',
         );
 

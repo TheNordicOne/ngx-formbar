@@ -18,6 +18,7 @@ import {
   countComponentRegistrationsMapProviderIdentifier,
   countNamedImport,
   forEachAtLeastOnce,
+  hasDynamicImportOf,
   read,
   src,
   writeJson
@@ -387,7 +388,7 @@ describe('register schematic', () => {
       'InlineComponent',
     );
 
-    expect(controlImportCount).toBe(1);
+    expect(controlImportCount).toBe(0);
     expect(featureImportCount).toBe(0);
     expect(registrationsCount).toBe(1);
   });
@@ -621,9 +622,13 @@ function assertRegisteredComponents(
         path,
       ).replace('.ts', '');
 
-      const importsComponent = hasNamedImport(
+      const hasStaticImport = hasNamedImport(
         componentRegistrationsSf,
         componentImportPath,
+        className,
+      );
+      const hasDynamicImport = hasDynamicImportOf(
+        componentRegistrationsSf,
         className,
       );
       const hasRegistration = hasRegistrationFn(
@@ -632,7 +637,8 @@ function assertRegisteredComponents(
         className,
       );
       const message = `${className} - ${key} - ${shouldRegister.toString()}`;
-      expect(importsComponent, message).toBe(shouldRegister);
+      expect(hasStaticImport, message).toBe(false);
+      expect(hasDynamicImport, message).toBe(shouldRegister);
       expect(hasRegistration, message).toBe(shouldRegister);
     },
   );

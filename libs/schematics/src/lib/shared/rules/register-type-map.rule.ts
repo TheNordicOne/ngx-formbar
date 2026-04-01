@@ -5,7 +5,6 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
   addComponentRegistration,
@@ -75,14 +74,7 @@ export function registerTypeConfig(
       componentFilePath,
     ).replace(/\.ts$/, '');
 
-    const changes: Change[] = [
-      insertImport(
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        componentClassName,
-        componentImportPath,
-      ),
-    ];
+    const changes: Change[] = [];
 
     const updateChanges = addComponentRegistration(
       tree,
@@ -91,6 +83,7 @@ export function registerTypeConfig(
       registrationsObject,
       key,
       componentClassName,
+      componentImportPath,
     );
 
     changes.push(...updateChanges);

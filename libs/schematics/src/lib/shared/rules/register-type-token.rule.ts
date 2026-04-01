@@ -6,7 +6,6 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
   findComponentRegistrationsNode,
@@ -70,14 +69,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       componentFilePath,
     ).replace(/\.ts$/, '');
 
-    const changes: Change[] = [
-      insertImport(
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        componentClassName,
-        componentImportPath,
-      ),
-    ];
+    const changes: Change[] = [];
 
     const mapArrayLiteral = findMapArrayLiteral(mapNode);
 
@@ -89,6 +81,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
         mapArrayLiteral,
         key,
         componentClassName,
+        componentImportPath,
       );
 
       changes.push(...updateChanges);

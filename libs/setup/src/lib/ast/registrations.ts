@@ -6,6 +6,7 @@ import {
   EmitHint,
   Expression,
   factory,
+  isArrowFunction,
   isArrayLiteralExpression,
   isCallExpression,
   isIdentifier,
@@ -76,6 +77,7 @@ export function updateMapEntries(
   mapArrayLiteral: ArrayLiteralExpression,
   key: string,
   componentClassName: string,
+  importPath: string,
 ) {
   const printer = createPrinter({});
 
@@ -85,7 +87,7 @@ export function updateMapEntries(
   }
   const fileContent = buffer.toString('utf-8');
 
-  const newEntry = createNewMapEntry(key, componentClassName);
+  const newEntry = createNewMapEntry(key, componentClassName, importPath);
   const updatedArray = createUpdatedArray(mapArrayLiteral, newEntry);
 
   return createChangeForArrayUpdate(
@@ -131,6 +133,7 @@ export function addComponentRegistration(
   registrationsObject: ObjectLiteralExpression,
   key: string,
   componentClassName: string,
+  importPath: string,
 ) {
   const printer = createPrinter({});
 
@@ -144,6 +147,7 @@ export function addComponentRegistration(
     registrationsObject,
     key,
     componentClassName,
+    importPath,
   );
 
   return createChangeForObjectUpdate(
@@ -197,8 +201,9 @@ export function matchesIdentifierName(
 
   return (
     matchesKey &&
-    isIdentifier(p.initializer) &&
-    p.initializer.text === identifierName
+    (isIdentifier(p.initializer)
+      ? p.initializer.text === identifierName
+      : extractComponentNameFromLazyImport(p.initializer) === identifierName)
   );
 }
 
@@ -345,7 +350,10 @@ export function provideFormbarComponentRegistrationsHasIdentifier(
     if (!matchesKey) {
       return false;
     }
-    return isIdentifier(p.initializer) && p.initializer.text === identifierName;
+    return (
+      (isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
+      extractComponentNameFromLazyImport(p.initializer) === identifierName
+    );
   });
 
   return !!entry;
@@ -711,10 +719,75 @@ function isPropertyWithName(prop: Node, name: string) {
   );
 }
 
-function createNewMapEntry(key: string, componentClassName: string) {
+function createLazyImportExpression(
+  importPath: string,
+  componentClassName: string,
+) {
+  const dynamicImport = factory.createCallExpression(
+    factory.createToken(SyntaxKind.ImportKeyword) as unknown as Expression,
+    undefined,
+    [factory.createStringLiteral(importPath)],
+  );
+
+  const thenCallback = factory.createArrowFunction(
+    undefined,
+    undefined,
+    [
+      factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        factory.createIdentifier('m'),
+      ),
+    ],
+    undefined,
+    factory.createToken(SyntaxKind.EqualsGreaterThanToken),
+    factory.createPropertyAccessExpression(
+      factory.createIdentifier('m'),
+      factory.createIdentifier(componentClassName),
+    ),
+  );
+
+  const thenCall = factory.createCallExpression(
+    factory.createPropertyAccessExpression(
+      dynamicImport,
+      factory.createIdentifier('then'),
+    ),
+    undefined,
+    [thenCallback],
+  );
+
+  return factory.createArrowFunction(
+    undefined,
+    undefined,
+    [],
+    undefined,
+    factory.createToken(SyntaxKind.EqualsGreaterThanToken),
+    thenCall,
+  );
+}
+
+export function extractComponentNameFromLazyImport(
+  node: Node,
+): string | null {
+  if (!isArrowFunction(node)) return null;
+  const body = node.body;
+  if (!isCallExpression(body)) return null;
+  if (body.arguments.length === 0) return null;
+  const thenCallback = body.arguments[0];
+  if (!isArrowFunction(thenCallback)) return null;
+  const innerBody = thenCallback.body;
+  if (!isPropertyAccessExpression(innerBody)) return null;
+  return isIdentifier(innerBody.name) ? innerBody.name.text : null;
+}
+
+function createNewMapEntry(
+  key: string,
+  componentClassName: string,
+  importPath: string,
+) {
   return factory.createArrayLiteralExpression([
     factory.createStringLiteral(key),
-    factory.createIdentifier(componentClassName),
+    createLazyImportExpression(importPath, componentClassName),
   ]);
 }
 
@@ -864,12 +937,13 @@ function createUpdatedRegistrationsObject(
   registrationsObject: ObjectLiteralExpression,
   key: string,
   componentClassName: string,
+  importPath: string,
 ) {
   const existingProperties = [...registrationsObject.properties];
 
   const newProperty = factory.createPropertyAssignment(
     factory.createStringLiteral(key),
-    factory.createIdentifier(componentClassName),
+    createLazyImportExpression(importPath, componentClassName),
   );
 
   return factory.updateObjectLiteralExpression(registrationsObject, [
@@ -931,8 +1005,8 @@ function isArrayAndMatchesIdentifierName(
   return (
     isStringLiteral(keyEl) &&
     keyEl.text === key &&
-    isIdentifier(valueEl) &&
-    valueEl.text === identifierName
+    ((isIdentifier(valueEl) && valueEl.text === identifierName) ||
+      extractComponentNameFromLazyImport(valueEl) === identifierName)
   );
 }
 
@@ -958,7 +1032,10 @@ function arrayLiteralUsesIdentifier(
       continue;
     }
     const [, v] = el.elements;
-    if (isIdentifier(v) && v.text === identifierName) {
+    if (
+      (isIdentifier(v) && v.text === identifierName) ||
+      extractComponentNameFromLazyImport(v) === identifierName
+    ) {
       return true;
     }
   }
@@ -989,7 +1066,10 @@ function objectLiteralUsesIdentifier(
     if (!isPropertyAssignment(p)) {
       continue;
     }
-    if (isIdentifier(p.initializer) && p.initializer.text === identifierName) {
+    if (
+      (isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
+      extractComponentNameFromLazyImport(p.initializer) === identifierName
+    ) {
       return true;
     }
   }
