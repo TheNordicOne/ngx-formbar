@@ -1,12 +1,43 @@
 import { Type } from '@angular/core';
 
 /**
- * Configuration for registering component types
- *
- * Used to map string type identifiers to component implementations
- * for dynamic rendering.
+ * Function that lazily loads a component.
+ * Works analog to lazily loading a component for a route.
  */
-export type ComponentRegistrationConfig = Record<string, Type<unknown>>;
+export type LoadComponentFn = () => Promise<Type<unknown>>;
+
+/**
+ * Registration entry for a statically imported component.
+ */
+export interface StaticRegistration {
+  component: Type<unknown>;
+}
+
+/**
+ * Registration entry for a lazily loaded component.
+ */
+export interface LazyRegistration {
+  loadComponent: LoadComponentFn;
+}
+
+/**
+ * A component registration entry — either static or lazy.
+ *
+ * - Static: `{ component: MyComponent }` — component is eagerly imported
+ * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }` — loaded on demand
+ */
+export type ComponentRegistrationEntry = StaticRegistration | LazyRegistration;
+
+/**
+ * Configuration for registering component types.
+ *
+ * Maps string type identifiers to component implementations for dynamic rendering.
+ * Supports both static and lazy component registrations.
+ */
+export type ComponentRegistrationConfig = Record<
+  string,
+  ComponentRegistrationEntry
+>;
 
 /**
  * Strategy for handling component states

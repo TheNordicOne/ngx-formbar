@@ -145,6 +145,57 @@ ng generate @ngx-formbar/schematics:block
 
 If you have scripts or CI commands that reference the old schematic package name, update those as well.
 
+## Step 7: Update component registrations
+
+Component registrations now use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry must be wrapped as either a static or lazy registration.
+
+**Before:**
+
+```typescript
+import { TextControlComponent } from './text-control.component';
+import { GroupComponent } from './group.component';
+
+provideFormbar({
+  componentRegistrations: {
+    text: TextControlComponent,
+    group: GroupComponent,
+  }
+})
+```
+
+**After (using helper functions):**
+
+```typescript
+import { staticComponent, loadComponent } from '@ngx-formbar/core';
+import { TextControlComponent } from './text-control.component';
+
+provideFormbar({
+  componentRegistrations: {
+    text: staticComponent(TextControlComponent),
+    group: loadComponent(() => import('./group.component').then(m => m.GroupComponent)),
+  }
+})
+```
+
+**After (without helpers):**
+
+```typescript
+import { TextControlComponent } from './text-control.component';
+
+provideFormbar({
+  componentRegistrations: {
+    text: { component: TextControlComponent },
+    group: { loadComponent: () => import('./group.component').then(m => m.GroupComponent) },
+  }
+})
+```
+
+You can freely mix static and lazy registrations. Static registrations keep the component in the main bundle, while lazy registrations enable code splitting.
+
+This applies to all registration styles — `provideFormbar()` config, `defineFormbarConfig()`, standalone registration files, and token-based `Map` registrations.
+
+If you use a custom `ComponentResolver`, update the `registrations` signal type from `Signal<ReadonlyMap<string, Type<unknown>>>` to `Signal<ReadonlyMap<string, ComponentRegistrationEntry>>`. Import `ComponentRegistrationEntry` from `@ngx-formbar/core`.
+
 ## What stays in @ngx-formbar/core
 
 The following imports remain in `@ngx-formbar/core` and do **not** need to change:
@@ -154,7 +205,8 @@ The following imports remain in `@ngx-formbar/core` and do **not** need to chang
 - `Expression`, `FormContext`
 - `NgxFbForm`, `NgxFbContent`, `NgxFbBaseContent`
 - `NgxFbControl`, `NgxFbFormGroup`, `NgxFbBlock`
-- `ComponentResolver`, `ComponentRegistrationConfig`
+- `ComponentResolver`, `ComponentRegistrationConfig`, `ComponentRegistrationEntry`, `StaticRegistration`, `LazyRegistration`, `LoadComponentFn`
+- `staticComponent`, `loadComponent` (helper functions)
 - `NgxFbGlobalConfiguration`
 - `UpdateStrategy`
 

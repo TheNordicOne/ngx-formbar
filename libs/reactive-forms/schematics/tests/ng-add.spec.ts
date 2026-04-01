@@ -23,7 +23,7 @@ import {
   providersArrayContainsProviderObject,
   read,
   src,
-} from './helper';
+} from '@ngx-formbar/schematics/testing';
 import { setupWorkspace } from './workspace-setup';
 import {
   DEFAULT_HELPER_PATH,

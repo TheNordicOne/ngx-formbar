@@ -1,15 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
+import { loadComponent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
 import {
-  maintenanceForm,
   HybridComponentResolver,
+  maintenanceForm,
 } from '@ngx-formbar/examples';
-import {
-  RadioControlComponent,
-  DropdownControlComponent,
-} from '@ngx-formbar/examples/reactive-forms';
 
 @Component({
   selector: 'docs-custom-resolver-demo',
@@ -40,13 +36,21 @@ export class CustomResolverDemoComponent {
       case 'radio':
         this.componentResolver.updateDynamicComponent(
           'radio',
-          RadioControlComponent,
+          loadComponent(() =>
+            import('@ngx-formbar/examples/reactive-forms').then(
+              (m) => m.RadioControlComponent,
+            ),
+          ),
         );
         break;
       case 'dropdown':
         this.componentResolver.updateDynamicComponent(
           'radio',
-          DropdownControlComponent,
+          loadComponent(() =>
+            import('@ngx-formbar/examples/reactive-forms').then(
+              (m) => m.DropdownControlComponent,
+            ),
+          ),
         );
         break;
     }

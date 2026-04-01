@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
-import { expect, waitFor } from 'storybook/test';
+import { expect } from 'storybook/test';
 import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { StoryFormHostComponent } from './story-form-host.component';
 import { NgxFbForm } from '@ngx-formbar/core';
@@ -33,14 +33,12 @@ export const DefaultChangeStrategy: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'Default Strategy' });
+    const input = await canvas.findByRole('textbox', { name: 'Default Strategy' });
     await userEvent.clear(input);
     await userEvent.type(input, 'new-text');
 
-    await waitFor(async () => {
-      const value = canvas.getByTestId('default-control-value');
-      await expect(value).toHaveTextContent('new-text');
-    });
+    const value = await canvas.findByTestId('default-control-value');
+    await expect(value).toHaveTextContent('new-text');
   },
 };
 
@@ -68,7 +66,7 @@ export const GlobalBlurStrategy: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'Control' });
+    const input = await canvas.findByRole('textbox', { name: 'Control' });
     await userEvent.clear(input);
     await userEvent.type(input, 'new-text');
 
@@ -78,10 +76,8 @@ export const GlobalBlurStrategy: Story = {
     // Blur the input to trigger the update
     await userEvent.tab();
 
-    await waitFor(async () => {
-      const value = canvas.getByTestId('control-value');
-      await expect(value).toHaveTextContent('new-text');
-    });
+    const value = await canvas.findByTestId('control-value');
+    await expect(value).toHaveTextContent('new-text');
   },
 };
 
@@ -109,7 +105,7 @@ export const GlobalSubmitStrategy: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'Control' });
+    const input = await canvas.findByRole('textbox', { name: 'Control' });
     await userEvent.clear(input);
     await userEvent.type(input, 'submit-text');
 
@@ -118,13 +114,11 @@ export const GlobalSubmitStrategy: Story = {
     await expect(canvas.queryByTestId('control-value')).not.toBeInTheDocument();
 
     // Submit the form
-    const submitButton = canvas.getByRole('button', { name: 'Submit' });
+    const submitButton = await canvas.findByRole('button', { name: 'Submit' });
     await userEvent.click(submitButton);
 
-    await waitFor(async () => {
-      const value = canvas.getByTestId('control-value');
-      await expect(value).toHaveTextContent('submit-text');
-    });
+    const value = await canvas.findByTestId('control-value');
+    await expect(value).toHaveTextContent('submit-text');
   },
 };
 
@@ -158,17 +152,15 @@ export const ControlOverride: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // The override-control uses 'change', so typing updates immediately
-    const overrideInput = canvas.getByRole('textbox', { name: 'Override Control' });
+    const overrideInput = await canvas.findByRole('textbox', { name: 'Override Control' });
     await userEvent.clear(overrideInput);
     await userEvent.type(overrideInput, 'override-text');
 
-    await waitFor(async () => {
-      const overrideValue = canvas.getByTestId('override-control-value');
-      await expect(overrideValue).toHaveTextContent('override-text');
-    });
+    const overrideValue = await canvas.findByTestId('override-control-value');
+    await expect(overrideValue).toHaveTextContent('override-text');
 
     // The default-control uses the global 'submit' strategy
-    const defaultInput = canvas.getByRole('textbox', { name: 'Default Control' });
+    const defaultInput = await canvas.findByRole('textbox', { name: 'Default Control' });
     await userEvent.clear(defaultInput);
     await userEvent.type(defaultInput, 'default-text');
     await userEvent.tab();
@@ -179,13 +171,11 @@ export const ControlOverride: Story = {
     ).not.toHaveTextContent('default-text');
 
     // Submit the form to trigger the update for the default control
-    const submitButton = canvas.getByRole('button', { name: 'Submit' });
+    const submitButton = await canvas.findByRole('button', { name: 'Submit' });
     await userEvent.click(submitButton);
 
-    await waitFor(async () => {
-      const defaultValue = canvas.getByTestId('default-control-value');
-      await expect(defaultValue).toHaveTextContent('default-text');
-    });
+    const defaultValue = await canvas.findByTestId('default-control-value');
+    await expect(defaultValue).toHaveTextContent('default-text');
   },
 };
 
@@ -235,7 +225,7 @@ export const NestedGroupInheritance: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // -- Grandchild inheriting 'submit' through nested groups --
-    const grandchildInput = canvas.getByRole('textbox', { name: 'Grandchild Control' });
+    const grandchildInput = await canvas.findByRole('textbox', { name: 'Grandchild Control' });
     await userEvent.clear(grandchildInput);
     await userEvent.type(grandchildInput, 'grandchild-text');
     await userEvent.tab();
@@ -246,38 +236,30 @@ export const NestedGroupInheritance: Story = {
     ).not.toBeInTheDocument();
 
     // Submit to trigger the update
-    const submitButton = canvas.getByRole('button', { name: 'Submit' });
+    const submitButton = await canvas.findByRole('button', { name: 'Submit' });
     await userEvent.click(submitButton);
 
-    await waitFor(async () => {
-      const grandchildValue = canvas.getByTestId(
-        'root-group.child-group.grandchild-control-value',
-      );
-      await expect(grandchildValue).toHaveTextContent('grandchild-text');
-    });
+    const grandchildValue = await canvas.findByTestId(
+      'root-group.child-group.grandchild-control-value',
+    );
+    await expect(grandchildValue).toHaveTextContent('grandchild-text');
 
     // -- Grandchild inheriting 'blur' from overridden parent group --
-    const overrideInput = canvas.getByRole('textbox', { name: 'Grandchild Override Control' });
+    const overrideInput = await canvas.findByRole('textbox', { name: 'Grandchild Override Control' });
     await userEvent.clear(overrideInput);
     await userEvent.type(overrideInput, 'override-grandchild-text');
 
     // Should not update yet (needs blur)
-    await waitFor(async () => {
-      const overrideValue = canvas.getByTestId(
-        'root-group.override-group.grandchild-override-control-value',
-      );
-      await expect(overrideValue).toHaveTextContent('');
-    });
+    await expect(await canvas.findByTestId(
+      'root-group.override-group.grandchild-override-control-value',
+    )).toHaveTextContent('');
 
     // Blur to trigger the update
     await userEvent.tab();
 
-    await waitFor(async () => {
-      const overrideValue = canvas.getByTestId(
-        'root-group.override-group.grandchild-override-control-value',
-      );
-      await expect(overrideValue).toHaveTextContent('override-grandchild-text');
-    });
+    await expect(await canvas.findByTestId(
+      'root-group.override-group.grandchild-override-control-value',
+    )).toHaveTextContent('override-grandchild-text');
   },
 };
 
@@ -300,33 +282,27 @@ export const ExplicitPerControlStrategies: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Change strategy — updates immediately
-    const changeInput = canvas.getByRole('textbox', { name: 'Change Control' });
+    const changeInput = await canvas.findByRole('textbox', { name: 'Change Control' });
     await userEvent.clear(changeInput);
     await userEvent.type(changeInput, 'change-text');
-    await waitFor(async () => {
-      await expect(canvas.getByTestId('change-control-value')).toHaveTextContent('change-text');
-    });
+    await expect(await canvas.findByTestId('change-control-value')).toHaveTextContent('change-text');
 
     // Blur strategy — updates only on blur
-    const blurInput = canvas.getByRole('textbox', { name: 'Blur Control' });
+    const blurInput = await canvas.findByRole('textbox', { name: 'Blur Control' });
     await userEvent.clear(blurInput);
     await userEvent.type(blurInput, 'blur-text');
-    await expect(canvas.getByTestId('blur-control-value')).toHaveTextContent('');
+    await expect(await canvas.findByTestId('blur-control-value')).toHaveTextContent('');
     await userEvent.tab();
-    await waitFor(async () => {
-      await expect(canvas.getByTestId('blur-control-value')).toHaveTextContent('blur-text');
-    });
+    await expect(await canvas.findByTestId('blur-control-value')).toHaveTextContent('blur-text');
 
     // Submit strategy — updates only on submit
-    const submitInput = canvas.getByRole('textbox', { name: 'Submit Control' });
+    const submitInput = await canvas.findByRole('textbox', { name: 'Submit Control' });
     await userEvent.clear(submitInput);
     await userEvent.type(submitInput, 'submit-text');
     await userEvent.tab();
     await expect(canvas.queryByTestId('submit-control-value')).not.toHaveTextContent('submit-text');
-    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
-    await waitFor(async () => {
-      await expect(canvas.getByTestId('submit-control-value')).toHaveTextContent('submit-text');
-    });
+    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await expect(await canvas.findByTestId('submit-control-value')).toHaveTextContent('submit-text');
   },
 };
 
@@ -364,25 +340,21 @@ export const GlobalDefaultWithNestedGroups: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // child-control inherits global default (blur)
-    const childInput = canvas.getByRole('textbox', { name: 'Child Control' });
+    const childInput = await canvas.findByRole('textbox', { name: 'Child Control' });
     await userEvent.clear(childInput);
     await userEvent.type(childInput, 'child-text');
     await expect(canvas.queryByTestId('root-group.child-control-value')).not.toBeInTheDocument();
     await userEvent.tab();
-    await waitFor(async () => {
-      await expect(canvas.getByTestId('root-group.child-control-value')).toHaveTextContent(
-        'child-text',
-      );
-    });
+    await expect(await canvas.findByTestId('root-group.child-control-value')).toHaveTextContent(
+      'child-text',
+    );
 
     // grandchild-control inherits change from child-group override
-    const grandchildInput = canvas.getByRole('textbox', { name: 'Grandchild Control' });
+    const grandchildInput = await canvas.findByRole('textbox', { name: 'Grandchild Control' });
     await userEvent.clear(grandchildInput);
     await userEvent.type(grandchildInput, 'grandchild-text');
-    await waitFor(async () => {
-      await expect(
-        canvas.getByTestId('root-group.child-group.grandchild-control-value'),
-      ).toHaveTextContent('grandchild-text');
-    });
+    await expect(
+      await canvas.findByTestId('root-group.child-group.grandchild-control-value'),
+    ).toHaveTextContent('grandchild-text');
   },
 };

@@ -16,7 +16,11 @@ import {
   SyntaxKind,
 } from 'typescript';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { isCallee, getMapArguments } from '@ngx-formbar/setup';
+import {
+  isCallee,
+  getMapArguments,
+  extractComponentNameFromLazyImport,
+} from '@ngx-formbar/setup';
 import { normalize } from '@angular-devkit/core';
 
 // Path helpers
@@ -307,6 +311,25 @@ export function callObjectArgHasProp(
   return found;
 }
 
+export function hasDynamicImportOf(
+  sf: SourceFile,
+  componentClassName: string,
+): boolean {
+  let found = false;
+
+  const visit = (node: Node) => {
+    if (found) return;
+    if (extractComponentNameFromLazyImport(node) === componentClassName) {
+      found = true;
+      return;
+    }
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
+}
+
 export function forEachAtLeastOnce<T>(
   array: readonly T[],
   callback: Parameters<(readonly T[])['forEach']>[0],
@@ -330,8 +353,8 @@ function isArrayAndMatchesIdentifierName(
   return (
     isStringLiteral(keyEl) &&
     keyEl.text === key &&
-    isIdentifier(valueEl) &&
-    valueEl.text === identifierName
+    ((isIdentifier(valueEl) && valueEl.text === identifierName) ||
+      extractComponentNameFromLazyImport(valueEl) === identifierName)
   );
 }
 

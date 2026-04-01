@@ -8,7 +8,7 @@ In ngx-formbar, resolvers are responsible for providing components and validator
 
 There are two types of resolvers:
 
-1. **Component Resolver**: Maps component type strings (like 'text', 'group') to actual component types
+1. **Component Resolver**: Maps component type strings (like 'text', 'group') to component registration entries (`ComponentRegistrationEntry`)
 2. **Validator Resolver**: Maps validator name strings to validator functions
 
 ## Creating a Custom Component Resolver
@@ -16,15 +16,16 @@ There are two types of resolvers:
 To create a custom component resolver, implement the `ComponentResolver` interface:
 
 ```typescript name="app-custom-component-resolver.ts"
-import { Signal, Type, computed, Injectable, signal } from '@angular/core';
-import { ComponentResolver } from '@ngx-formbar/core';
+import { Signal, computed, Injectable, signal } from '@angular/core';
+import { ComponentResolver, ComponentRegistrationEntry, staticComponent, loadComponent } from '@ngx-formbar/core';
+import { MyCustomTextComponent } from './components/custom-text.component';
 
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
   // Create a signal with your component mapping
-  private readonly _componentMap = signal(new Map<string, Type<unknown>>([
-    ['custom-text', MyCustomTextComponent],
-    ['special-group', MySpecialGroupComponent],
+  private readonly _componentMap = signal(new Map<string, ComponentRegistrationEntry>([
+    ['custom-text', staticComponent(MyCustomTextComponent)],
+    ['special-group', loadComponent(() => import('./components/special-group.component').then(m => m.MySpecialGroupComponent))],
     // Add more components as needed
   ]));
 
@@ -32,9 +33,9 @@ export class AppCustomComponentResolver implements ComponentResolver {
   readonly registrations = this._componentMap.asReadonly();
 
   // Optional: Add methods to dynamically update components
-  addComponent(key: string, component: Type<unknown>): void {
+  addRegistration(key: string, entry: ComponentRegistrationEntry): void {
     const currentMap = new Map(this._componentMap());
-    currentMap.set(key, component);
+    currentMap.set(key, entry);
     this._componentMap.set(currentMap);
   }
 
@@ -51,8 +52,8 @@ export class AppCustomComponentResolver implements ComponentResolver {
 For more complex scenarios, you might want to create a resolver that combines multiple sources:
 
 ```typescript name="hybrid-component-resolver.ts"
-import { Signal, Type, computed, inject, Injectable } from '@angular/core';
-import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
+import { Signal, computed, inject, Injectable, signal } from '@angular/core';
+import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS, ComponentRegistrationEntry } from '@ngx-formbar/core';
 
 @Injectable()
 export class HybridComponentResolver implements ComponentResolver {
@@ -60,24 +61,24 @@ export class HybridComponentResolver implements ComponentResolver {
   private readonly defaultRegistrations = inject(NGX_FW_COMPONENT_REGISTRATIONS);
 
   // Create your dynamic registrations
-  private readonly dynamicRegistrations = signal(new Map<string, Type<unknown>>());
+  private readonly dynamicRegistrations = signal(new Map<string, ComponentRegistrationEntry>());
 
   // Combine them with computed
-  readonly registrations: Signal<ReadonlyMap<string, Type<unknown>>> = computed(() => {
-    const result = new Map<string, Type<unknown>>(this.defaultRegistrations);
+  readonly registrations = computed(() => {
+    const result = new Map<string, ComponentRegistrationEntry>(this.defaultRegistrations);
 
     // Override with dynamic registrations
-    for (const [key, component] of this.dynamicRegistrations()) {
-      result.set(key, component);
+    for (const [key, entry] of this.dynamicRegistrations()) {
+      result.set(key, entry);
     }
 
     return result;
   });
 
   // Methods to update dynamic registrations
-  updateDynamicComponent(key: string, component: Type<unknown>): void {
+  updateDynamicComponent(key: string, entry: ComponentRegistrationEntry): void {
     const current = new Map(this.dynamicRegistrations());
-    current.set(key, component);
+    current.set(key, entry);
     this.dynamicRegistrations.set(current);
   }
 }

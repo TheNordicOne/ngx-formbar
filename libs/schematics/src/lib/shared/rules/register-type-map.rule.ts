@@ -75,14 +75,15 @@ export function registerTypeConfig(
       componentFilePath,
     ).replace(/\.ts$/, '');
 
-    const changes: Change[] = [
-      insertImport(
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        componentClassName,
-        componentImportPath,
-      ),
-    ];
+    const changes: Change[] = [];
+
+    const loadComponentImport = insertImport(
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      'loadComponent',
+      '@ngx-formbar/core',
+    );
+    changes.push(loadComponentImport);
 
     const updateChanges = addComponentRegistration(
       tree,
@@ -91,6 +92,7 @@ export function registerTypeConfig(
       registrationsObject,
       key,
       componentClassName,
+      componentImportPath,
     );
 
     changes.push(...updateChanges);

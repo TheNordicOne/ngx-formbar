@@ -2,11 +2,11 @@ import {
   EnvironmentProviders,
   makeEnvironmentProviders,
   Provider,
-  Type,
 } from '@angular/core';
 import {
-  ComponentRegistrationService,
   ComponentRegistrationConfig,
+  ComponentRegistrationEntry,
+  ComponentRegistrationService,
   ExpressionService,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_COMPONENT_RESOLVER,
@@ -51,8 +51,8 @@ import { FormbarConfig } from '../types/provide.type';
  *   providers: [
  *     provideFormbar({
  *       componentRegistrations: {
- *         text: TextInputComponent,
- *         select: SelectComponent,
+ *         text: staticComponent(TextInputComponent),
+ *         select: loadComponent(() => import('./select.component').then(m => m.SelectComponent)),
  *       },
  *       validatorRegistrations: {
  *         customValidator: [myCustomValidator]
@@ -138,7 +138,9 @@ export function provideFormbar<
 function toComponentRegistrationMap(
   componentRegistrations: ComponentRegistrationConfig,
 ) {
-  return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
+  return new Map<string, ComponentRegistrationEntry>(
+    Object.entries(componentRegistrations),
+  );
 }
 
 /**

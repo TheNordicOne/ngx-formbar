@@ -5,7 +5,7 @@ import {
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { app, src, writeTs } from './helper';
+import { app, src, writeTs } from '@ngx-formbar/schematics/testing';
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { CORE_PACKAGE_NAME, REACTIVE_FORMS_PACKAGE_NAME } from '../shared/constants';
 

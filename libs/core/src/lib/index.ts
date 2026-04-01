@@ -12,5 +12,6 @@ export * from './tokens/default-update-strategy';
 export * from './services/expression.service';
 export * from './services/component-registration.service';
 export * from './services/configuration.service';
+export * from './helper/registration';
 export * from './helper/string';
 export * from './composables';

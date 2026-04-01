@@ -70,14 +70,15 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       componentFilePath,
     ).replace(/\.ts$/, '');
 
-    const changes: Change[] = [
-      insertImport(
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        componentClassName,
-        componentImportPath,
-      ),
-    ];
+    const changes: Change[] = [];
+
+    const loadComponentImport = insertImport(
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      'loadComponent',
+      '@ngx-formbar/core',
+    );
+    changes.push(loadComponentImport);
 
     const mapArrayLiteral = findMapArrayLiteral(mapNode);
 
@@ -89,6 +90,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
         mapArrayLiteral,
         key,
         componentClassName,
+        componentImportPath,
       );
 
       changes.push(...updateChanges);

@@ -39,8 +39,10 @@ export const appConfig: ApplicationConfig = {
         }),
         {
           provide: NGX_FW_COMPONENT_REGISTRATIONS,
-          useValue: new Map([
+          useValue: new Map<string, ComponentRegistrationEntry>([
             // Component registrations go here
+            // Static: ['text', staticComponent(TextControlComponent)]
+            // Lazy: ['text', loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))]
           ])
         },
         // All tokens below are optional
@@ -76,6 +78,8 @@ export const appConfig: ApplicationConfig = {
     provideFormbar({
       componentRegistrations: {
         // Component registrations go here
+        // Static: text: staticComponent(TextControlComponent)
+        // Lazy: text: loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))
       },
 
       // validatorRegistrations are optional

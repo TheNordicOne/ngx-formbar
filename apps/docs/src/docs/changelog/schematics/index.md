@@ -11,6 +11,10 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - **`block` generator:** Scaffolds a new block component and registers it automatically
 - **`register` generator:** Discovers all existing components in the project and bulk-registers them
 
+### Changed
+
+- Generated registrations now use `ComponentRegistrationEntry` from `@ngx-formbar/core`, supporting both static and lazy component registrations
+
 ### Migration
 
 No migration steps required. Install as a dev dependency to replace the generators previously in `@ngx-formbar/core`:
