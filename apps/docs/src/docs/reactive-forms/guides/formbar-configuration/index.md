@@ -22,11 +22,11 @@ Each component registration is either **static** or **lazy**:
 - **Static** `{ component: Type<unknown> }` — the component is eagerly imported and included in the main bundle
 - **Lazy** `{ loadComponent: LoadComponentFn }` — the component is loaded on demand via dynamic `import()`
 
-The helper functions `component()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
+The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
 
 ```typescript
 // These are equivalent:
-text: component(TextComponent)
+text: staticComponent(TextComponent)
 text: { component: TextComponent }
 
 // These are equivalent:
@@ -64,12 +64,12 @@ Create a file next to your _app.config.ts_ with this content to get started. The
 
 ```typescript name="formbar.config.ts"
 import { defineFormbarConfig } from '@ngx-formbar/reactive-forms';
-import { component, loadComponent } from '@ngx-formbar/core';
+import { staticComponent, loadComponent } from '@ngx-formbar/core';
 
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
     // Static registration — component is eagerly imported
-    // e.g. text: component(TextControlComponent)
+    // e.g. text: staticComponent(TextControlComponent)
     // Lazy registration — component is loaded on demand
     // e.g. select: loadComponent(() => import('./select.component').then(m => m.SelectComponent))
   },
@@ -111,13 +111,13 @@ For more advanced code organization, you can leverage Angular's dependency injec
 #### Component Registration with Tokens
 
 ```typescript name="component-registrations.provider.ts"
-import { NGX_FW_COMPONENT_REGISTRATIONS, ComponentRegistrationEntry, component, loadComponent } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_REGISTRATIONS, ComponentRegistrationEntry, staticComponent, loadComponent } from '@ngx-formbar/core';
 import { TextControlComponent } from './components/text-control.component';
 
 export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
-    ['text-control', component(TextControlComponent)],
+    ['text-control', staticComponent(TextControlComponent)],
     ['group', loadComponent(() => import('./components/group.component').then(m => m.GroupComponent))],
     ['info', loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent))],
     // more registrations...
@@ -183,7 +183,7 @@ export const appConfig: ApplicationConfig = {
 You can also provide multiple configuration objects that will be merged according to their resolution strategy:
 
 ```typescript name="split-configurations.provider.ts"
-import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_CONFIG, ComponentRegistrationEntry, component, loadComponent } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_CONFIG, ComponentRegistrationEntry, staticComponent, loadComponent } from '@ngx-formbar/core';
 import { NGX_FW_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
 import { TextComponent } from './components/text.component';
 
@@ -191,7 +191,7 @@ import { TextComponent } from './components/text.component';
 export const baseComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
-    ['text', component(TextComponent)],
+    ['text', staticComponent(TextComponent)],
     ['number', loadComponent(() => import('./components/number.component').then(m => m.NumberComponent))],
   ]),
 };
@@ -231,11 +231,11 @@ For simpler scenarios, you can still split your registration files by type while
 Create a file with the following content, at whatever location makes sense.
 
 ```typescript name="controls.registrations.ts"
-import { component, loadComponent } from '@ngx-formbar/core';
+import { staticComponent, loadComponent } from '@ngx-formbar/core';
 import { TextControlComponent } from './components/text-control.component';
 
 export const componentRegistrations: ComponentRegistrationConfig = {
-  'text-control': component(TextControlComponent),
+  'text-control': staticComponent(TextControlComponent),
   group: loadComponent(() => import('./components/group.component').then(m => m.GroupComponent)),
   info: loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent)),
   // more registrations...

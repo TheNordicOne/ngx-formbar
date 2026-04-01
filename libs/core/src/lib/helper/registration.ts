@@ -11,15 +11,15 @@ import {
  *
  * @example
  * ```ts
- * import { component } from '@ngx-formbar/core';
+ * import { staticComponent } from '@ngx-formbar/core';
  * import { TextComponent } from './text.component';
  *
  * const registrations = {
- *   text: component(TextComponent),
+ *   text: staticComponent(TextComponent),
  * };
  * ```
  */
-export function component(type: Type<unknown>): StaticRegistration {
+export function staticComponent(type: Type<unknown>): StaticRegistration {
   return { component: type };
 }
 

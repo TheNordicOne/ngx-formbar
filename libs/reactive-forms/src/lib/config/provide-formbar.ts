@@ -51,7 +51,7 @@ import { FormbarConfig } from '../types/provide.type';
  *   providers: [
  *     provideFormbar({
  *       componentRegistrations: {
- *         text: component(TextInputComponent),
+ *         text: staticComponent(TextInputComponent),
  *         select: loadComponent(() => import('./select.component').then(m => m.SelectComponent)),
  *       },
  *       validatorRegistrations: {

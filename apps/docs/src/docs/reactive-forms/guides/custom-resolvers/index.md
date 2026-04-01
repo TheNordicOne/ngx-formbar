@@ -17,14 +17,14 @@ To create a custom component resolver, implement the `ComponentResolver` interfa
 
 ```typescript name="app-custom-component-resolver.ts"
 import { Signal, computed, Injectable, signal } from '@angular/core';
-import { ComponentResolver, ComponentRegistrationEntry, component, loadComponent } from '@ngx-formbar/core';
+import { ComponentResolver, ComponentRegistrationEntry, staticComponent, loadComponent } from '@ngx-formbar/core';
 import { MyCustomTextComponent } from './components/custom-text.component';
 
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
   // Create a signal with your component mapping
   private readonly _componentMap = signal(new Map<string, ComponentRegistrationEntry>([
-    ['custom-text', component(MyCustomTextComponent)],
+    ['custom-text', staticComponent(MyCustomTextComponent)],
     ['special-group', loadComponent(() => import('./components/special-group.component').then(m => m.MySpecialGroupComponent))],
     // Add more components as needed
   ]));

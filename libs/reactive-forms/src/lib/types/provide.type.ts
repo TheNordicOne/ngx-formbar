@@ -26,7 +26,7 @@ import {
  * const formbarConfig: FormbarConfig<SyncValidators, AsyncValidators> = {
  *   componentRegistrations:
  *   {
- *      'text-input': component(TextInputComponent),
+ *      'text-input': staticComponent(TextInputComponent),
  *      'address-group': loadComponent(() => import('./address-group.component').then(m => m.AddressGroupComponent)),
  *   },
  *   validatorRegistrations: {

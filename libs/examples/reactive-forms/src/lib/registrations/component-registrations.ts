@@ -1,4 +1,4 @@
-import { component, loadComponent } from '@ngx-formbar/core';
+import { staticComponent, loadComponent } from '@ngx-formbar/core';
 import { ComponentRegistrations } from '@ngx-formbar/examples';
 import { TextControlComponent } from '../components/text/text-control.component';
 import { CheckboxControlComponent } from '../components/checkbox/checkbox-control.component';
@@ -6,9 +6,9 @@ import { NoteControlComponent } from '../components/note/note-control.component'
 import { NumberControlComponent } from '../components/number/number-control.component';
 
 export const componentRegistrations: ComponentRegistrations = {
-  text: component(TextControlComponent),
-  number: component(NumberControlComponent),
-  checkbox: component(CheckboxControlComponent),
+  text: staticComponent(TextControlComponent),
+  number: staticComponent(NumberControlComponent),
+  checkbox: staticComponent(CheckboxControlComponent),
   radio: loadComponent(() =>
     import('../components/radio/radio-control.component').then(
       (m) => m.RadioControlComponent,
@@ -24,7 +24,7 @@ export const componentRegistrations: ComponentRegistrations = {
       (m) => m.GroupControlComponent,
     ),
   ),
-  note: component(NoteControlComponent),
+  note: staticComponent(NoteControlComponent),
   textarea: loadComponent(() =>
     import('../components/textarea/textarea-control.component').then(
       (m) => m.TextareaControlComponent,

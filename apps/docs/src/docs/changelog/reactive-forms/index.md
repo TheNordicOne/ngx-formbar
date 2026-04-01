@@ -20,7 +20,7 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 ### Changed
 
 - `NgxfbAbstractControlDirective` now supports both static and lazy component registrations via `ComponentRegistrationEntry`
-- `provideFormbar` accepts `ComponentRegistrationEntry` values in `componentRegistrations` — use `component()` for static or `loadComponent()` for lazy
+- `provideFormbar` accepts `ComponentRegistrationEntry` values in `componentRegistrations` — use `staticComponent()` for static or `loadComponent()` for lazy
 - Schematics generate `ComponentRegistrationEntry`-based registrations
 
 ### Migration

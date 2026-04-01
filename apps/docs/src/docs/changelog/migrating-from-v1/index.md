@@ -166,12 +166,12 @@ provideFormbar({
 **After (using helper functions):**
 
 ```typescript
-import { component, loadComponent } from '@ngx-formbar/core';
+import { staticComponent, loadComponent } from '@ngx-formbar/core';
 import { TextControlComponent } from './text-control.component';
 
 provideFormbar({
   componentRegistrations: {
-    text: component(TextControlComponent),
+    text: staticComponent(TextControlComponent),
     group: loadComponent(() => import('./group.component').then(m => m.GroupComponent)),
   }
 })
@@ -206,7 +206,7 @@ The following imports remain in `@ngx-formbar/core` and do **not** need to chang
 - `NgxFbForm`, `NgxFbContent`, `NgxFbBaseContent`
 - `NgxFbControl`, `NgxFbFormGroup`, `NgxFbBlock`
 - `ComponentResolver`, `ComponentRegistrationConfig`, `ComponentRegistrationEntry`, `StaticRegistration`, `LazyRegistration`, `LoadComponentFn`
-- `component`, `loadComponent` (helper functions)
+- `staticComponent`, `loadComponent` (helper functions)
 - `NgxFbGlobalConfiguration`
 - `UpdateStrategy`
 

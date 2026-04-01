@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
           provide: NGX_FW_COMPONENT_REGISTRATIONS,
           useValue: new Map<string, ComponentRegistrationEntry>([
             // Component registrations go here
-            // Static: ['text', component(TextControlComponent)]
+            // Static: ['text', staticComponent(TextControlComponent)]
             // Lazy: ['text', loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))]
           ])
         },
@@ -78,7 +78,7 @@ export const appConfig: ApplicationConfig = {
     provideFormbar({
       componentRegistrations: {
         // Component registrations go here
-        // Static: text: component(TextControlComponent)
+        // Static: text: staticComponent(TextControlComponent)
         // Lazy: text: loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))
       },
 
