@@ -43,7 +43,7 @@ This project uses **trunk-based development**:
 
 ### Maintenance Branches
 
-When a major version is released and `main` moves on to the next version, a maintenance branch (e.g. `2.0.x`) may be created for critical patches. Fixes are committed to `main` first, then cherry-picked to the maintenance branch.
+When a stable release is published, the **Release Packages** workflow automatically creates a maintenance branch (e.g. `2.0.x`). This branch receives critical patches only. Fixes are committed to `main` first, then cherry-picked to the maintenance branch. Pushing to a maintenance branch triggers the **Hotfix Release** workflow, which publishes a stable patch release directly.
 
 ## Pull Requests
 
@@ -117,25 +117,38 @@ Releases are fully automated via GitHub Actions.
    - Builds all packages
    - Creates git tags and GitHub releases
    - Publishes to npm
+   - Creates a maintenance branch (e.g. `2.0.x`) for future hotfixes
    - Deploys documentation to production
 
 ### Pre-releases
 
-Pre-releases use `release/**` branches as a trigger mechanism — all development still happens on `main`:
+Pre-releases are published from `main` via manual trigger:
 
-1. Push `main` to a release branch: `git push origin main:release/v3`
-2. The **Pre-release Packages** workflow runs:
-   - Bumps versions with a `-next.X` suffix
+1. Commits land on `main` via squash-merged PRs
+2. When ready to publish a pre-release, manually trigger the **Pre-release Packages** workflow (Actions > Pre-release Packages > Run workflow):
+   - Queries npm for the latest `next` version and auto-increments the `-next.X` suffix
+   - For the first pre-release, conventional commits determine the base version (e.g. breaking change from `1.0.0` produces `2.0.0-next.0`)
+   - Creates git tags and GitHub pre-releases
    - Publishes to npm under the `next` dist-tag
    - Deploys documentation to the preview environment
-3. To publish another prerelease after more changes land on `main`, force-push again: `git push origin main:release/v3 --force`
-4. Once the stable release is published, delete the release branch
+3. Repeat step 2 after more changes land on `main` to publish the next pre-release
 
 Consumers can install pre-releases with:
 
 ```sh
 npm install @ngx-formbar/core@next
 ```
+
+### Hotfix Releases
+
+Critical fixes for released versions use maintenance branches:
+
+1. Cherry-pick the fix from `main` to the maintenance branch (e.g. `2.0.x`)
+2. Push to the maintenance branch
+3. The **Hotfix Release** workflow runs automatically:
+   - Determines the patch version from conventional commits
+   - Publishes directly to npm as a stable release
+   - Creates git tags and GitHub releases
 
 ## Project Structure
 

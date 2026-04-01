@@ -1,9 +1,6 @@
 name: Pre-release Packages
 
 on:
-  push:
-    branches:
-      - 'release/**'
   workflow_dispatch:
     inputs:
       dry-run:
@@ -13,7 +10,7 @@ on:
         default: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
 
 jobs:
   prerelease:
@@ -41,20 +38,53 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Configure git
+      - name: Determine prerelease version
+        id: detect
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          LATEST=$(npm view @ngx-formbar/core dist-tags.latest 2>/dev/null || echo "")
+          CURRENT_NEXT=$(npm view @ngx-formbar/core dist-tags.next 2>/dev/null || echo "")
 
-      - name: Version packages and generate changelogs (prerelease)
-        run: npx nx release --preid next --skip-publish
+          # If next is behind or equal to latest, it's stale (from a previous release cycle)
+          if [ -n "$CURRENT_NEXT" ] && [ -n "$LATEST" ]; then
+            IS_STALE=$(node -e "
+              const semver = require('semver');
+              process.stdout.write(semver.lte('${CURRENT_NEXT}', '${LATEST}') ? 'true' : 'false');
+            ")
+            if [ "$IS_STALE" = "true" ]; then
+              echo "Next version ${CURRENT_NEXT} is behind latest ${LATEST}, starting fresh"
+              CURRENT_NEXT=""
+            fi
+          fi
 
-      - name: Commit and push version changes
-        if: env.DRY_RUN != 'true'
+          if [ -n "$CURRENT_NEXT" ] && [[ "$CURRENT_NEXT" == *"-next."* ]]; then
+            BASE="${CURRENT_NEXT%-next.*}"
+            NUM="${CURRENT_NEXT##*-next.}"
+            NEXT_NUM=$((NUM + 1))
+            SPECIFIER="${BASE}-next.${NEXT_NUM}"
+            echo "specifier=${SPECIFIER}" >> "$GITHUB_OUTPUT"
+            echo "Incrementing from ${CURRENT_NEXT} to ${SPECIFIER}"
+          else
+            echo "No usable next version, will derive from conventional commits"
+          fi
+
+      - name: Version packages (prerelease)
         run: |
-          git add .
-          git commit -m "chore: version packages (prerelease)" --allow-empty
-          git push
+          SPECIFIER="${{ steps.detect.outputs.specifier }}"
+          if [ -n "$SPECIFIER" ]; then
+            npx nx release version "$SPECIFIER"
+          else
+            npx nx release version --preid next
+          fi
+
+      - name: Read resolved version
+        id: resolved
+        run: |
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${VERSION}"
+
+      - name: Build all packages
+        run: npx nx run-many -t build --skip-nx-cache && npx nx run @ngx-formbar/reactive-forms:clean-schematics
 
       - name: Create git tags and GitHub pre-releases
         if: env.DRY_RUN != 'true'
@@ -63,6 +93,7 @@ jobs:
             ["@ngx-formbar/core"]="libs/core/package.json"
             ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
             ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+            ["@ngx-formbar/setup"]="libs/setup/package.json"
           )
 
           for pkg in "${!PACKAGES[@]}"; do
@@ -80,7 +111,7 @@ jobs:
               continue
             fi
 
-            echo "Creating pre-release for $tag"
+            echo "Creating pre-release tag $tag"
             git tag "$tag"
           done
 
@@ -97,6 +128,7 @@ jobs:
 
             gh release create "$tag" \
               --title "$tag" \
+              --generate-notes \
               --prerelease \
               --latest=false || echo "Release $tag already exists, skipping"
           done
@@ -108,9 +140,9 @@ jobs:
       - name: Dry-run summary
         if: env.DRY_RUN == 'true'
         run: |
-          echo "::notice::Dry-run mode — skipped commit, push, tagging, GitHub releases, and npm publish"
+          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
           echo "::group::Pre-release versions"
-          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json; do
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json libs/setup/package.json; do
             name=$(node -p "require('./${pkg_json}').name")
             version=$(node -p "require('./${pkg_json}').version")
             echo "  $name@$version"

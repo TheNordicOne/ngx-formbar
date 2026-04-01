@@ -1,24 +1,15 @@
-name: Release Packages
+name: Hotfix Release
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    types: [closed]
-  workflow_dispatch:
-    inputs:
-      dry-run:
-        description: Run build and version detection without publishing
-        required: false
-        type: boolean
-        default: false
+      - '[0-9]*.[0-9]*.x'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.title, 'chore: version packages'))
+  hotfix:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,7 +17,6 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DRY_RUN: ${{ inputs.dry-run || false }}
 
     steps:
       - name: Checkout repository
@@ -43,11 +33,40 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Version packages and generate changelogs
+        run: npx nx release --skip-publish
+
+      - name: Check for version changes
+        id: changes
+        run: |
+          if git diff --quiet libs/*/package.json; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No version-worthy commits found, skipping release"
+          else
+            VERSION=$(node -p "require('./libs/core/package.json').version")
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "New version: ${VERSION}"
+          fi
+
       - name: Build all packages
+        if: steps.changes.outputs.has_changes == 'true'
         run: npx nx run-many -t build --skip-nx-cache && npx nx run @ngx-formbar/reactive-forms:clean-schematics
 
+      - name: Commit version changes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git add .
+          git commit -m "chore: version packages (hotfix) [skip ci]"
+          git push
+
       - name: Create git tags and GitHub releases
-        if: env.DRY_RUN != 'true'
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           declare -A PACKAGES=(
             ["@ngx-formbar/core"]="libs/core/package.json"
@@ -84,40 +103,5 @@ jobs:
           done
 
       - name: Publish to npm
-        if: env.DRY_RUN != 'true'
+        if: steps.changes.outputs.has_changes == 'true'
         run: npx nx release publish --provenance
-
-      - name: Create maintenance branch
-        if: env.DRY_RUN != 'true'
-        run: |
-          VERSION=$(node -p "require('./libs/core/package.json').version")
-          IFS='.' read -r MAJOR MINOR _PATCH <<< "$VERSION"
-          BRANCH="${MAJOR}.${MINOR}.x"
-
-          if git ls-remote --exit-code origin "refs/heads/${BRANCH}" >/dev/null 2>&1; then
-            echo "Maintenance branch ${BRANCH} already exists, skipping"
-          else
-            echo "Creating maintenance branch ${BRANCH}"
-            git branch "$BRANCH"
-            git push origin "$BRANCH"
-          fi
-
-      - name: Dry-run summary
-        if: env.DRY_RUN == 'true'
-        run: |
-          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
-          echo "::group::Package versions that would be released"
-          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json libs/setup/package.json; do
-            name=$(node -p "require('./${pkg_json}').name")
-            version=$(node -p "require('./${pkg_json}').version")
-            echo "  $name@$version"
-          done
-          echo "::endgroup::"
-
-  deploy-docs:
-    if: ${{ !(inputs.dry-run || false) }}
-    needs: release
-    uses: ./.github/workflows/publish-docs.yml
-    with:
-      environment: production
-    secrets: inherit

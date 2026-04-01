@@ -122,7 +122,6 @@
       "tag": false
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build && npx nx run @ngx-formbar/reactive-forms:clean-schematics",
       "conventionalCommits": true
     },
     "changelog": {
