@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      skip-docs:
+        description: Skip deploying documentation to the preview environment
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}
@@ -150,7 +155,7 @@ jobs:
           echo "::endgroup::"
 
   deploy-docs:
-    if: ${{ !(inputs.dry-run || false) }}
+    if: ${{ !(inputs.dry-run || false) && !(inputs.skip-docs || false) }}
     needs: prerelease
     uses: ./.github/workflows/publish-docs.yml
     with:
