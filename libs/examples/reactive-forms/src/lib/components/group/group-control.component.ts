@@ -5,9 +5,8 @@ import {
   inject,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { NgxfbAbstractControlDirective } from '@ngx-formbar/core';
-import { GroupControl } from '@ngx-formbar/examples';
+import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { GroupControl } from '@ngx-formbar/examples'; 
 import { ngxfbGroupHostDirective, viewProviders } from '../../helpers';
 import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
 

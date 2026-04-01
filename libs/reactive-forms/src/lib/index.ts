@@ -7,6 +7,7 @@ export * from './config/provide-formbar';
 export * from './directives/ngxfb-control.directive';
 export * from './directives/ngxfb-group.directive';
 export * from './directives/ngxfb-block.directive';
+export * from './directives/ngxfb-abstract-control.directive';
 export * from './tokens/validator-registrations';
 export * from './tokens/validator-resolver';
 export * from './composables/computed-value';

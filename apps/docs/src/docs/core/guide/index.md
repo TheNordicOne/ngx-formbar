@@ -8,8 +8,6 @@ The `@ngx-formbar/core` package provides the foundation for building your own fo
 
 **Tokens** wire everything together via Angular's dependency injection.
 
-**NgxfbAbstractControlDirective** dynamically renders the correct component based on a control's `type` configuration.
-
 ## Composables
 
 Composables are functions that return signals. They are designed to be called inside an injection context (e.g. in a directive's constructor).
@@ -142,28 +140,11 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 
 ## Tokens
 
-| Token | Default | Purpose |
-|---|---|---|
-| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map | Maps type strings to component classes |
-| NGX_FW_COMPONENT_RESOLVER | - | Provides access to the component registration map |
-| NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'` | Application-wide default update strategy |
-| NGX_FW_DEFAULT_CONFIG | `{}` | Base global configuration |
-| NGX_FW_CONFIG | `[]` | Additional configuration partials to merge |
-| NGX_FW_CONFIG_RESOLVED | Merged result | Final resolved configuration |
-
-## NgxfbAbstractControlDirective
-
-A structural directive that dynamically renders a component based on a control's `type` property. It looks up the registered component for the type, creates it, and binds the `content` and `name` inputs.
-
-```html
-@for (control of controls(); track control[0]) {
-  <ng-template *ngxfbAbstractControl="control" />
-}
-```
-
-The rendered component must accept these inputs:
-
-```typescript
-readonly content = input.required<NgxFbBaseContent>();
-readonly name = input.required<string>();
-```
+| Token                          | Default       | Purpose                                           |
+|--------------------------------|---------------|---------------------------------------------------|
+| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map     | Maps type strings to component classes            |
+| NGX_FW_COMPONENT_RESOLVER      | -             | Provides access to the component registration map |
+| NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'`    | Application-wide default update strategy          |
+| NGX_FW_DEFAULT_CONFIG          | `{}`          | Base global configuration                         |
+| NGX_FW_CONFIG                  | `[]`          | Additional configuration partials to merge        |
+| NGX_FW_CONFIG_RESOLVED         | Merged result | Final resolved configuration                      |
