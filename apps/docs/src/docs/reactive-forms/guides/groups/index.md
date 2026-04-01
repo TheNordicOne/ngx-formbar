@@ -42,8 +42,8 @@ Then implement the component.
 ```typescript group="group-component" name="group.component.ts" icon="angular"
 import { Component, Signal, inject } from '@angular/core';
 import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxfbAbstractControlDirective, NgxFbContent } from '@ngx-formbar/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { NgxFbContent } from '@ngx-formbar/core';
+import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
@@ -331,9 +331,9 @@ The `NgxfbGroupDirective<T>` exposes the following public properties and methods
 
 ### Advanced
 
-| Property / Method | Type | Description |
-|---|---|---|
-| `parentFormGroup` | `FormGroup \| null` | Getter for the parent `FormGroup` containing this group. |
-| `parentValueStrategy` | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance. |
-| `setDisabledHandling(handling)` | `(StateHandling) => void` | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
-| `setTestIdBuilderFn(fn)` | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this group only. |
+| Property / Method               | Type                                     | Description                                                            |
+|---------------------------------|------------------------------------------|------------------------------------------------------------------------|
+| `parentFormGroup`               | `FormGroup \| null`                      | Getter for the parent `FormGroup` containing this group.               |
+| `parentValueStrategy`           | `Signal<ValueStrategy \| undefined>`     | The parent's value strategy, used for inheritance.                     |
+| `setDisabledHandling(handling)` | `(StateHandling) => void`                | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
+| `setTestIdBuilderFn(fn)`        | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this group only.            |

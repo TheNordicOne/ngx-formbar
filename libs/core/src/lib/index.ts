@@ -5,7 +5,6 @@ export * from './types/form.type';
 export * from './types/functions.type';
 export * from './types/global-configuration.type';
 export * from './types/registration.type';
-export * from './directives/ngxfb-abstract-control.directive';
 export * from './tokens/component-registrations';
 export * from './tokens/component-resolver';
 export * from './tokens/global-config';

@@ -7,7 +7,7 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 ### Added 
 
 - **Components:** `NgxfbFormComponent`
-- **Directives:** `NgxfbControlDirective`, `NgxfbGroupDirective`, `NgxfbBlockDirective`
+- **Directives:** `NgxfbAbstractControlDirective`, `NgxfbControlDirective`, `NgxfbGroupDirective`, `NgxfbBlockDirective`
 - **Host directive configs:** `ngxfbControlHostDirective`, `ngxfbGroupHostDirective`
 - **Services:** `FormService`, `ValidatorRegistrationService`
 - **Provider setup:** `provideFormbar`, `defineFormbarConfig`

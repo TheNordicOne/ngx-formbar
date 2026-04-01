@@ -7,11 +7,11 @@ import {
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import {
-  NgxfbAbstractControlDirective,
   NgxFbBaseContent,
   NgxFbContent,
   NgxFbForm,
 } from '@ngx-formbar/core';
+import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-control.directive';
 
 /**
  * Ngx Formbar Form Component

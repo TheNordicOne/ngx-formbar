@@ -6,8 +6,7 @@ import {
   input,
   ViewContainerRef,
 } from '@angular/core';
-import { NgxFbBaseContent } from '../types/content.type';
-import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
+import { NgxFbBaseContent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 
 /**
  * Structural directive that renders the appropriate component based on the control's type.

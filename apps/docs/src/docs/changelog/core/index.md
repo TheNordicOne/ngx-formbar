@@ -9,7 +9,6 @@ If you want you could also use the core package alone to build your own implemen
 ### Added
 
 - Composable functions for expression and state resolution: `resolveExpression`, `resolveInheritableExpression`, `resolveHiddenState`, `resolveDisabledEffect`, `resolveTestId`, `resolveHiddenAttribute`, `resolveUpdateStrategy`
-- `NgxfbAbstractControlDirective` as a public API for building custom rendering directives
 - String helper utilities via `toSafeString`
 
 ### Changed
