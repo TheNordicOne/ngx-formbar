@@ -2,12 +2,12 @@ import {
   EnvironmentProviders,
   makeEnvironmentProviders,
   Provider,
-  Type,
 } from '@angular/core';
 import {
-  ComponentRegistrationService,
   ComponentRegistrationConfig,
+  ComponentRegistrationService,
   ExpressionService,
+  LoadComponentFn,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_COMPONENT_RESOLVER,
   NGX_FW_CONFIG,
@@ -138,7 +138,9 @@ export function provideFormbar<
 function toComponentRegistrationMap(
   componentRegistrations: ComponentRegistrationConfig,
 ) {
-  return new Map<string, Type<unknown>>(Object.entries(componentRegistrations));
+  return new Map<string, LoadComponentFn>(
+    Object.entries(componentRegistrations),
+  );
 }
 
 /**

@@ -51,8 +51,8 @@ export class AppCustomComponentResolver implements ComponentResolver {
 For more complex scenarios, you might want to create a resolver that combines multiple sources:
 
 ```typescript name="hybrid-component-resolver.ts"
-import { Signal, Type, computed, inject, Injectable } from '@angular/core';
-import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
+import { Signal, computed, inject, Injectable } from '@angular/core';
+import { ComponentResolver, NGX_FW_COMPONENT_REGISTRATIONS, LoadComponentFn } from '@ngx-formbar/core';
 
 @Injectable()
 export class HybridComponentResolver implements ComponentResolver {
@@ -64,7 +64,7 @@ export class HybridComponentResolver implements ComponentResolver {
 
   // Combine them with computed
   readonly registrations: Signal<ReadonlyMap<string, Type<unknown>>> = computed(() => {
-    const result = new Map<string, Type<unknown>>(this.defaultRegistrations);
+    const result = new Map<string, LoadComponentFn>(this.defaultRegistrations);
 
     // Override with dynamic registrations
     for (const [key, component] of this.dynamicRegistrations()) {

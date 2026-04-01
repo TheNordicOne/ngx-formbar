@@ -6,7 +6,13 @@ import { Type } from '@angular/core';
  * Used to map string type identifiers to component implementations
  * for dynamic rendering.
  */
-export type ComponentRegistrationConfig = Record<string, Type<unknown>>;
+export type ComponentRegistrationConfig = Record<string, LoadComponentFn>;
+
+/**
+ * Function that loads a component.
+ * Works analog to lazily loading a component for a route
+ */
+export type LoadComponentFn = () => Promise<Type<unknown>>;
 
 /**
  * Strategy for handling component states

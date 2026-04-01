@@ -6,7 +6,9 @@ import {
   input,
   ViewContainerRef,
 } from '@angular/core';
-import { NgxFbBaseContent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_RESOLVER, NgxFbBaseContent } from '@ngx-formbar/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { from, of, switchMap } from 'rxjs';
 
 /**
  * Structural directive that renders the appropriate component based on the control's type.
@@ -62,17 +64,25 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
    */
   readonly registrations = this.contentRegistrationService.registrations;
 
-  /**
-   * Computed component type based on content.type
-   * Looks up the component implementation from registrations map
-   */
-  readonly component = computed(() => {
+  private readonly componentLoadFn = computed(() => {
     const registrations = this.registrations();
     const content = this.controlConfig();
 
     const component = registrations.get(content.type);
     return component ?? null;
   });
+
+  private readonly $componentLoadFn = toObservable(this.componentLoadFn);
+
+  private readonly $component = this.$componentLoadFn.pipe(
+    switchMap((loadFn) => (loadFn ? from(loadFn()) : of(null))),
+  );
+
+  /**
+   * Computed component type based on content.type
+   * Looks up the component implementation from registrations map
+   */
+  readonly component = toSignal(this.$component, { initialValue: null });
 
   constructor() {
     effect(() => {

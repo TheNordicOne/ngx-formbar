@@ -1,24 +1,44 @@
-import { TextControlComponent } from '../components/text/text-control.component';
-import { NumberControlComponent } from '../components/number/number-control.component';
-import { CheckboxControlComponent } from '../components/checkbox/checkbox-control.component';
-import { RadioControlComponent } from '../components/radio/radio-control.component';
-import { DropdownControlComponent } from '../components/dropdown/dropdown-control.component';
-import { GroupControlComponent } from '../components/group/group-control.component';
-import { NoteControlComponent } from '../components/note/note-control.component';
-import { TextareaControlComponent } from '../components/textarea/textarea-control.component';
-import { DateControlComponent } from '../components/date/date-control.component';
-import { FileControlComponent } from '../components/file/file-control.component';
 import { ComponentRegistrations } from '@ngx-formbar/examples';
 
 export const componentRegistrations: ComponentRegistrations = {
-  text: TextControlComponent,
-  number: NumberControlComponent,
-  checkbox: CheckboxControlComponent,
-  radio: RadioControlComponent,
-  dropdown: DropdownControlComponent,
-  group: GroupControlComponent,
-  note: NoteControlComponent,
-  textarea: TextareaControlComponent,
-  date: DateControlComponent,
-  file: FileControlComponent,
+  text: () =>
+    import('../components/text/text-control.component').then(
+      (m) => m.TextControlComponent,
+    ),
+  number: () =>
+    import('../components/number/number-control.component').then(
+      (m) => m.NumberControlComponent,
+    ),
+  checkbox: () =>
+    import('../components/checkbox/checkbox-control.component').then(
+      (m) => m.CheckboxControlComponent,
+    ),
+  radio: () =>
+    import('../components/radio/radio-control.component').then(
+      (m) => m.RadioControlComponent,
+    ),
+  dropdown: () =>
+    import('../components/dropdown/dropdown-control.component').then(
+      (m) => m.DropdownControlComponent,
+    ),
+  group: () =>
+    import('../components/group/group-control.component').then(
+      (m) => m.GroupControlComponent,
+    ),
+  note: () =>
+    import('../components/note/note-control.component').then(
+      (m) => m.NoteControlComponent,
+    ),
+  textarea: () =>
+    import('../components/textarea/textarea-control.component').then(
+      (m) => m.TextareaControlComponent,
+    ),
+  date: () =>
+    import('../components/date/date-control.component').then(
+      (m) => m.DateControlComponent,
+    ),
+  file: () =>
+    import('../components/file/file-control.component').then(
+      (m) => m.FileControlComponent,
+    ),
 };
