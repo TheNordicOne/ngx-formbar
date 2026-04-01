@@ -15,6 +15,7 @@ If you want you could also use the core package alone to build your own implemen
 
 - Removed `@angular/forms` and `@angular/cdk` as peer dependencies — the package now only depends on `@angular/core`
 - Composable functions and low-level services are now part of the public API for consumers building custom form implementations
+- Component registrations now use lazy loading: `ComponentRegistrationConfig` values changed from `Type<unknown>` to `LoadComponentFn` (`() => Promise<Type<unknown>>`). The `NGX_FW_COMPONENT_REGISTRATIONS` token and `ComponentResolver` interface use `LoadComponentFn` accordingly.
 
 ### Removed
 

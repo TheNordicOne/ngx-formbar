@@ -17,6 +17,12 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 - **Helpers:** `controlContainerViewProviders`
 - **Schematics:** `ng-add` schematic for automated project setup
 
+### Changed
+
+- `NgxfbAbstractControlDirective` now resolves components asynchronously via `LoadComponentFn`, enabling lazy loading of form control components
+- `provideFormbar` accepts `LoadComponentFn` values in `componentRegistrations` instead of `Type<unknown>`
+- Schematics generate lazy `() => import('...').then(m => m.Component)` registrations instead of static imports
+
 ### Migration
 
 No migration steps required. This is a new package — install it to replace the reactive forms functionality previously in `@ngx-formbar/core`. See [Migrating from v1](/changelog/migrating-from-v1) for details.

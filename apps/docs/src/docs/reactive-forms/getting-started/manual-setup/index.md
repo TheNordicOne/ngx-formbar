@@ -39,8 +39,9 @@ export const appConfig: ApplicationConfig = {
         }),
         {
           provide: NGX_FW_COMPONENT_REGISTRATIONS,
-          useValue: new Map([
+          useValue: new Map<string, LoadComponentFn>([
             // Component registrations go here
+            // e.g. ['text', () => import('./text-control.component').then(m => m.TextControlComponent)]
           ])
         },
         // All tokens below are optional
@@ -76,6 +77,7 @@ export const appConfig: ApplicationConfig = {
     provideFormbar({
       componentRegistrations: {
         // Component registrations go here
+        // e.g. text: () => import('./text-control.component').then(m => m.TextControlComponent)
       },
 
       // validatorRegistrations are optional

@@ -89,14 +89,13 @@ Finally, register the group in _app.config.ts_
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
-import { GroupComponent } from './group.component';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormbar({
       componentRegistrations: {
-        group: GroupComponent
+        group: () => import('./group.component').then(m => m.GroupComponent)
       }
     })
   ],

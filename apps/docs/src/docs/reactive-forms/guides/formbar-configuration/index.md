@@ -13,7 +13,7 @@ The configuration object that is used by the `provideFormbar` function has these
 
 | Property                    | Type                                           | Required | Description                                   |
 |-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
-| componentRegistrations      | Record<string, Type<unknown>>                  | No       | Mapping between keys and controls.            |
+| componentRegistrations      | Record<string, LoadComponentFn>                | No       | Mapping between keys and controls.            |
 | validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
 | asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
 | updateOn                    | 'change' \| 'blur' \| 'submit'                 | No       | Specifies when to update the control's value. |
@@ -47,6 +47,7 @@ import { defineFormbarConfig } from '@ngx-formbar/reactive-forms';
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
     // Component registrations go here
+    // e.g. text: () => import('./text-control.component').then(m => m.TextControlComponent)
   },
   // validatorRegistrations are optional
   validatorRegistrations: {
@@ -86,18 +87,14 @@ For more advanced code organization, you can leverage Angular's dependency injec
 #### Component Registration with Tokens
 
 ```typescript name="component-registrations.provider.ts"
-import { Type } from '@angular/core';
-import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';
-import { TextControlComponent } from './components/text-control.component';
-import { GroupComponent } from './components/group.component';
-import { InfoBlockComponent } from './components/info-block.component';
+import { NGX_FW_COMPONENT_REGISTRATIONS, LoadComponentFn } from '@ngx-formbar/core';
 
 export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
-  useValue: new Map<string, Type<unknown>>([
-    ['text-control', TextControlComponent],
-    ['group', GroupComponent],
-    ['info', InfoBlockComponent],
+  useValue: new Map<string, LoadComponentFn>([
+    ['text-control', () => import('./components/text-control.component').then(m => m.TextControlComponent)],
+    ['group', () => import('./components/group.component').then(m => m.GroupComponent)],
+    ['info', () => import('./components/info-block.component').then(m => m.InfoBlockComponent)],
     // more registrations...
   ]),
 };
@@ -161,24 +158,24 @@ export const appConfig: ApplicationConfig = {
 You can also provide multiple configuration objects that will be merged according to their resolution strategy:
 
 ```typescript name="split-configurations.provider.ts"
-import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_CONFIG } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_REGISTRATIONS, NGX_FW_CONFIG, LoadComponentFn } from '@ngx-formbar/core';
 import { NGX_FW_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
 
 // First set of components
 export const baseComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
-  useValue: new Map([
-    ['text', TextComponent],
-    ['number', NumberComponent],
+  useValue: new Map<string, LoadComponentFn>([
+    ['text', () => import('./components/text.component').then(m => m.TextComponent)],
+    ['number', () => import('./components/number.component').then(m => m.NumberComponent)],
   ]),
 };
 
 // Additional components from a different module
 export const extraComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
-  useValue: new Map([
-    ['date', DateComponent],
-    ['select', SelectComponent],
+  useValue: new Map<string, LoadComponentFn>([
+    ['date', () => import('./components/date.component').then(m => m.DateComponent)],
+    ['select', () => import('./components/select.component').then(m => m.SelectComponent)],
   ]),
 };
 
@@ -209,9 +206,9 @@ Create a file with the following content, at whatever location makes sense.
 
 ```typescript name="controls.registrations.ts"
 export const componentRegistrations: ComponentRegistrationConfig = {
-  'text-control': TextControlComponent,
-  group: GroupComponent,
-  info: InfoBlockComponent,
+  'text-control': () => import('./components/text-control.component').then(m => m.TextControlComponent),
+  group: () => import('./components/group.component').then(m => m.GroupComponent),
+  info: () => import('./components/info-block.component').then(m => m.InfoBlockComponent),
   // more registrations...
 };
 ```

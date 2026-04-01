@@ -8,7 +8,7 @@ In ngx-formbar, resolvers are responsible for providing components and validator
 
 There are two types of resolvers:
 
-1. **Component Resolver**: Maps component type strings (like 'text', 'group') to actual component types
+1. **Component Resolver**: Maps component type strings (like 'text', 'group') to lazy component loaders (`LoadComponentFn`)
 2. **Validator Resolver**: Maps validator name strings to validator functions
 
 ## Creating a Custom Component Resolver
@@ -16,15 +16,15 @@ There are two types of resolvers:
 To create a custom component resolver, implement the `ComponentResolver` interface:
 
 ```typescript name="app-custom-component-resolver.ts"
-import { Signal, Type, computed, Injectable, signal } from '@angular/core';
-import { ComponentResolver } from '@ngx-formbar/core';
+import { Signal, computed, Injectable, signal } from '@angular/core';
+import { ComponentResolver, LoadComponentFn } from '@ngx-formbar/core';
 
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
   // Create a signal with your component mapping
-  private readonly _componentMap = signal(new Map<string, Type<unknown>>([
-    ['custom-text', MyCustomTextComponent],
-    ['special-group', MySpecialGroupComponent],
+  private readonly _componentMap = signal(new Map<string, LoadComponentFn>([
+    ['custom-text', () => import('./components/custom-text.component').then(m => m.MyCustomTextComponent)],
+    ['special-group', () => import('./components/special-group.component').then(m => m.MySpecialGroupComponent)],
     // Add more components as needed
   ]));
 
@@ -32,7 +32,7 @@ export class AppCustomComponentResolver implements ComponentResolver {
   readonly registrations = this._componentMap.asReadonly();
 
   // Optional: Add methods to dynamically update components
-  addComponent(key: string, component: Type<unknown>): void {
+  addComponent(key: string, component: LoadComponentFn): void {
     const currentMap = new Map(this._componentMap());
     currentMap.set(key, component);
     this._componentMap.set(currentMap);
@@ -60,10 +60,10 @@ export class HybridComponentResolver implements ComponentResolver {
   private readonly defaultRegistrations = inject(NGX_FW_COMPONENT_REGISTRATIONS);
 
   // Create your dynamic registrations
-  private readonly dynamicRegistrations = signal(new Map<string, Type<unknown>>());
+  private readonly dynamicRegistrations = signal(new Map<string, LoadComponentFn>());
 
   // Combine them with computed
-  readonly registrations: Signal<ReadonlyMap<string, Type<unknown>>> = computed(() => {
+  readonly registrations = computed(() => {
     const result = new Map<string, LoadComponentFn>(this.defaultRegistrations);
 
     // Override with dynamic registrations
@@ -75,7 +75,7 @@ export class HybridComponentResolver implements ComponentResolver {
   });
 
   // Methods to update dynamic registrations
-  updateDynamicComponent(key: string, component: Type<unknown>): void {
+  updateDynamicComponent(key: string, component: LoadComponentFn): void {
     const current = new Map(this.dynamicRegistrations());
     current.set(key, component);
     this.dynamicRegistrations.set(current);
