@@ -140,15 +140,11 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 
 ## Tokens
 
-| Token | Default | Purpose |
-|---|---|---|
-| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map | Maps type strings to component classes |
-| NGX_FW_COMPONENT_RESOLVER | - | Provides access to the component registration map |
-| NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'` | Application-wide default update strategy |
-| NGX_FW_DEFAULT_CONFIG | `{}` | Base global configuration |
-| NGX_FW_CONFIG | `[]` | Additional configuration partials to merge |
-| NGX_FW_CONFIG_RESOLVED | Merged result | Final resolved configuration |
-
-## NgxfbAbstractControlDirective
-
-> **Moved** — `NgxfbAbstractControlDirective` has been moved to [`@ngx-formbar/reactive-forms`](/reactive-forms/guides/groups). Import it from `@ngx-formbar/reactive-forms` instead.
+| Token                          | Default       | Purpose                                           |
+|--------------------------------|---------------|---------------------------------------------------|
+| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map     | Maps type strings to component classes            |
+| NGX_FW_COMPONENT_RESOLVER      | -             | Provides access to the component registration map |
+| NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'`    | Application-wide default update strategy          |
+| NGX_FW_DEFAULT_CONFIG          | `{}`          | Base global configuration                         |
+| NGX_FW_CONFIG                  | `[]`          | Additional configuration partials to merge        |
+| NGX_FW_CONFIG_RESOLVED         | Merged result | Final resolved configuration                      |
