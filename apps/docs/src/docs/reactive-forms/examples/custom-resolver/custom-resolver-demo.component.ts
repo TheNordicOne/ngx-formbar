@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
+import { loadComponent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
 import {
   HybridComponentResolver,
@@ -34,16 +34,22 @@ export class CustomResolverDemoComponent {
   protected setChoiceMode(mode: 'radio' | 'dropdown') {
     switch (mode) {
       case 'radio':
-        this.componentResolver.updateDynamicComponent('radio', () =>
-          import('@ngx-formbar/examples/reactive-forms').then(
-            (m) => m.RadioControlComponent,
+        this.componentResolver.updateDynamicComponent(
+          'radio',
+          loadComponent(() =>
+            import('@ngx-formbar/examples/reactive-forms').then(
+              (m) => m.RadioControlComponent,
+            ),
           ),
         );
         break;
       case 'dropdown':
-        this.componentResolver.updateDynamicComponent('radio', () =>
-          import('@ngx-formbar/examples/reactive-forms').then(
-            (m) => m.DropdownControlComponent,
+        this.componentResolver.updateDynamicComponent(
+          'radio',
+          loadComponent(() =>
+            import('@ngx-formbar/examples/reactive-forms').then(
+              (m) => m.DropdownControlComponent,
+            ),
           ),
         );
         break;

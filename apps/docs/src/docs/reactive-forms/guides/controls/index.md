@@ -95,6 +95,7 @@ Finally, register the control in _app.config.ts_
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
+import { loadComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
 
 export const appConfig: ApplicationConfig = {
@@ -102,7 +103,7 @@ export const appConfig: ApplicationConfig = {
     // other providers
     provideFormbar({
       componentRegistrations: {
-        text: () => import('./text-control.component').then(m => m.TextControlComponent)
+        text: loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))
       }
     })
   ],

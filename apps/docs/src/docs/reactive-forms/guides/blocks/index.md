@@ -80,6 +80,7 @@ Finally, register the block in app.config.ts
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
+import { loadComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
 
 export const appConfig: ApplicationConfig = {
@@ -87,7 +88,7 @@ export const appConfig: ApplicationConfig = {
     // other providers
     provideFormbar({
       componentRegistrations: {
-        info: () => import('./info-block.component').then(m => m.InfoBlockComponent),
+        info: loadComponent(() => import('./info-block.component').then(m => m.InfoBlockComponent)),
       },
     }),
   ],
