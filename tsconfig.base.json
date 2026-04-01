@@ -24,9 +24,6 @@
       "@ngx-formbar/schematics/testing": [
         "libs/schematics/src/lib/tests/helper.ts"
       ],
-      "@ngx-formbar/schematics/testing": [
-        "libs/schematics/src/lib/tests/helper.ts"
-      ],
       "@ngx-formbar/setup": ["libs/setup/src/index.ts"],
       "@ngx-formbar/examples/reactive-forms": [
         "libs/examples/reactive-forms/src/index.ts"
