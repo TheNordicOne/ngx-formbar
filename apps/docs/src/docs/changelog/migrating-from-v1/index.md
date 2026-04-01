@@ -145,9 +145,9 @@ ng generate @ngx-formbar/schematics:block
 
 If you have scripts or CI commands that reference the old schematic package name, update those as well.
 
-## Step 7: Update component registrations to lazy loading
+## Step 7: Update component registrations
 
-Component registrations now use `LoadComponentFn` instead of `Type<unknown>`. Replace static component references with lazy import functions.
+Component registrations now use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry must be wrapped as either a static or lazy registration.
 
 **Before:**
 
@@ -163,20 +163,38 @@ provideFormbar({
 })
 ```
 
-**After:**
+**After (using helper functions):**
 
 ```typescript
+import { component, loadComponent } from '@ngx-formbar/core';
+import { TextControlComponent } from './text-control.component';
+
 provideFormbar({
   componentRegistrations: {
-    text: () => import('./text-control.component').then(m => m.TextControlComponent),
-    group: () => import('./group.component').then(m => m.GroupComponent),
+    text: component(TextControlComponent),
+    group: loadComponent(() => import('./group.component').then(m => m.GroupComponent)),
   }
 })
 ```
 
-This applies to all registration styles — `provideFormbar()` config, `defineFormbarConfig()`, standalone registration files, and token-based `Map` registrations. The static imports of the component classes can be removed.
+**After (without helpers):**
 
-If you use a custom `ComponentResolver`, update the `registrations` signal type from `Signal<ReadonlyMap<string, Type<unknown>>>` to `Signal<ReadonlyMap<string, LoadComponentFn>>`. Import `LoadComponentFn` from `@ngx-formbar/core`.
+```typescript
+import { TextControlComponent } from './text-control.component';
+
+provideFormbar({
+  componentRegistrations: {
+    text: { component: TextControlComponent },
+    group: { loadComponent: () => import('./group.component').then(m => m.GroupComponent) },
+  }
+})
+```
+
+You can freely mix static and lazy registrations. Static registrations keep the component in the main bundle, while lazy registrations enable code splitting.
+
+This applies to all registration styles — `provideFormbar()` config, `defineFormbarConfig()`, standalone registration files, and token-based `Map` registrations.
+
+If you use a custom `ComponentResolver`, update the `registrations` signal type from `Signal<ReadonlyMap<string, Type<unknown>>>` to `Signal<ReadonlyMap<string, ComponentRegistrationEntry>>`. Import `ComponentRegistrationEntry` from `@ngx-formbar/core`.
 
 ## What stays in @ngx-formbar/core
 
@@ -187,7 +205,8 @@ The following imports remain in `@ngx-formbar/core` and do **not** need to chang
 - `Expression`, `FormContext`
 - `NgxFbForm`, `NgxFbContent`, `NgxFbBaseContent`
 - `NgxFbControl`, `NgxFbFormGroup`, `NgxFbBlock`
-- `ComponentResolver`, `ComponentRegistrationConfig`, `LoadComponentFn`
+- `ComponentResolver`, `ComponentRegistrationConfig`, `ComponentRegistrationEntry`, `StaticRegistration`, `LazyRegistration`, `LoadComponentFn`
+- `component`, `loadComponent` (helper functions)
 - `NgxFbGlobalConfiguration`
 - `UpdateStrategy`
 

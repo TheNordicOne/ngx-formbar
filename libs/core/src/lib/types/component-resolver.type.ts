@@ -1,6 +1,6 @@
 import { Signal } from '@angular/core';
-import { LoadComponentFn } from './registration.type';
+import { ComponentRegistrationEntry } from './registration.type';
 
 export interface ComponentResolver {
-  registrations: Signal<ReadonlyMap<string, LoadComponentFn>>;
+  registrations: Signal<ReadonlyMap<string, ComponentRegistrationEntry>>;
 }

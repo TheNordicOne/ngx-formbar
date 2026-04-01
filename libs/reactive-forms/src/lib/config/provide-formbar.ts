@@ -5,9 +5,9 @@ import {
 } from '@angular/core';
 import {
   ComponentRegistrationConfig,
+  ComponentRegistrationEntry,
   ComponentRegistrationService,
   ExpressionService,
-  LoadComponentFn,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_COMPONENT_RESOLVER,
   NGX_FW_CONFIG,
@@ -51,8 +51,8 @@ import { FormbarConfig } from '../types/provide.type';
  *   providers: [
  *     provideFormbar({
  *       componentRegistrations: {
- *         text: () => import('./text-input.component').then(m => m.TextInputComponent),
- *         select: () => import('./select.component').then(m => m.SelectComponent),
+ *         text: component(TextInputComponent),
+ *         select: loadComponent(() => import('./select.component').then(m => m.SelectComponent)),
  *       },
  *       validatorRegistrations: {
  *         customValidator: [myCustomValidator]
@@ -138,7 +138,7 @@ export function provideFormbar<
 function toComponentRegistrationMap(
   componentRegistrations: ComponentRegistrationConfig,
 ) {
-  return new Map<string, LoadComponentFn>(
+  return new Map<string, ComponentRegistrationEntry>(
     Object.entries(componentRegistrations),
   );
 }

@@ -5,6 +5,7 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
   addComponentRegistration,
@@ -75,6 +76,14 @@ export function registerTypeConfig(
     ).replace(/\.ts$/, '');
 
     const changes: Change[] = [];
+
+    const loadComponentImport = insertImport(
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      'loadComponent',
+      '@ngx-formbar/core',
+    );
+    changes.push(loadComponentImport);
 
     const updateChanges = addComponentRegistration(
       tree,

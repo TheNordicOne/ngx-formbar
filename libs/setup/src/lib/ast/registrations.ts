@@ -274,6 +274,9 @@ export function registrationsObjectUsesIdentifier(
     if (isIdentifier(p.initializer) && p.initializer.text === identifierName) {
       return true;
     }
+    if (extractComponentNameFromLazyImport(p.initializer) === identifierName) {
+      return true;
+    }
   }
 
   return false;
@@ -756,7 +759,7 @@ function createLazyImportExpression(
     [thenCallback],
   );
 
-  return factory.createArrowFunction(
+  const arrowFn = factory.createArrowFunction(
     undefined,
     undefined,
     [],
@@ -764,19 +767,46 @@ function createLazyImportExpression(
     factory.createToken(SyntaxKind.EqualsGreaterThanToken),
     thenCall,
   );
+
+  return factory.createCallExpression(
+    factory.createIdentifier('loadComponent'),
+    undefined,
+    [arrowFn],
+  );
 }
 
 export function extractComponentNameFromLazyImport(
   node: Node,
 ): string | null {
-  if (!isArrowFunction(node)) return null;
+  // Handle loadComponent(() => import(...).then(m => m.Component))
+  if (
+    isCallExpression(node) &&
+    isIdentifier(node.expression) &&
+    node.expression.text === 'loadComponent' &&
+    node.arguments.length > 0
+  ) {
+    return extractComponentNameFromLazyImport(node.arguments[0]);
+  }
+
+  // Handle bare () => import(...).then(m => m.Component)
+  if (!isArrowFunction(node)) {
+    return null;
+  }
   const body = node.body;
-  if (!isCallExpression(body)) return null;
-  if (body.arguments.length === 0) return null;
+  if (!isCallExpression(body)) {
+    return null;
+  }
+  if (body.arguments.length === 0) {
+    return null;
+  }
   const thenCallback = body.arguments[0];
-  if (!isArrowFunction(thenCallback)) return null;
+  if (!isArrowFunction(thenCallback)) {
+    return null;
+  }
   const innerBody = thenCallback.body;
-  if (!isPropertyAccessExpression(innerBody)) return null;
+  if (!isPropertyAccessExpression(innerBody)) {
+    return null;
+  }
   return isIdentifier(innerBody.name) ? innerBody.name.text : null;
 }
 

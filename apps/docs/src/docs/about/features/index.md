@@ -18,7 +18,7 @@
 - Derive a value based on form state (dynamic readonly controls)
 - Dynamic labels/titles based on form state
 - Use own component and validator resolvers if you need more involved logic
-- Lazy-loaded component registrations for better initial bundle size
+- Static or lazy-loaded component registrations (mix and match per control)
 - Switch, add or remove registrations during runtime
 - Automatic e2e-Id generation
 - Configuration of test id (attribute name and how value is build)

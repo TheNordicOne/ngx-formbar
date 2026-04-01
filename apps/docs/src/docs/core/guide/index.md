@@ -130,8 +130,8 @@ Provides access to the component type mapping as a read-only signal.
 
 ```typescript
 const registrationService = inject(ComponentRegistrationService);
-const loadComponent = registrationService.registrations().get('text');
-// Returns the LoadComponentFn (lazy loader) registered for 'text'
+const entry = registrationService.registrations().get('text');
+// Returns the ComponentRegistrationEntry registered for 'text'
 ```
 
 ### NgxFbConfigurationService
@@ -142,7 +142,7 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 
 | Token                          | Default       | Purpose                                           |
 |--------------------------------|---------------|---------------------------------------------------|
-| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map     | Maps type strings to `LoadComponentFn` loaders    |
+| NGX_FW_COMPONENT_REGISTRATIONS | Empty Map     | Maps type strings to `ComponentRegistrationEntry` |
 | NGX_FW_COMPONENT_RESOLVER      | -             | Provides access to the component registration map |
 | NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'`    | Application-wide default update strategy          |
 | NGX_FW_DEFAULT_CONFIG          | `{}`          | Base global configuration                         |

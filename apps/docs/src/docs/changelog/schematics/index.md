@@ -13,7 +13,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Changed
 
-- Generated registrations now use lazy `() => import('...').then(m => m.Component)` syntax instead of static component imports, matching the new `LoadComponentFn` type in `@ngx-formbar/core`
+- Generated registrations now use `ComponentRegistrationEntry` from `@ngx-formbar/core`, supporting both static and lazy component registrations
 
 ### Migration
 

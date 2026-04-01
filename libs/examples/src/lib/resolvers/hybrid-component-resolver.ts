@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
+  ComponentRegistrationEntry,
   ComponentResolver,
-  LoadComponentFn,
   NGX_FW_COMPONENT_REGISTRATIONS,
 } from '@ngx-formbar/core';
 
@@ -12,11 +12,13 @@ export class HybridComponentResolver implements ComponentResolver {
   );
 
   private readonly dynamicRegistrations = signal(
-    new Map<string, LoadComponentFn>(),
+    new Map<string, ComponentRegistrationEntry>(),
   );
 
   readonly registrations = computed(() => {
-    const result = new Map<string, LoadComponentFn>(this.defaultRegistrations);
+    const result = new Map<string, ComponentRegistrationEntry>(
+      this.defaultRegistrations,
+    );
 
     for (const [key, component] of this.dynamicRegistrations()) {
       result.set(key, component);
@@ -24,9 +26,9 @@ export class HybridComponentResolver implements ComponentResolver {
     return result;
   });
 
-  updateDynamicComponent(key: string, component: LoadComponentFn) {
+  updateDynamicComponent(key: string, entry: ComponentRegistrationEntry) {
     const current = new Map(this.dynamicRegistrations());
-    current.set(key, component);
+    current.set(key, entry);
     this.dynamicRegistrations.set(current);
   }
 }

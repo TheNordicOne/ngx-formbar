@@ -64,18 +64,26 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
    */
   readonly registrations = this.contentRegistrationService.registrations;
 
-  private readonly componentLoadFn = computed(() => {
+  private readonly registrationEntry = computed(() => {
     const registrations = this.registrations();
     const content = this.controlConfig();
-
-    const component = registrations.get(content.type);
-    return component ?? null;
+    return registrations.get(content.type) ?? null;
   });
 
-  private readonly $componentLoadFn = toObservable(this.componentLoadFn);
+  private readonly $registrationEntry = toObservable(this.registrationEntry);
 
-  private readonly $component = this.$componentLoadFn.pipe(
-    switchMap((loadFn) => (loadFn ? from(loadFn()) : of(null))),
+  private readonly $component = this.$registrationEntry.pipe(
+    switchMap((entry) => {
+      if (!entry) {
+        return of(null);
+      }
+
+      if ('component' in entry) {
+        return of(entry.component);
+      }
+
+      return from(entry.loadComponent());
+    }),
   );
 
   /**

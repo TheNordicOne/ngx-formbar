@@ -6,6 +6,7 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
   findComponentRegistrationsNode,
@@ -70,6 +71,14 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     ).replace(/\.ts$/, '');
 
     const changes: Change[] = [];
+
+    const loadComponentImport = insertImport(
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      'loadComponent',
+      '@ngx-formbar/core',
+    );
+    changes.push(loadComponentImport);
 
     const mapArrayLiteral = findMapArrayLiteral(mapNode);
 

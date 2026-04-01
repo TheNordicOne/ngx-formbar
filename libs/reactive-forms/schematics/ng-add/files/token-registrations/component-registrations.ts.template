@@ -1,7 +1,7 @@
-import { NGX_FW_COMPONENT_REGISTRATIONS, LoadComponentFn } from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_REGISTRATIONS, ComponentRegistrationEntry } from '@ngx-formbar/core';
 
 export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
-  useValue: new Map<string, LoadComponentFn>([
+  useValue: new Map<string, ComponentRegistrationEntry>([
   ])
 };
