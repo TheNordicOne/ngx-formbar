@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect, waitFor } from 'storybook/test';
+import { expect } from 'storybook/test';
 import type { FormContext } from '@ngx-formbar/core';
 import type { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
@@ -62,11 +62,9 @@ export const StaticDisabled: Story = {
     },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).toBeDisabled();
   },
 };
 
@@ -111,32 +109,26 @@ export const ConditionalDisabled: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially not disabled
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).not.toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).not.toBeDisabled();
 
     // Type "disable" to trigger the expression
-    const disableControl = canvas.getByRole('textbox', { name: 'Type "disable" to disable everything' });
+    const disableControl = await canvas.findByRole('textbox', { name: 'Type "disable" to disable everything' });
     await userEvent.clear(disableControl);
     await userEvent.type(disableControl, 'disable');
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).toBeDisabled();
 
     // Clear the trigger to re-enable
     await userEvent.clear(disableControl);
     await userEvent.type(disableControl, 'something else');
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).not.toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).not.toBeDisabled();
   },
 };
 
@@ -180,15 +172,13 @@ export const StaticReadonly: Story = {
     },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).toHaveAttribute(
+      'readonly',
+    );
   },
 };
 
@@ -233,44 +223,38 @@ export const ConditionalReadonly: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially not readonly
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).not.toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).not.toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).not.toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).not.toHaveAttribute(
+      'readonly',
+    );
 
     // Type "readonly" to trigger the expression
-    const readonlyControl = canvas.getByRole('textbox', { name: 'Type "readonly" to readonly everything' });
+    const readonlyControl = await canvas.findByRole('textbox', { name: 'Type "readonly" to readonly everything' });
     await userEvent.clear(readonlyControl);
     await userEvent.type(readonlyControl, 'readonly');
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).toHaveAttribute(
+      'readonly',
+    );
 
     // Clear to remove readonly
     await userEvent.clear(readonlyControl);
     await userEvent.type(readonlyControl, 'something else');
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First label' })).not.toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second label' })).not.toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).not.toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second label' })).not.toHaveAttribute(
+      'readonly',
+    );
   },
 };
 
@@ -327,8 +311,8 @@ export const FunctionExpressions: Story = {
       type: 'text',
       label: 'Computed by function',
       computedValue: (formValue: FormContext): string => {
-        const a = (formValue['sourceA'] as string | undefined) ?? '';
-        const b = (formValue['sourceB'] as string | undefined) ?? '';
+    const a = (formValue['sourceA'] as string | undefined) ?? '';
+    const b = (formValue['sourceB'] as string | undefined) ?? '';
         return `${a} ${b}!`.trim();
       },
       defaultValue: '',
@@ -336,7 +320,7 @@ export const FunctionExpressions: Story = {
     labelTarget: {
       type: 'text',
       dynamicLabel: (formValue: FormContext): string => {
-        const name =
+    const name =
           (formValue['nameForLabel'] as string | undefined) ?? '';
         return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
       },
@@ -345,75 +329,59 @@ export const FunctionExpressions: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initial state: all visible, enabled, not readonly
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Hidden by function' }),
-      ).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Disabled by function' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Readonly by function' })).not.toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Hidden by function' }),
+    ).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Disabled by function' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Readonly by function' })).not.toHaveAttribute(
+      'readonly',
+    );
 
     // Computed value from function
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Computed by function' })).toHaveValue(
-        'Hello World!',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Computed by function' })).toHaveValue(
+      'Hello World!',
+    );
 
     // Dynamic label from function
-    await waitFor(async () => {
-      await expect(canvas.getByText('Greeting for User')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Greeting for User')).toBeInTheDocument();
 
     // Trigger hidden
-    const triggerField = canvas.getByRole('textbox', { name: 'Trigger (type "hide", "disable", "readonly")' });
+    const triggerField = await canvas.findByRole('textbox', { name: 'Trigger (type "hide", "disable", "readonly")' });
     await userEvent.clear(triggerField);
     await userEvent.type(triggerField, 'hide');
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Hidden by function' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Hidden by function' }),
+    ).not.toBeInTheDocument();
 
     // Trigger disabled
     await userEvent.clear(triggerField);
     await userEvent.type(triggerField, 'disable');
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Hidden by function' }),
-      ).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Disabled by function' })).toBeDisabled();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Hidden by function' }),
+    ).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Disabled by function' })).toBeDisabled();
 
     // Trigger readonly
     await userEvent.clear(triggerField);
     await userEvent.type(triggerField, 'readonly');
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Disabled by function' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Readonly by function' })).toHaveAttribute(
-        'readonly',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Disabled by function' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Readonly by function' })).toHaveAttribute(
+      'readonly',
+    );
 
     // Update computed sources
-    const sourceA = canvas.getByRole('textbox', { name: 'Source A' });
+    const sourceA = await canvas.findByRole('textbox', { name: 'Source A' });
     await userEvent.clear(sourceA);
     await userEvent.type(sourceA, 'Goodbye');
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Computed by function' })).toHaveValue(
-        'Goodbye World!',
-      );
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Computed by function' })).toHaveValue(
+      'Goodbye World!',
+    );
 
     // Update dynamic label source
-    const nameForLabel = canvas.getByRole('textbox', { name: 'Name' });
+    const nameForLabel = await canvas.findByRole('textbox', { name: 'Name' });
     await userEvent.clear(nameForLabel);
     await userEvent.type(nameForLabel, 'Alice');
-    await waitFor(async () => {
-      await expect(canvas.getByText('Greeting for Alice')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Greeting for Alice')).toBeInTheDocument();
   },
 };
 
@@ -494,44 +462,38 @@ export const DeepHierarchyVisibility: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially all fields should be visible
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
 
     // Hide fields with the toggle control
-    const toggleControl = canvas.getByRole('textbox', { name: 'Type "hide" to hide nested fields' });
+    const toggleControl = await canvas.findByRole('textbox', { name: 'Type "hide" to hide nested fields' });
     await userEvent.clear(toggleControl);
     await userEvent.type(toggleControl, 'hide');
 
     // Fields with hidden condition should be hidden
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Level 2A Field' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Level 3A Field' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByRole('group', { name: 'Level 3B' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Level 2A Field' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Level 3A Field' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('group', { name: 'Level 3B' }),
+    ).not.toBeInTheDocument();
 
     // Fields without hidden condition should still be visible
-    await expect(canvas.getByRole('textbox', { name: 'Root level field' })).toBeInTheDocument();
-    await expect(canvas.getByRole('textbox', { name: 'Level 1 Field' })).toBeInTheDocument();
-    await expect(canvas.getByRole('textbox', { name: 'Level 2B Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Root level field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 1 Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 2B Field' })).toBeInTheDocument();
 
     // Show fields again by clearing the toggle control
     await userEvent.clear(toggleControl);
 
     // All fields should be visible again
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
-      await expect(canvas.getByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
   },
 };
 
@@ -572,34 +534,28 @@ export const CrossGroupDependencies: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially dependent field should be hidden
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Dependent Field' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Dependent Field' }),
+    ).not.toBeInTheDocument();
 
     // Set the toggle field value to "show"
-    const toggleField = canvas.getByRole('textbox', { name: 'Type "show" to reveal field in Branch B' });
+    const toggleField = await canvas.findByRole('textbox', { name: 'Type "show" to reveal field in Branch B' });
     await userEvent.clear(toggleField);
     await userEvent.type(toggleField, 'show');
 
     // Dependent field should now be visible
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Dependent Field' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Dependent Field' }),
+    ).toBeInTheDocument();
 
     // Change toggle field to something else
     await userEvent.clear(toggleField);
     await userEvent.type(toggleField, 'hide');
 
     // Dependent field should be hidden again
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Dependent Field' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Dependent Field' }),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -636,7 +592,7 @@ export const ComputedValue: Story = {
       type: 'text',
       label: 'Square',
       computedValue: (ctx: FormContext): number => {
-        const b = Number(ctx['base']);
+    const b = Number(ctx['base']);
         return b * b;
       },
     },
@@ -652,50 +608,36 @@ export const ComputedValue: Story = {
     },
   }),
   play: async ({ canvas, userEvent }) => {
-    const fullName = canvas.getByRole('textbox', { name: 'Full Name' });
-    const square = canvas.getByRole('textbox', { name: 'Square' });
-    const fallback = canvas.getByRole('textbox', { name: 'Fallback' });
+    const fullName = await canvas.findByRole('textbox', { name: 'Full Name' });
+    const square = await canvas.findByRole('textbox', { name: 'Square' });
+    const fallback = await canvas.findByRole('textbox', { name: 'Fallback' });
 
     // String concatenation
-    await waitFor(async () => {
-      await expect(fullName).toHaveValue('Jane Doe');
-    });
+    await expect(fullName).toHaveValue('Jane Doe');
 
-    const firstName = canvas.getByRole('textbox', { name: 'First' });
+    const firstName = await canvas.findByRole('textbox', { name: 'First' });
     await userEvent.clear(firstName);
     await userEvent.type(firstName, 'John');
-    await waitFor(async () => {
-      await expect(fullName).toHaveValue('John Doe');
-    });
+    await expect(fullName).toHaveValue('John Doe');
 
-    const lastName = canvas.getByRole('textbox', { name: 'Last' });
+    const lastName = await canvas.findByRole('textbox', { name: 'Last' });
     await userEvent.clear(lastName);
     await userEvent.type(lastName, 'Smith');
-    await waitFor(async () => {
-      await expect(fullName).toHaveValue('John Smith');
-    });
+    await expect(fullName).toHaveValue('John Smith');
 
     // Numeric computation
-    await waitFor(async () => {
-      await expect(square).toHaveValue('25');
-    });
+    await expect(square).toHaveValue('25');
 
-    const base = canvas.getByRole('textbox', { name: 'Base' });
+    const base = await canvas.findByRole('textbox', { name: 'Base' });
     await userEvent.clear(base);
     await userEvent.type(base, '7');
-    await waitFor(async () => {
-      await expect(square).toHaveValue('49');
-    });
+    await expect(square).toHaveValue('49');
 
     // Fallback when empty
-    await waitFor(async () => {
-      await expect(fallback).toHaveValue('DEFAULT');
-    });
+    await expect(fallback).toHaveValue('DEFAULT');
 
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Maybe Empty' }), 'Foo');
-    await waitFor(async () => {
-      await expect(fallback).toHaveValue('Foo');
-    });
+    await userEvent.type(await canvas.findByRole('textbox', { name: 'Maybe Empty' }), 'Foo');
+    await expect(fallback).toHaveValue('Foo');
   },
 };
 
@@ -736,45 +678,41 @@ export const CascadingComputed: Story = {
     },
   }),
   play: async ({ canvas, userEvent }) => {
-    const level0 = canvas.getByRole('textbox', { name: 'Level 0 Input' });
-    const level1 = canvas.getByRole('textbox', { name: 'Level 1 Computed' });
-    const level2 = canvas.getByRole('textbox', { name: 'Level 2 Computed' });
-    const level3 = canvas.getByRole('textbox', { name: 'Level 3 Computed' });
-    const level4 = canvas.getByRole('textbox', { name: 'Level 4 Computed' });
-    const level5 = canvas.getByRole('textbox', { name: 'Level 5 Computed' });
+    const level0 = await canvas.findByRole('textbox', { name: 'Level 0 Input' });
+    const level1 = await canvas.findByRole('textbox', { name: 'Level 1 Computed' });
+    const level2 = await canvas.findByRole('textbox', { name: 'Level 2 Computed' });
+    const level3 = await canvas.findByRole('textbox', { name: 'Level 3 Computed' });
+    const level4 = await canvas.findByRole('textbox', { name: 'Level 4 Computed' });
+    const level5 = await canvas.findByRole('textbox', { name: 'Level 5 Computed' });
 
     // Verify initial cascaded values
-    await waitFor(async () => {
-      await expect(level0).toHaveValue('Start');
-      await expect(level1).toHaveValue('Start-L1');
-      await expect(level2).toHaveValue('Start-L1-L2');
-      await expect(level3).toHaveValue('Start-L1-L2-L3');
-      await expect(level4).toHaveValue(
-        'Start-L1-L2-L3-L4',
-      );
-      await expect(level5).toHaveValue(
-        'Start-L1-L2-L3-L4-L5',
-      );
-    });
+    await expect(level0).toHaveValue('Start');
+    await expect(level1).toHaveValue('Start-L1');
+    await expect(level2).toHaveValue('Start-L1-L2');
+    await expect(level3).toHaveValue('Start-L1-L2-L3');
+    await expect(level4).toHaveValue(
+      'Start-L1-L2-L3-L4',
+    );
+    await expect(level5).toHaveValue(
+      'Start-L1-L2-L3-L4-L5',
+    );
 
     // Update the base value
     await userEvent.clear(level0);
     await userEvent.type(level0, 'Updated');
 
     // Verify all dependent values are updated
-    await waitFor(async () => {
-      await expect(level1).toHaveValue('Updated-L1');
-      await expect(level2).toHaveValue('Updated-L1-L2');
-      await expect(level3).toHaveValue(
-        'Updated-L1-L2-L3',
-      );
-      await expect(level4).toHaveValue(
-        'Updated-L1-L2-L3-L4',
-      );
-      await expect(level5).toHaveValue(
-        'Updated-L1-L2-L3-L4-L5',
-      );
-    });
+    await expect(level1).toHaveValue('Updated-L1');
+    await expect(level2).toHaveValue('Updated-L1-L2');
+    await expect(level3).toHaveValue(
+      'Updated-L1-L2-L3',
+    );
+    await expect(level4).toHaveValue(
+      'Updated-L1-L2-L3-L4',
+    );
+    await expect(level5).toHaveValue(
+      'Updated-L1-L2-L3-L4-L5',
+    );
   },
 };
 
@@ -816,53 +754,45 @@ export const ComputedWithValueStrategy: Story = {
     },
   }),
   play: async ({ canvas, userEvent }) => {
-    const compLast = canvas.getByRole('textbox', { name: 'Computed (keep + last)' });
-    const compDefault = canvas.getByRole('textbox', { name: 'Computed (keep + default)' });
-    const compReset = canvas.getByRole('textbox', { name: 'Computed (keep + reset)' });
+    const compLast = await canvas.findByRole('textbox', { name: 'Computed (keep + last)' });
+    const compDefault = await canvas.findByRole('textbox', { name: 'Computed (keep + default)' });
+    const compReset = await canvas.findByRole('textbox', { name: 'Computed (keep + reset)' });
 
     // Initial computed values
-    await waitFor(async () => {
-      await expect(compLast).toHaveValue('DZ');
-      await expect(compDefault).toHaveValue('DZ');
-      await expect(compReset).toHaveValue('DZ');
-    });
+    await expect(compLast).toHaveValue('DZ');
+    await expect(compDefault).toHaveValue('DZ');
+    await expect(compReset).toHaveValue('DZ');
 
     // Update dependency
-    const dep = canvas.getByRole('textbox', { name: 'Dependency' });
+    const dep = await canvas.findByRole('textbox', { name: 'Dependency' });
     await userEvent.clear(dep);
     await userEvent.type(dep, 'X');
-    await waitFor(async () => {
-      await expect(compLast).toHaveValue('XZ');
-      await expect(compDefault).toHaveValue('XZ');
-      await expect(compReset).toHaveValue('XZ');
-    });
+    await expect(compLast).toHaveValue('XZ');
+    await expect(compDefault).toHaveValue('XZ');
+    await expect(compReset).toHaveValue('XZ');
 
     // Hide all computed controls
-    const toggle = canvas.getByRole('textbox', { name: 'Toggle (type "hide")' });
+    const toggle = await canvas.findByRole('textbox', { name: 'Toggle (type "hide")' });
     await userEvent.clear(toggle);
     await userEvent.type(toggle, 'hide');
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Computed (keep + last)' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Computed (keep + default)' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Computed (keep + reset)' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Computed (keep + last)' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Computed (keep + default)' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Computed (keep + reset)' }),
+    ).not.toBeInTheDocument();
 
     // Show again: each strategy produces a different result
     await userEvent.clear(toggle);
-    await waitFor(async () => {
-      // "last" preserves the last computed value
-      await expect(canvas.getByRole('textbox', { name: 'Computed (keep + last)' })).toHaveValue('XZ');
-      // "default" reverts to defaultValue
-      await expect(canvas.getByRole('textbox', { name: 'Computed (keep + default)' })).toHaveValue('DEFAULT');
-      // "reset" clears the value
-      await expect(canvas.getByRole('textbox', { name: 'Computed (keep + reset)' })).toHaveValue('');
-    });
+    // "last" preserves the last computed value
+    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + last)' })).toHaveValue('XZ');
+    // "default" reverts to defaultValue
+    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + default)' })).toHaveValue('DEFAULT');
+    // "reset" clears the value
+    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + reset)' })).toHaveValue('');
   },
 };
 
@@ -892,20 +822,16 @@ export const DynamicLabels: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Dynamic label shows evaluated expression
-    await waitFor(async () => {
-      await expect(canvas.getByText('Initial Dynamic Label')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Initial Dynamic Label')).toBeInTheDocument();
 
     // Static label remains unchanged
-    await expect(canvas.getByText('Purely Static Label')).toBeInTheDocument();
+    await expect(await canvas.findByText('Purely Static Label')).toBeInTheDocument();
 
     // Update source changes dynamic label
-    const source = canvas.getByRole('textbox', { name: 'Source' });
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
     await userEvent.clear(source);
     await userEvent.type(source, 'Updated');
-    await waitFor(async () => {
-      await expect(canvas.getByText('Updated Dynamic Label')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Updated Dynamic Label')).toBeInTheDocument();
   },
 };
 
@@ -950,25 +876,19 @@ export const DynamicTitles: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Dynamic title shows evaluated expression
-    await waitFor(async () => {
-      await expect(canvas.getByRole('group', { name: 'Initial Dynamic Title' })).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('group', { name: 'Initial Dynamic Title' })).toBeInTheDocument();
 
     // Nested dynamic title and label
-    await waitFor(async () => {
-      await expect(canvas.getByRole('group', { name: 'Parent: Initial' })).toBeInTheDocument();
-      await expect(canvas.getByText('Child: Initial')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('group', { name: 'Parent: Initial' })).toBeInTheDocument();
+    await expect(await canvas.findByText('Child: Initial')).toBeInTheDocument();
 
     // Update source changes all dynamic properties
-    const source = canvas.getByRole('textbox', { name: 'Source' });
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
     await userEvent.clear(source);
     await userEvent.type(source, 'Updated');
-    await waitFor(async () => {
-      await expect(canvas.getByRole('group', { name: 'Updated Dynamic Title' })).toBeInTheDocument();
-      await expect(canvas.getByRole('group', { name: 'Parent: Updated' })).toBeInTheDocument();
-      await expect(canvas.getByText('Child: Updated')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('group', { name: 'Updated Dynamic Title' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('group', { name: 'Parent: Updated' })).toBeInTheDocument();
+    await expect(await canvas.findByText('Child: Updated')).toBeInTheDocument();
   },
 };
 
@@ -985,9 +905,7 @@ export const BuiltInFunctionCalls: Story = {
     upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Uppercase' })).toHaveValue('MIXEDCASE');
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('MIXEDCASE');
   },
 };
 
@@ -999,9 +917,7 @@ export const ComputedPriority: Story = {
     mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'Mix' })).toHaveValue('SHUTDOWN');
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'Mix' })).toHaveValue('SHUTDOWN');
   },
 };
 
@@ -1015,28 +931,22 @@ export const ManualOverride: Story = {
     combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
   }),
   play: async ({ canvas, userEvent }) => {
-    const combo = canvas.getByRole('textbox', { name: 'Combo' });
+    const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
     // Verify initial computed value
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('AB');
-    });
+    await expect(combo).toHaveValue('AB');
 
     // Manually override the computed field
     await userEvent.clear(combo);
     await userEvent.type(combo, 'CUSTOM');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('CUSTOM');
-    });
+    await expect(combo).toHaveValue('CUSTOM');
 
     // Change a dependency – combo should revert to computed
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Part 1' }), 'X');
+    await userEvent.type(await canvas.findByRole('textbox', { name: 'Part 1' }), 'X');
 
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('AXB');
-    });
+    await expect(combo).toHaveValue('AXB');
   },
 };
 
@@ -1051,39 +961,31 @@ export const ManualOverridePersistence: Story = {
     unrelated: { type: 'text', label: 'Unrelated' },
   }),
   play: async ({ canvas, userEvent }) => {
-    const combo = canvas.getByRole('textbox', { name: 'Combo' });
+    const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
     // Verify initial computed value
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('AB');
-    });
+    await expect(combo).toHaveValue('AB');
 
     // Manually override the computed field
     await userEvent.clear(combo);
     await userEvent.type(combo, 'ManualEntry');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('ManualEntry');
-    });
+    await expect(combo).toHaveValue('ManualEntry');
 
     // Typing into an unrelated field should NOT reset the override
-    const unrelated = canvas.getByRole('textbox', { name: 'Unrelated' });
+    const unrelated = await canvas.findByRole('textbox', { name: 'Unrelated' });
     await userEvent.clear(unrelated);
     await userEvent.type(unrelated, 'Not relevant');
 
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('ManualEntry');
-    });
+    await expect(combo).toHaveValue('ManualEntry');
 
     // Changing a dependency resets the override
-    const part1 = canvas.getByRole('textbox', { name: 'Part 1' });
+    const part1 = await canvas.findByRole('textbox', { name: 'Part 1' });
     await userEvent.clear(part1);
     await userEvent.type(part1, 'X');
 
-    await waitFor(async () => {
-      await expect(combo).toHaveValue('XB');
-    });
+    await expect(combo).toHaveValue('XB');
   },
 };
 
@@ -1100,45 +1002,39 @@ export const CascadingManualOverride: Story = {
     level5_override: { type: 'text', label: 'Level 5', computedValue: 'level4_override + "-L5"' },
   }),
   play: async ({ canvas, userEvent }) => {
-    const level0 = canvas.getByRole('textbox', { name: 'Level 0' });
-    const level1 = canvas.getByRole('textbox', { name: 'Level 1' });
-    const level2 = canvas.getByRole('textbox', { name: 'Level 2' });
-    const level3 = canvas.getByRole('textbox', { name: 'Level 3' });
-    const level4 = canvas.getByRole('textbox', { name: 'Level 4' });
-    const level5 = canvas.getByRole('textbox', { name: 'Level 5' });
+    const level0 = await canvas.findByRole('textbox', { name: 'Level 0' });
+    const level1 = await canvas.findByRole('textbox', { name: 'Level 1' });
+    const level2 = await canvas.findByRole('textbox', { name: 'Level 2' });
+    const level3 = await canvas.findByRole('textbox', { name: 'Level 3' });
+    const level4 = await canvas.findByRole('textbox', { name: 'Level 4' });
+    const level5 = await canvas.findByRole('textbox', { name: 'Level 5' });
 
     // Verify initial cascaded values
-    await waitFor(async () => {
-      await expect(level5).toHaveValue(
-        'Initial-L1-L2-L3-L4-L5',
-      );
-    });
+    await expect(level5).toHaveValue(
+      'Initial-L1-L2-L3-L4-L5',
+    );
 
     // Manually override level5
     await userEvent.clear(level5);
     await userEvent.type(level5, 'ManualOverride');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(level5).toHaveValue('ManualOverride');
-    });
+    await expect(level5).toHaveValue('ManualOverride');
 
     // Change the base – level5 should revert to computed
     await userEvent.clear(level0);
     await userEvent.type(level0, 'ChangedBase');
 
-    await waitFor(async () => {
-      await expect(level5).toHaveValue(
-        'ChangedBase-L1-L2-L3-L4-L5',
-      );
-      // Verify all intermediate levels updated too
-      await expect(level1).toHaveValue('ChangedBase-L1');
-      await expect(level2).toHaveValue('ChangedBase-L1-L2');
-      await expect(level3).toHaveValue('ChangedBase-L1-L2-L3');
-      await expect(level4).toHaveValue(
-        'ChangedBase-L1-L2-L3-L4',
-      );
-    });
+    await expect(level5).toHaveValue(
+      'ChangedBase-L1-L2-L3-L4-L5',
+    );
+    // Verify all intermediate levels updated too
+    await expect(level1).toHaveValue('ChangedBase-L1');
+    await expect(level2).toHaveValue('ChangedBase-L1-L2');
+    await expect(level3).toHaveValue('ChangedBase-L1-L2-L3');
+    await expect(level4).toHaveValue(
+      'ChangedBase-L1-L2-L3-L4',
+    );
   },
 };
 
@@ -1169,39 +1065,33 @@ export const ComplexArithmeticExpressions: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initial: 10+20>30 is false → visible. 10*20<30 is false → visible.
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Hidden by complex expression' }),
-      ).toBeInTheDocument();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Visible by complex expression' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Hidden by complex expression' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Visible by complex expression' }),
+    ).toBeInTheDocument();
 
     // Set valueA to 20: 20+20>30=true → hidden. 20*20<30=false → visible.
-    const valueA = canvas.getByRole('textbox', { name: 'Value A' });
+    const valueA = await canvas.findByRole('textbox', { name: 'Value A' });
     await userEvent.clear(valueA);
     await userEvent.type(valueA, '20');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Hidden by complex expression' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Visible by complex expression' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Hidden by complex expression' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Visible by complex expression' }),
+    ).toBeInTheDocument();
 
     // Set valueC to 500: 20*20<500=true → hidden.
-    const valueC = canvas.getByRole('textbox', { name: 'Value C' });
+    const valueC = await canvas.findByRole('textbox', { name: 'Value C' });
     await userEvent.clear(valueC);
     await userEvent.type(valueC, '500');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Visible by complex expression' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Visible by complex expression' }),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -1221,43 +1111,35 @@ export const MultipleDependencies: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially hidden (both 'no')
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Conditional Field' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Conditional Field' }),
+    ).not.toBeInTheDocument();
 
     // Set showCondition to 'yes' → still hidden (secondCondition is 'no')
-    const showCondition = canvas.getByRole('textbox', { name: 'Show Condition' });
+    const showCondition = await canvas.findByRole('textbox', { name: 'Show Condition' });
     await userEvent.clear(showCondition);
     await userEvent.type(showCondition, 'yes');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Conditional Field' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Conditional Field' }),
+    ).not.toBeInTheDocument();
 
     // Set secondCondition to 'yes' → now visible
-    const secondCondition = canvas.getByRole('textbox', { name: 'Second Condition' });
+    const secondCondition = await canvas.findByRole('textbox', { name: 'Second Condition' });
     await userEvent.clear(secondCondition);
     await userEvent.type(secondCondition, 'yes');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Conditional Field' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Conditional Field' }),
+    ).toBeInTheDocument();
 
     // Set showCondition to 'no' → hidden again
     await userEvent.clear(showCondition);
     await userEvent.type(showCondition, 'no');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Conditional Field' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Conditional Field' }),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -1281,31 +1163,25 @@ export const FunctionHiddenKeepStrategy: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially visible
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+    ).toBeInTheDocument();
 
     // Type 'hide' → hidden (not in document)
-    const triggerField = canvas.getByRole('textbox', { name: 'Type "hide" to hide target (keep)' });
+    const triggerField = await canvas.findByRole('textbox', { name: 'Type "hide" to hide target (keep)' });
     await userEvent.clear(triggerField);
     await userEvent.type(triggerField, 'hide');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+    ).not.toBeInTheDocument();
 
     // Clear → visible again
     await userEvent.clear(triggerField);
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -1318,7 +1194,7 @@ export const ExternalFunctionCall: Story = {
     targetFieldLabelFunc: {
       type: 'text',
       dynamicLabel: (formValue: FormContext): string => {
-        const name = (formValue['nameForLabel'] as string | undefined) ?? '';
+    const name = (formValue['nameForLabel'] as string | undefined) ?? '';
         return getGreeting(name);
       },
       defaultValue: 'Some value',
@@ -1326,25 +1202,19 @@ export const ExternalFunctionCall: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Verify initial label
-    await waitFor(async () => {
-      await expect(canvas.getByText('Greeting for User')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Greeting for User')).toBeInTheDocument();
 
     // Clear name, type 'Alice' → label updates
-    const nameForLabel = canvas.getByRole('textbox', { name: 'Name' });
+    const nameForLabel = await canvas.findByRole('textbox', { name: 'Name' });
     await userEvent.clear(nameForLabel);
     await userEvent.type(nameForLabel, 'Alice');
 
-    await waitFor(async () => {
-      await expect(canvas.getByText('Greeting for Alice')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Greeting for Alice')).toBeInTheDocument();
 
     // Clear name → label shows Guest
     await userEvent.clear(nameForLabel);
 
-    await waitFor(async () => {
-      await expect(canvas.getByText('Greeting for Guest')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Greeting for Guest')).toBeInTheDocument();
   },
 };
 
@@ -1400,13 +1270,11 @@ export const GroupDisabledWithOverride: Story = {
     },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped Overwritten' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Overwritten' })).not.toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped Overwritten' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Overwritten' })).not.toBeDisabled();
   },
 };
 
@@ -1452,20 +1320,16 @@ export const InitialDisabledState: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially all disabled (defaultValue matches condition)
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).toBeDisabled();
 
     // Clear disableControl → all become enabled
-    await userEvent.clear(canvas.getByRole('textbox', { name: 'Type "disable"' }));
+    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Type "disable"' }));
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).not.toBeDisabled();
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).not.toBeDisabled();
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).not.toBeDisabled();
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).not.toBeDisabled();
   },
 };
 
@@ -1517,15 +1381,13 @@ export const GroupReadonlyWithOverride: Story = {
     },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped Overwritten' })).not.toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Nested Overwritten' })).not.toHaveAttribute('readonly');
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped Overwritten' })).not.toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Overwritten' })).not.toHaveAttribute('readonly');
   },
 };
 
@@ -1571,22 +1433,18 @@ export const InitialReadonlyState: Story = {
   }),
   play: async ({ canvas, userEvent }) => {
     // Initially all readonly (defaultValue matches condition)
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).toHaveAttribute(
-        'readonly',
-      );
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).toHaveAttribute('readonly');
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toHaveAttribute(
+      'readonly',
+    );
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).toHaveAttribute('readonly');
 
     // Clear readonlyControl → all become not readonly
-    await userEvent.clear(canvas.getByRole('textbox', { name: 'Type "readonly"' }));
+    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Type "readonly"' }));
 
-    await waitFor(async () => {
-      await expect(canvas.getByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Grouped First' })).not.toHaveAttribute('readonly');
-      await expect(canvas.getByRole('textbox', { name: 'Nested Second' })).not.toHaveAttribute('readonly');
-    });
+    await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).not.toHaveAttribute('readonly');
+    await expect(await canvas.findByRole('textbox', { name: 'Nested Second' })).not.toHaveAttribute('readonly');
   },
 };
 
@@ -1602,9 +1460,7 @@ export const StaticLabelFallback: Story = {
     target: { type: 'text', label: 'Purely Static Label' },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByText('Purely Static Label')).toBeInTheDocument();
-    });
+    await expect(await canvas.findByText('Purely Static Label')).toBeInTheDocument();
   },
 };
 
@@ -1620,8 +1476,6 @@ export const StaticTitleFallback: Story = {
     },
   }),
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('group', { name: 'Purely Static Title' })).toBeInTheDocument();
-    });
+    await expect(await canvas.findByRole('group', { name: 'Purely Static Title' })).toBeInTheDocument();
   },
 };

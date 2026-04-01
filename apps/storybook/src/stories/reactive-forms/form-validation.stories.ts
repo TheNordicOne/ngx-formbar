@@ -30,27 +30,23 @@ export const SingleValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'First label' });
+    const input = await canvas.findByRole('textbox', { name: 'First label' });
 
     // Type a single character — too short for minLength(3)
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('Minimum 3 characters required'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('Minimum 3 characters required'),
+    ).toBeInTheDocument();
 
     // Type enough characters to satisfy minLength(3)
     await userEvent.clear(input);
     await userEvent.type(input, 'XYZ');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('Minimum 3 characters required'),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('Minimum 3 characters required'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -74,46 +70,40 @@ export const MultipleValidators: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'First label' });
+    const input = await canvas.findByRole('textbox', { name: 'First label' });
 
     // Type a single character that does not contain 'a'
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('Minimum 3 characters required'),
-      ).toBeInTheDocument();
-      await expect(
-        canvas.getByText('Must contain the letter "a"'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('Minimum 3 characters required'),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('Must contain the letter "a"'),
+    ).toBeInTheDocument();
 
     // Satisfy minLength but not letter validator
     await userEvent.clear(input);
     await userEvent.type(input, 'XYZ');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('Minimum 3 characters required'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.getByText('Must contain the letter "a"'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('Minimum 3 characters required'),
+    ).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByText('Must contain the letter "a"'),
+    ).toBeInTheDocument();
 
     // Satisfy both validators (contains 'a' and length >= 3)
     await userEvent.clear(input);
     await userEvent.type(input, 'abc');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('Minimum 3 characters required'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText('Must contain the letter "a"'),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('Minimum 3 characters required'),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Must contain the letter "a"'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -137,44 +127,38 @@ export const CombinedValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'First label' });
+    const input = await canvas.findByRole('textbox', { name: 'First label' });
 
     // Type a single character that does not contain 'a' — triggers minlength + letter
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('Minimum 3 characters required'),
-      ).toBeInTheDocument();
-      await expect(
-        canvas.getByText('Must contain the letter "a"'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('Minimum 3 characters required'),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('Must contain the letter "a"'),
+    ).toBeInTheDocument();
 
     // Clear the input — triggers required (from combined) as well
     await userEvent.clear(input);
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('Required'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('Required'),
+    ).toBeInTheDocument();
 
     // Type a valid value satisfying all combined validators
     await userEvent.type(input, 'abc');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('Minimum 3 characters required'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText('Must contain the letter "a"'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText('Required'),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('Minimum 3 characters required'),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Must contain the letter "a"'),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Required'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -199,20 +183,18 @@ export const AsyncValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const input = canvas.getByRole('textbox', { name: 'First label' });
+    const input = await canvas.findByRole('textbox', { name: 'First label' });
 
     // Type a short value without 'a' — sync errors appear
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('Minimum 3 characters required'),
-      ).toBeInTheDocument();
-      await expect(
-        canvas.getByText('Must contain the letter "a"'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('Minimum 3 characters required'),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('Must contain the letter "a"'),
+    ).toBeInTheDocument();
 
     // Type a value that satisfies sync validators but not async ('a' present, length >= 3)
     await userEvent.clear(input);
@@ -220,14 +202,14 @@ export const AsyncValidator: Story = {
 
     await waitFor(
       async () => {
-        await expect(
+    await expect(
           canvas.queryByText('Minimum 3 characters required'),
         ).not.toBeInTheDocument();
-        await expect(
+    await expect(
           canvas.queryByText('Must contain the letter "a"'),
         ).not.toBeInTheDocument();
-        await expect(
-          canvas.getByText('Value must contain "async"'),
+    await expect(
+          await canvas.findByText('Value must contain "async"'),
         ).toBeInTheDocument();
       },
       { timeout: 3000 },
@@ -239,7 +221,7 @@ export const AsyncValidator: Story = {
 
     await waitFor(
       async () => {
-        await expect(
+    await expect(
           canvas.queryByText('Value must contain "async"'),
         ).not.toBeInTheDocument();
       },
@@ -283,17 +265,15 @@ export const GroupContent: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await waitFor(async () => {
-      await expect(canvas.getByRole('group', { name: 'First Group' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('group', { name: 'First Group' })).toBeInTheDocument();
 
-      await expect(canvas.getByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toBeInTheDocument();
 
-      await expect(canvas.getByRole('group', { name: 'Nested Group' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('group', { name: 'Nested Group' })).toBeInTheDocument();
 
-      await expect(
-        canvas.getByRole('textbox', { name: 'Second label' }),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second label' }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -327,45 +307,39 @@ export const GroupValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const firstInput = canvas.getByRole('textbox', { name: 'First label' });
-    const secondInput = canvas.getByRole('textbox', { name: 'Second label' });
+    const firstInput = await canvas.findByRole('textbox', { name: 'First label' });
+    const secondInput = await canvas.findByRole('textbox', { name: 'Second label' });
 
     // Type duplicate values in both controls
     await userEvent.type(firstInput, 'X');
     await userEvent.type(secondInput, 'X');
     await userEvent.tab();
 
-    await waitFor(async () => {
-      await expect(
-        canvas.getByText('No duplicate values allowed'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      await canvas.findByText('No duplicate values allowed'),
+    ).toBeInTheDocument();
 
     // Clear first input to remove duplicate, but type 'A' to trigger forbidden-letter-a
     await userEvent.clear(firstInput);
     await userEvent.type(firstInput, 'A');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('No duplicate values allowed'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.getByText('The letter "A" is not allowed'),
-      ).toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('No duplicate values allowed'),
+    ).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByText('The letter "A" is not allowed'),
+    ).toBeInTheDocument();
 
     // Type a value without 'a' that is not a duplicate
     await userEvent.clear(firstInput);
     await userEvent.type(firstInput, 'Y');
 
-    await waitFor(async () => {
-      await expect(
-        canvas.queryByText('No duplicate values allowed'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText('The letter "A" is not allowed'),
-      ).not.toBeInTheDocument();
-    });
+    await expect(
+      canvas.queryByText('No duplicate values allowed'),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('The letter "A" is not allowed'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -399,7 +373,7 @@ export const GroupAsyncValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const firstInput = canvas.getByRole('textbox', { name: 'First label' });
+    const firstInput = await canvas.findByRole('textbox', { name: 'First label' });
 
     // Type a value that does not contain 'sync' — async group validator fails
     await userEvent.type(firstInput, 'X');
@@ -407,8 +381,8 @@ export const GroupAsyncValidator: Story = {
 
     await waitFor(
       async () => {
-        await expect(
-          canvas.getByText('At least one value must contain "sync"'),
+    await expect(
+          await canvas.findByText('At least one value must contain "sync"'),
         ).toBeInTheDocument();
       },
       { timeout: 3000 },
@@ -420,7 +394,7 @@ export const GroupAsyncValidator: Story = {
 
     await waitFor(
       async () => {
-        await expect(
+    await expect(
           canvas.queryByText('At least one value must contain "sync"'),
         ).not.toBeInTheDocument();
       },
