@@ -2,7 +2,9 @@
   "name": "@ngx-formbar/reactive-forms",
   "version": "1.0.0",
   "dependencies": {
-    "@ngx-formbar/setup": "workspace:^"
+    "@ngx-formbar/setup": "workspace:^",
+    "@ngx-formbar/schematics": "0.0.1",
+    "rxjs": "~7.8.0"
   },
   "peerDependencies": {
     "@angular-devkit/core": ">=19.2.0 <22.0.0",
