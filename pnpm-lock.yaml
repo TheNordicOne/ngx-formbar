@@ -217,6 +217,102 @@ importers:
         specifier: ^9.0.4
         version: 9.0.4
 
+  libs/core:
+    dependencies:
+      '@angular/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2)
+      acorn:
+        specifier: ^8.14.1
+        version: 8.16.0
+
+  libs/examples:
+    dependencies:
+      '@angular/common':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2)
+      '@angular/forms':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/common@21.1.6(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(@angular/platform-browser@21.1.6(@angular/common@21.1.6(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@ngx-formbar/core':
+        specifier: workspace:^
+        version: link:../core
+      '@ngx-formbar/reactive-forms':
+        specifier: workspace:^
+        version: link:../reactive-forms
+      rxjs:
+        specifier: ^7.8.0
+        version: 7.8.2
+
+  libs/reactive-forms:
+    dependencies:
+      '@angular-devkit/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@angular-devkit/schematics':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@angular/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2)
+      '@angular/forms':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.6(@angular/common@21.1.6(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(@angular/platform-browser@21.1.6(@angular/common@21.1.6(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.1.6(@angular/compiler@21.1.6)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@ngx-formbar/core':
+        specifier: workspace:^
+        version: link:../core
+      '@ngx-formbar/setup':
+        specifier: workspace:^
+        version: link:../setup
+      '@schematics/angular':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      rxjs:
+        specifier: '>=7.0.0'
+        version: 7.8.2
+      typescript:
+        specifier: '>=5.4.0'
+        version: 5.9.3
+
+  libs/schematics:
+    dependencies:
+      '@angular-devkit/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@angular-devkit/schematics':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@ngx-formbar/setup':
+        specifier: workspace:^
+        version: link:../setup
+      '@schematics/angular':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      typescript:
+        specifier: '>=5.4.0'
+        version: 5.9.3
+
+  libs/setup:
+    dependencies:
+      '@angular-devkit/core':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@angular-devkit/schematics':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      '@schematics/angular':
+        specifier: '>=19.2.0 <22.0.0'
+        version: 21.1.5(chokidar@5.0.0)
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+      typescript:
+        specifier: '>=5.4.0'
+        version: 5.9.3
+
 packages:
 
   '@acemir/cssom@0.9.31':

@@ -1,3 +1,6 @@
+packages:
+  - 'libs/*'
+  - 'apps/*'
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
