@@ -88,6 +88,10 @@ jobs:
         id: resolved
         run: |
           VERSION=$(node -p "require('./libs/core/package.json').version")
+          if [[ "$VERSION" != *"-next."* ]]; then
+            echo "::error::Resolved version ${VERSION} is not a pre-release. No version-worthy commits found since the last release tag."
+            exit 1
+          fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Resolved version: ${VERSION}"
 
