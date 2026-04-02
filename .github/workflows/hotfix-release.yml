@@ -9,107 +9,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  hotfix:
-    runs-on: ubuntu-latest
+  publish:
     permissions:
       contents: write
       id-token: write
-
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get and cache dependencies
-        uses: ./.github/actions/cached-deps
-
-      - name: Setup Node.js for npm publish
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Version packages and generate changelogs
-        run: npx nx release --skip-publish
-
-      - name: Check for version changes
-        id: changes
-        run: |
-          if git diff --quiet libs/*/package.json; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No version-worthy commits found, skipping release"
-          else
-            VERSION=$(node -p "require('./libs/core/package.json').version")
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "New version: ${VERSION}"
-          fi
-
-      - name: Commit version changes
-        if: steps.changes.outputs.has_changes == 'true'
-        run: |
-          git add .
-          git commit -m "chore: version packages (hotfix) [skip ci]"
-          git push
-
-      - name: Create git tags and GitHub releases
-        if: steps.changes.outputs.has_changes == 'true'
-        run: |
-          declare -A PACKAGES=(
-            ["@ngx-formbar/core"]="libs/core/package.json"
-            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
-            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
-            ["@ngx-formbar/setup"]="libs/setup/package.json"
-          )
-
-          VERSION=$(node -p "require('./libs/core/package.json').version")
-
-          # Create v{version} tag for Nx release version resolution
-          VTAG="v${VERSION}"
-          if git rev-parse "$VTAG" >/dev/null 2>&1; then
-            echo "Tag $VTAG already exists, skipping"
-          else
-            echo "Creating tag $VTAG"
-            git tag "$VTAG"
-          fi
-
-          # Create per-package tags for GitHub releases
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
-
-            if git rev-parse "$tag" >/dev/null 2>&1; then
-              echo "Tag $tag already exists, skipping"
-              continue
-            fi
-
-            echo "Creating release for $tag"
-            git tag "$tag"
-          done
-
-          git push origin --tags
-
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
-
-            gh release create "$tag" \
-              --title "$tag" \
-              --generate-notes \
-              --latest=false || echo "Release $tag already exists, skipping"
-          done
-
-      - name: Publish to npm
-        if: steps.changes.outputs.has_changes == 'true'
-        run: npx nx release publish --provenance
+    uses: ./.github/workflows/publish-packages.yml
+    with:
+      mode: hotfix
+    secrets: inherit

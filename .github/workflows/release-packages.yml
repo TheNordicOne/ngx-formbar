@@ -14,121 +14,23 @@ on:
         default: false
 
 jobs:
-  release:
+  publish:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true &&
       startsWith(github.event.pull_request.title, 'chore: version packages'))
-    runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
-
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DRY_RUN: ${{ inputs.dry-run || false }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get and cache dependencies
-        uses: ./.github/actions/cached-deps
-
-      - name: Setup Node.js for npm publish
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-
-      - name: Build all packages
-        run: npx nx run-many -t build --skip-nx-cache && npx nx run @ngx-formbar/reactive-forms:clean-schematics
-
-      - name: Create git tags and GitHub releases
-        if: env.DRY_RUN != 'true'
-        run: |
-          declare -A PACKAGES=(
-            ["@ngx-formbar/core"]="libs/core/package.json"
-            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
-            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
-            ["@ngx-formbar/setup"]="libs/setup/package.json"
-          )
-
-          VERSION=$(node -p "require('./libs/core/package.json').version")
-
-          # Create v{version} tag for Nx release version resolution
-          VTAG="v${VERSION}"
-          if git rev-parse "$VTAG" >/dev/null 2>&1; then
-            echo "Tag $VTAG already exists, skipping"
-          else
-            echo "Creating tag $VTAG"
-            git tag "$VTAG"
-          fi
-
-          # Create per-package tags for GitHub releases
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
-
-            if git rev-parse "$tag" >/dev/null 2>&1; then
-              echo "Tag $tag already exists, skipping"
-              continue
-            fi
-
-            echo "Creating release for $tag"
-            git tag "$tag"
-          done
-
-          git push origin --tags
-
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
-
-            gh release create "$tag" \
-              --title "$tag" \
-              --generate-notes \
-              --latest=false || echo "Release $tag already exists, skipping"
-          done
-
-      - name: Publish to npm
-        if: env.DRY_RUN != 'true'
-        run: npx nx release publish --provenance
-
-      - name: Create maintenance branch
-        if: env.DRY_RUN != 'true'
-        run: |
-          VERSION=$(node -p "require('./libs/core/package.json').version")
-          IFS='.' read -r MAJOR MINOR _PATCH <<< "$VERSION"
-          BRANCH="${MAJOR}.${MINOR}.x"
-
-          if git ls-remote --exit-code origin "refs/heads/${BRANCH}" >/dev/null 2>&1; then
-            echo "Maintenance branch ${BRANCH} already exists, skipping"
-          else
-            echo "Creating maintenance branch ${BRANCH}"
-            git branch "$BRANCH"
-            git push origin "$BRANCH"
-          fi
-
-      - name: Dry-run summary
-        if: env.DRY_RUN == 'true'
-        run: |
-          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
-          echo "::group::Package versions that would be released"
-          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json libs/setup/package.json; do
-            name=$(node -p "require('./${pkg_json}').name")
-            version=$(node -p "require('./${pkg_json}').version")
-            echo "  $name@$version"
-          done
-          echo "::endgroup::"
+    uses: ./.github/workflows/publish-packages.yml
+    with:
+      mode: release
+      dry-run: ${{ inputs.dry-run || false }}
+    secrets: inherit
 
   deploy-docs:
     if: ${{ !(inputs.dry-run || false) }}
-    needs: release
+    needs: publish
     uses: ./.github/workflows/publish-docs.yml
     with:
       environment: production

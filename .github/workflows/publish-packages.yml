@@ -1,0 +1,196 @@
+name: Publish Packages
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'Publishing mode: prerelease, release, or hotfix'
+        type: string
+        required: true
+      specifier:
+        description: 'Explicit version specifier for prerelease mode (e.g., 2.0.0-next.1)'
+        type: string
+        default: ''
+      dry-run:
+        description: 'Run without publishing'
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry-run }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get and cache dependencies
+        uses: ./.github/actions/cached-deps
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Configure git
+        if: inputs.mode == 'hotfix'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # --- Prerelease versioning ---
+      - name: Version packages (prerelease)
+        if: inputs.mode == 'prerelease'
+        run: |
+          SPECIFIER="${{ inputs.specifier }}"
+          if [ -n "$SPECIFIER" ]; then
+            npx nx release version "$SPECIFIER"
+          else
+            npx nx release version --preid next
+          fi
+
+      - name: Validate prerelease version
+        if: inputs.mode == 'prerelease'
+        run: |
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          if [[ "$VERSION" != *"-next."* ]]; then
+            echo "::error::Resolved version ${VERSION} is not a pre-release. No version-worthy commits found since the last release tag."
+            exit 1
+          fi
+
+      # --- Release build (versions already set by Version PR) ---
+      - name: Build packages (release)
+        if: inputs.mode == 'release'
+        run: npx nx run-many -t build --skip-nx-cache && npx nx run @ngx-formbar/reactive-forms:clean-schematics
+
+      # --- Hotfix versioning + changelog ---
+      - name: Version packages and generate changelogs (hotfix)
+        if: inputs.mode == 'hotfix'
+        run: npx nx release --skip-publish
+
+      - name: Check for hotfix changes
+        if: inputs.mode == 'hotfix'
+        id: hotfix
+        run: |
+          if git diff --quiet libs/*/package.json; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No version-worthy commits found, skipping release"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit hotfix version changes
+        if: inputs.mode == 'hotfix' && steps.hotfix.outputs.has_changes == 'true'
+        run: |
+          git add .
+          git commit -m "chore: version packages (hotfix) [skip ci]"
+          git push
+
+      # --- Shared: tags, GitHub releases, npm publish ---
+      - name: Should publish
+        id: should-publish
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.mode }}" = "hotfix" ] && [ "${{ steps.hotfix.outputs.has_changes }}" != "true" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create git tags and GitHub releases
+        if: steps.should-publish.outputs.publish == 'true'
+        run: |
+          declare -A PACKAGES=(
+            ["@ngx-formbar/core"]="libs/core/package.json"
+            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
+            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
+            ["@ngx-formbar/setup"]="libs/setup/package.json"
+          )
+
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          IS_PRERELEASE="${{ inputs.mode == 'prerelease' }}"
+
+          # Create v{version} tag for Nx release version resolution
+          VTAG="v${VERSION}"
+          if git rev-parse "$VTAG" >/dev/null 2>&1; then
+            echo "Tag $VTAG already exists, skipping"
+          else
+            echo "Creating tag $VTAG"
+            git tag "$VTAG"
+          fi
+
+          # Create per-package tags for GitHub releases
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+              continue
+            fi
+
+            echo "Creating tag $tag"
+            git tag "$tag"
+          done
+
+          git push origin --tags
+
+          RELEASE_FLAGS="--generate-notes --latest=false"
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            RELEASE_FLAGS="$RELEASE_FLAGS --prerelease"
+          fi
+
+          for pkg in "${!PACKAGES[@]}"; do
+            pkg_json="${PACKAGES[$pkg]}"
+            version=$(node -p "require('./${pkg_json}').version")
+            tag="${pkg}@${version}"
+
+            gh release create "$tag" \
+              --title "$tag" \
+              $RELEASE_FLAGS || echo "Release $tag already exists, skipping"
+          done
+
+      - name: Publish to npm
+        if: steps.should-publish.outputs.publish == 'true'
+        run: |
+          TAG="${{ inputs.mode == 'prerelease' && 'next' || 'latest' }}"
+          npx nx release publish --tag "$TAG" --provenance
+
+      - name: Create maintenance branch
+        if: inputs.mode == 'release' && steps.should-publish.outputs.publish == 'true'
+        run: |
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          IFS='.' read -r MAJOR MINOR _PATCH <<< "$VERSION"
+          BRANCH="${MAJOR}.${MINOR}.x"
+
+          if git ls-remote --exit-code origin "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+            echo "Maintenance branch ${BRANCH} already exists, skipping"
+          else
+            echo "Creating maintenance branch ${BRANCH}"
+            git branch "$BRANCH"
+            git push origin "$BRANCH"
+          fi
+
+      - name: Dry-run summary
+        if: inputs.dry-run
+        run: |
+          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
+          echo "::group::Package versions"
+          for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json libs/setup/package.json; do
+            name=$(node -p "require('./${pkg_json}').name")
+            version=$(node -p "require('./${pkg_json}').version")
+            echo "  $name@$version"
+          done
+          echo "::endgroup::"
