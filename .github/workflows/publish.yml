@@ -1,34 +1,72 @@
-name: Pre-release Packages
+name: Publish
 
 on:
+  push:
+    branches:
+      - '[0-9]*.[0-9]*.x'
+  pull_request:
+    branches:
+      - main
+    types: [closed]
   workflow_dispatch:
     inputs:
+      mode:
+        description: Publishing mode
+        type: choice
+        options:
+          - prerelease
+          - release
+        required: true
       dry-run:
-        description: Run without publishing or pushing changes
-        required: false
+        description: Run without publishing
         type: boolean
         default: false
       skip-docs:
-        description: Skip deploying documentation to the preview environment
-        required: false
+        description: Skip deploying documentation
         type: boolean
         default: false
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  detect-version:
+  resolve:
     runs-on: ubuntu-latest
     outputs:
+      mode: ${{ steps.mode.outputs.mode }}
       specifier: ${{ steps.detect.outputs.specifier }}
+      should-run: ${{ steps.mode.outputs.should-run }}
     steps:
+      - name: Determine publishing mode
+        id: mode
+        run: |
+          EVENT="${{ github.event_name }}"
+
+          if [ "$EVENT" = "push" ]; then
+            echo "mode=hotfix" >> "$GITHUB_OUTPUT"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT" = "pull_request" ]; then
+            MERGED="${{ github.event.pull_request.merged }}"
+            TITLE="${{ github.event.pull_request.title }}"
+            if [ "$MERGED" = "true" ] && [[ "$TITLE" == "chore: version packages"* ]]; then
+              echo "mode=release" >> "$GITHUB_OUTPUT"
+              echo "should-run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "should-run=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
       - name: Setup Node.js
+        if: steps.mode.outputs.mode == 'prerelease'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Determine prerelease version
+      - name: Detect prerelease specifier
+        if: steps.mode.outputs.mode == 'prerelease'
         id: detect
         run: |
           LATEST=$(npm view @ngx-formbar/core dist-tags.latest 2>/dev/null || echo "")
@@ -61,21 +99,26 @@ jobs:
           fi
 
   publish:
-    needs: detect-version
+    needs: resolve
+    if: needs.resolve.outputs.should-run == 'true'
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/publish-packages.yml
     with:
-      mode: prerelease
-      specifier: ${{ needs.detect-version.outputs.specifier }}
+      mode: ${{ needs.resolve.outputs.mode }}
+      specifier: ${{ needs.resolve.outputs.specifier || '' }}
       dry-run: ${{ inputs.dry-run || false }}
     secrets: inherit
 
   deploy-docs:
-    if: ${{ !(inputs.dry-run || false) && !(inputs.skip-docs || false) }}
-    needs: publish
+    needs: [resolve, publish]
+    if: >-
+      needs.resolve.outputs.should-run == 'true' &&
+      needs.resolve.outputs.mode != 'hotfix' &&
+      !(inputs.dry-run || false) &&
+      !(inputs.skip-docs || false)
     uses: ./.github/workflows/publish-docs.yml
     with:
-      environment: preview
+      environment: ${{ needs.resolve.outputs.mode == 'release' && 'production' || 'preview' }}
     secrets: inherit
