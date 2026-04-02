@@ -49,11 +49,14 @@ jobs:
           LATEST=$(npm view @ngx-formbar/core dist-tags.latest 2>/dev/null || echo "")
           CURRENT_NEXT=$(npm view @ngx-formbar/core dist-tags.next 2>/dev/null || echo "")
 
-          # If next is behind or equal to latest, it's stale (from a previous release cycle)
-          if [ -n "$CURRENT_NEXT" ] && [ -n "$LATEST" ]; then
+          # If the base of next is <= latest, it's stale (from a previous release cycle)
+          if [ -n "$CURRENT_NEXT" ] && [ -n "$LATEST" ] && [[ "$CURRENT_NEXT" == *"-next."* ]]; then
+            NEXT_BASE="${CURRENT_NEXT%-next.*}"
             IS_STALE=$(node -e "
-              const semver = require('semver');
-              process.stdout.write(semver.lte('${CURRENT_NEXT}', '${LATEST}') ? 'true' : 'false');
+              const a = '${LATEST}'.split('.').map(Number);
+              const b = '${NEXT_BASE}'.split('.').map(Number);
+              const cmp = (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]);
+              process.stdout.write(cmp >= 0 ? 'true' : 'false');
             ")
             if [ "$IS_STALE" = "true" ]; then
               echo "Next version ${CURRENT_NEXT} is behind latest ${LATEST}, starting fresh"
