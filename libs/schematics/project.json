@@ -3,18 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/schematics/src",
   "projectType": "library",
-  "release": {
-    "version": {
-      "manifestRootsToUpdate": [
-        {
-          "path": "dist/{projectRoot}",
-          "preserveLocalDependencyProtocols": false
-        }
-      ],
-      "currentVersionResolver": "git-tag",
-      "fallbackCurrentVersionResolver": "disk"
-    }
-  },
   "tags": ["schematics"],
   "targets": {
     "build": {

@@ -118,7 +118,15 @@
       "@ngx-formbar/setup"
     ],
     "version": {
+      "preVersionCommand": "npx nx run-many -t build && npx nx run @ngx-formbar/reactive-forms:clean-schematics",
       "conventionalCommits": true,
+      "manifestRootsToUpdate": [
+        "{projectRoot}",
+        {
+          "path": "dist/{projectRoot}",
+          "preserveLocalDependencyProtocols": false
+        }
+      ],
       "git": {
         "commit": false,
         "tag": false

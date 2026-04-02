@@ -4,18 +4,6 @@
   "sourceRoot": "libs/reactive-forms/src",
   "prefix": "ngxfb",
   "projectType": "library",
-  "release": {
-    "version": {
-      "manifestRootsToUpdate": [
-        {
-          "path": "dist/{projectRoot}",
-          "preserveLocalDependencyProtocols": false
-        }
-      ],
-      "currentVersionResolver": "git-tag",
-      "fallbackCurrentVersionResolver": "disk"
-    }
-  },
   "tags": ["reactive-forms"],
   "targets": {
     "build": {
