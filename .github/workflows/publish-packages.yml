@@ -112,10 +112,10 @@ jobs:
         if: steps.should-publish.outputs.publish == 'true'
         run: |
           declare -A PACKAGES=(
-            ["@ngx-formbar/core"]="libs/core/package.json"
-            ["@ngx-formbar/reactive-forms"]="libs/reactive-forms/package.json"
-            ["@ngx-formbar/schematics"]="libs/schematics/package.json"
-            ["@ngx-formbar/setup"]="libs/setup/package.json"
+            ["core"]="libs/core/package.json"
+            ["reactive-forms"]="libs/reactive-forms/package.json"
+            ["schematics"]="libs/schematics/package.json"
+            ["setup"]="libs/setup/package.json"
           )
 
           VERSION=$(node -p "require('./libs/core/package.json').version")
@@ -134,7 +134,7 @@ jobs:
           for pkg in "${!PACKAGES[@]}"; do
             pkg_json="${PACKAGES[$pkg]}"
             version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
+            tag="${pkg}-v${version}"
 
             if git rev-parse "$tag" >/dev/null 2>&1; then
               echo "Tag $tag already exists, skipping"
@@ -155,7 +155,7 @@ jobs:
           for pkg in "${!PACKAGES[@]}"; do
             pkg_json="${PACKAGES[$pkg]}"
             version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}@${version}"
+            tag="${pkg}-v${version}"
 
             gh release create "$tag" \
               --title "$tag" \
