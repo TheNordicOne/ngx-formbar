@@ -108,59 +108,28 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create git tags and GitHub releases
+      - name: Create git tag and GitHub release
         if: steps.should-publish.outputs.publish == 'true'
         run: |
-          declare -A PACKAGES=(
-            ["core"]="libs/core/package.json"
-            ["reactive-forms"]="libs/reactive-forms/package.json"
-            ["schematics"]="libs/schematics/package.json"
-            ["setup"]="libs/setup/package.json"
-          )
-
           VERSION=$(node -p "require('./libs/core/package.json').version")
-          IS_PRERELEASE="${{ inputs.mode == 'prerelease' }}"
+          TAG="v${VERSION}"
 
-          # Create v{version} tag for Nx release version resolution
-          VTAG="v${VERSION}"
-          if git rev-parse "$VTAG" >/dev/null 2>&1; then
-            echo "Tag $VTAG already exists, skipping"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
           else
-            echo "Creating tag $VTAG"
-            git tag "$VTAG"
+            echo "Creating tag $TAG"
+            git tag "$TAG"
+            git push origin "$TAG"
           fi
 
-          # Create per-package tags for GitHub releases
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}-v${version}"
-
-            if git rev-parse "$tag" >/dev/null 2>&1; then
-              echo "Tag $tag already exists, skipping"
-              continue
-            fi
-
-            echo "Creating tag $tag"
-            git tag "$tag"
-          done
-
-          git push origin --tags
-
           RELEASE_FLAGS="--generate-notes --latest=false"
-          if [ "$IS_PRERELEASE" = "true" ]; then
+          if [ "${{ inputs.mode == 'prerelease' }}" = "true" ]; then
             RELEASE_FLAGS="$RELEASE_FLAGS --prerelease"
           fi
 
-          for pkg in "${!PACKAGES[@]}"; do
-            pkg_json="${PACKAGES[$pkg]}"
-            version=$(node -p "require('./${pkg_json}').version")
-            tag="${pkg}-v${version}"
-
-            gh release create "$tag" \
-              --title "$tag" \
-              $RELEASE_FLAGS || echo "Release $tag already exists, skipping"
-          done
+          gh release create "$TAG" \
+            --title "$TAG" \
+            $RELEASE_FLAGS || echo "Release $TAG already exists, skipping"
 
       - name: Publish to npm
         if: steps.should-publish.outputs.publish == 'true'
