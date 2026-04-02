@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js for npm publish
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Configure git
@@ -136,6 +136,8 @@ jobs:
         run: |
           TAG="${{ inputs.mode == 'prerelease' && 'next' || 'latest' }}"
           npx nx release publish --tag "$TAG" --provenance
+        env:
+          NODE_AUTH_TOKEN: ''
 
       - name: Create maintenance branch
         if: inputs.mode == 'release' && steps.should-publish.outputs.publish == 'true'
