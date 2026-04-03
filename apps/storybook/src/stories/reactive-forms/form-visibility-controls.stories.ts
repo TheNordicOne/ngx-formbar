@@ -135,6 +135,7 @@ export const ControlRemoveDefault: Story = {
     docs: { description: { story: 'Remove strategy with default — reverts to default value on show.' } },
   },
   args: {
+    autoUpdate: true,
     formConfig: formConfig({
       hideControl: {
         type: 'text',

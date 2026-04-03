@@ -21,3 +21,13 @@
     }
   </div>
 }
+
+@if (valueHistory().length > 0) {
+  <details class="story-value-history" open>
+    <summary>Value History ({{ valueHistory().length }})</summary>
+    <pre data-testid="value-history">@for (entry of valueHistory(); track $index) {
+{{ entry.timestamp }} {{ entry.raw }}
+}
+</pre>
+  </details>
+}

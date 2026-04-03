@@ -27,6 +27,7 @@ export class StoryFormHostComponent {
   readonly patchData = input<Record<string, unknown>>({});
   readonly autoUpdate = input(false);
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
+  readonly valueHistory = signal<{ timestamp: string; raw: string }[]>([]);
 
   form: FormGroup = this.formBuilder.group({});
 
@@ -38,7 +39,20 @@ export class StoryFormHostComponent {
         filter(() => this.autoUpdate()),
         takeUntilDestroyed(),
       )
-      .subscribe(() => { this.onSubmit(); });
+      .subscribe(() => {
+        this.onSubmit();
+      });
+
+    this.form.valueChanges
+      .pipe(
+        filter(() => this.autoUpdate()),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        const raw = JSON.stringify(this.form.getRawValue());
+        const timestamp = new Date().toISOString().slice(11, 23);
+        this.valueHistory.update((h) => [...h, { timestamp, raw }]);
+      });
   }
 
   reset() {
@@ -68,9 +82,7 @@ export class StoryFormHostComponent {
         typeof value === 'object' &&
         !Array.isArray(value)
       ) {
-        result = result.concat(
-          this.flattenFormValues(value as object, path),
-        );
+        result = result.concat(this.flattenFormValues(value as object, path));
         continue;
       }
 
