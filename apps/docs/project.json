@@ -2,9 +2,14 @@
   "name": "@ngx-formbar/docs",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "prefix": "doc",
+  "prefix": "docs",
   "sourceRoot": "apps/docs/src",
   "tags": [],
+  "generators": {
+    "@schematics/angular:component": {
+      "changeDetection": "OnPush"
+    }
+  },
   "targets": {
     "build": {
       "executor": "@ng-doc/builder:application",
