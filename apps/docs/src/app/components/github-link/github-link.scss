@@ -1,0 +1,10 @@
+.github-link {
+  display: flex;
+  align-items: center;
+  color: var(--ng-doc-text);
+  transition: color var(--button-transition-speed);
+
+  &:hover {
+    color: var(--ng-doc-primary);
+  }
+}
