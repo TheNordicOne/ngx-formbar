@@ -6,5 +6,4 @@ export interface TextControl extends NgxFbControl {
 
   hint?: string;
   placeHolder?: string;
-  hideMode?: 'structural' | 'attribute';
 }
