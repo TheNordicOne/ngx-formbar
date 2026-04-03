@@ -33,6 +33,8 @@ Use the AskUserQuestion tool to raise uncertainties, present options, and get de
 
 Never self-answer your own questions. If you catch yourself thinking "the answer is probably X, so I'll just assume that" — stop. That's exactly the moment you need to ask. Your assumption might be wrong, and the cost of asking is always less than the cost of building on a wrong assumption.
 
+**Know when to stop asking and just listen.** AskUserQuestion is for structured decisions with clear options. When the user chooses the freeform option or signals they want to discuss something openly, switch to conversation — let them type, respond naturally, and only go back to structured questions when there's a concrete decision to make. Don't chain AskUserQuestion calls back-to-back when the user is trying to have a dialogue.
+
 ## Bugs: reproduction first
 
 When investigating a bug, the first goal is always a reliable reproduction — not a fix, not even a root cause theory.
