@@ -42,7 +42,9 @@ jobs:
         uses: ./.github/actions/cached-deps
 
       - name: Build documentation
-        run: npx nx build @ngx-formbar/docs
+        run: |
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          npx nx build @ngx-formbar/docs "--define.NGXFB_VERSION=\"'v${VERSION}'\""
 
       - name: Install lftp
         run: sudo apt-get install -y lftp

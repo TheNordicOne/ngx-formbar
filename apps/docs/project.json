@@ -44,7 +44,10 @@
           "node_modules/@ng-doc/app/styles/global.css",
           "apps/docs/src/styles.scss"
         ],
-        "allowedCommonJsDependencies": ["@ng-doc/core"]
+        "allowedCommonJsDependencies": ["@ng-doc/core"],
+        "define": {
+          "NGXFB_VERSION": "'v0.0.0'"
+        }
       },
       "configurations": {
         "production": {

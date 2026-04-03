@@ -8,5 +8,5 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VersionBadge {
-  protected readonly version = signal('v0.0.0');
+  protected readonly version = signal(NGXFB_VERSION);
 }

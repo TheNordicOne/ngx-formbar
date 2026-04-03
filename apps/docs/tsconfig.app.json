@@ -5,6 +5,6 @@
     "outDir": "../../dist/out-tsc",
     "types": []
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../../types/build-constants.d.ts"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
 }
