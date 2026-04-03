@@ -2,7 +2,7 @@ import { NgDocApi } from '@ng-doc/core';
 
 const api: NgDocApi = {
   title: 'API Reference',
-  order: 6,
+  order: 7,
   scopes: [
     {
       name: '@ngx-formbar/core',

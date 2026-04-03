@@ -2,7 +2,7 @@ import { NgDocCategory } from '@ng-doc/core';
 
 const ChangelogCategory: NgDocCategory = {
   title: 'Changelog',
-  order: 7,
+  order: 6,
   expandable: true,
 };
 
