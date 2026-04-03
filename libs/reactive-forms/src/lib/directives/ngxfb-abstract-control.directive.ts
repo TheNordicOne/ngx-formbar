@@ -3,6 +3,7 @@ import {
   Directive,
   effect,
   inject,
+  Injector,
   input,
   ViewContainerRef,
 } from '@angular/core';
@@ -14,6 +15,10 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { from, of, switchMap } from 'rxjs';
 import { withHiddenState } from '../composables/hidden.state';
+import {
+  CONTROL_LIFECYCLE_STATE,
+  controlLifecycleStateFactory,
+} from '../services/control-lifecycle-state';
 
 @Directive({
   selector: '[ngxfbAbstractControl]',
@@ -67,6 +72,14 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
     () => this.hideStrategy() === 'remove' && this.isHidden(),
   );
 
+  private readonly lifecycleState = controlLifecycleStateFactory();
+  private readonly childInjector = Injector.create({
+    providers: [
+      { provide: CONTROL_LIFECYCLE_STATE, useValue: this.lifecycleState },
+    ],
+    parent: this.viewContainerRef.injector,
+  });
+
   constructor() {
     effect(() => {
       const component = this.component();
@@ -75,7 +88,9 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
       this.viewContainerRef.clear();
 
       if (component && !shouldHide) {
-        const componentRef = this.viewContainerRef.createComponent(component);
+        const componentRef = this.viewContainerRef.createComponent(component, {
+          injector: this.childInjector,
+        });
         componentRef.setInput('content', this.controlConfig());
         componentRef.setInput('name', this.controlName());
       }

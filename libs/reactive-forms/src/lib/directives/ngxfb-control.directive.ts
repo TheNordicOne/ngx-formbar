@@ -14,6 +14,7 @@ import {
   TestIdBuilderFn,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
+import { CONTROL_LIFECYCLE_STATE } from '../services/control-lifecycle-state';
 import {
   disabledEffect,
   withDisabledState,
@@ -77,6 +78,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+  private readonly lifecycleState = inject(CONTROL_LIFECYCLE_STATE);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -219,15 +221,20 @@ export class NgxfbControlDirective<T extends NgxFbControl>
 
   /**
    * Computed signal for the form control instance
-   * Creates a new FormControl with appropriate validators and configuration
+   * Creates a new FormControl with appropriate validators and configuration.
+   *
+   * When recreated after `hideStrategy: 'remove'`, the initial value
+   * is determined by the `valueStrategy`:
+   * - `last`: restored from the lifecycle state (saved before destruction)
+   * - `default`: uses `defaultValue` from the configuration
+   * - `reset`: uses `undefined`
    */
   private readonly controlInstance = computed(() => {
     const content = this.content();
-
     const validators = this.validators();
     const asyncValidators = this.asyncValidators();
     const updateOn = this.updateStrategy();
-    return new FormControl(content.defaultValue, {
+    return new FormControl(this.resolveInitialValue(), {
       nonNullable: content.nonNullable,
       validators,
       asyncValidators,
@@ -332,6 +339,24 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     });
   }
 
+  private resolveInitialValue(): unknown {
+    if (!this.lifecycleState.hasSavedValue()) {
+      return this.content().defaultValue;
+    }
+
+    const valueStrategy =
+      this.valueStrategy() ?? this.parentValueStrategy();
+
+    switch (valueStrategy) {
+      case 'last':
+        return this.lifecycleState.savedValue();
+      case 'reset':
+        return undefined;
+      default:
+        return this.content().defaultValue;
+    }
+  }
+
   private removeControl() {
     const id = this.name();
     const formControl = this.formControl;
@@ -365,6 +390,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   }
 
   ngOnDestroy(): void {
+    const control = this.formControl;
+    if (control) {
+      this.lifecycleState.saveValue(control.value);
+    }
     this.removeControl();
   }
 }
