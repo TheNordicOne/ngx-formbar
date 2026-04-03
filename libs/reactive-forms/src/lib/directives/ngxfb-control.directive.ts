@@ -213,6 +213,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   private readonly computedValue = withComputedValue(this.content);
 
+  private readonly isComputedValueDefined = computed(
+    () => this.content().computedValue !== undefined,
+  );
+
   /**
    * Computed signal for the form control instance
    * Creates a new FormControl with appropriate validators and configuration
@@ -282,6 +286,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     setComputedValueEffect({
       controlInstance: this.controlInstance,
       computeValueSignal: this.computedValue,
+      isComputedValueDefined: this.isComputedValueDefined,
     });
   }
 
