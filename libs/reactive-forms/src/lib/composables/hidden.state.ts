@@ -108,30 +108,29 @@ export function hiddenEffect(options: {
       options.valueStrategySignal() ?? options.parentValueStrategySignal();
     const formControl = untracked(() => parentFormGroup?.get(options.name()));
 
-    // Re-attach control
-    // On initial render the form control will not be attached, but we need it for the hide strategy "keep"
-    if (!formControl && (!isHidden || hideStrategy === 'keep')) {
+    // For remove strategy, the structural directive owns the component lifecycle.
+    if (hideStrategy === 'remove') {
+      if (!formControl) {
+        untracked(() => {
+          options.attachFunction();
+        });
+      }
+      return;
+    }
+
+    // Keep strategy: attach control if not yet attached
+    if (!formControl) {
       untracked(() => {
         options.attachFunction();
       });
       return;
     }
 
-    // Control is already detached
-    if (hideStrategy === 'remove' && !formControl) {
-      return;
-    }
-
-    // Remove control
-    if (hideStrategy === 'remove' && isHidden) {
+    // Keep strategy: handle value when hidden
+    if (isHidden) {
       untracked(() => {
-        options.detachFunction();
+        options.valueHandleFunction(valueStrategy);
       });
     }
-
-    // Only thing left to check is value strategy
-    untracked(() => {
-      options.valueHandleFunction(valueStrategy);
-    });
   });
 }
