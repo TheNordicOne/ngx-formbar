@@ -5,7 +5,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
 
 const meta: Meta<StoryFormHostComponent> = {
-  title: 'Reactive Forms/Visibility Strategies/Structural',
+  title: 'Reactive Forms/Visibility Strategies/Controls',
   component: StoryFormHostComponent,
 };
 
@@ -27,11 +27,11 @@ function getFormValue(): Record<string, unknown> {
 }
 
 // ---------------------------------------------------------------------------
-// Control-level stories
+// Stories
 // ---------------------------------------------------------------------------
 
 export const ControlKeepLast: Story = {
-  name: 'Control — Keep & Last',
+  name: 'Keep & Last',
   parameters: {
     docs: { description: { story: 'Keep strategy with last value — control removed from view, value preserved in model.' } },
   },
@@ -80,7 +80,7 @@ export const ControlKeepLast: Story = {
 };
 
 export const ControlRemoveLast: Story = {
-  name: 'Control — Remove & Last',
+  name: 'Remove & Last',
   parameters: {
     docs: { description: { story: 'Remove strategy with last value — control removed from DOM and model, restored on show.' } },
   },
@@ -129,7 +129,7 @@ export const ControlRemoveLast: Story = {
 };
 
 export const ControlRemoveDefault: Story = {
-  name: 'Control — Remove & Default',
+  name: 'Remove & Default',
   parameters: {
     docs: { description: { story: 'Remove strategy with default — reverts to default value on show.' } },
   },
@@ -179,7 +179,7 @@ export const ControlRemoveDefault: Story = {
 };
 
 export const ControlRemoveReset: Story = {
-  name: 'Control — Remove & Reset',
+  name: 'Remove & Reset',
   parameters: {
     docs: { description: { story: 'Remove strategy with reset — clears to null on show.' } },
   },
@@ -228,11 +228,11 @@ export const ControlRemoveReset: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Control — Keep & Default
+//Keep & Default
 // ---------------------------------------------------------------------------
 
 export const ControlKeepDefault: Story = {
-  name: 'Control — Keep & Default',
+  name: 'Keep & Default',
   parameters: {
     docs: { description: { story: 'Keep strategy with default — reverts to default when hidden.' } },
   },
@@ -282,11 +282,11 @@ export const ControlKeepDefault: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Control — Keep & Reset
+//Keep & Reset
 // ---------------------------------------------------------------------------
 
 export const ControlKeepReset: Story = {
-  name: 'Control — Keep & Reset',
+  name: 'Keep & Reset',
   parameters: {
     docs: { description: { story: 'Keep strategy with reset — clears to null when hidden.' } },
   },

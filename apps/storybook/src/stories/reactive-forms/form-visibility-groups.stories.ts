@@ -5,7 +5,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
 
 const meta: Meta<StoryFormHostComponent> = {
-  title: 'Reactive Forms/Visibility Strategies/Attribute',
+  title: 'Reactive Forms/Visibility Strategies/Groups',
   component: StoryFormHostComponent,
 };
 
@@ -23,11 +23,10 @@ function formConfig(
 }
 
 // ---------------------------------------------------------------------------
-// Group — Keep & Last (attribute hiding)
-// ---------------------------------------------------------------------------
+//Keep & Last// ---------------------------------------------------------------------------
 
 export const GroupKeepLast: Story = {
-  name: 'Group — Keep & Last',
+  name: 'Keep & Last',
   parameters: {
     docs: {
       description: {
@@ -141,11 +140,10 @@ export const GroupKeepLast: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Group — Remove & Last (attribute hiding)
-// ---------------------------------------------------------------------------
+//Remove & Last// ---------------------------------------------------------------------------
 
 export const GroupRemoveLast: Story = {
-  name: 'Group — Remove & Last',
+  name: 'Remove & Last',
   parameters: {
     docs: {
       description: {
@@ -253,11 +251,10 @@ export const GroupRemoveLast: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Group — Remove & Default (attribute hiding)
-// ---------------------------------------------------------------------------
+//Remove & Default// ---------------------------------------------------------------------------
 
 export const GroupRemoveDefault: Story = {
-  name: 'Group — Remove & Default',
+  name: 'Remove & Default',
   parameters: {
     docs: {
       description: {
@@ -365,11 +362,10 @@ export const GroupRemoveDefault: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Group — Remove & Reset (attribute hiding)
-// ---------------------------------------------------------------------------
+//Remove & Reset// ---------------------------------------------------------------------------
 
 export const GroupRemoveReset: Story = {
-  name: 'Group — Remove & Reset',
+  name: 'Remove & Reset',
   parameters: {
     docs: {
       description: {
@@ -476,11 +472,10 @@ export const GroupRemoveReset: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Group — Keep & Default (attribute hiding)
-// ---------------------------------------------------------------------------
+//Keep & Default// ---------------------------------------------------------------------------
 
 export const GroupKeepDefault: Story = {
-  name: 'Group — Keep & Default',
+  name: 'Keep & Default',
   parameters: {
     docs: {
       description: {
@@ -594,11 +589,10 @@ export const GroupKeepDefault: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Group — Keep & Reset (attribute hiding)
-// ---------------------------------------------------------------------------
+//Keep & Reset// ---------------------------------------------------------------------------
 
 export const GroupKeepReset: Story = {
-  name: 'Group — Keep & Reset',
+  name: 'Keep & Reset',
   parameters: {
     docs: {
       description: {
@@ -711,11 +705,10 @@ export const GroupKeepReset: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Parent Remove Precedence (attribute hiding)
-// ---------------------------------------------------------------------------
+// Parent Remove Precedence// ---------------------------------------------------------------------------
 
 export const ParentRemovePrecedence: Story = {
-  name: 'Group — Parent Remove Precedence',
+  name: 'Parent Remove Precedence',
   parameters: {
     docs: {
       description: {
@@ -814,11 +807,10 @@ export const ParentRemovePrecedence: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Inherited Strategies (attribute hiding)
-// ---------------------------------------------------------------------------
+// Inherited Strategies// ---------------------------------------------------------------------------
 
 export const InheritedStrategies: Story = {
-  name: 'Group — Inherited Strategies',
+  name: 'Inherited Strategies',
   parameters: {
     docs: {
       description: {
@@ -915,11 +907,10 @@ export const InheritedStrategies: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Strategy Override (attribute hiding)
-// ---------------------------------------------------------------------------
+// Strategy Override// ---------------------------------------------------------------------------
 
 export const StrategyOverride: Story = {
-  name: 'Group — Strategy Override',
+  name: 'Strategy Override',
   parameters: {
     docs: {
       description: { story: "Child group overrides parent's value strategy." },
@@ -1018,11 +1009,10 @@ export const StrategyOverride: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Three-Level Inheritance (attribute hiding)
-// ---------------------------------------------------------------------------
+// Three-Level Inheritance// ---------------------------------------------------------------------------
 
 export const ThreeLevelInheritance: Story = {
-  name: 'Group — Three-Level Inheritance',
+  name: 'Three-Level Inheritance',
   parameters: {
     docs: {
       description: {
