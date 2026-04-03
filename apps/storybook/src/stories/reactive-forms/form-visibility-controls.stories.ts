@@ -64,7 +64,8 @@ export const ControlKeepLast: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is hidden
+    // Verify field is hidden but still in the DOM (keep strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Keep and use last value', hidden: true })).toBeInTheDocument();
     await expect(canvas.queryByRole('textbox', { name: 'Keep and use last value' })).not.toBeInTheDocument();
 
     // Value is preserved in the form model (keep strategy)
@@ -113,8 +114,8 @@ export const ControlRemoveLast: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from DOM
-    await expect(canvas.queryByRole('textbox', { name: 'Remove but remember last value' })).not.toBeInTheDocument();
+    // Verify field is removed from the DOM entirely (remove strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Remove but remember last value', hidden: true })).not.toBeInTheDocument();
 
     // Value is not in the form model when hidden (remove strategy)
     await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
@@ -163,8 +164,8 @@ export const ControlRemoveDefault: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from DOM
-    await expect(canvas.queryByRole('textbox', { name: 'Remove but use default value' })).not.toBeInTheDocument();
+    // Verify field is removed from the DOM entirely (remove strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Remove but use default value', hidden: true })).not.toBeInTheDocument();
 
     // Value is not in the form model when hidden
     await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
@@ -212,8 +213,8 @@ export const ControlRemoveReset: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from DOM
-    await expect(canvas.queryByRole('textbox', { name: 'Remove and reset value' })).not.toBeInTheDocument();
+    // Verify field is removed from the DOM entirely (remove strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Remove and reset value', hidden: true })).not.toBeInTheDocument();
 
     // Value is not in the form model when hidden
     await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
@@ -266,7 +267,8 @@ export const ControlKeepDefault: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from DOM
+    // Verify field is hidden but still in the DOM (keep strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Keep but use default value', hidden: true })).toBeInTheDocument();
     await expect(canvas.queryByRole('textbox', { name: 'Keep but use default value' })).not.toBeInTheDocument();
 
     // Value reverts to default in the form model (keep + default strategy)
@@ -319,7 +321,8 @@ export const ControlKeepReset: Story = {
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from DOM
+    // Verify field is hidden but still in the DOM (keep strategy)
+    await expect(canvas.queryByRole('textbox', { name: 'Keep but reset value', hidden: true })).toBeInTheDocument();
     await expect(canvas.queryByRole('textbox', { name: 'Keep but reset value' })).not.toBeInTheDocument();
 
     // Value is reset to empty in the form model (keep + reset strategy)
