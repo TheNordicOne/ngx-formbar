@@ -3,7 +3,7 @@ By default, the visibility is handled by **formbar**. Depending on the `hideStra
 - **`keep`** (default): The `hidden` attribute is set on your component, visually hiding it while keeping it in the DOM and form model.
 - **`remove`**: The component is structurally removed from the DOM and unregistered from the form model. When shown again, the component is recreated and its value is restored based on the `valueStrategy`.
 
-You have the option to handle visibility yourself by calling `setVisibilityHandling('manual')` in your component. This disables the automatic `hidden` attribute. It can be useful for when you want to show some placeholder instead or need fine-grained control over the visibility behavior.
+You have the option to handle visibility yourself by setting `visibilityHandling: 'manual'` in the component registration. This disables all automatic visibility behavior. It can be useful for when you want to show some placeholder instead or need fine-grained control over the visibility behavior.
 
 ### Visibility State Overview
 

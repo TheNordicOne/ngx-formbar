@@ -21,7 +21,7 @@ Following are configuration options that are supported out of the box. When sett
 
 ### Base
 
-The `NgxFbBaseContent` interface is the foundation for all form controls and groups. It defines a common set of options that control registration, validation, visibility, and behavior of the form elements.
+The `NgxFbBaseContent` interface is the foundation for all form content. It defines the minimal set of properties shared across all content types: type identification and visibility.
 
 | Name   | Type                  | Required | Description                                                                                                                                                                       |
 |--------|-----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

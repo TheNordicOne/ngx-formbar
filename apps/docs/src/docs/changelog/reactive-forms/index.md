@@ -22,7 +22,9 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 - `NgxfbAbstractControlDirective` now supports both static and lazy component registrations via `ComponentRegistrationEntry`
 - `NgxfbAbstractControlDirective` structurally removes components when `hideStrategy: 'remove'` is used — the component is destroyed when hidden and recreated when shown
 - `hiddenEffect` no longer handles the `remove` strategy — it only manages `keep` strategy (attach control, apply value strategy while hidden)
+- `hiddenEffect` and `withHiddenAttribute` now accept a `handleVisibility` boolean signal instead of a `StateHandling` string signal
 - `setComputedValueEffect` now requires an `isComputedValueDefined` signal parameter — the effect only runs when a `computedValue` is explicitly configured
+- `NgxfbControlDirective`, `NgxfbGroupDirective`, and `NgxfbBlockDirective` now read `visibilityHandling` from the component registration instead of a runtime method call
 - `NgxfbControlDirective` and `NgxfbGroupDirective` now inject `FORM_LIFECYCLE_STATE` for value save/restore across hide/show cycles
 - `NgxfbFormComponent` now provides `FORM_LIFECYCLE_STATE` — a form-level cache that stores control values when they are destroyed and restores them on re-creation based on the `valueStrategy`
 - `provideFormbar` accepts `ComponentRegistrationEntry` values in `componentRegistrations` — use `staticComponent()` for static or `loadComponent()` for lazy
@@ -38,6 +40,10 @@ New package containing all reactive forms functionality, split from `@ngx-formba
 
 - **Service:** `FormLifecycleState` — form-level cache for control values across destroy/create cycles
 - **Token:** `FORM_LIFECYCLE_STATE`
+
+### Removed
+
+- `setVisibilityHandling()` method from `NgxfbControlDirective`, `NgxfbGroupDirective`, and `NgxfbBlockDirective` — use `visibilityHandling` in the component registration instead (e.g., `staticComponent(MyComponent, { visibilityHandling: 'manual' })`)
 
 ### Migration
 

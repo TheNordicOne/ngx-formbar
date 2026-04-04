@@ -125,10 +125,7 @@ export class GroupComponent {
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly name: Signal<string> = this.control.name;
 
-  constructor() {
-    // Let formbar know, that you take care of handling visibility
-    this.control.setVisibilityHandling('manual')
-  }
+  // Manual visibility handling is configured in the component registration
 }
 ```
 
@@ -327,7 +324,6 @@ The `NgxfbGroupDirective<T>` exposes the following public properties and methods
 | `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The group's value strategy (`'last'`, `'default'`, or `'reset'`).         |
 | `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the group.                               |
 | `formGroup`                       | `FormGroup \| null`                      | Getter for the underlying `FormGroup` instance.                           |
-| `setVisibilityHandling(handling)` | `(StateHandling) => void`                | Sets visibility handling to `'auto'` or `'manual'`.                       |
 
 ### Advanced
 
