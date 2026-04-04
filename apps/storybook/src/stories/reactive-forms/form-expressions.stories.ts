@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { expect } from 'storybook/test';
 import type { FormContext } from '@ngx-formbar/core';
-import type { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
+import { formConfig } from './story-helpers';
 
 const meta: Meta<StoryFormHostComponent> = {
   title: 'Reactive Forms/Form Expressions',
@@ -13,16 +13,6 @@ export default meta;
 type Story = StoryObj<StoryFormHostComponent>;
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formConfig(
-  content: Record<string, ExampleControls>,
-): { formConfig: { content: Record<string, ExampleControls> } } {
-  return { formConfig: { content } };
-}
-
-// ---------------------------------------------------------------------------
 // Disabling
 // ---------------------------------------------------------------------------
 
@@ -30,37 +20,39 @@ export const StaticDisabled: Story = {
   parameters: {
     docs: { description: { story: 'Static disabled: true disables controls and inherits through groups.' } },
   },
-  args: formConfig({
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      disabled: true,
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      disabled: true,
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First label',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second label',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        disabled: true,
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        disabled: true,
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
     await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toBeDisabled();
@@ -72,41 +64,43 @@ export const ConditionalDisabled: Story = {
   parameters: {
     docs: { description: { story: 'Conditional expression toggles disabled state reactively.' } },
   },
-  args: formConfig({
-    disableControl: {
-      type: 'text',
-      label: 'Type "disable" to disable everything',
-    },
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      disabled: 'disableControl === "disable"',
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      disabled: 'disableControl === "disable"',
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First label',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second label',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      disableControl: {
+        type: 'text',
+        label: 'Type "disable" to disable everything',
+      },
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        disabled: 'disableControl === "disable"',
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        disabled: 'disableControl === "disable"',
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially not disabled
     await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toBeDisabled();
@@ -140,37 +134,39 @@ export const StaticReadonly: Story = {
   parameters: {
     docs: { description: { story: 'Static readonly: true applies the readonly attribute.' } },
   },
-  args: formConfig({
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      readonly: true,
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      readonly: true,
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First label',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second label',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        readonly: true,
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        readonly: true,
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
     await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toHaveAttribute(
@@ -186,41 +182,43 @@ export const ConditionalReadonly: Story = {
   parameters: {
     docs: { description: { story: 'Conditional expression toggles readonly state reactively.' } },
   },
-  args: formConfig({
-    readonlyControl: {
-      type: 'text',
-      label: 'Type "readonly" to readonly everything',
-    },
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      readonly: 'readonlyControl === "readonly"',
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      readonly: 'readonlyControl === "readonly"',
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First label',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second label',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      readonlyControl: {
+        type: 'text',
+        label: 'Type "readonly" to readonly everything',
+      },
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        readonly: 'readonlyControl === "readonly"',
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        readonly: 'readonlyControl === "readonly"',
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First label',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second label',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially not readonly
     await expect(await canvas.findByRole('textbox', { name: 'First' })).not.toHaveAttribute('readonly');
@@ -266,67 +264,69 @@ export const FunctionExpressions: Story = {
   parameters: {
     docs: { description: { story: 'Function-based expressions for hidden, disabled, readonly, computed, and dynamic labels.' } },
   },
-  args: formConfig({
-    triggerField: {
-      type: 'text',
-      label: 'Trigger (type "hide", "disable", "readonly")',
-      defaultValue: '',
-    },
-    nameForLabel: {
-      type: 'text',
-      label: 'Name',
-      defaultValue: 'User',
-    },
-    sourceA: {
-      type: 'text',
-      label: 'Source A',
-      defaultValue: 'Hello',
-    },
-    sourceB: {
-      type: 'text',
-      label: 'Source B',
-      defaultValue: 'World',
-    },
-    hiddenTarget: {
-      type: 'text',
-      label: 'Hidden by function',
-      hidden: (formValue: FormContext) => formValue['triggerField'] === 'hide',
-      defaultValue: 'I can be hidden',
-    },
-    disabledTarget: {
-      type: 'text',
-      label: 'Disabled by function',
-      disabled: (formValue: FormContext) =>
-        formValue['triggerField'] === 'disable',
-      defaultValue: 'I can be disabled',
-    },
-    readonlyTarget: {
-      type: 'text',
-      label: 'Readonly by function',
-      readonly: (formValue: FormContext) =>
-        formValue['triggerField'] === 'readonly',
-      defaultValue: 'I can be readonly',
-    },
-    computedTarget: {
-      type: 'text',
-      label: 'Computed by function',
-      computedValue: (formValue: FormContext): string => {
-    const a = (formValue['sourceA'] as string | undefined) ?? '';
-    const b = (formValue['sourceB'] as string | undefined) ?? '';
-        return `${a} ${b}!`.trim();
+  args: {
+    formConfig: formConfig({
+      triggerField: {
+        type: 'text',
+        label: 'Trigger (type "hide", "disable", "readonly")',
+        defaultValue: '',
       },
-      defaultValue: '',
-    },
-    labelTarget: {
-      type: 'text',
-      dynamicLabel: (formValue: FormContext): string => {
-    const name =
-          (formValue['nameForLabel'] as string | undefined) ?? '';
-        return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+      nameForLabel: {
+        type: 'text',
+        label: 'Name',
+        defaultValue: 'User',
       },
-      defaultValue: 'Some value',
-    },
-  }),
+      sourceA: {
+        type: 'text',
+        label: 'Source A',
+        defaultValue: 'Hello',
+      },
+      sourceB: {
+        type: 'text',
+        label: 'Source B',
+        defaultValue: 'World',
+      },
+      hiddenTarget: {
+        type: 'text',
+        label: 'Hidden by function',
+        hidden: (formValue: FormContext) => formValue['triggerField'] === 'hide',
+        defaultValue: 'I can be hidden',
+      },
+      disabledTarget: {
+        type: 'text',
+        label: 'Disabled by function',
+        disabled: (formValue: FormContext) =>
+          formValue['triggerField'] === 'disable',
+        defaultValue: 'I can be disabled',
+      },
+      readonlyTarget: {
+        type: 'text',
+        label: 'Readonly by function',
+        readonly: (formValue: FormContext) =>
+          formValue['triggerField'] === 'readonly',
+        defaultValue: 'I can be readonly',
+      },
+      computedTarget: {
+        type: 'text',
+        label: 'Computed by function',
+        computedValue: (formValue: FormContext): string => {
+      const a = (formValue['sourceA'] as string | undefined) ?? '';
+      const b = (formValue['sourceB'] as string | undefined) ?? '';
+          return `${a} ${b}!`.trim();
+        },
+        defaultValue: '',
+      },
+      labelTarget: {
+        type: 'text',
+        dynamicLabel: (formValue: FormContext): string => {
+      const name =
+            (formValue['nameForLabel'] as string | undefined) ?? '';
+          return `Greeting for ${name.length > 0 ? name : 'Guest'}`;
+        },
+        defaultValue: 'Some value',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initial state: all visible, enabled, not readonly
     await expect(
@@ -389,77 +389,79 @@ export const DeepHierarchyVisibility: Story = {
   parameters: {
     docs: { description: { story: 'Hidden expressions across three levels of nesting with mixed strategies.' } },
   },
-  args: formConfig({
-    toggleControl: {
-      type: 'text',
-      label: 'Type "hide" to hide nested fields',
-    },
-    rootField: {
-      type: 'text',
-      label: 'Root level field',
-      defaultValue: 'root value',
-    },
-    level1: {
-      type: 'group',
-      legend: 'Level 1',
-      controls: {
-        level1Field: {
-          type: 'text',
-          label: 'Level 1 Field',
-          defaultValue: 'level 1 value',
-        },
-        level2A: {
-          type: 'group',
-          legend: 'Level 2A',
-          controls: {
-            level2AField: {
-              type: 'text',
-              label: 'Level 2A Field',
-              hidden: 'toggleControl === "hide"',
-              hideStrategy: 'remove',
-              defaultValue: 'level 2A value',
-            },
+  args: {
+    formConfig: formConfig({
+      toggleControl: {
+        type: 'text',
+        label: 'Type "hide" to hide nested fields',
+      },
+      rootField: {
+        type: 'text',
+        label: 'Root level field',
+        defaultValue: 'root value',
+      },
+      level1: {
+        type: 'group',
+        legend: 'Level 1',
+        controls: {
+          level1Field: {
+            type: 'text',
+            label: 'Level 1 Field',
+            defaultValue: 'level 1 value',
           },
-        },
-        level2B: {
-          type: 'group',
-          legend: 'Level 2B',
-          controls: {
-            level2BField: {
-              type: 'text',
-              label: 'Level 2B Field',
-              defaultValue: 'level 2B value',
-            },
-            level3A: {
-              type: 'group',
-              legend: 'Level 3A',
-              controls: {
-                level3AField: {
-                  type: 'text',
-                  label: 'Level 3A Field',
-                  hidden: 'toggleControl === "hide"',
-                  hideStrategy: 'keep',
-                  defaultValue: 'level 3A value',
-                },
+          level2A: {
+            type: 'group',
+            legend: 'Level 2A',
+            controls: {
+              level2AField: {
+                type: 'text',
+                label: 'Level 2A Field',
+                hidden: 'toggleControl === "hide"',
+                hideStrategy: 'remove',
+                defaultValue: 'level 2A value',
               },
             },
-            level3B: {
-              type: 'group',
-              legend: 'Level 3B',
-              hidden: 'toggleControl === "hide"',
-              controls: {
-                level3BField: {
-                  type: 'text',
-                  label: 'Level 3B Field',
-                  defaultValue: 'level 3B value',
+          },
+          level2B: {
+            type: 'group',
+            legend: 'Level 2B',
+            controls: {
+              level2BField: {
+                type: 'text',
+                label: 'Level 2B Field',
+                defaultValue: 'level 2B value',
+              },
+              level3A: {
+                type: 'group',
+                legend: 'Level 3A',
+                controls: {
+                  level3AField: {
+                    type: 'text',
+                    label: 'Level 3A Field',
+                    hidden: 'toggleControl === "hide"',
+                    hideStrategy: 'keep',
+                    defaultValue: 'level 3A value',
+                  },
+                },
+              },
+              level3B: {
+                type: 'group',
+                legend: 'Level 3B',
+                hidden: 'toggleControl === "hide"',
+                controls: {
+                  level3BField: {
+                    type: 'text',
+                    label: 'Level 3B Field',
+                    defaultValue: 'level 3B value',
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially all fields should be visible
     await expect(await canvas.findByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
@@ -501,37 +503,39 @@ export const CrossGroupDependencies: Story = {
   parameters: {
     docs: { description: { story: 'A field in one group depends on a field in another group.' } },
   },
-  args: formConfig({
-    branchA: {
-      type: 'group',
-      legend: 'Branch A',
-      controls: {
-        toggleField: {
-          type: 'text',
-          label: 'Type "show" to reveal field in Branch B',
-          defaultValue: '',
+  args: {
+    formConfig: formConfig({
+      branchA: {
+        type: 'group',
+        legend: 'Branch A',
+        controls: {
+          toggleField: {
+            type: 'text',
+            label: 'Type "show" to reveal field in Branch B',
+            defaultValue: '',
+          },
         },
       },
-    },
-    branchB: {
-      type: 'group',
-      legend: 'Branch B',
-      controls: {
-        nestedGroup: {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            dependentField: {
-              type: 'text',
-              label: 'Dependent Field',
-              hidden: 'branchA.toggleField !== "show"',
-              defaultValue: 'I depend on Branch A field',
+      branchB: {
+        type: 'group',
+        legend: 'Branch B',
+        controls: {
+          nestedGroup: {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              dependentField: {
+                type: 'text',
+                label: 'Dependent Field',
+                hidden: 'branchA.toggleField !== "show"',
+                defaultValue: 'I depend on Branch A field',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially dependent field should be hidden
     await expect(
@@ -567,46 +571,48 @@ export const ComputedValue: Story = {
   parameters: {
     docs: { description: { story: 'String concatenation, numeric computation, and fallback expressions.' } },
   },
-  args: formConfig({
-    firstName: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'Jane',
-    },
-    lastName: {
-      type: 'text',
-      label: 'Last',
-      defaultValue: 'Doe',
-    },
-    fullName: {
-      type: 'text',
-      label: 'Full Name',
-      computedValue: 'firstName + " " + lastName',
-    },
-    base: {
-      type: 'text',
-      label: 'Base',
-      defaultValue: '5',
-    },
-    square: {
-      type: 'text',
-      label: 'Square',
-      computedValue: (ctx: FormContext): number => {
-    const b = Number(ctx['base']);
-        return b * b;
+  args: {
+    formConfig: formConfig({
+      firstName: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'Jane',
       },
-    },
-    maybeEmpty: {
-      type: 'text',
-      label: 'Maybe Empty',
-      defaultValue: '',
-    },
-    fallback: {
-      type: 'text',
-      label: 'Fallback',
-      computedValue: 'maybeEmpty || "DEFAULT"',
-    },
-  }),
+      lastName: {
+        type: 'text',
+        label: 'Last',
+        defaultValue: 'Doe',
+      },
+      fullName: {
+        type: 'text',
+        label: 'Full Name',
+        computedValue: 'firstName + " " + lastName',
+      },
+      base: {
+        type: 'text',
+        label: 'Base',
+        defaultValue: '5',
+      },
+      square: {
+        type: 'text',
+        label: 'Square',
+        computedValue: (ctx: FormContext): number => {
+      const b = Number(ctx['base']);
+          return b * b;
+        },
+      },
+      maybeEmpty: {
+        type: 'text',
+        label: 'Maybe Empty',
+        defaultValue: '',
+      },
+      fallback: {
+        type: 'text',
+        label: 'Fallback',
+        computedValue: 'maybeEmpty || "DEFAULT"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const fullName = await canvas.findByRole('textbox', { name: 'Full Name' });
     const square = await canvas.findByRole('textbox', { name: 'Square' });
@@ -645,38 +651,40 @@ export const CascadingComputed: Story = {
   parameters: {
     docs: { description: { story: 'Computed values cascade through five levels.' } },
   },
-  args: formConfig({
-    level0: {
-      type: 'text',
-      label: 'Level 0 Input',
-      defaultValue: 'Start',
-    },
-    level1: {
-      type: 'text',
-      label: 'Level 1 Computed',
-      computedValue: 'level0 + "-L1"',
-    },
-    level2: {
-      type: 'text',
-      label: 'Level 2 Computed',
-      computedValue: 'level1 + "-L2"',
-    },
-    level3: {
-      type: 'text',
-      label: 'Level 3 Computed',
-      computedValue: 'level2 + "-L3"',
-    },
-    level4: {
-      type: 'text',
-      label: 'Level 4 Computed',
-      computedValue: 'level3 + "-L4"',
-    },
-    level5: {
-      type: 'text',
-      label: 'Level 5 Computed',
-      computedValue: 'level4 + "-L5"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      level0: {
+        type: 'text',
+        label: 'Level 0 Input',
+        defaultValue: 'Start',
+      },
+      level1: {
+        type: 'text',
+        label: 'Level 1 Computed',
+        computedValue: 'level0 + "-L1"',
+      },
+      level2: {
+        type: 'text',
+        label: 'Level 2 Computed',
+        computedValue: 'level1 + "-L2"',
+      },
+      level3: {
+        type: 'text',
+        label: 'Level 3 Computed',
+        computedValue: 'level2 + "-L3"',
+      },
+      level4: {
+        type: 'text',
+        label: 'Level 4 Computed',
+        computedValue: 'level3 + "-L4"',
+      },
+      level5: {
+        type: 'text',
+        label: 'Level 5 Computed',
+        computedValue: 'level4 + "-L5"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const level0 = await canvas.findByRole('textbox', { name: 'Level 0 Input' });
     const level1 = await canvas.findByRole('textbox', { name: 'Level 1 Computed' });
@@ -720,39 +728,41 @@ export const ComputedWithValueStrategy: Story = {
   parameters: {
     docs: { description: { story: 'Computed values interact with keep + last/default/reset strategies.' } },
   },
-  args: formConfig({
-    toggle: { type: 'text', label: 'Toggle (type "hide")' },
-    dep: {
-      type: 'text',
-      label: 'Dependency',
-      defaultValue: 'D',
-    },
-    compLast: {
-      type: 'text',
-      label: 'Computed (keep + last)',
-      computedValue: 'dep + "Z"',
-      hidden: 'toggle === "hide"',
-      hideStrategy: 'keep',
-      valueStrategy: 'last',
-    },
-    compDefault: {
-      type: 'text',
-      label: 'Computed (keep + default)',
-      defaultValue: 'DEFAULT',
-      computedValue: 'dep + "Z"',
-      hidden: 'toggle === "hide"',
-      hideStrategy: 'keep',
-      valueStrategy: 'default',
-    },
-    compReset: {
-      type: 'text',
-      label: 'Computed (keep + reset)',
-      computedValue: 'dep + "Z"',
-      hidden: 'toggle === "hide"',
-      hideStrategy: 'keep',
-      valueStrategy: 'reset',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      toggle: { type: 'text', label: 'Toggle (type "hide")' },
+      dep: {
+        type: 'text',
+        label: 'Dependency',
+        defaultValue: 'D',
+      },
+      compLast: {
+        type: 'text',
+        label: 'Computed (keep + last)',
+        computedValue: 'dep + "Z"',
+        hidden: 'toggle === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'last',
+      },
+      compDefault: {
+        type: 'text',
+        label: 'Computed (keep + default)',
+        defaultValue: 'DEFAULT',
+        computedValue: 'dep + "Z"',
+        hidden: 'toggle === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'default',
+      },
+      compReset: {
+        type: 'text',
+        label: 'Computed (keep + reset)',
+        computedValue: 'dep + "Z"',
+        hidden: 'toggle === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'reset',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const compLast = await canvas.findByRole('textbox', { name: 'Computed (keep + last)' });
     const compDefault = await canvas.findByRole('textbox', { name: 'Computed (keep + default)' });
@@ -804,22 +814,24 @@ export const DynamicLabels: Story = {
   parameters: {
     docs: { description: { story: 'Dynamic label expressions update when the source field changes.' } },
   },
-  args: formConfig({
-    source: {
-      type: 'text',
-      label: 'Source',
-      defaultValue: 'Initial',
-    },
-    target: {
-      type: 'text',
-      label: 'Static Target Label',
-      dynamicLabel: "source + ' Dynamic Label'",
-    },
-    staticTarget: {
-      type: 'text',
-      label: 'Purely Static Label',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: {
+        type: 'text',
+        label: 'Source',
+        defaultValue: 'Initial',
+      },
+      target: {
+        type: 'text',
+        label: 'Static Target Label',
+        dynamicLabel: "source + ' Dynamic Label'",
+      },
+      staticTarget: {
+        type: 'text',
+        label: 'Purely Static Label',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Dynamic label shows evaluated expression
     await expect(await canvas.findByText('Initial Dynamic Label')).toBeInTheDocument();
@@ -847,33 +859,35 @@ export const DynamicTitles: Story = {
   parameters: {
     docs: { description: { story: 'Dynamic titles on groups and labels on controls update reactively.' } },
   },
-  args: formConfig({
-    source: {
-      type: 'text',
-      label: 'Source',
-      defaultValue: 'Initial',
-    },
-    targetGroup: {
-      type: 'group',
-      title: 'Static Group Title',
-      dynamicTitle: "source + ' Dynamic Title'",
-      legend: 'Target Group',
-      controls: {},
-    },
-    parentGroup: {
-      type: 'group',
-      title: 'Static Parent Title',
-      dynamicTitle: "'Parent: ' + source",
-      legend: 'Parent Group',
-      controls: {
-        childControl: {
-          type: 'text',
-          label: 'Static Child Label',
-          dynamicLabel: "'Child: ' + source",
+  args: {
+    formConfig: formConfig({
+      source: {
+        type: 'text',
+        label: 'Source',
+        defaultValue: 'Initial',
+      },
+      targetGroup: {
+        type: 'group',
+        title: 'Static Group Title',
+        dynamicTitle: "source + ' Dynamic Title'",
+        legend: 'Target Group',
+        controls: {},
+      },
+      parentGroup: {
+        type: 'group',
+        title: 'Static Parent Title',
+        dynamicTitle: "'Parent: ' + source",
+        legend: 'Parent Group',
+        controls: {
+          childControl: {
+            type: 'text',
+            label: 'Static Child Label',
+            dynamicLabel: "'Child: ' + source",
+          },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Dynamic title shows evaluated expression
     await expect(await canvas.findByRole('group', { name: 'Initial Dynamic Title' })).toBeInTheDocument();
@@ -900,10 +914,12 @@ export const BuiltInFunctionCalls: Story = {
   parameters: {
     docs: { description: { story: 'Computed expression calls .toUpperCase() on a field value.' } },
   },
-  args: formConfig({
-    raw: { type: 'text', label: 'Raw', defaultValue: 'mixedCase' },
-    upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
-  }),
+  args: {
+    formConfig: formConfig({
+      raw: { type: 'text', label: 'Raw', defaultValue: 'mixedCase' },
+      upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('MIXEDCASE');
   },
@@ -913,9 +929,11 @@ export const ComputedPriority: Story = {
   parameters: {
     docs: { description: { story: 'computedValue takes priority over defaultValue.' } },
   },
-  args: formConfig({
-    mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
-  }),
+  args: {
+    formConfig: formConfig({
+      mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'Mix' })).toHaveValue('SHUTDOWN');
   },
@@ -925,11 +943,13 @@ export const ManualOverride: Story = {
   parameters: {
     docs: { description: { story: 'User can override a computed value; changing a dependency resets it.' } },
   },
-  args: formConfig({
-    part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
-    part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
-    combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
-  }),
+  args: {
+    formConfig: formConfig({
+      part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
+      part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
+      combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
@@ -954,12 +974,14 @@ export const ManualOverridePersistence: Story = {
   parameters: {
     docs: { description: { story: 'Manual override persists when changing unrelated fields.' } },
   },
-  args: formConfig({
-    part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
-    part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
-    combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
-    unrelated: { type: 'text', label: 'Unrelated' },
-  }),
+  args: {
+    formConfig: formConfig({
+      part1: { type: 'text', label: 'Part 1', defaultValue: 'A' },
+      part2: { type: 'text', label: 'Part 2', defaultValue: 'B' },
+      combo: { type: 'text', label: 'Combo', computedValue: 'part1 + part2' },
+      unrelated: { type: 'text', label: 'Unrelated' },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
@@ -993,14 +1015,16 @@ export const CascadingManualOverride: Story = {
   parameters: {
     docs: { description: { story: 'Manual override on the deepest cascading level resets on base change.' } },
   },
-  args: formConfig({
-    level0_override: { type: 'text', label: 'Level 0', defaultValue: 'Initial' },
-    level1_override: { type: 'text', label: 'Level 1', computedValue: 'level0_override + "-L1"' },
-    level2_override: { type: 'text', label: 'Level 2', computedValue: 'level1_override + "-L2"' },
-    level3_override: { type: 'text', label: 'Level 3', computedValue: 'level2_override + "-L3"' },
-    level4_override: { type: 'text', label: 'Level 4', computedValue: 'level3_override + "-L4"' },
-    level5_override: { type: 'text', label: 'Level 5', computedValue: 'level4_override + "-L5"' },
-  }),
+  args: {
+    formConfig: formConfig({
+      level0_override: { type: 'text', label: 'Level 0', defaultValue: 'Initial' },
+      level1_override: { type: 'text', label: 'Level 1', computedValue: 'level0_override + "-L1"' },
+      level2_override: { type: 'text', label: 'Level 2', computedValue: 'level1_override + "-L2"' },
+      level3_override: { type: 'text', label: 'Level 3', computedValue: 'level2_override + "-L3"' },
+      level4_override: { type: 'text', label: 'Level 4', computedValue: 'level3_override + "-L4"' },
+      level5_override: { type: 'text', label: 'Level 5', computedValue: 'level4_override + "-L5"' },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const level0 = await canvas.findByRole('textbox', { name: 'Level 0' });
     const level1 = await canvas.findByRole('textbox', { name: 'Level 1' });
@@ -1046,17 +1070,19 @@ export const ComputedWithRemoveStrategy: Story = {
   parameters: {
     docs: { description: { story: 'Computed value is re-applied after remove/re-create, reflecting dependency changes made while hidden.' } },
   },
-  args: formConfig({
-    toggle: { type: 'text', label: 'Toggle (type "hide")' },
-    dep: { type: 'text', label: 'Dependency', defaultValue: 'D' },
-    compRemove: {
-      type: 'text',
-      label: 'Computed (remove)',
-      computedValue: 'dep + "Z"',
-      hidden: 'toggle === "hide"',
-      hideStrategy: 'remove',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      toggle: { type: 'text', label: 'Toggle (type "hide")' },
+      dep: { type: 'text', label: 'Dependency', defaultValue: 'D' },
+      compRemove: {
+        type: 'text',
+        label: 'Computed (remove)',
+        computedValue: 'dep + "Z"',
+        hidden: 'toggle === "hide"',
+        hideStrategy: 'remove',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const compRemove = await canvas.findByRole('textbox', { name: 'Computed (remove)' });
 
@@ -1088,15 +1114,17 @@ export const ReadonlyComputedValue: Story = {
   parameters: {
     docs: { description: { story: 'Readonly computed field displays and updates reactively but cannot be edited.' } },
   },
-  args: formConfig({
-    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
-    derived: {
-      type: 'text',
-      label: 'Derived (readonly)',
-      readonly: true,
-      computedValue: 'source + " World"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+      derived: {
+        type: 'text',
+        label: 'Derived (readonly)',
+        readonly: true,
+        computedValue: 'source + " World"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const derived = await canvas.findByRole('textbox', { name: 'Derived (readonly)' });
 
@@ -1129,28 +1157,30 @@ export const CrossGroupComputedValue: Story = {
   parameters: {
     docs: { description: { story: 'Computed expression references fields in sibling groups via dot notation (uses ?. workaround, see #83).' } },
   },
-  args: formConfig({
-    groupA: {
-      type: 'group',
-      legend: 'Group A',
-      controls: {
-        fieldA: { type: 'text', label: 'Field A', defaultValue: 'Hello' },
+  args: {
+    formConfig: formConfig({
+      groupA: {
+        type: 'group',
+        legend: 'Group A',
+        controls: {
+          fieldA: { type: 'text', label: 'Field A', defaultValue: 'Hello' },
+        },
       },
-    },
-    groupB: {
-      type: 'group',
-      legend: 'Group B',
-      controls: {
-        fieldB: { type: 'text', label: 'Field B', defaultValue: 'World' },
+      groupB: {
+        type: 'group',
+        legend: 'Group B',
+        controls: {
+          fieldB: { type: 'text', label: 'Field B', defaultValue: 'World' },
+        },
       },
-    },
-    crossGroupResult: {
-      type: 'text',
-      label: 'Cross-Group Result',
-      // #83: requires ?. — without it the expression throws on initial render
-      computedValue: 'groupA?.fieldA + " " + groupB?.fieldB',
-    },
-  }),
+      crossGroupResult: {
+        type: 'text',
+        label: 'Cross-Group Result',
+        // #83: requires ?. — without it the expression throws on initial render
+        computedValue: 'groupA?.fieldA + " " + groupB?.fieldB',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const result = await canvas.findByRole('textbox', { name: 'Cross-Group Result' });
 
@@ -1172,12 +1202,14 @@ export const IntermediateCascadeOverride: Story = {
   parameters: {
     docs: { description: { story: 'Manual override at an intermediate cascade level affects downstream and resets when the base changes.' } },
   },
-  args: formConfig({
-    base: { type: 'text', label: 'Base', defaultValue: 'X' },
-    mid1: { type: 'text', label: 'Mid 1', computedValue: 'base + "-M1"' },
-    mid2: { type: 'text', label: 'Mid 2', computedValue: 'mid1 + "-M2"' },
-    leaf: { type: 'text', label: 'Leaf', computedValue: 'mid2 + "-LEAF"' },
-  }),
+  args: {
+    formConfig: formConfig({
+      base: { type: 'text', label: 'Base', defaultValue: 'X' },
+      mid1: { type: 'text', label: 'Mid 1', computedValue: 'base + "-M1"' },
+      mid2: { type: 'text', label: 'Mid 2', computedValue: 'mid1 + "-M2"' },
+      leaf: { type: 'text', label: 'Leaf', computedValue: 'mid2 + "-LEAF"' },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const base = await canvas.findByRole('textbox', { name: 'Base' });
     const mid1 = await canvas.findByRole('textbox', { name: 'Mid 1' });
@@ -1213,15 +1245,17 @@ export const ComputedWithDisabled: Story = {
   parameters: {
     docs: { description: { story: 'Disabled computed field still receives computed value updates.' } },
   },
-  args: formConfig({
-    source: { type: 'text', label: 'Source', defaultValue: 'Input' },
-    disabledComputed: {
-      type: 'text',
-      label: 'Disabled Computed',
-      disabled: true,
-      computedValue: 'source + " (computed)"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: { type: 'text', label: 'Source', defaultValue: 'Input' },
+      disabledComputed: {
+        type: 'text',
+        label: 'Disabled Computed',
+        disabled: true,
+        computedValue: 'source + " (computed)"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const disabledComputed = await canvas.findByRole('textbox', { name: 'Disabled Computed' });
 
@@ -1241,19 +1275,21 @@ export const ComputedFanOut: Story = {
   parameters: {
     docs: { description: { story: 'Multiple computed fields derive from the same source independently.' } },
   },
-  args: formConfig({
-    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
-    upper: { type: 'text', label: 'Uppercase', computedValue: 'source.toUpperCase()' },
-    prefixed: { type: 'text', label: 'Prefixed', computedValue: '">> " + source' },
-    reversed: {
-      type: 'text',
-      label: 'Reversed',
-      computedValue: (ctx: FormContext): string => {
-        const s = (ctx['source'] as string | undefined) ?? '';
-        return s.split('').reverse().join('');
+  args: {
+    formConfig: formConfig({
+      source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+      upper: { type: 'text', label: 'Uppercase', computedValue: 'source.toUpperCase()' },
+      prefixed: { type: 'text', label: 'Prefixed', computedValue: '">> " + source' },
+      reversed: {
+        type: 'text',
+        label: 'Reversed',
+        computedValue: (ctx: FormContext): string => {
+          const s = (ctx['source'] as string | undefined) ?? '';
+          return s.split('').reverse().join('');
+        },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // All three have initial computed values
     await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('HELLO');
@@ -1274,17 +1310,19 @@ export const ComputedNullishResult: Story = {
   parameters: {
     docs: { description: { story: 'Computed expression evaluating to null clears the field value.' } },
   },
-  args: formConfig({
-    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
-    nullish: {
-      type: 'text',
-      label: 'Nullish Result',
-      computedValue: (ctx: FormContext): string | null => {
-        const s = ctx['source'] as string | undefined;
-        return s === 'clear' ? null : (s ?? '') + '!';
+  args: {
+    formConfig: formConfig({
+      source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+      nullish: {
+        type: 'text',
+        label: 'Nullish Result',
+        computedValue: (ctx: FormContext): string | null => {
+          const s = ctx['source'] as string | undefined;
+          return s === 'clear' ? null : (s ?? '') + '!';
+        },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const nullish = await canvas.findByRole('textbox', { name: 'Nullish Result' });
 
@@ -1308,14 +1346,16 @@ export const ComputedTernaryExpression: Story = {
   parameters: {
     docs: { description: { story: 'Ternary expression in computedValue toggles between two results.' } },
   },
-  args: formConfig({
-    age: { type: 'text', label: 'Age', defaultValue: '25' },
-    category: {
-      type: 'text',
-      label: 'Category',
-      computedValue: '+age >= 18 ? "Adult" : "Minor"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      age: { type: 'text', label: 'Age', defaultValue: '25' },
+      category: {
+        type: 'text',
+        label: 'Category',
+        computedValue: '+age >= 18 ? "Adult" : "Minor"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const category = await canvas.findByRole('textbox', { name: 'Category' });
 
@@ -1339,19 +1379,21 @@ export const FunctionComputedManualOverride: Story = {
   parameters: {
     docs: { description: { story: 'Manual override on a function-based computed value persists until a dependency changes.' } },
   },
-  args: formConfig({
-    first: { type: 'text', label: 'First', defaultValue: 'A' },
-    second: { type: 'text', label: 'Second', defaultValue: 'B' },
-    funcComputed: {
-      type: 'text',
-      label: 'Function Computed',
-      computedValue: (ctx: FormContext): string => {
-        const a = (ctx['first'] as string | undefined) ?? '';
-        const b = (ctx['second'] as string | undefined) ?? '';
-        return `${a}-${b}`;
+  args: {
+    formConfig: formConfig({
+      first: { type: 'text', label: 'First', defaultValue: 'A' },
+      second: { type: 'text', label: 'Second', defaultValue: 'B' },
+      funcComputed: {
+        type: 'text',
+        label: 'Function Computed',
+        computedValue: (ctx: FormContext): string => {
+          const a = (ctx['first'] as string | undefined) ?? '';
+          const b = (ctx['second'] as string | undefined) ?? '';
+          return `${a}-${b}`;
+        },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const funcComputed = await canvas.findByRole('textbox', { name: 'Function Computed' });
 
@@ -1378,15 +1420,17 @@ export const ComputedWithBlurUpdateStrategy: Story = {
   parameters: {
     docs: { description: { story: 'Programmatic computed value updates bypass the blur update strategy.' } },
   },
-  args: formConfig({
-    source: { type: 'text', label: 'Source', defaultValue: 'A' },
-    blurComputed: {
-      type: 'text',
-      label: 'Blur Computed',
-      computedValue: 'source + "!"',
-      updateOn: 'blur',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: { type: 'text', label: 'Source', defaultValue: 'A' },
+      blurComputed: {
+        type: 'text',
+        label: 'Blur Computed',
+        computedValue: 'source + "!"',
+        updateOn: 'blur',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const blurComputed = await canvas.findByRole('textbox', { name: 'Blur Computed' });
 
@@ -1405,14 +1449,16 @@ export const SelfReferencingComputed: Story = {
   parameters: {
     docs: { description: { story: 'Idempotent self-referencing expression stabilizes without infinite loop.' } },
   },
-  args: formConfig({
-    selfRef: {
-      type: 'text',
-      label: 'Self Reference',
-      defaultValue: '',
-      computedValue: 'selfRef || "FALLBACK"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      selfRef: {
+        type: 'text',
+        label: 'Self Reference',
+        defaultValue: '',
+        computedValue: 'selfRef || "FALLBACK"',
+      },
+    }),
+  },
   play: async ({ canvas }) => {
     // Self-referencing expression stabilizes: "" || "FALLBACK" → "FALLBACK"
     await expect(
@@ -1429,23 +1475,25 @@ export const ComplexArithmeticExpressions: Story = {
   parameters: {
     docs: { description: { story: 'Arithmetic operators in hidden expressions (+, *, comparisons).' } },
   },
-  args: formConfig({
-    valueA: { type: 'text', label: 'Value A', defaultValue: '10' },
-    valueB: { type: 'text', label: 'Value B', defaultValue: '20' },
-    valueC: { type: 'text', label: 'Value C', defaultValue: '30' },
-    hiddenByComplexExpression: {
-      type: 'text',
-      label: 'Hidden by complex expression',
-      hidden: '+valueA + +valueB > +valueC',
-      defaultValue: 'Should be hidden initially',
-    },
-    visibleByComplexExpression: {
-      type: 'text',
-      label: 'Visible by complex expression',
-      hidden: '+valueA * +valueB < +valueC',
-      defaultValue: 'Should be visible initially',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      valueA: { type: 'text', label: 'Value A', defaultValue: '10' },
+      valueB: { type: 'text', label: 'Value B', defaultValue: '20' },
+      valueC: { type: 'text', label: 'Value C', defaultValue: '30' },
+      hiddenByComplexExpression: {
+        type: 'text',
+        label: 'Hidden by complex expression',
+        hidden: '+valueA + +valueB > +valueC',
+        defaultValue: 'Should be hidden initially',
+      },
+      visibleByComplexExpression: {
+        type: 'text',
+        label: 'Visible by complex expression',
+        hidden: '+valueA * +valueB < +valueC',
+        defaultValue: 'Should be visible initially',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initial: 10+20>30 is false → visible. 10*20<30 is false → visible.
     await expect(
@@ -1482,16 +1530,18 @@ export const MultipleDependencies: Story = {
   parameters: {
     docs: { description: { story: 'Multiple conditions with logical OR in a hidden expression.' } },
   },
-  args: formConfig({
-    showCondition: { type: 'text', label: 'Show Condition', defaultValue: 'no' },
-    secondCondition: { type: 'text', label: 'Second Condition', defaultValue: 'no' },
-    conditionalField: {
-      type: 'text',
-      label: 'Conditional Field',
-      hidden: 'showCondition !== "yes" || secondCondition !== "yes"',
-      defaultValue: 'Only visible when both conditions are "yes"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      showCondition: { type: 'text', label: 'Show Condition', defaultValue: 'no' },
+      secondCondition: { type: 'text', label: 'Second Condition', defaultValue: 'no' },
+      conditionalField: {
+        type: 'text',
+        label: 'Conditional Field',
+        hidden: 'showCondition !== "yes" || secondCondition !== "yes"',
+        defaultValue: 'Only visible when both conditions are "yes"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially hidden (both 'no')
     await expect(
@@ -1530,20 +1580,22 @@ export const FunctionHiddenKeepStrategy: Story = {
   parameters: {
     docs: { description: { story: 'Function-based hidden expression with keep strategy.' } },
   },
-  args: formConfig({
-    triggerFieldFuncKeep: {
-      type: 'text',
-      label: 'Type "hide" to hide target (keep)',
-      defaultValue: '',
-    },
-    targetFieldFuncKeep: {
-      type: 'text',
-      label: 'Target Field (Function Hidden, Keep)',
-      hidden: (formValue: FormContext) => formValue['triggerFieldFuncKeep'] === 'hide',
-      hideStrategy: 'keep',
-      defaultValue: 'I can be hidden by a function (kept in DOM)',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      triggerFieldFuncKeep: {
+        type: 'text',
+        label: 'Type "hide" to hide target (keep)',
+        defaultValue: '',
+      },
+      targetFieldFuncKeep: {
+        type: 'text',
+        label: 'Target Field (Function Hidden, Keep)',
+        hidden: (formValue: FormContext) => formValue['triggerFieldFuncKeep'] === 'hide',
+        hideStrategy: 'keep',
+        defaultValue: 'I can be hidden by a function (kept in DOM)',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially visible
     await expect(
@@ -1572,17 +1624,19 @@ export const ExternalFunctionCall: Story = {
   parameters: {
     docs: { description: { story: 'Dynamic label uses an external helper function.' } },
   },
-  args: formConfig({
-    nameForLabel: { type: 'text', label: 'Name', defaultValue: 'User' },
-    targetFieldLabelFunc: {
-      type: 'text',
-      dynamicLabel: (formValue: FormContext): string => {
-    const name = (formValue['nameForLabel'] as string | undefined) ?? '';
-        return getGreeting(name);
+  args: {
+    formConfig: formConfig({
+      nameForLabel: { type: 'text', label: 'Name', defaultValue: 'User' },
+      targetFieldLabelFunc: {
+        type: 'text',
+        dynamicLabel: (formValue: FormContext): string => {
+      const name = (formValue['nameForLabel'] as string | undefined) ?? '';
+          return getGreeting(name);
+        },
+        defaultValue: 'Some value',
       },
-      defaultValue: 'Some value',
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Verify initial label
     await expect(await canvas.findByText('Greeting for User')).toBeInTheDocument();
@@ -1609,49 +1663,51 @@ export const GroupDisabledWithOverride: Story = {
   parameters: {
     docs: { description: { story: 'Group disabled with individual controls overriding to enabled.' } },
   },
-  args: formConfig({
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      disabled: true,
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      disabled: true,
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First',
-          defaultValue: 'default-grouped-first',
-        },
-        'grouped-overwritten': {
-          type: 'text',
-          label: 'Grouped Overwritten',
-          defaultValue: 'default-grouped-overwritten',
-          disabled: false,
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second',
-              defaultValue: 'default-nested-second',
-            },
-            'nested-overwritten': {
-              type: 'text',
-              label: 'Nested Overwritten',
-              defaultValue: 'default-nested-overwritten',
-              disabled: false,
+  args: {
+    formConfig: formConfig({
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        disabled: true,
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        disabled: true,
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First',
+            defaultValue: 'default-grouped-first',
+          },
+          'grouped-overwritten': {
+            type: 'text',
+            label: 'Grouped Overwritten',
+            defaultValue: 'default-grouped-overwritten',
+            disabled: false,
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second',
+                defaultValue: 'default-nested-second',
+              },
+              'nested-overwritten': {
+                type: 'text',
+                label: 'Nested Overwritten',
+                defaultValue: 'default-nested-overwritten',
+                disabled: false,
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
     await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toBeDisabled();
@@ -1665,42 +1721,44 @@ export const InitialDisabledState: Story = {
   parameters: {
     docs: { description: { story: 'Initial state matches disabled condition from default value.' } },
   },
-  args: formConfig({
-    disableControl: {
-      type: 'text',
-      label: 'Type "disable"',
-      defaultValue: 'disable',
-    },
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      disabled: 'disableControl === "disable"',
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      disabled: 'disableControl === "disable"',
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      disableControl: {
+        type: 'text',
+        label: 'Type "disable"',
+        defaultValue: 'disable',
+      },
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        disabled: 'disableControl === "disable"',
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        disabled: 'disableControl === "disable"',
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially all disabled (defaultValue matches condition)
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toBeDisabled();
@@ -1720,49 +1778,51 @@ export const GroupReadonlyWithOverride: Story = {
   parameters: {
     docs: { description: { story: 'Group readonly with individual controls overriding to editable.' } },
   },
-  args: formConfig({
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      readonly: true,
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      readonly: true,
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First',
-          defaultValue: 'default-grouped-first',
-        },
-        'grouped-overwritten': {
-          type: 'text',
-          label: 'Grouped Overwritten',
-          defaultValue: 'default-grouped-overwritten',
-          readonly: false,
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second',
-              defaultValue: 'default-nested-second',
-            },
-            'nested-overwritten': {
-              type: 'text',
-              label: 'Nested Overwritten',
-              defaultValue: 'default-nested-overwritten',
-              readonly: false,
+  args: {
+    formConfig: formConfig({
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        readonly: true,
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        readonly: true,
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First',
+            defaultValue: 'default-grouped-first',
+          },
+          'grouped-overwritten': {
+            type: 'text',
+            label: 'Grouped Overwritten',
+            defaultValue: 'default-grouped-overwritten',
+            readonly: false,
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second',
+                defaultValue: 'default-nested-second',
+              },
+              'nested-overwritten': {
+                type: 'text',
+                label: 'Nested Overwritten',
+                defaultValue: 'default-nested-overwritten',
+                readonly: false,
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
     await expect(await canvas.findByRole('textbox', { name: 'Grouped First' })).toHaveAttribute(
@@ -1778,42 +1838,44 @@ export const InitialReadonlyState: Story = {
   parameters: {
     docs: { description: { story: 'Initial state matches readonly condition from default value.' } },
   },
-  args: formConfig({
-    readonlyControl: {
-      type: 'text',
-      label: 'Type "readonly"',
-      defaultValue: 'readonly',
-    },
-    first: {
-      type: 'text',
-      label: 'First',
-      defaultValue: 'default-first',
-      readonly: 'readonlyControl === "readonly"',
-    },
-    'first-group': {
-      type: 'group',
-      legend: 'First Group',
-      readonly: 'readonlyControl === "readonly"',
-      controls: {
-        'grouped-first': {
-          type: 'text',
-          label: 'Grouped First',
-          defaultValue: 'default-grouped-first',
-        },
-        'nested-group': {
-          type: 'group',
-          legend: 'Nested Group',
-          controls: {
-            'nested-second': {
-              type: 'text',
-              label: 'Nested Second',
-              defaultValue: 'default-nested-second',
+  args: {
+    formConfig: formConfig({
+      readonlyControl: {
+        type: 'text',
+        label: 'Type "readonly"',
+        defaultValue: 'readonly',
+      },
+      first: {
+        type: 'text',
+        label: 'First',
+        defaultValue: 'default-first',
+        readonly: 'readonlyControl === "readonly"',
+      },
+      'first-group': {
+        type: 'group',
+        legend: 'First Group',
+        readonly: 'readonlyControl === "readonly"',
+        controls: {
+          'grouped-first': {
+            type: 'text',
+            label: 'Grouped First',
+            defaultValue: 'default-grouped-first',
+          },
+          'nested-group': {
+            type: 'group',
+            legend: 'Nested Group',
+            controls: {
+              'nested-second': {
+                type: 'text',
+                label: 'Nested Second',
+                defaultValue: 'default-nested-second',
+              },
             },
           },
         },
       },
-    },
-  }),
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially all readonly (defaultValue matches condition)
     await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveAttribute('readonly');
@@ -1839,9 +1901,11 @@ export const StaticLabelFallback: Story = {
   parameters: {
     docs: { description: { story: 'Static label renders when no dynamic label is set.' } },
   },
-  args: formConfig({
-    target: { type: 'text', label: 'Purely Static Label' },
-  }),
+  args: {
+    formConfig: formConfig({
+      target: { type: 'text', label: 'Purely Static Label' },
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Purely Static Label')).toBeInTheDocument();
   },
@@ -1851,13 +1915,15 @@ export const StaticTitleFallback: Story = {
   parameters: {
     docs: { description: { story: 'Static group title renders when no dynamic title is set.' } },
   },
-  args: formConfig({
-    targetGroup: {
-      type: 'group',
-      legend: 'Purely Static Title',
-      controls: {},
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      targetGroup: {
+        type: 'group',
+        legend: 'Purely Static Title',
+        controls: {},
+      },
+    }),
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('group', { name: 'Purely Static Title' })).toBeInTheDocument();
   },

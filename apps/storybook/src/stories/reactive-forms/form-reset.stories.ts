@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { expect } from 'storybook/test';
-import type { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
+import { formConfig } from './story-helpers';
 
 const meta: Meta<StoryFormHostComponent> = {
   title: 'Reactive Forms/Form Reset',
@@ -10,16 +10,6 @@ const meta: Meta<StoryFormHostComponent> = {
 
 export default meta;
 type Story = StoryObj<StoryFormHostComponent>;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formConfig(
-  content: Record<string, ExampleControls>,
-): { formConfig: { content: Record<string, ExampleControls> } } {
-  return { formConfig: { content } };
-}
 
 // ---------------------------------------------------------------------------
 // Reset + Computed Values
@@ -34,19 +24,21 @@ export const ResetReappliesComputedValues: Story = {
       },
     },
   },
-  args: formConfig({
-    source: {
-      type: 'text',
-      label: 'Source',
-      defaultValue: 'Hello',
-      nonNullable: true,
-    },
-    derived: {
-      type: 'text',
-      label: 'Derived',
-      computedValue: 'source + " World"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: {
+        type: 'text',
+        label: 'Source',
+        defaultValue: 'Hello',
+        nonNullable: true,
+      },
+      derived: {
+        type: 'text',
+        label: 'Derived',
+        computedValue: 'source + " World"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const source = await canvas.findByRole('textbox', { name: 'Source' });
     const derived = await canvas.findByRole('textbox', { name: 'Derived' });
@@ -81,25 +73,27 @@ export const ResetClearsManualOverride: Story = {
       },
     },
   },
-  args: formConfig({
-    part1: {
-      type: 'text',
-      label: 'Part 1',
-      defaultValue: 'A',
-      nonNullable: true,
-    },
-    part2: {
-      type: 'text',
-      label: 'Part 2',
-      defaultValue: 'B',
-      nonNullable: true,
-    },
-    combo: {
-      type: 'text',
-      label: 'Combo',
-      computedValue: 'part1 + part2',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      part1: {
+        type: 'text',
+        label: 'Part 1',
+        defaultValue: 'A',
+        nonNullable: true,
+      },
+      part2: {
+        type: 'text',
+        label: 'Part 2',
+        defaultValue: 'B',
+        nonNullable: true,
+      },
+      combo: {
+        type: 'text',
+        label: 'Combo',
+        computedValue: 'part1 + part2',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
@@ -139,25 +133,27 @@ export const ResetWithUnchangedComputedDependencies: Story = {
       },
     },
   },
-  args: formConfig({
-    part1: {
-      type: 'text',
-      label: 'Part 1',
-      defaultValue: 'A',
-      nonNullable: true,
-    },
-    part2: {
-      type: 'text',
-      label: 'Part 2',
-      defaultValue: 'B',
-      nonNullable: true,
-    },
-    combo: {
-      type: 'text',
-      label: 'Combo',
-      computedValue: 'part1 + part2',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      part1: {
+        type: 'text',
+        label: 'Part 1',
+        defaultValue: 'A',
+        nonNullable: true,
+      },
+      part2: {
+        type: 'text',
+        label: 'Part 2',
+        defaultValue: 'B',
+        nonNullable: true,
+      },
+      combo: {
+        type: 'text',
+        label: 'Combo',
+        computedValue: 'part1 + part2',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const combo = await canvas.findByRole('textbox', { name: 'Combo' });
 
@@ -192,20 +188,22 @@ export const ResetReEvaluatesDisabledExpression: Story = {
       },
     },
   },
-  args: formConfig({
-    toggle: {
-      type: 'text',
-      label: 'Toggle',
-      defaultValue: '',
-      nonNullable: true,
-    },
-    target: {
-      type: 'text',
-      label: 'Target',
-      defaultValue: 'Editable',
-      disabled: 'toggle === "yes"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      toggle: {
+        type: 'text',
+        label: 'Toggle',
+        defaultValue: '',
+        nonNullable: true,
+      },
+      target: {
+        type: 'text',
+        label: 'Target',
+        defaultValue: 'Editable',
+        disabled: 'toggle === "yes"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const target = await canvas.findByRole('textbox', { name: 'Target' });
 
@@ -240,21 +238,23 @@ export const ResetReEvaluatesHiddenExpression: Story = {
       },
     },
   },
-  args: formConfig({
-    toggle: {
-      type: 'text',
-      label: 'Toggle',
-      defaultValue: '',
-      nonNullable: true,
-    },
-    target: {
-      type: 'text',
-      label: 'Hideable Target',
-      defaultValue: 'Visible',
-      hidden: 'toggle === "hide"',
-      hideStrategy: 'keep',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      toggle: {
+        type: 'text',
+        label: 'Toggle',
+        defaultValue: '',
+        nonNullable: true,
+      },
+      target: {
+        type: 'text',
+        label: 'Hideable Target',
+        defaultValue: 'Visible',
+        hidden: 'toggle === "hide"',
+        hideStrategy: 'keep',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initially visible
     await expect(
@@ -297,20 +297,22 @@ export const ResetReEvaluatesReadonlyExpression: Story = {
       },
     },
   },
-  args: formConfig({
-    toggle: {
-      type: 'text',
-      label: 'Toggle',
-      defaultValue: '',
-      nonNullable: true,
-    },
-    target: {
-      type: 'text',
-      label: 'Target',
-      defaultValue: 'Editable',
-      readonly: 'toggle === "lock"',
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      toggle: {
+        type: 'text',
+        label: 'Toggle',
+        defaultValue: '',
+        nonNullable: true,
+      },
+      target: {
+        type: 'text',
+        label: 'Target',
+        defaultValue: 'Editable',
+        readonly: 'toggle === "lock"',
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const target = await canvas.findByRole('textbox', { name: 'Target' });
 
@@ -345,19 +347,21 @@ export const ResetUpdatesDynamicLabels: Story = {
       },
     },
   },
-  args: formConfig({
-    source: {
-      type: 'text',
-      label: 'Source',
-      defaultValue: 'Initial',
-      nonNullable: true,
-    },
-    target: {
-      type: 'text',
-      label: 'Static Fallback',
-      dynamicLabel: "source + ' Label'",
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      source: {
+        type: 'text',
+        label: 'Source',
+        defaultValue: 'Initial',
+        nonNullable: true,
+      },
+      target: {
+        type: 'text',
+        label: 'Static Fallback',
+        dynamicLabel: "source + ' Label'",
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     // Initial dynamic label
     await expect(
@@ -393,13 +397,15 @@ export const ResetPreservesValidators: Story = {
       },
     },
   },
-  args: formConfig({
-    field: {
-      type: 'text',
-      label: 'Validated Field',
-      validators: ['min-chars'],
-    },
-  }),
+  args: {
+    formConfig: formConfig({
+      field: {
+        type: 'text',
+        label: 'Validated Field',
+        validators: ['min-chars'],
+      },
+    }),
+  },
   play: async ({ canvas, userEvent }) => {
     const field = await canvas.findByRole('textbox', {
       name: 'Validated Field',
