@@ -15,6 +15,7 @@ import {
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
+import { FormService } from '../services/form.service';
 import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
@@ -80,6 +81,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
 {
   private parentContainer = inject(ControlContainer);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
+  private readonly formService = inject(FormService);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -298,6 +300,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
       controlInstance: this.controlInstance,
       computeValueSignal: this.computedValue,
       isComputedValueDefined: this.isComputedValueDefined,
+      formResetSignal: this.formService.formReset,
     });
   }
 

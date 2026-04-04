@@ -6,6 +6,7 @@
   "exclude": ["../**/*.spec.ts"],
   "include": [
     "../src/**/*.stories.ts",
+    "../src/**/story-helpers.ts",
     "../src/**/*.stories.js",
     "../src/**/*.stories.jsx",
     "../src/**/*.stories.tsx",

@@ -16,7 +16,7 @@ export class FormService {
   readonly formGroup = this.controlContainer.control as FormGroup;
   readonly formValue = toSignal<FormContext>(this.formGroup.valueChanges);
 
-  private readonly formReset = toSignal(
+  readonly formReset = toSignal(
     this.formGroup.events.pipe(
       filter((event) => event instanceof FormResetEvent),
     ),

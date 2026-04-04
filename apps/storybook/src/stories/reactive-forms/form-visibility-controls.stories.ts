@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { expect } from 'storybook/test';
-import { NgxFbForm } from '@ngx-formbar/core';
-import { ExampleControls } from '@ngx-formbar/examples';
 import { StoryFormHostComponent } from './story-form-host.component';
+import { formConfig } from './story-helpers';
 
 const meta: Meta<StoryFormHostComponent> = {
   title: 'Reactive Forms/Visibility Strategies/Controls',
@@ -15,12 +14,6 @@ type Story = StoryObj<StoryFormHostComponent>;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formConfig(
-  content: Record<string, ExampleControls>,
-): NgxFbForm<ExampleControls> {
-  return { content };
-}
 
 function getFormValue(): Record<string, unknown> {
   return StoryFormHostComponent.lastInstance!.form.getRawValue();
