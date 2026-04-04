@@ -1039,6 +1039,389 @@ export const CascadingManualOverride: Story = {
 };
 
 // ---------------------------------------------------------------------------
+// Computed Value – Edge Cases
+// ---------------------------------------------------------------------------
+
+export const ComputedWithRemoveStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed value is re-applied after remove/re-create, reflecting dependency changes made while hidden.' } },
+  },
+  args: formConfig({
+    toggle: { type: 'text', label: 'Toggle (type "hide")' },
+    dep: { type: 'text', label: 'Dependency', defaultValue: 'D' },
+    compRemove: {
+      type: 'text',
+      label: 'Computed (remove)',
+      computedValue: 'dep + "Z"',
+      hidden: 'toggle === "hide"',
+      hideStrategy: 'remove',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const compRemove = await canvas.findByRole('textbox', { name: 'Computed (remove)' });
+
+    // Verify initial computed value
+    await expect(compRemove).toHaveValue('DZ');
+
+    // Hide → control is destroyed
+    const toggle = await canvas.findByRole('textbox', { name: 'Toggle (type "hide")' });
+    await userEvent.clear(toggle);
+    await userEvent.type(toggle, 'hide');
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Computed (remove)' }),
+    ).not.toBeInTheDocument();
+
+    // Change dependency while control doesn't exist
+    const dep = await canvas.findByRole('textbox', { name: 'Dependency' });
+    await userEvent.clear(dep);
+    await userEvent.type(dep, 'NEW');
+
+    // Show → control is re-created with current computed value
+    await userEvent.clear(toggle);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed (remove)' }),
+    ).toHaveValue('NEWZ');
+  },
+};
+
+export const ReadonlyComputedValue: Story = {
+  parameters: {
+    docs: { description: { story: 'Readonly computed field displays and updates reactively but cannot be edited.' } },
+  },
+  args: formConfig({
+    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+    derived: {
+      type: 'text',
+      label: 'Derived (readonly)',
+      readonly: true,
+      computedValue: 'source + " World"',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const derived = await canvas.findByRole('textbox', { name: 'Derived (readonly)' });
+
+    // Computed value displayed and control is readonly
+    await expect(derived).toHaveValue('Hello World');
+    await expect(derived).toHaveAttribute('readonly');
+
+    // Update source → computed field updates reactively
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
+    await userEvent.clear(source);
+    await userEvent.type(source, 'Goodbye');
+    await expect(derived).toHaveValue('Goodbye World');
+  },
+};
+
+/**
+ * Cross-group computed values require optional chaining (`?.`) in string
+ * expressions because the effect fires before sibling groups register
+ * their children (#83). Without `?.`, the expression throws on initial
+ * render. With `?.`, it safely returns `undefined` for missing groups.
+ *
+ * When #83 is fixed, replace with non-optional access:
+ *   computedValue: 'groupA.fieldA + " " + groupB.fieldB'
+ * and add an initial assertion:
+ *   await expect(result).toHaveValue('Hello World');
+ *
+ * @see https://github.com/TheNordicOne/ngx-formbar/issues/83
+ */
+export const CrossGroupComputedValue: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed expression references fields in sibling groups via dot notation (uses ?. workaround, see #83).' } },
+  },
+  args: formConfig({
+    groupA: {
+      type: 'group',
+      legend: 'Group A',
+      controls: {
+        fieldA: { type: 'text', label: 'Field A', defaultValue: 'Hello' },
+      },
+    },
+    groupB: {
+      type: 'group',
+      legend: 'Group B',
+      controls: {
+        fieldB: { type: 'text', label: 'Field B', defaultValue: 'World' },
+      },
+    },
+    crossGroupResult: {
+      type: 'text',
+      label: 'Cross-Group Result',
+      // #83: requires ?. — without it the expression throws on initial render
+      computedValue: 'groupA?.fieldA + " " + groupB?.fieldB',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const result = await canvas.findByRole('textbox', { name: 'Cross-Group Result' });
+
+    // Change field in Group A → triggers valueChanges with full form context
+    const fieldA = await canvas.findByRole('textbox', { name: 'Field A' });
+    await userEvent.clear(fieldA);
+    await userEvent.type(fieldA, 'Goodbye');
+    await expect(result).toHaveValue('Goodbye World');
+
+    // Change field in Group B
+    const fieldB = await canvas.findByRole('textbox', { name: 'Field B' });
+    await userEvent.clear(fieldB);
+    await userEvent.type(fieldB, 'Moon');
+    await expect(result).toHaveValue('Goodbye Moon');
+  },
+};
+
+export const IntermediateCascadeOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'Manual override at an intermediate cascade level affects downstream and resets when the base changes.' } },
+  },
+  args: formConfig({
+    base: { type: 'text', label: 'Base', defaultValue: 'X' },
+    mid1: { type: 'text', label: 'Mid 1', computedValue: 'base + "-M1"' },
+    mid2: { type: 'text', label: 'Mid 2', computedValue: 'mid1 + "-M2"' },
+    leaf: { type: 'text', label: 'Leaf', computedValue: 'mid2 + "-LEAF"' },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const base = await canvas.findByRole('textbox', { name: 'Base' });
+    const mid1 = await canvas.findByRole('textbox', { name: 'Mid 1' });
+    const mid2 = await canvas.findByRole('textbox', { name: 'Mid 2' });
+    const leaf = await canvas.findByRole('textbox', { name: 'Leaf' });
+
+    // Verify initial cascade
+    await expect(mid1).toHaveValue('X-M1');
+    await expect(mid2).toHaveValue('X-M1-M2');
+    await expect(leaf).toHaveValue('X-M1-M2-LEAF');
+
+    // Override mid1 (intermediate level)
+    await userEvent.clear(mid1);
+    await userEvent.type(mid1, 'CUSTOM');
+    await userEvent.tab();
+
+    // Downstream fields compute from the overridden value
+    await expect(mid1).toHaveValue('CUSTOM');
+    await expect(mid2).toHaveValue('CUSTOM-M2');
+    await expect(leaf).toHaveValue('CUSTOM-M2-LEAF');
+
+    // Change the base → mid1 override resets, full cascade restores
+    await userEvent.clear(base);
+    await userEvent.type(base, 'Y');
+
+    await expect(mid1).toHaveValue('Y-M1');
+    await expect(mid2).toHaveValue('Y-M1-M2');
+    await expect(leaf).toHaveValue('Y-M1-M2-LEAF');
+  },
+};
+
+export const ComputedWithDisabled: Story = {
+  parameters: {
+    docs: { description: { story: 'Disabled computed field still receives computed value updates.' } },
+  },
+  args: formConfig({
+    source: { type: 'text', label: 'Source', defaultValue: 'Input' },
+    disabledComputed: {
+      type: 'text',
+      label: 'Disabled Computed',
+      disabled: true,
+      computedValue: 'source + " (computed)"',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const disabledComputed = await canvas.findByRole('textbox', { name: 'Disabled Computed' });
+
+    // Control is disabled but has computed value
+    await expect(disabledComputed).toBeDisabled();
+    await expect(disabledComputed).toHaveValue('Input (computed)');
+
+    // Change source → disabled field updates
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
+    await userEvent.clear(source);
+    await userEvent.type(source, 'Updated');
+    await expect(disabledComputed).toHaveValue('Updated (computed)');
+  },
+};
+
+export const ComputedFanOut: Story = {
+  parameters: {
+    docs: { description: { story: 'Multiple computed fields derive from the same source independently.' } },
+  },
+  args: formConfig({
+    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+    upper: { type: 'text', label: 'Uppercase', computedValue: 'source.toUpperCase()' },
+    prefixed: { type: 'text', label: 'Prefixed', computedValue: '">> " + source' },
+    reversed: {
+      type: 'text',
+      label: 'Reversed',
+      computedValue: (ctx: FormContext): string => {
+        const s = (ctx['source'] as string | undefined) ?? '';
+        return s.split('').reverse().join('');
+      },
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    // All three have initial computed values
+    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('HELLO');
+    await expect(await canvas.findByRole('textbox', { name: 'Prefixed' })).toHaveValue('>> Hello');
+    await expect(await canvas.findByRole('textbox', { name: 'Reversed' })).toHaveValue('olleH');
+
+    // Change source → all three update
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
+    await userEvent.clear(source);
+    await userEvent.type(source, 'World');
+    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('WORLD');
+    await expect(await canvas.findByRole('textbox', { name: 'Prefixed' })).toHaveValue('>> World');
+    await expect(await canvas.findByRole('textbox', { name: 'Reversed' })).toHaveValue('dlroW');
+  },
+};
+
+export const ComputedNullishResult: Story = {
+  parameters: {
+    docs: { description: { story: 'Computed expression evaluating to null clears the field value.' } },
+  },
+  args: formConfig({
+    source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
+    nullish: {
+      type: 'text',
+      label: 'Nullish Result',
+      computedValue: (ctx: FormContext): string | null => {
+        const s = ctx['source'] as string | undefined;
+        return s === 'clear' ? null : (s ?? '') + '!';
+      },
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const nullish = await canvas.findByRole('textbox', { name: 'Nullish Result' });
+
+    // Initial: non-null computed value
+    await expect(nullish).toHaveValue('Hello!');
+
+    // Set source to "clear" → computed returns null → field is empty
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
+    await userEvent.clear(source);
+    await userEvent.type(source, 'clear');
+    await expect(nullish).toHaveValue('');
+
+    // Set source back → computed returns non-null
+    await userEvent.clear(source);
+    await userEvent.type(source, 'Back');
+    await expect(nullish).toHaveValue('Back!');
+  },
+};
+
+export const ComputedTernaryExpression: Story = {
+  parameters: {
+    docs: { description: { story: 'Ternary expression in computedValue toggles between two results.' } },
+  },
+  args: formConfig({
+    age: { type: 'text', label: 'Age', defaultValue: '25' },
+    category: {
+      type: 'text',
+      label: 'Category',
+      computedValue: '+age >= 18 ? "Adult" : "Minor"',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const category = await canvas.findByRole('textbox', { name: 'Category' });
+
+    // Initial: 25 >= 18 → Adult
+    await expect(category).toHaveValue('Adult');
+
+    // Change to 10 → Minor
+    const age = await canvas.findByRole('textbox', { name: 'Age' });
+    await userEvent.clear(age);
+    await userEvent.type(age, '10');
+    await expect(category).toHaveValue('Minor');
+
+    // Boundary: 18 → Adult
+    await userEvent.clear(age);
+    await userEvent.type(age, '18');
+    await expect(category).toHaveValue('Adult');
+  },
+};
+
+export const FunctionComputedManualOverride: Story = {
+  parameters: {
+    docs: { description: { story: 'Manual override on a function-based computed value persists until a dependency changes.' } },
+  },
+  args: formConfig({
+    first: { type: 'text', label: 'First', defaultValue: 'A' },
+    second: { type: 'text', label: 'Second', defaultValue: 'B' },
+    funcComputed: {
+      type: 'text',
+      label: 'Function Computed',
+      computedValue: (ctx: FormContext): string => {
+        const a = (ctx['first'] as string | undefined) ?? '';
+        const b = (ctx['second'] as string | undefined) ?? '';
+        return `${a}-${b}`;
+      },
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const funcComputed = await canvas.findByRole('textbox', { name: 'Function Computed' });
+
+    // Initial function-computed value
+    await expect(funcComputed).toHaveValue('A-B');
+
+    // Manual override persists
+    await userEvent.clear(funcComputed);
+    await userEvent.type(funcComputed, 'OVERRIDE');
+    await userEvent.tab();
+
+    await expect(funcComputed).toHaveValue('OVERRIDE');
+
+    // Change dependency → override resets
+    const first = await canvas.findByRole('textbox', { name: 'First' });
+    await userEvent.clear(first);
+    await userEvent.type(first, 'X');
+
+    await expect(funcComputed).toHaveValue('X-B');
+  },
+};
+
+export const ComputedWithBlurUpdateStrategy: Story = {
+  parameters: {
+    docs: { description: { story: 'Programmatic computed value updates bypass the blur update strategy.' } },
+  },
+  args: formConfig({
+    source: { type: 'text', label: 'Source', defaultValue: 'A' },
+    blurComputed: {
+      type: 'text',
+      label: 'Blur Computed',
+      computedValue: 'source + "!"',
+      updateOn: 'blur',
+    },
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const blurComputed = await canvas.findByRole('textbox', { name: 'Blur Computed' });
+
+    // Initial computed value applied despite blur strategy
+    await expect(blurComputed).toHaveValue('A!');
+
+    // Changing source updates computed field (programmatic setValue bypasses blur)
+    const source = await canvas.findByRole('textbox', { name: 'Source' });
+    await userEvent.clear(source);
+    await userEvent.type(source, 'B');
+    await expect(blurComputed).toHaveValue('B!');
+  },
+};
+
+export const SelfReferencingComputed: Story = {
+  parameters: {
+    docs: { description: { story: 'Idempotent self-referencing expression stabilizes without infinite loop.' } },
+  },
+  args: formConfig({
+    selfRef: {
+      type: 'text',
+      label: 'Self Reference',
+      defaultValue: '',
+      computedValue: 'selfRef || "FALLBACK"',
+    },
+  }),
+  play: async ({ canvas }) => {
+    // Self-referencing expression stabilizes: "" || "FALLBACK" → "FALLBACK"
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Self Reference' }),
+    ).toHaveValue('FALLBACK');
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Expression – Additional Stories
 // ---------------------------------------------------------------------------
 
