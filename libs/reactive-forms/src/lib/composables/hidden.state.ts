@@ -60,24 +60,16 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
 }
 
 /**
- * Creates an effect that manages control visibility in forms
+ * Creates an effect that manages control registration and value strategy for the `keep` hide strategy.
  *
- * Based on visibility state and hide strategy, this effect:
- * 1. Attaches the control to the form when visible
- * 2. Detaches the control from the form when hidden and strategy is 'remove'
- * 3. Manages control values based on the specified valueStrategy when visibility changes
+ * For `keep` strategy:
+ * 1. Attaches the control to the form when not yet registered
+ * 2. Applies the value strategy when the control becomes hidden
  *
- * @param options Configuration object for hidden effect
- * @param options.content Signal containing control configuration
- * @param options.name Signal containing the name of the control
- * @param options.controlInstance Signal with the form control instance
- * @param options.hiddenSignal Signal that indicates if the control should be hidden
- * @param options.hideStrategySignal Signal with the strategy for handling hidden controls
- * @param options.valueStrategySignal Signal with the strategy for handling control values
- * @param options.parentValueStrategySignal Signal with the parent's value strategy
- * @param options.attachFunction Function to call when control should be attached
- * @param options.detachFunction Function to call when control should be detached
- * @param options.valueHandleFunction Function to handle control value based on strategy
+ * For `remove` strategy, this effect is a no-op — the structural directive
+ * (`NgxfbAbstractControlDirective`) owns the component lifecycle by destroying
+ * and recreating the component. Registration and value restoration are handled
+ * by `ngOnDestroy` / `controlInstance` respectively.
  */
 export function withHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;

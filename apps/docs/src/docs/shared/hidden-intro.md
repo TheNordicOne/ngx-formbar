@@ -1,7 +1,23 @@
-By default, the visibility is handled by **formbar**. It will set the `hidden` attribute on your component, if a control or group should not be visible.
+By default, the visibility is handled by **formbar**. Depending on the `hideStrategy`, the library handles visibility differently:
 
-You have the option to handle this by yourself, but can only be configured on a component level.
-It can be useful for when you want to work with `@if` to actually create and destroy components used in the template, or you want to show some placeholder instead.
+- **`keep`** (default): The `hidden` attribute is set on your component, visually hiding it while keeping it in the DOM and form model.
+- **`remove`**: The component is structurally removed from the DOM and unregistered from the form model. When shown again, the component is recreated and its value is restored based on the `valueStrategy`.
+
+You have the option to handle visibility yourself by calling `setVisibilityHandling('manual')` in your component. This disables the automatic `hidden` attribute. It can be useful for when you want to show some placeholder instead or need fine-grained control over the visibility behavior.
+
+### Visibility State Overview
+
+| Visibility Handling | Hide Strategy    | When hidden                                                 | Value on re-show                                                   |
+|---------------------|------------------|-------------------------------------------------------------|--------------------------------------------------------------------|
+| `auto` (default)    | `keep` (default) | `hidden` attribute set on host, control stays in form model | Determined by `valueStrategy` (applied while hidden)               |
+| `auto`              | `remove`         | Component destroyed and removed from form model             | Determined by `valueStrategy` (restored from cache on re-creation) |
+| `manual`            | `keep`           | No `hidden` attribute set, but value strategy still applies | Determined by `valueStrategy`                                      |
+| `manual`            | `remove`         | Component is still destroyed by the library                 | Determined by `valueStrategy` (restored from cache on re-creation) |
+
+> **Note**
+> When using `manual` visibility handling, only the `hidden` attribute is disabled. The form model management (adding/removing controls, value strategy) is still handled by the library. Full manual control over the form model is not yet supported.
+
+### Hidden State Rules
 
 The hidden state is determined using the following rules (`content` could be any of your controls or groups):
 1. If no `hidden` expression is defined, the control inherits the hidden state from its parent group
