@@ -9,6 +9,7 @@ export type { NoteControl } from './lib/types/note-control.type';
 export type { TextareaControl } from './lib/types/textarea-control.type';
 export type { DateControl } from './lib/types/date-control.type';
 export type { FileControl } from './lib/types/file-control.type';
+export type { ManualTextControl } from './lib/types/manual-text-control.type';
 export type {
   ValidatorRegistrations,
   AsyncValidatorRegistrations,

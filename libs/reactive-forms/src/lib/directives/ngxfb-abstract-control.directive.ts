@@ -63,8 +63,15 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
     return undefined;
   });
 
+  private readonly handleVisibility = computed(
+    () => (this.registrationEntry()?.visibilityHandling ?? 'auto') === 'auto',
+  );
+
   private readonly shouldStructurallyHide = computed(
-    () => this.hideStrategy() === 'remove' && this.isHidden(),
+    () =>
+      this.handleVisibility() &&
+      this.hideStrategy() === 'remove' &&
+      this.isHidden(),
   );
 
   constructor() {

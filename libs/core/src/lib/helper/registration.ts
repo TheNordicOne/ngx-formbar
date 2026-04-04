@@ -1,5 +1,6 @@
 import { Type } from '@angular/core';
 import {
+  ComponentRegistrationOptions,
   LazyRegistration,
   LoadComponentFn,
   StaticRegistration,
@@ -16,11 +17,15 @@ import {
  *
  * const registrations = {
  *   text: staticComponent(TextComponent),
+ *   custom: staticComponent(CustomComponent, { visibilityHandling: 'manual' }),
  * };
  * ```
  */
-export function staticComponent(type: Type<unknown>): StaticRegistration {
-  return { component: type };
+export function staticComponent(
+  type: Type<unknown>,
+  options?: ComponentRegistrationOptions,
+): StaticRegistration & ComponentRegistrationOptions {
+  return { component: type, ...options };
 }
 
 /**
@@ -33,9 +38,13 @@ export function staticComponent(type: Type<unknown>): StaticRegistration {
  *
  * const registrations = {
  *   text: loadComponent(() => import('./text.component').then(m => m.TextComponent)),
+ *   custom: loadComponent(() => import('./custom.component').then(m => m.CustomComponent), { visibilityHandling: 'manual' }),
  * };
  * ```
  */
-export function loadComponent(load: LoadComponentFn): LazyRegistration {
-  return { loadComponent: load };
+export function loadComponent(
+  load: LoadComponentFn,
+  options?: ComponentRegistrationOptions,
+): LazyRegistration & ComponentRegistrationOptions {
+  return { loadComponent: load, ...options };
 }

@@ -21,12 +21,22 @@ export interface LazyRegistration {
 }
 
 /**
- * A component registration entry — either static or lazy.
+ * Optional configuration for a component registration entry.
+ */
+export interface ComponentRegistrationOptions {
+  visibilityHandling?: StateHandling;
+}
+
+/**
+ * A component registration entry — either static or lazy,
+ * optionally with additional configuration.
  *
  * - Static: `{ component: MyComponent }` — component is eagerly imported
  * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }` — loaded on demand
  */
-export type ComponentRegistrationEntry = StaticRegistration | LazyRegistration;
+export type ComponentRegistrationEntry =
+  | (StaticRegistration & ComponentRegistrationOptions)
+  | (LazyRegistration & ComponentRegistrationOptions);
 
 /**
  * Configuration for registering component types.

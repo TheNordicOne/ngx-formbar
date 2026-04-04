@@ -389,3 +389,152 @@ export const ControlRemoveLastResetClearsCache: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Manual Visibility Handling
+// ---------------------------------------------------------------------------
+
+export const ManualKeep: Story = {
+  name: 'Manual — Keep',
+  parameters: {
+    docs: { description: { story: 'With manual visibility handling, the library does not set [attr.hidden] or manage the form model. The component handles visibility itself via @if.' } },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      manualKeepField: {
+        type: 'manual-text',
+        label: 'Manual keep field',
+        defaultValue: 'default-manual-keep',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'last',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom manual value';
+
+    // Fill the field
+    const targetInput = await canvas.findByRole('textbox', { name: 'Manual keep field' });
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, customValue);
+
+    // Hide
+    const triggerInput = await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' });
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // Component handles hiding via @if — field is not in DOM
+    await expect(canvas.queryByRole('textbox', { name: 'Manual keep field' })).not.toBeInTheDocument();
+
+    // Library should NOT have removed control from form model (keep strategy, manual handling)
+    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await expect(getFormValue()['manualKeepField']).toBe(customValue);
+
+    // Show again
+    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' }));
+
+    // Value preserved (last strategy, component handles it)
+    await expect(await canvas.findByRole('textbox', { name: 'Manual keep field' })).toHaveValue(customValue);
+  },
+};
+
+export const ManualKeepDefault: Story = {
+  name: 'Manual — Keep & Default (no library value handling)',
+  parameters: {
+    docs: { description: { story: 'With manual handling and default value strategy, the library should NOT reset the value to defaultValue when hidden. The component manages everything.' } },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      manualKeepDefaultField: {
+        type: 'manual-text',
+        label: 'Manual keep default field',
+        defaultValue: 'default-manual',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'default',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom manual default value';
+
+    // Fill the field
+    const targetInput = await canvas.findByRole('textbox', { name: 'Manual keep default field' });
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, customValue);
+
+    // Hide
+    const triggerInput = await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' });
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // Library should NOT have applied value strategy (manual mode)
+    // The form model should still have the custom value, NOT defaultValue
+    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await expect(getFormValue()['manualKeepDefaultField']).toBe(customValue);
+
+    // Show again
+    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' }));
+
+    // Value preserved (library didn't touch it)
+    await expect(await canvas.findByRole('textbox', { name: 'Manual keep default field' })).toHaveValue(customValue);
+  },
+};
+
+export const ManualRemove: Story = {
+  name: 'Manual — Remove',
+  parameters: {
+    docs: { description: { story: 'With manual visibility handling and remove strategy, the library should NOT destroy the component. The component handles visibility itself.' } },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      manualRemoveField: {
+        type: 'manual-text',
+        label: 'Manual remove field',
+        defaultValue: 'default-manual-remove',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'last',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom manual remove value';
+
+    // Fill the field
+    const targetInput = await canvas.findByRole('textbox', { name: 'Manual remove field' });
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, customValue);
+
+    // Hide
+    const triggerInput = await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' });
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // Component handles hiding via @if — input not visible
+    await expect(canvas.queryByRole('textbox', { name: 'Manual remove field' })).not.toBeInTheDocument();
+
+    // Library should NOT have destroyed the component (manual handling)
+    // The control should still be in the form model because the library didn't remove it
+    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await expect(getFormValue()['manualRemoveField']).toBe(customValue);
+
+    // Show again
+    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' }));
+
+    // Value preserved
+    await expect(await canvas.findByRole('textbox', { name: 'Manual remove field' })).toHaveValue(customValue);
+  },
+};

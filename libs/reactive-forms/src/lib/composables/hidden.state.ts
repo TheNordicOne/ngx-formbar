@@ -9,7 +9,6 @@ import {
   resolveHiddenAttribute,
   resolveHiddenState,
   SimpleFunction,
-  StateHandling,
   ValueHandleFunction,
   ValueStrategy,
 } from '@ngx-formbar/core';
@@ -56,7 +55,12 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
       formService.formValue() ?? (formService.formGroup.value as FormContext),
   );
 
-  return resolveHiddenState(option, formContext, expressionService, parentGroupIsHidden);
+  return resolveHiddenState(
+    option,
+    formContext,
+    expressionService,
+    parentGroupIsHidden,
+  );
 }
 
 /**
@@ -73,7 +77,7 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
  */
 export function withHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;
-  hiddenHandlingSignal: Signal<StateHandling>;
+  handleVisibility: Signal<boolean>;
 }) {
   return resolveHiddenAttribute(options);
 }
@@ -86,6 +90,7 @@ export function hiddenEffect(options: {
   hideStrategySignal: Signal<HideStrategy | undefined>;
   valueStrategySignal: Signal<ValueStrategy | undefined>;
   parentValueStrategySignal: Signal<ValueStrategy | undefined>;
+  handleVisibility: Signal<boolean>;
   attachFunction: SimpleFunction;
   detachFunction: SimpleFunction;
   valueHandleFunction: ValueHandleFunction;
@@ -96,25 +101,23 @@ export function hiddenEffect(options: {
     options.controlInstance();
     const isHidden = options.hiddenSignal();
     const hideStrategy = options.hideStrategySignal();
+    const handleVisibility = options.handleVisibility();
     const valueStrategy =
       options.valueStrategySignal() ?? options.parentValueStrategySignal();
     const formControl = untracked(() => parentFormGroup?.get(options.name()));
 
-    // For remove strategy, the structural directive owns the component lifecycle.
-    if (hideStrategy === 'remove') {
-      if (!formControl) {
-        untracked(() => {
-          options.attachFunction();
-        });
-      }
-      return;
-    }
-
-    // Keep strategy: attach control if not yet attached
+    // Attach control if not yet registered in the form model
     if (!formControl) {
       untracked(() => {
         options.attachFunction();
       });
+      return;
+    }
+
+    // Only auto + keep handles value strategy when hidden.
+    // Manual mode: component handles everything.
+    // Remove mode: structural directive handles the lifecycle.
+    if (!handleVisibility || hideStrategy === 'remove') {
       return;
     }
 

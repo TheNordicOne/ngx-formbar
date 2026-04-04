@@ -15,6 +15,7 @@ import {
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
+import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
   withDisabledState,
@@ -96,7 +97,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   readonly name = input.required<string>();
 
-  private readonly visibilityHandling = signal<StateHandling>('auto');
+  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
+  private readonly handleVisibility = computed(
+    () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
+  );
   private readonly disabledHandling = signal<StateHandling>('auto');
   private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
     undefined,
@@ -152,7 +156,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   readonly hiddenAttribute = withHiddenAttribute({
     hiddenSignal: this.isHidden,
-    hiddenHandlingSignal: this.visibilityHandling,
+    handleVisibility: this.handleVisibility,
   });
 
   /**
@@ -278,6 +282,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
       hideStrategySignal: this.hideStrategy,
       valueStrategySignal: this.valueStrategy,
       parentValueStrategySignal: this.parentValueStrategy,
+      handleVisibility: this.handleVisibility,
       attachFunction: this.setControl.bind(this),
       detachFunction: this.removeControl.bind(this),
       valueHandleFunction: this.handleValue.bind(this),
@@ -297,22 +302,6 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     });
   }
 
-  /**
-   * Sets the visibility handling strategy
-   * Determines if visibility should be managed by the component (manual) or by Formbar (auto)
-   *
-   * Use 'manual' when implementing custom visibility handling in your component:
-   * ```typescript
-   * constructor() {
-   *   this.control.setVisibilityHandling('manual');
-   * }
-   * ```
-   *
-   * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
-   */
-  setVisibilityHandling(visibilityHandling: StateHandling) {
-    this.visibilityHandling.set(visibilityHandling);
-  }
 
   /**
    * Sets the disabled handling strategy
