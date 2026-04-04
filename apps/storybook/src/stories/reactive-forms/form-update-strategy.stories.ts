@@ -165,10 +165,10 @@ export const ControlOverride: Story = {
     await userEvent.type(defaultInput, 'default-text');
     await userEvent.tab();
 
-    // Value should not be present since the form hasn't been submitted
+    // Value should still be empty since the submit-strategy control hasn't synced
     await expect(
-      canvas.queryByTestId('default-control-value'),
-    ).not.toHaveTextContent('default-text');
+      await canvas.findByTestId('default-control-value'),
+    ).toHaveTextContent('');
 
     // Submit the form to trigger the update for the default control
     const submitButton = await canvas.findByRole('button', { name: 'Submit' });
