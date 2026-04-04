@@ -109,6 +109,53 @@ export const FormContent: Story = {
 };
 
 // ---------------------------------------------------------------------------
+// GroupContent
+// ---------------------------------------------------------------------------
+
+export const GroupContent: Story = {
+  parameters: {
+    docs: { description: { story: 'Renders a group with nested groups and controls.' } },
+  },
+  args: {
+    formConfig: {
+      content: {
+        'test-group': {
+          type: 'group',
+          legend: 'First Group',
+          controls: {
+            first: {
+              type: 'text',
+              label: 'First label',
+            },
+            'nested-group': {
+              type: 'group',
+              legend: 'Nested Group',
+              controls: {
+                second: {
+                  type: 'text',
+                  label: 'Second label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('group', { name: 'First Group' })).toBeInTheDocument();
+
+    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+
+    await expect(await canvas.findByRole('group', { name: 'Nested Group' })).toBeInTheDocument();
+
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second label' }),
+    ).toBeInTheDocument();
+  },
+};
+
+// ---------------------------------------------------------------------------
 // PatchAndReset
 // ---------------------------------------------------------------------------
 
