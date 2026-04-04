@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { StateHandling } from '../types/registration.type';
 import { resolveHiddenAttribute } from './resolve-hidden-attribute';
 
 describe('resolveHiddenAttribute', () => {
@@ -8,31 +7,31 @@ describe('resolveHiddenAttribute', () => {
     TestBed.configureTestingModule({});
   });
 
-  it('should return true when hidden and handling is auto', () => {
+  it('should return true when hidden and visibility is handled by library', () => {
     TestBed.runInInjectionContext(() => {
       const result = resolveHiddenAttribute({
         hiddenSignal: signal(true),
-        hiddenHandlingSignal: signal<StateHandling>('auto'),
+        handleVisibility: signal(true),
       });
       expect(result()).toBe(true);
     });
   });
 
-  it('should return null when not hidden and handling is auto', () => {
+  it('should return null when not hidden and visibility is handled by library', () => {
     TestBed.runInInjectionContext(() => {
       const result = resolveHiddenAttribute({
         hiddenSignal: signal(false),
-        hiddenHandlingSignal: signal<StateHandling>('auto'),
+        handleVisibility: signal(true),
       });
       expect(result()).toBeNull();
     });
   });
 
-  it('should return null when handling is manual regardless of hidden state', () => {
+  it('should return null when component handles visibility regardless of hidden state', () => {
     TestBed.runInInjectionContext(() => {
       const result = resolveHiddenAttribute({
         hiddenSignal: signal(true),
-        hiddenHandlingSignal: signal<StateHandling>('manual'),
+        handleVisibility: signal(false),
       });
       expect(result()).toBeNull();
     });
@@ -43,7 +42,7 @@ describe('resolveHiddenAttribute', () => {
       const hidden = signal(false);
       const result = resolveHiddenAttribute({
         hiddenSignal: hidden,
-        hiddenHandlingSignal: signal<StateHandling>('auto'),
+        handleVisibility: signal(true),
       });
 
       expect(result()).toBeNull();
@@ -53,17 +52,17 @@ describe('resolveHiddenAttribute', () => {
     });
   });
 
-  it('should react to handling signal changes', () => {
+  it('should react to handleVisibility signal changes', () => {
     TestBed.runInInjectionContext(() => {
-      const handling = signal<StateHandling>('auto');
+      const handleVisibility = signal(true);
       const result = resolveHiddenAttribute({
         hiddenSignal: signal(true),
-        hiddenHandlingSignal: handling,
+        handleVisibility,
       });
 
       expect(result()).toBe(true);
 
-      handling.set('manual');
+      handleVisibility.set(false);
       expect(result()).toBeNull();
     });
   });
