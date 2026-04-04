@@ -219,6 +219,12 @@ In some cases it is desirable to (pre)-fill certain inputs with a value based on
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
+> **Known issue:** String expressions that reference fields inside sibling groups do not resolve correctly on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). Use optional chaining as a workaround:
+>
+> ```typescript
+> computedValue: 'groupA?.fieldA + " " + groupB?.fieldB'
+> ```
+
 ## Dynamic Label
 
 A control's label can be made responsive to other form data by using the `dynamicLabel` configuration property. You provide an expression string to dynamicLabel (e.g., 'Hello, ' + user.name), and the control's label text will then be computed based on this expression.
