@@ -7,4 +7,5 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrl: './github-link.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GithubLink {}

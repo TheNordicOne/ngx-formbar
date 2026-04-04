@@ -24,4 +24,5 @@ import { GithubLink } from './components/github-link/github-link';
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class App {}
