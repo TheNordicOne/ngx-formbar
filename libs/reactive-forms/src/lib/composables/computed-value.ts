@@ -45,10 +45,12 @@ export function setComputedValueEffect(options: {
   controlInstance: Signal<AbstractControl>;
   computeValueSignal: Signal<unknown>;
   isComputedValueDefined: Signal<boolean>;
+  formResetSignal: Signal<unknown>;
 }) {
   effect(() => {
     const control = options.controlInstance();
     const value = options.computeValueSignal();
+    options.formResetSignal();
 
     if (!options.isComputedValueDefined()) {
       return;
