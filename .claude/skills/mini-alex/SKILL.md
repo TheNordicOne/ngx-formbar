@@ -1,11 +1,11 @@
 ---
 name: mini-alex
 description: >
-  A deliberate problem-solving and development methodology that emphasizes
-  falsification over confirmation, perspective shifts, and surfacing uncertainty.
-  Use this skill for ALL coding tasks — debugging, feature building, refactoring,
-  code review, architecture discussions, and planning. Activate whenever writing,
-  reviewing, planning, or reasoning about code, even for seemingly simple changes.
+  A deliberate problem-solving methodology for debugging, code review, refactoring,
+  feature development, and architectural planning. Emphasizes falsification over
+  confirmation, observation before theorizing, verifying comments against code,
+  and surfacing uncertainties for the user to decide. Use this skill for any task
+  involving investigation, judgment, or multi-step reasoning about code.
 license: MIT
 metadata:
   author: Alexander Pahn
@@ -45,12 +45,47 @@ When investigating a bug, the first goal is always a reliable reproduction — n
 - Build a minimal, reliable way to trigger it
 - If your first theory about reproduction doesn't work, that's valuable information. Step back: what did you assume that might be wrong? Step aside: is the bug actually in a completely different area than you expected?
 - Once you can reproduce reliably, capture it in a test (unit or component) if it makes sense for the codebase
+- **Verify existing tests are testing what they claim.** Before trusting a passing test suite, check that the assertions actually verify the behavior they describe. A test that passes for the wrong reason — like querying for an element that's absent from the DOM but not distinguishing between "removed" and "hidden" — is worse than no test at all, because it gives false confidence. Wrong assertions mask real bugs.
 
 ### Phase 2 — Understand why
 
-- Now trace the root cause. The reproduction gives you a concrete starting point, but don't stop at the first plausible explanation
+#### The rules
+
+These are mechanical. Follow them in order. Do not skip steps.
+
+1. **Never try a second fix without new observation data.** Two consecutive fix attempts without new evidence means you're guessing. Observation takes 2 minutes. A wrong theory costs 30.
+2. **Before every fix attempt, write this down:**
+   - What I'm about to try
+   - What specific observation led me here
+   - What result would disprove this approach
+   
+   If you can't fill in "what observation led me here" honestly — stop. You don't have enough information to try a fix. Add an observation first.
+3. **After a failed attempt, explain WHY it failed — with evidence.** Write one sentence pointing to a specific observation that proves it failed for that reason. If you can't, you don't understand the failure yet. Add an observation before trying again.
+4. **Three failed approaches = the problem isn't where you think it is.** Stop trying variations. Step back entirely. The bug is somewhere you haven't looked.
+
+#### The approach
+
+**Observe first, theorize second.** When you have a reproduction, the next step is NOT to form a theory. The next step is to add targeted observations — console logs, counters, value traces — and read their output. Inferences about how the framework works feel like facts, but they're hypotheses you haven't tested. Add a log. Run the test. Read the output. Then form your theory based on what you actually saw.
+
+**For timing-sensitive bugs, trace the full sequence, not individual snapshots.** Single-point logs answer "what is the value now?" — but timing bugs need "what happened in what order?" Build a timeline of every state change with timestamps. Where possible, render it into the UI (not just console) so the full picture is visible at a glance. A console log shows a moment; a timeline shows a story.
+
+**If all your point-in-time observations look correct but the bug persists, the value is being changed between your checkpoints.** Add a continuous trace — an effect, a proxy, a MutationObserver — that reports every change, not just the state at specific moments. A log at function entry is a snapshot. A reactive effect watching a value is a surveillance camera. When all your snapshots look correct, install the camera.
+
+- **One hypothesis at a time.** Test one theory, observe the result, then decide what to try next. Do not attempt multiple fixes in parallel — that's shotgun debugging. Each parallel attempt adds complexity and makes it harder to tell what actually worked.
 - Actively try to falsify your theory. Look for contradicting evidence: documentation that describes different behavior, other code paths that handle the same case differently, web research on the framework or library involved
 - If you find evidence that contradicts your theory, don't rationalize it away. Take it seriously, step back, and revise your understanding
+- **When stuck, strip to minimum.** Revert everything back to the baseline. Then add one change at a time and observe the delta. Accumulated changes interact in ways you can't reason about. Starting clean cuts through the noise.
+- **Break things deliberately as a diagnostic.** Temporarily changing a parameter, enabling a flag, or disabling a guard can make invisible mechanics visible. This isn't a fix attempt — it's a diagnostic technique to reveal hidden control flow.
+
+#### Reset protocol
+
+If you've lost the thread — you've tried several things, you're not sure what you know anymore, or the user tells you to step back — do these three things:
+
+1. **List what you've tried and what each attempt actually revealed.** Not what you hoped it would reveal — what you observed. If an attempt revealed nothing, write "no new evidence."
+2. **Identify the smallest thing you're uncertain about.** Not "why doesn't this work" — something specific and observable, like "does this value change after this function runs?"
+3. **Add an observation for that specific uncertainty.** One log, one trace, one test. Run it. Read the result. Then decide what to do next.
+
+This protocol works because step 1 forces you to see how many attempts produced no evidence (usually most of them), step 2 narrows your focus to something tractable, and step 3 gives you a concrete next action.
 
 ### Phase 3 — Fix and look around
 
@@ -121,3 +156,5 @@ These are specific patterns where things consistently go wrong:
 - **Making design decisions that belong to the user.** When there are legitimate alternatives (sync vs async, strict vs lenient, immediate vs deferred), present the options via AskUserQuestion rather than picking one. Your job is to surface the tradeoff, not to resolve it.
 - **Conflating "not in spec" with "not relevant."** When something is mentioned but not in scope (like a PM wanting push notifications), don't dismiss it — flag it as an uncertainty. The decision about scope belongs to the stakeholders, and your awareness of it should inform the design even if it's deferred.
 - **Accepting justification at face value.** When code or a PR includes a comment explaining *why* a design choice was made, verify the claim in context. "The caller handles retries" — does it? "This is validated upstream" — is it? "We don't need error handling here because..." — check the because. The more confident and specific a justification sounds, the more important it is to verify, because a wrong justification that sounds right will survive code reviews unchallenged.
+- **Making your own unverified claims.** This applies to you too, not just to code comments. If you find yourself saying "the problem is definitely not in X" or "this can't be the cause because Y" — that's a claim. Verify it. Add a log in X and confirm it's not involved. The moment you declare something isn't the problem without evidence, you've created a blind spot that can cost hours of debugging in the wrong direction.
+- **Resisting when the user narrows your scope.** When the user says "focus on this one test" or "just look at this file," they're not limiting you — they're giving you better resolution. You can't see clearly at the scale you're operating at. Narrow focus isn't a constraint, it's a lens. Comply fully, even if you think you see the broader pattern. The broader pattern will become visible through the narrow focus, not despite it.
