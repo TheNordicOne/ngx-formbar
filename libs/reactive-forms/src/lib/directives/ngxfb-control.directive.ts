@@ -14,7 +14,7 @@ import {
   TestIdBuilderFn,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
-import { CONTROL_LIFECYCLE_STATE } from '../services/control-lifecycle-state';
+import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 import {
   disabledEffect,
   withDisabledState,
@@ -78,7 +78,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
-  private readonly lifecycleState = inject(CONTROL_LIFECYCLE_STATE);
+  private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -340,7 +340,8 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   }
 
   private resolveInitialValue(): unknown {
-    if (!this.lifecycleState.hasSavedValue()) {
+    const hasSaved = this.hasSavedValue();
+    if (!hasSaved) {
       return this.content().defaultValue;
     }
 
@@ -349,12 +350,24 @@ export class NgxfbControlDirective<T extends NgxFbControl>
 
     switch (valueStrategy) {
       case 'last':
-        return this.lifecycleState.savedValue();
+        return this.getSavedValue();
       case 'reset':
         return undefined;
       default:
         return this.content().defaultValue;
     }
+  }
+
+  private get controlPath(): string {
+    return [...(this.parentContainer.path ?? []), this.name()].join('.');
+  }
+
+  private hasSavedValue(): boolean {
+    return this.formLifecycleState.hasSavedValue(this.controlPath)();
+  }
+
+  private getSavedValue(): unknown {
+    return this.formLifecycleState.getSavedValue(this.controlPath)();
   }
 
   private removeControl() {
@@ -392,7 +405,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   ngOnDestroy(): void {
     const control = this.formControl;
     if (control) {
-      this.lifecycleState.saveValue(control.value);
+      this.formLifecycleState.saveValue(this.controlPath, control.value);
     }
     this.removeControl();
   }

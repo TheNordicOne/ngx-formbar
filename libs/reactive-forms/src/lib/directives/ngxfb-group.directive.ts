@@ -14,6 +14,7 @@ import {
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormGroup } from '@angular/forms';
+import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 import {
   disabledEffect,
   withDisabledState,
@@ -72,6 +73,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+  private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -252,6 +254,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    * Returns an array of [name, control] pairs for rendering
    */
   readonly controls = computed(() => Object.entries(this.content().controls));
+
 
   /**
    * Access to the parent FormGroup containing this group
