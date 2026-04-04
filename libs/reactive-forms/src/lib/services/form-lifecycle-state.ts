@@ -11,6 +11,7 @@ export interface FormLifecycleState {
   hasSavedValue(path: string): Signal<boolean>;
   getSavedValue(path: string): Signal<unknown>;
   saveValue(path: string, value: unknown): void;
+  clear(): void;
 }
 
 export const FORM_LIFECYCLE_STATE = new InjectionToken<FormLifecycleState>(
@@ -34,6 +35,9 @@ export function formLifecycleStateFactory(): FormLifecycleState {
     },
     saveValue(path: string, value: unknown): void {
       entries.update((e) => ({ ...e, [path]: value }));
+    },
+    clear(): void {
+      entries.set({});
     },
   };
 }

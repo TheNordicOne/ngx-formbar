@@ -338,3 +338,54 @@ export const ControlKeepReset: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Remove & Last — Reset clears cache
+// ---------------------------------------------------------------------------
+
+export const ControlRemoveLastResetClearsCache: Story = {
+  name: 'Remove & Last — Reset clears cache',
+  parameters: {
+    docs: { description: { story: 'When the form is reset while a control is hidden, the cached "last" value should be discarded. The control should show its default value on re-show, not the stale cached value.' } },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      cachedField: {
+        type: 'text',
+        label: 'Cached field',
+        defaultValue: 'default-cached',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'last',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const defaultValue = 'default-cached';
+
+    for (const [i, customValue] of ['First', 'Second', 'Third'].entries()) {
+      // Fill the field with a custom value
+      const targetInput = await canvas.findByRole('textbox', { name: 'Cached field' });
+      await userEvent.clear(targetInput);
+      await userEvent.type(targetInput, customValue);
+
+      // Hide the field (value is cached in FormLifecycleState)
+      const triggerInput = await canvas.findByRole('textbox', { name: 'Type "hide" to hide everything' });
+      await userEvent.clear(triggerInput);
+      await userEvent.type(triggerInput, 'hide');
+
+      // Verify field is removed from DOM
+      await expect(canvas.queryByRole('textbox', { name: 'Cached field', hidden: true })).not.toBeInTheDocument();
+
+      // Reset the form while the control is hidden
+      await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
+
+      // Verify field appears with default value, NOT the stale cached value
+      await expect(await canvas.findByRole('textbox', { name: 'Cached field' })).toHaveValue(defaultValue);
+    }
+  },
+};
+
