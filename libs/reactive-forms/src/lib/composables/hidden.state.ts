@@ -92,7 +92,6 @@ export function hiddenEffect(options: {
   parentValueStrategySignal: Signal<ValueStrategy | undefined>;
   handleVisibility: Signal<boolean>;
   attachFunction: SimpleFunction;
-  detachFunction: SimpleFunction;
   valueHandleFunction: ValueHandleFunction;
 }) {
   const parentContainer = inject(ControlContainer);

@@ -286,7 +286,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
       parentValueStrategySignal: this.parentValueStrategy,
       handleVisibility: this.handleVisibility,
       attachFunction: this.setGroup.bind(this),
-      detachFunction: this.removeGroup.bind(this),
       valueHandleFunction: this.handleValue.bind(this),
     });
 

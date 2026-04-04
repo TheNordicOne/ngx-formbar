@@ -18,8 +18,6 @@ export const FORM_LIFECYCLE_STATE = new InjectionToken<FormLifecycleState>(
   'form-lifecycle-state',
 );
 
-const NO_SAVED_VALUE = Symbol('no-saved-value');
-
 export function formLifecycleStateFactory(): FormLifecycleState {
   const entries = signal<Record<string, unknown>>({});
 
@@ -28,10 +26,7 @@ export function formLifecycleStateFactory(): FormLifecycleState {
       return computed(() => path in entries());
     },
     getSavedValue(path: string): Signal<unknown> {
-      return computed(() => {
-        const value = entries()[path];
-        return value === NO_SAVED_VALUE ? undefined : value;
-      });
+      return computed(() => entries()[path]);
     },
     saveValue(path: string, value: unknown): void {
       entries.update((e) => ({ ...e, [path]: value }));

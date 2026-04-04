@@ -284,7 +284,6 @@ export class NgxfbControlDirective<T extends NgxFbControl>
       parentValueStrategySignal: this.parentValueStrategy,
       handleVisibility: this.handleVisibility,
       attachFunction: this.setControl.bind(this),
-      detachFunction: this.removeControl.bind(this),
       valueHandleFunction: this.handleValue.bind(this),
     });
 
@@ -334,8 +333,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
       return this.content().defaultValue;
     }
 
-    const valueStrategy =
-      this.valueStrategy() ?? this.parentValueStrategy();
+    const valueStrategy = this.valueStrategy();
 
     switch (valueStrategy) {
       case 'last':
