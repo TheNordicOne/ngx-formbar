@@ -7,6 +7,10 @@ import {
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import {
+  FORM_LIFECYCLE_STATE,
+  formLifecycleStateFactory,
+} from '../../services/form-lifecycle-state';
+import {
   NgxFbBaseContent,
   NgxFbContent,
   NgxFbForm,
@@ -30,7 +34,13 @@ import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-c
   selector: 'ngxfb-form',
   imports: [NgxfbAbstractControlDirective],
   templateUrl: './ngxfb-form.component.html',
-  providers: [FormService],
+  providers: [
+    FormService,
+    {
+      provide: FORM_LIFECYCLE_STATE,
+      useFactory: formLifecycleStateFactory,
+    },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: [controlContainerViewProviders],
 })

@@ -14,6 +14,8 @@ import {
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormGroup } from '@angular/forms';
+import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
+import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
   withDisabledState,
@@ -72,6 +74,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+  private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -96,7 +99,10 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    * - 'auto': directive handles visibility via hidden attribute
    * - 'manual': component handles visibility in its own template
    */
-  private readonly visibilityHandling = signal<StateHandling>('auto');
+  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
+  private readonly handleVisibility = computed(
+    () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
+  );
 
   /**
    * Signal for managing the disabled state handling strategy ('auto' or 'manual')
@@ -166,7 +172,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    */
   readonly hiddenAttribute = withHiddenAttribute({
     hiddenSignal: this.isHidden,
-    hiddenHandlingSignal: this.visibilityHandling,
+    handleVisibility: this.handleVisibility,
   });
 
   /**
@@ -253,6 +259,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    */
   readonly controls = computed(() => Object.entries(this.content().controls));
 
+
   /**
    * Access to the parent FormGroup containing this group
    */
@@ -277,8 +284,8 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
       hideStrategySignal: this.hideStrategy,
       valueStrategySignal: this.valueStrategy,
       parentValueStrategySignal: this.parentValueStrategy,
+      handleVisibility: this.handleVisibility,
       attachFunction: this.setGroup.bind(this),
-      detachFunction: this.removeGroup.bind(this),
       valueHandleFunction: this.handleValue.bind(this),
     });
 
@@ -290,22 +297,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
     });
   }
 
-  /**
-   * Sets the visibility handling strategy
-   * Determines if visibility should be managed by the component (manual) or by Formbar (auto)
-   *
-   * Use 'manual' when implementing custom visibility handling in your component:
-   * ```typescript
-   * constructor() {
-   *   this.control.setVisibilityHandling('manual');
-   * }
-   * ```
-   *
-   * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
-   */
-  setVisibilityHandling(visibilityHandling: StateHandling) {
-    this.visibilityHandling.set(visibilityHandling);
-  }
 
   /**
    * Sets the disabled handling strategy

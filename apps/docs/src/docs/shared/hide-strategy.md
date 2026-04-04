@@ -6,15 +6,9 @@ This is relevant for when you have a hidden control, but still want to access it
 
 The following strategies are available:
 
-| Strategy         | Effect                                                 |
-|------------------|--------------------------------------------------------|
-| `keep` (default) | The control remains in the form model even when hidden |
-| `remove`         | The control is removed from the form model when hidden |
+| Strategy         | Effect                                                                    |
+|------------------|---------------------------------------------------------------------------|
+| `keep` (default) | The control remains in the form model even when hidden                    |
+| `remove`         | The control is removed from the form model and destroyed when hidden      |
 
-
-> **Alert**
-> If you use the `remove` strategy you **must** ensure that your component does not try to render elements with a binding to `[formGroupName]` or `[formControlName]`!
->
-> This is true even if you use the `auto` visibility state management! This is currently a limitation, for which I have not found a reasonable solution.
->
-> Checkout the [GitHub Issue](https://github.com/TheNordicOne/ngx-formbar/issues/64) for more details.
+When using the `remove` strategy, the component is structurally removed from the DOM when hidden and recreated when shown again. The value restoration behavior on re-show is determined by the `valueStrategy` option.

@@ -133,10 +133,7 @@ export class TextControlComponent {
   readonly isHidden: Signal<unknown> = this.control.isHidden;
   readonly name: Signal<string> = this.control.name;
 
-  constructor() {
-    // Let formbar know, that you take care of handling visibility
-    this.control.setVisibilityHandling('manual');
-  }
+  // Manual visibility handling is configured in the component registration
 }
 ```
 
@@ -343,7 +340,6 @@ The `NgxfbControlDirective<T>` exposes the following public properties and metho
 | `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The control's value strategy (`'last'`, `'default'`, or `'reset'`).       |
 | `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the control.                             |
 | `formControl`                     | `FormControl \| null`                    | Getter for the underlying `FormControl` instance.                         |
-| `setVisibilityHandling(handling)` | `(StateHandling) => void`                | Sets visibility handling to `'auto'` or `'manual'`.                       |
 
 ### Advanced
 

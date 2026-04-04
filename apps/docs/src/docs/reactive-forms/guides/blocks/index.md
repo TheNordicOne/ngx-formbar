@@ -121,10 +121,7 @@ export class InfoBlockComponent {
   // Really only should ever be a boolean return value, but an expression could also return a number, string or object
   readonly isHidden: Signal<unknown> = this.blockDirective.isHidden;
 
-  constructor() {
-    // Let formbar know, that you take care of handling visibility
-    this.blockDirective.setVisibilityHandling('manual');
-  }
+  // Manual visibility handling is configured in the component registration
 }
 ```
 
@@ -188,7 +185,6 @@ The `NgxfbBlockDirective<T>` exposes the following public properties and methods
 | `hiddenAttribute`                 | `Signal<string \| null>`      | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
 | `testId`                          | `Signal<string \| undefined>` | The computed test ID for the block.                                       |
 | `rootForm`                        | `ControlContainer`            | Getter for the parent form container.                                     |
-| `setVisibilityHandling(handling)` | `(StateHandling) => void`     | Sets visibility handling to `'auto'` or `'manual'`.                       |
 
 ### Advanced
 

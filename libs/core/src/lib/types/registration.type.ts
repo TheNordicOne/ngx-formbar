@@ -21,12 +21,32 @@ export interface LazyRegistration {
 }
 
 /**
- * A component registration entry — either static or lazy.
+ * Optional configuration for a component registration entry.
+ */
+export interface ComponentRegistrationOptions {
+  /**
+   * Controls how visibility is managed for this component type.
+   *
+   * - `'auto'` (default): The library manages visibility — setting `[attr.hidden]` for the `keep`
+   *   strategy, structurally removing the component for the `remove` strategy, and applying
+   *   the `valueStrategy` when visibility changes.
+   * - `'manual'`: The library does not manage visibility. The component receives the `isHidden`
+   *   signal but is responsible for handling its own hiding, form model management, and value
+   *   strategy. The library only handles initial form control registration.
+   */
+  visibilityHandling?: StateHandling;
+}
+
+/**
+ * A component registration entry — either static or lazy,
+ * optionally with additional configuration.
  *
  * - Static: `{ component: MyComponent }` — component is eagerly imported
  * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }` — loaded on demand
  */
-export type ComponentRegistrationEntry = StaticRegistration | LazyRegistration;
+export type ComponentRegistrationEntry =
+  | (StaticRegistration & ComponentRegistrationOptions)
+  | (LazyRegistration & ComponentRegistrationOptions);
 
 /**
  * Configuration for registering component types.

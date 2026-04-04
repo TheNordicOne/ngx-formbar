@@ -34,24 +34,26 @@ export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
 /**
  * Creates an effect that applies computed values to a form control
  *
- * The effect only updates the control when the parent form is dirty or the computed value is truthy,
- * preventing unnecessary overwrites on pristine forms.
+ * Only applies when a `computedValue` is defined in the control's configuration.
+ * Controls without `computedValue` are never touched by this effect.
  *
  * @param options.controlInstance Signal containing the AbstractControl to update
  * @param options.computeValueSignal Signal containing the resolved computed value
+ * @param options.isComputedValueDefined Signal indicating whether computedValue is configured
  */
 export function setComputedValueEffect(options: {
   controlInstance: Signal<AbstractControl>;
   computeValueSignal: Signal<unknown>;
+  isComputedValueDefined: Signal<boolean>;
 }) {
-  const parentContainer = inject(ControlContainer);
   effect(() => {
     const control = options.controlInstance();
     const value = options.computeValueSignal();
 
-    if (!value && parentContainer.pristine) {
+    if (!options.isComputedValueDefined()) {
       return;
     }
+
     control.setValue(value);
   });
 }

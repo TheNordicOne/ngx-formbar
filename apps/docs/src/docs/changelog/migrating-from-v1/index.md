@@ -196,6 +196,56 @@ This applies to all registration styles — `provideFormbar()` config, `defineFo
 
 If you use a custom `ComponentResolver`, update the `registrations` signal type from `Signal<ReadonlyMap<string, Type<unknown>>>` to `Signal<ReadonlyMap<string, ComponentRegistrationEntry>>`. Import `ComponentRegistrationEntry` from `@ngx-formbar/core`.
 
+## Step 8: Update visibility handling
+
+The `setVisibilityHandling('manual')` method has been removed from `NgxfbControlDirective`, `NgxfbGroupDirective`, and `NgxfbBlockDirective`. Visibility handling is now configured in the component registration.
+
+**Before:**
+
+```typescript
+@Component({ ... })
+export class MyComponent {
+  private readonly control = inject(NgxfbControlDirective);
+
+  constructor() {
+    this.control.setVisibilityHandling('manual');
+  }
+}
+```
+
+**After:**
+
+```typescript
+import { staticComponent } from '@ngx-formbar/core';
+
+provideFormbar({
+  componentRegistrations: {
+    myControl: staticComponent(MyComponent, { visibilityHandling: 'manual' }),
+  }
+})
+```
+
+The component itself no longer needs any code for visibility handling configuration.
+
+## Step 9: Update composable usage (if applicable)
+
+If you use the lower-level composables directly, the following signatures have changed:
+
+- `withHiddenAttribute` and `hiddenEffect` now accept `handleVisibility: Signal<boolean>` instead of `hiddenHandlingSignal: Signal<StateHandling>`. The boolean is `true` when the library manages visibility (`auto`) and `false` when the component handles it (`manual`).
+- `setComputedValueEffect` now requires an additional `isComputedValueDefined: Signal<boolean>` parameter. This signal should indicate whether a `computedValue` is configured on the control.
+
+## Step 10: Review computed value behavior
+
+`setComputedValueEffect` no longer skips falsy computed values on pristine forms. In v1, a `computedValue` that resolved to a falsy value (`0`, `""`, `false`) was not applied until the form became dirty — the `defaultValue` would show instead. In v2, the computed value is always applied as soon as it resolves, regardless of form state.
+
+If you relied on `defaultValue` being visible on initial render while a `computedValue` resolved to a falsy value, you may need to adjust your expression to return a non-falsy default or remove the `defaultValue`.
+
+## Step 11: Review hide strategy behavior
+
+The `hideStrategy: 'remove'` option now works with automatic visibility handling. When a control or group is hidden with `remove`, the component is structurally removed from the DOM and recreated when shown. Values are preserved across this cycle based on the `valueStrategy`.
+
+If you previously worked around this by wrapping content in `@if` or using manual visibility handling specifically for the `remove` strategy, you can remove those workarounds. The library now handles this automatically.
+
 ## What stays in @ngx-formbar/core
 
 The following imports remain in `@ngx-formbar/core` and do **not** need to change:
@@ -205,7 +255,7 @@ The following imports remain in `@ngx-formbar/core` and do **not** need to chang
 - `Expression`, `FormContext`
 - `NgxFbForm`, `NgxFbContent`, `NgxFbBaseContent`
 - `NgxFbControl`, `NgxFbFormGroup`, `NgxFbBlock`
-- `ComponentResolver`, `ComponentRegistrationConfig`, `ComponentRegistrationEntry`, `StaticRegistration`, `LazyRegistration`, `LoadComponentFn`
+- `ComponentResolver`, `ComponentRegistrationConfig`, `ComponentRegistrationEntry`, `ComponentRegistrationOptions`, `StaticRegistration`, `LazyRegistration`, `LoadComponentFn`
 - `staticComponent`, `loadComponent` (helper functions)
 - `NgxFbGlobalConfiguration`
 - `UpdateStrategy`

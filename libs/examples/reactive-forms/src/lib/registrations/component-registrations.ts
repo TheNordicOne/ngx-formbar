@@ -40,4 +40,11 @@ export const componentRegistrations: ComponentRegistrations = {
       (m) => m.FileControlComponent,
     ),
   ),
+  'manual-text': loadComponent(
+    () =>
+      import(
+        '../components/manual-text/manual-text-control.component'
+      ).then((m) => m.ManualTextControlComponent),
+    { visibilityHandling: 'manual' },
+  ),
 };

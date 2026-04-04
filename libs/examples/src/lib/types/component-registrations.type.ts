@@ -14,4 +14,5 @@ export interface ComponentRegistrations extends ComponentRegistrationConfig {
   textarea: ComponentRegistrationEntry;
   date: ComponentRegistrationEntry;
   file: ComponentRegistrationEntry;
+  'manual-text': ComponentRegistrationEntry;
 }

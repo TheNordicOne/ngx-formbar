@@ -31,12 +31,6 @@ export class GroupControlComponent {
   protected readonly legend = computed(
     () => this.dynamicTitle() ?? this.content().legend ?? '',
   );
-  protected readonly structurallyHidden = computed(
-    () => this.content().hideMode !== 'attribute' && this.isHidden(),
-  );
-  protected readonly attributeHidden = computed(
-    () => this.content().hideMode === 'attribute' && this.isHidden(),
-  );
   protected get errors() {
     return this.group.formGroup?.errors ?? {};
   }

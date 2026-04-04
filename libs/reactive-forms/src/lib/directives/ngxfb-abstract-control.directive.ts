@@ -6,62 +6,30 @@ import {
   input,
   ViewContainerRef,
 } from '@angular/core';
-import { NGX_FW_COMPONENT_RESOLVER, NgxFbBaseContent } from '@ngx-formbar/core';
+import {
+  NGX_FW_COMPONENT_RESOLVER,
+  NgxFbAbstractControl,
+  NgxFbBaseContent,
+} from '@ngx-formbar/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { from, of, switchMap } from 'rxjs';
+import { withHiddenState } from '../composables/hidden.state';
 
-/**
- * Structural directive that renders the appropriate component based on the control's type.
- *
- * This directive acts as a dynamic renderer for form controls, blocks, and groups.
- * It works by:
- * 1. Receiving a content configuration and name
- * 2. Looking up the registered component for the content's type
- * 3. Creating an instance of that component and binding the content and name to it
- *
- * This allows forms to be composed declaratively through configuration objects
- * rather than explicit templates.
- *
- * @example
- * ```html
- * <!-- Used with ngFor to render a list of controls -->
- * @for (control of controls(); track control[0]) {
- *   <ng-template *ngxfbAbstractControl="control" />
- * }
- *
- * <!-- Used directly with a specific control -->
- * <ng-template *ngxfbAbstractControl="['name', nameControlConfig]" />
- * ```
- */
 @Directive({
   selector: '[ngxfbAbstractControl]',
 })
 export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
   private viewContainerRef = inject(ViewContainerRef);
-
-  /**
-   * Service for component registration
-   * Provides access to component type mappings
-   */
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
   );
 
-  /**
-   * Required input for control configuration
-   * Defines properties like type, validation, and other control-specific settings
-   */
   readonly content = input.required<[string, T]>({
     alias: 'ngxfbAbstractControl',
   });
 
   readonly controlName = computed(() => this.content()[0]);
   readonly controlConfig = computed(() => this.content()[1]);
-
-  /**
-   * Registration map of component types
-   * Maps control types to component implementations
-   */
   readonly registrations = this.contentRegistrationService.registrations;
 
   private readonly registrationEntry = computed(() => {
@@ -71,32 +39,49 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
   });
 
   private readonly $registrationEntry = toObservable(this.registrationEntry);
-
   private readonly $component = this.$registrationEntry.pipe(
     switchMap((entry) => {
       if (!entry) {
         return of(null);
       }
-
       if ('component' in entry) {
         return of(entry.component);
       }
-
       return from(entry.loadComponent());
     }),
   );
 
-  /**
-   * Computed component type based on content.type
-   * Looks up the component implementation from registrations map
-   */
   readonly component = toSignal(this.$component, { initialValue: null });
+
+  readonly isHidden = withHiddenState(this.controlConfig);
+
+  private readonly hideStrategy = computed(() => {
+    const content = this.controlConfig();
+    if ('hideStrategy' in content) {
+      return (content as NgxFbAbstractControl).hideStrategy;
+    }
+    return undefined;
+  });
+
+  private readonly handleVisibility = computed(
+    () => (this.registrationEntry()?.visibilityHandling ?? 'auto') === 'auto',
+  );
+
+  private readonly shouldStructurallyHide = computed(
+    () =>
+      this.handleVisibility() &&
+      this.hideStrategy() === 'remove' &&
+      this.isHidden(),
+  );
 
   constructor() {
     effect(() => {
       const component = this.component();
+      const shouldHide = this.shouldStructurallyHide();
+
       this.viewContainerRef.clear();
-      if (component) {
+
+      if (component && !shouldHide) {
         const componentRef = this.viewContainerRef.createComponent(component);
         componentRef.setInput('content', this.controlConfig());
         componentRef.setInput('name', this.controlName());

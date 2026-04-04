@@ -1,0 +1,11 @@
+@if (!isHidden()) {
+  <div class="inline-input" [attr.data-testid]="testId()">
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+    <input
+      type="text"
+      [id]="name()"
+      [formControlName]="name()"
+      [attr.data-testid]="`${testId()}-input`"
+    />
+  </div>
+}

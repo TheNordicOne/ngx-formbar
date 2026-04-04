@@ -14,6 +14,8 @@ import {
   TestIdBuilderFn,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
+import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
+import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
   withDisabledState,
@@ -77,6 +79,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   implements OnDestroy
 {
   private parentContainer = inject(ControlContainer);
+  private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
   private readonly parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -94,7 +97,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   readonly name = input.required<string>();
 
-  private readonly visibilityHandling = signal<StateHandling>('auto');
+  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
+  private readonly handleVisibility = computed(
+    () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
+  );
   private readonly disabledHandling = signal<StateHandling>('auto');
   private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
     undefined,
@@ -150,7 +156,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   readonly hiddenAttribute = withHiddenAttribute({
     hiddenSignal: this.isHidden,
-    hiddenHandlingSignal: this.visibilityHandling,
+    handleVisibility: this.handleVisibility,
   });
 
   /**
@@ -213,17 +219,26 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   private readonly computedValue = withComputedValue(this.content);
 
+  private readonly isComputedValueDefined = computed(
+    () => this.content().computedValue !== undefined,
+  );
+
   /**
    * Computed signal for the form control instance
-   * Creates a new FormControl with appropriate validators and configuration
+   * Creates a new FormControl with appropriate validators and configuration.
+   *
+   * When recreated after `hideStrategy: 'remove'`, the initial value
+   * is determined by the `valueStrategy`:
+   * - `last`: restored from the lifecycle state (saved before destruction)
+   * - `default`: uses `defaultValue` from the configuration
+   * - `reset`: uses `undefined`
    */
   private readonly controlInstance = computed(() => {
     const content = this.content();
-
     const validators = this.validators();
     const asyncValidators = this.asyncValidators();
     const updateOn = this.updateStrategy();
-    return new FormControl(content.defaultValue, {
+    return new FormControl(this.resolveInitialValue(), {
       nonNullable: content.nonNullable,
       validators,
       asyncValidators,
@@ -267,8 +282,8 @@ export class NgxfbControlDirective<T extends NgxFbControl>
       hideStrategySignal: this.hideStrategy,
       valueStrategySignal: this.valueStrategy,
       parentValueStrategySignal: this.parentValueStrategy,
+      handleVisibility: this.handleVisibility,
       attachFunction: this.setControl.bind(this),
-      detachFunction: this.removeControl.bind(this),
       valueHandleFunction: this.handleValue.bind(this),
     });
 
@@ -282,25 +297,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     setComputedValueEffect({
       controlInstance: this.controlInstance,
       computeValueSignal: this.computedValue,
+      isComputedValueDefined: this.isComputedValueDefined,
     });
   }
 
-  /**
-   * Sets the visibility handling strategy
-   * Determines if visibility should be managed by the component (manual) or by Formbar (auto)
-   *
-   * Use 'manual' when implementing custom visibility handling in your component:
-   * ```typescript
-   * constructor() {
-   *   this.control.setVisibilityHandling('manual');
-   * }
-   * ```
-   *
-   * @param visibilityHandling Strategy for handling visibility ('auto' or 'manual')
-   */
-  setVisibilityHandling(visibilityHandling: StateHandling) {
-    this.visibilityHandling.set(visibilityHandling);
-  }
 
   /**
    * Sets the disabled handling strategy
@@ -325,6 +325,36 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     this.parentFormGroup?.setControl(this.name(), this.controlInstance(), {
       emitEvent: false,
     });
+  }
+
+  private resolveInitialValue(): unknown {
+    const hasSaved = this.hasSavedValue();
+    if (!hasSaved) {
+      return this.content().defaultValue;
+    }
+
+    const valueStrategy = this.valueStrategy();
+
+    switch (valueStrategy) {
+      case 'last':
+        return this.getSavedValue();
+      case 'reset':
+        return undefined;
+      default:
+        return this.content().defaultValue;
+    }
+  }
+
+  private get controlPath(): string {
+    return [...(this.parentContainer.path ?? []), this.name()].join('.');
+  }
+
+  private hasSavedValue(): boolean {
+    return this.formLifecycleState.hasSavedValue(this.controlPath)();
+  }
+
+  private getSavedValue(): unknown {
+    return this.formLifecycleState.getSavedValue(this.controlPath)();
   }
 
   private removeControl() {
@@ -360,6 +390,10 @@ export class NgxfbControlDirective<T extends NgxFbControl>
   }
 
   ngOnDestroy(): void {
+    const control = this.formControl;
+    if (control) {
+      this.formLifecycleState.saveValue(this.controlPath, control.value);
+    }
     this.removeControl();
   }
 }
