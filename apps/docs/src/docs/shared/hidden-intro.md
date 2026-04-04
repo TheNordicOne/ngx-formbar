@@ -7,15 +7,15 @@ You have the option to handle visibility yourself by setting `visibilityHandling
 
 ### Visibility State Overview
 
-| Visibility Handling | Hide Strategy    | When hidden                                                 | Value on re-show                                                   |
-|---------------------|------------------|-------------------------------------------------------------|--------------------------------------------------------------------|
-| `auto` (default)    | `keep` (default) | `hidden` attribute set on host, control stays in form model | Determined by `valueStrategy` (applied while hidden)               |
-| `auto`              | `remove`         | Component destroyed and removed from form model             | Determined by `valueStrategy` (restored from cache on re-creation) |
-| `manual`            | `keep`           | No `hidden` attribute set, but value strategy still applies | Determined by `valueStrategy`                                      |
-| `manual`            | `remove`         | Component is still destroyed by the library                 | Determined by `valueStrategy` (restored from cache on re-creation) |
+| Visibility Handling | Hide Strategy    | When hidden                                                   | Value on re-show                                                   |
+|---------------------|------------------|---------------------------------------------------------------|--------------------------------------------------------------------|
+| `auto` (default)    | `keep` (default) | `hidden` attribute set on host, control stays in form model   | Determined by `valueStrategy` (applied while hidden)               |
+| `auto`              | `remove`         | Component destroyed and removed from form model               | Determined by `valueStrategy` (restored from cache on re-creation) |
+| `manual`            | `keep`           | No automatic behavior — component manages visibility itself   | Value unchanged (library does not intervene)                       |
+| `manual`            | `remove`         | No automatic behavior — component manages visibility itself   | Value unchanged (library does not intervene)                       |
 
 > **Note**
-> When using `manual` visibility handling, only the `hidden` attribute is disabled. The form model management (adding/removing controls, value strategy) is still handled by the library. Full manual control over the form model is not yet supported.
+> When using `manual` visibility handling, the library only handles initial control registration. It does not set the `hidden` attribute, apply value strategies, or structurally remove the component. The component receives the `isHidden` signal and is responsible for managing its own visibility.
 
 ### Hidden State Rules
 
