@@ -1,4 +1,5 @@
 export * from './components/form/ngxfb-form.component';
+export * from './types/control-component.type';
 export * from './types/validation.type';
 export * from './types/validator-resolver.type';
 export * from './types/provide.type';

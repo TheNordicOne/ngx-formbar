@@ -1,4 +1,4 @@
-@if (!isHidden()) {
+@if (!hidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [for]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
     <select
@@ -12,6 +12,5 @@
         </option>
       }
     </select>
-    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
   </div>
 }
