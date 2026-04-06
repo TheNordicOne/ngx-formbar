@@ -10,43 +10,37 @@ import {
 } from './validation.type';
 
 /**
- * Configuration for registering and providing components and validators in Ngx Formbar
- *
- * @template S - Type extending RegistrationRecord for synchronous validators
- * @template A - Type extending RegistrationRecord for asynchronous validators
- *
- * @property componentRegistrations - Optional mapping of control types to component implementations
- * @property validatorRegistrations - Optional configuration for synchronous validators
- * @property asyncValidatorRegistrations - Optional configuration for asynchronous validators
- * @property updateOn - (Optional) Specifies when to update the control's value
- * @property globalConfig - (Optional) Configuration that is used for all controls
+ * Configuration object passed to `provideFormbar` or `defineFormbarConfig`.
  *
  * @example
- * // Define custom form components and validators
- * const formbarConfig: FormbarConfig<SyncValidators, AsyncValidators> = {
- *   componentRegistrations:
- *   {
- *      'text-input': staticComponent(TextInputComponent),
- *      'address-group': loadComponent(() => import('./address-group.component').then(m => m.AddressGroupComponent)),
+ * ```ts
+ * const config: FormbarConfig<SyncValidators, AsyncValidators> = {
+ *   componentRegistrations: {
+ *     'text-input': staticComponent(TextInputComponent),
+ *     'address-group': loadComponent(() => import('./address-group.component').then(m => m.AddressGroupComponent)),
  *   },
  *   validatorRegistrations: {
- *      'min-chars': [Validators.minLength(3)],
- *       letter: [letterValidator],
- *       combined: ['min-chars', Validators.required, 'letter'],
- *   }
+ *     'min-chars': [Validators.minLength(3)],
+ *     combined: ['min-chars', Validators.required, letterValidator],
+ *   },
  *   asyncValidatorRegistrations: {
  *     async: [asyncValidator],
- *     'async-group': [asyncGroupValidator],
  *   },
  * };
+ * ```
  */
 export interface FormbarConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
 > {
+  /** Maps control type names to their component implementations (static or lazy-loaded). */
   componentRegistrations?: ComponentRegistrationConfig;
+  /** Synchronous validator registrations keyed by name. */
   validatorRegistrations?: ValidatorConfig<S>;
+  /** Asynchronous validator registrations keyed by name. */
   asyncValidatorRegistrations?: AsyncValidatorConfig<A>;
+  /** Default update strategy (`change` | `blur` | `submit`) applied to all controls unless overridden. */
   updateOn?: UpdateStrategy;
+  /** Global configuration applied to every control in the form. */
   globalConfig?: NgxFbGlobalConfiguration;
 }
