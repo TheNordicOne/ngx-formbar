@@ -11,9 +11,9 @@ import {
   NgxFbAbstractControl,
   NgxFbBaseContent,
 } from '@ngx-formbar/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { from, of, switchMap } from 'rxjs';
 import { withHiddenState } from '../composables/hidden.state';
+import { FormConfigEntry } from '../types/control-component.type';
+import { withLoadedComponent } from '../composables/loaded-component';
 
 @Directive({
   selector: '[ngxfbAbstractControl]',
@@ -24,13 +24,19 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
     NGX_FW_COMPONENT_RESOLVER,
   );
 
-  readonly content = input.required<[string, T]>({
+  readonly config = input.required({
     alias: 'ngxfbAbstractControl',
+    transform: (v: [string, T]): FormConfigEntry<T> => ({
+      name: v[0],
+      config: v[1],
+    }),
   });
 
-  readonly controlName = computed(() => this.content()[0]);
-  readonly controlConfig = computed(() => this.content()[1]);
-  readonly registrations = this.contentRegistrationService.registrations;
+  private readonly registrations =
+    this.contentRegistrationService.registrations;
+
+  private readonly controlConfig = computed(() => this.config().config);
+  private readonly controlName = computed(() => this.config().name);
 
   private readonly registrationEntry = computed(() => {
     const registrations = this.registrations();
@@ -38,20 +44,7 @@ export class NgxfbAbstractControlDirective<T extends NgxFbBaseContent> {
     return registrations.get(content.type) ?? null;
   });
 
-  private readonly $registrationEntry = toObservable(this.registrationEntry);
-  private readonly $component = this.$registrationEntry.pipe(
-    switchMap((entry) => {
-      if (!entry) {
-        return of(null);
-      }
-      if ('component' in entry) {
-        return of(entry.component);
-      }
-      return from(entry.loadComponent());
-    }),
-  );
-
-  readonly component = toSignal(this.$component, { initialValue: null });
+  readonly component = withLoadedComponent(this.registrationEntry);
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
