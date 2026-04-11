@@ -13,18 +13,25 @@ const meta: Meta<StoryFormHostComponent> = {
 export default meta;
 type Story = StoryObj<StoryFormHostComponent>;
 
+function getFormValue(): Record<string, unknown> {
+  return StoryFormHostComponent.lastInstance!.form.getRawValue();
+}
+
 // -- DefaultChangeStrategy --
-// Default Angular behavior: form control updates on every keystroke.
 
 export const DefaultChangeStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Default Angular behavior — form updates on every keystroke.' } },
+    docs: {
+      description: {
+        story:
+          'Default Angular behavior — form model updates on every keystroke.',
+      },
+    },
   },
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
-        'default-control': {
+        control: {
           type: 'text',
           label: 'Default Strategy',
           defaultValue: '',
@@ -33,21 +40,25 @@ export const DefaultChangeStrategy: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    const input = await canvas.findByRole('textbox', { name: 'Default Strategy' });
+    const input = await canvas.findByRole('textbox', {
+      name: 'Default Strategy',
+    });
     await userEvent.clear(input);
     await userEvent.type(input, 'new-text');
 
-    const value = await canvas.findByTestId('default-control-value');
-    await expect(value).toHaveTextContent('new-text');
+    await expect(getFormValue()['control']).toBe('new-text');
   },
 };
 
 // -- GlobalBlurStrategy --
-// Global blur: typing doesn't update the form, blur does.
 
 export const GlobalBlurStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Global blur strategy — form updates only on blur.' } },
+    docs: {
+      description: {
+        story: 'Global blur strategy — form model updates only on blur.',
+      },
+    },
   },
   decorators: [
     applicationConfig({
@@ -55,7 +66,6 @@ export const GlobalBlurStrategy: Story = {
     }),
   ],
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
         control: {
@@ -70,23 +80,24 @@ export const GlobalBlurStrategy: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'new-text');
 
-    // Value should not be visible yet (form hasn't updated)
-    await expect(canvas.queryByTestId('control-value')).not.toBeInTheDocument();
+    // Form model has not committed the typed value yet
+    await expect(getFormValue()['control']).not.toBe('new-text');
 
-    // Blur the input to trigger the update
+    // Blur commits the value
     await userEvent.tab();
-
-    const value = await canvas.findByTestId('control-value');
-    await expect(value).toHaveTextContent('new-text');
+    await expect(getFormValue()['control']).toBe('new-text');
   },
 };
 
 // -- GlobalSubmitStrategy --
-// Global submit: form only updates on form submission.
 
 export const GlobalSubmitStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Global submit strategy — form updates only on submit.' } },
+    docs: {
+      description: {
+        story: 'Global submit strategy — form model updates only on submit.',
+      },
+    },
   },
   decorators: [
     applicationConfig({
@@ -94,7 +105,6 @@ export const GlobalSubmitStrategy: Story = {
     }),
   ],
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
         control: {
@@ -109,25 +119,26 @@ export const GlobalSubmitStrategy: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'submit-text');
 
-    // Blur should not trigger an update either
+    // Blur should not commit the value either
     await userEvent.tab();
-    await expect(canvas.queryByTestId('control-value')).not.toBeInTheDocument();
+    await expect(getFormValue()['control']).not.toBe('submit-text');
 
-    // Submit the form
+    // Submit commits the value
     const submitButton = await canvas.findByRole('button', { name: 'Submit' });
     await userEvent.click(submitButton);
-
-    const value = await canvas.findByTestId('control-value');
-    await expect(value).toHaveTextContent('submit-text');
+    await expect(getFormValue()['control']).toBe('submit-text');
   },
 };
 
 // -- ControlOverride --
-// Global strategy is 'submit', but one control overrides to 'change'.
 
 export const ControlOverride: Story = {
   parameters: {
-    docs: { description: { story: 'A control overrides the global submit strategy with change.' } },
+    docs: {
+      description: {
+        story: 'A control overrides the global submit strategy with change.',
+      },
+    },
   },
   decorators: [
     applicationConfig({
@@ -135,7 +146,6 @@ export const ControlOverride: Story = {
     }),
   ],
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
         'default-control': {
@@ -151,44 +161,44 @@ export const ControlOverride: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    // The override-control uses 'change', so typing updates immediately
-    const overrideInput = await canvas.findByRole('textbox', { name: 'Override Control' });
+    // The override control uses 'change' — updates immediately
+    const overrideInput = await canvas.findByRole('textbox', {
+      name: 'Override Control',
+    });
     await userEvent.clear(overrideInput);
     await userEvent.type(overrideInput, 'override-text');
+    await expect(getFormValue()['override-control']).toBe('override-text');
 
-    const overrideValue = await canvas.findByTestId('override-control-value');
-    await expect(overrideValue).toHaveTextContent('override-text');
-
-    // The default-control uses the global 'submit' strategy
-    const defaultInput = await canvas.findByRole('textbox', { name: 'Default Control' });
+    // The default control uses the global 'submit' strategy
+    const defaultInput = await canvas.findByRole('textbox', {
+      name: 'Default Control',
+    });
     await userEvent.clear(defaultInput);
     await userEvent.type(defaultInput, 'default-text');
     await userEvent.tab();
 
-    // Value should still be empty since the submit-strategy control hasn't synced
-    await expect(
-      await canvas.findByTestId('default-control-value'),
-    ).toHaveTextContent('');
+    // Not committed yet — still needs submit
+    await expect(getFormValue()['default-control']).not.toBe('default-text');
 
-    // Submit the form to trigger the update for the default control
+    // Submit commits the value
     const submitButton = await canvas.findByRole('button', { name: 'Submit' });
     await userEvent.click(submitButton);
-
-    const defaultValue = await canvas.findByTestId('default-control-value');
-    await expect(defaultValue).toHaveTextContent('default-text');
+    await expect(getFormValue()['default-control']).toBe('default-text');
   },
 };
 
 // -- NestedGroupInheritance --
-// Nested groups inherit the parent group's updateOn strategy,
-// but can override it at any level.
 
 export const NestedGroupInheritance: Story = {
   parameters: {
-    docs: { description: { story: 'Nested groups inherit and override the parent updateOn strategy.' } },
+    docs: {
+      description: {
+        story:
+          'Nested groups inherit and override the parent updateOn strategy.',
+      },
+    },
   },
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
         'root-group': {
@@ -197,24 +207,20 @@ export const NestedGroupInheritance: Story = {
           controls: {
             'child-group': {
               type: 'group',
-              // Inherits 'submit' from root-group
               controls: {
                 'grandchild-control': {
                   type: 'text',
-                  label: 'Grandchild Control',
-                  // Inherits 'submit' from parent chain
+                  label: 'Grandchild Control (inherits submit)',
                 },
               },
             },
             'override-group': {
               type: 'group',
               updateOn: 'blur',
-              // Overrides to 'blur'
               controls: {
                 'grandchild-override-control': {
                   type: 'text',
-                  label: 'Grandchild Override Control',
-                  // Inherits 'blur' from immediate parent
+                  label: 'Grandchild Override Control (inherits blur)',
                 },
               },
             },
@@ -224,94 +230,126 @@ export const NestedGroupInheritance: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    // -- Grandchild inheriting 'submit' through nested groups --
-    const grandchildInput = await canvas.findByRole('textbox', { name: 'Grandchild Control' });
+    const formValue = () =>
+      getFormValue() as {
+        'root-group': Record<string, Record<string, string>>;
+      };
+
+    // Grandchild inheriting 'submit' through nested groups
+    const grandchildInput = await canvas.findByRole('textbox', {
+      name: 'Grandchild Control (inherits submit)',
+    });
     await userEvent.clear(grandchildInput);
     await userEvent.type(grandchildInput, 'grandchild-text');
     await userEvent.tab();
 
-    // Should not update yet (needs submit)
     await expect(
-      canvas.queryByTestId('root-group.child-group.grandchild-control-value'),
-    ).not.toBeInTheDocument();
+      formValue()['root-group']['child-group']['grandchild-control'],
+    ).not.toBe('grandchild-text');
 
-    // Submit to trigger the update
-    const submitButton = await canvas.findByRole('button', { name: 'Submit' });
-    await userEvent.click(submitButton);
-
-    const grandchildValue = await canvas.findByTestId(
-      'root-group.child-group.grandchild-control-value',
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
     );
-    await expect(grandchildValue).toHaveTextContent('grandchild-text');
+    await expect(
+      formValue()['root-group']['child-group']['grandchild-control'],
+    ).toBe('grandchild-text');
 
-    // -- Grandchild inheriting 'blur' from overridden parent group --
-    const overrideInput = await canvas.findByRole('textbox', { name: 'Grandchild Override Control' });
+    // Grandchild inheriting 'blur' from overridden parent group
+    const overrideInput = await canvas.findByRole('textbox', {
+      name: 'Grandchild Override Control (inherits blur)',
+    });
     await userEvent.clear(overrideInput);
-    await userEvent.type(overrideInput, 'override-grandchild-text');
+    await userEvent.type(overrideInput, 'override-text');
 
-    // Should not update yet (needs blur)
-    await expect(await canvas.findByTestId(
-      'root-group.override-group.grandchild-override-control-value',
-    )).toHaveTextContent('');
+    await expect(
+      formValue()['root-group']['override-group'][
+        'grandchild-override-control'
+      ],
+    ).not.toBe('override-text');
 
-    // Blur to trigger the update
     await userEvent.tab();
-
-    await expect(await canvas.findByTestId(
-      'root-group.override-group.grandchild-override-control-value',
-    )).toHaveTextContent('override-grandchild-text');
+    await expect(
+      formValue()['root-group']['override-group'][
+        'grandchild-override-control'
+      ],
+    ).toBe('override-text');
   },
 };
 
 // -- ExplicitPerControlStrategies --
-// Tests explicit updateOn strategies on individual controls without a global default.
 
 export const ExplicitPerControlStrategies: Story = {
   parameters: {
-    docs: { description: { story: 'Each control explicitly sets its own updateOn strategy.' } },
+    docs: {
+      description: {
+        story: 'Each control explicitly sets its own updateOn strategy.',
+      },
+    },
   },
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
-        'change-control': { type: 'text', label: 'Change Control', updateOn: 'change' },
-        'blur-control': { type: 'text', label: 'Blur Control', updateOn: 'blur' },
-        'submit-control': { type: 'text', label: 'Submit Control', updateOn: 'submit' },
+        'change-control': {
+          type: 'text',
+          label: 'Change Control',
+          updateOn: 'change',
+        },
+        'blur-control': {
+          type: 'text',
+          label: 'Blur Control',
+          updateOn: 'blur',
+        },
+        'submit-control': {
+          type: 'text',
+          label: 'Submit Control',
+          updateOn: 'submit',
+        },
       },
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
     // Change strategy — updates immediately
-    const changeInput = await canvas.findByRole('textbox', { name: 'Change Control' });
+    const changeInput = await canvas.findByRole('textbox', {
+      name: 'Change Control',
+    });
     await userEvent.clear(changeInput);
     await userEvent.type(changeInput, 'change-text');
-    await expect(await canvas.findByTestId('change-control-value')).toHaveTextContent('change-text');
+    await expect(getFormValue()['change-control']).toBe('change-text');
 
     // Blur strategy — updates only on blur
-    const blurInput = await canvas.findByRole('textbox', { name: 'Blur Control' });
+    const blurInput = await canvas.findByRole('textbox', {
+      name: 'Blur Control',
+    });
     await userEvent.clear(blurInput);
     await userEvent.type(blurInput, 'blur-text');
-    await expect(await canvas.findByTestId('blur-control-value')).toHaveTextContent('');
+    await expect(getFormValue()['blur-control']).not.toBe('blur-text');
     await userEvent.tab();
-    await expect(await canvas.findByTestId('blur-control-value')).toHaveTextContent('blur-text');
+    await expect(getFormValue()['blur-control']).toBe('blur-text');
 
     // Submit strategy — updates only on submit
-    const submitInput = await canvas.findByRole('textbox', { name: 'Submit Control' });
+    const submitInput = await canvas.findByRole('textbox', {
+      name: 'Submit Control',
+    });
     await userEvent.clear(submitInput);
     await userEvent.type(submitInput, 'submit-text');
     await userEvent.tab();
-    await expect(canvas.queryByTestId('submit-control-value')).not.toHaveTextContent('submit-text');
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
-    await expect(await canvas.findByTestId('submit-control-value')).toHaveTextContent('submit-text');
+    await expect(getFormValue()['submit-control']).not.toBe('submit-text');
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
+    await expect(getFormValue()['submit-control']).toBe('submit-text');
   },
 };
 
 // -- GlobalDefaultWithNestedGroups --
-// Tests global default strategy interacting with nested group overrides.
 
 export const GlobalDefaultWithNestedGroups: Story = {
   parameters: {
-    docs: { description: { story: 'Global blur default with a nested group overriding to change.' } },
+    docs: {
+      description: {
+        story: 'Global blur default with a nested group overriding to change.',
+      },
+    },
   },
   decorators: [
     applicationConfig({
@@ -319,18 +357,23 @@ export const GlobalDefaultWithNestedGroups: Story = {
     }),
   ],
   args: {
-    autoUpdate: true,
     formConfig: {
       content: {
         'root-group': {
           type: 'group',
           controls: {
-            'child-control': { type: 'text', label: 'Child Control' },
+            'child-control': {
+              type: 'text',
+              label: 'Child Control (inherits blur)',
+            },
             'child-group': {
               type: 'group',
               updateOn: 'change',
               controls: {
-                'grandchild-control': { type: 'text', label: 'Grandchild Control' },
+                'grandchild-control': {
+                  type: 'text',
+                  label: 'Grandchild Control (inherits change)',
+                },
               },
             },
           },
@@ -339,22 +382,31 @@ export const GlobalDefaultWithNestedGroups: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
+    const formValue = () =>
+      getFormValue() as { 'root-group': Record<string, unknown> };
+
     // child-control inherits global default (blur)
-    const childInput = await canvas.findByRole('textbox', { name: 'Child Control' });
+    const childInput = await canvas.findByRole('textbox', {
+      name: 'Child Control (inherits blur)',
+    });
     await userEvent.clear(childInput);
     await userEvent.type(childInput, 'child-text');
-    await expect(canvas.queryByTestId('root-group.child-control-value')).not.toBeInTheDocument();
-    await userEvent.tab();
-    await expect(await canvas.findByTestId('root-group.child-control-value')).toHaveTextContent(
+    await expect(formValue()['root-group']['child-control']).not.toBe(
       'child-text',
     );
+    await userEvent.tab();
+    await expect(formValue()['root-group']['child-control']).toBe('child-text');
 
     // grandchild-control inherits change from child-group override
-    const grandchildInput = await canvas.findByRole('textbox', { name: 'Grandchild Control' });
+    const grandchildInput = await canvas.findByRole('textbox', {
+      name: 'Grandchild Control (inherits change)',
+    });
     await userEvent.clear(grandchildInput);
     await userEvent.type(grandchildInput, 'grandchild-text');
     await expect(
-      await canvas.findByTestId('root-group.child-group.grandchild-control-value'),
-    ).toHaveTextContent('grandchild-text');
+      (formValue()['root-group']['child-group'] as Record<string, unknown>)[
+        'grandchild-control'
+      ],
+    ).toBe('grandchild-text');
   },
 };
