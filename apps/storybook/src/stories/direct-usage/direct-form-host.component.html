@@ -1,0 +1,100 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <ngxfb-examples-text-control
+    name="firstName"
+    label="First Name"
+    testId="firstName"
+    placeHolder="Enter your name"
+  />
+
+  <ngxfb-examples-number-control
+    name="age"
+    label="Age"
+    testId="age"
+    [min]="0"
+    [max]="150"
+  />
+
+  <ngxfb-examples-checkbox-control
+    name="agree"
+    label="I agree to the terms"
+    testId="agree"
+  />
+
+  <ngxfb-examples-radio-control
+    name="favoriteColor"
+    label="Favorite Color"
+    testId="favoriteColor"
+    [options]="colorOptions"
+  />
+
+  <ngxfb-examples-dropdown-control
+    name="country"
+    label="Country"
+    testId="country"
+    [options]="countryOptions"
+  />
+
+  <ngxfb-examples-textarea-control
+    name="bio"
+    label="Biography"
+    testId="bio"
+    placeHolder="Tell us about yourself"
+    [rows]="4"
+    [maxLength]="500"
+  />
+
+  <ngxfb-examples-date-control
+    name="birthDate"
+    label="Birth Date"
+    testId="birthDate"
+    minDate="1900-01-01"
+    maxDate="2026-12-31"
+  />
+
+  <ngxfb-examples-file-control
+    name="attachment"
+    label="Attachment"
+    testId="attachment"
+    [accept]="['.pdf', '.txt']"
+  />
+
+  <ngxfb-examples-group-control
+    name="address"
+    title="Address"
+    testId="address"
+    legend="Address"
+  >
+    <ng-container formGroupName="address">
+      <ngxfb-examples-text-control
+        name="street"
+        label="Street"
+        testId="street"
+      />
+      <ngxfb-examples-text-control
+        name="city"
+        label="City"
+        testId="city"
+      />
+    </ng-container>
+  </ngxfb-examples-group-control>
+
+  <ngxfb-examples-note-control
+    testId="info"
+    message="All fields above are used directly without formbar."
+  />
+
+  <div class="story-actions">
+    <button data-testid="submit" type="submit">Submit</button>
+  </div>
+</form>
+
+@if (formValues().length > 0) {
+  <div class="story-form-values" data-testid="form-values">
+    @for (entry of formValues(); track entry.path) {
+      <div>
+        <span [attr.data-testid]="`${entry.path}-path`">{{ entry.path }}: </span>
+        <span [attr.data-testid]="`${entry.path}-value`">{{ entry.value }}</span>
+      </div>
+    }
+  </div>
+}
