@@ -185,9 +185,3 @@ The `NgxfbBlockDirective<T>` exposes the following public properties and methods
 | `hiddenAttribute`                 | `Signal<string \| null>`      | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
 | `testId`                          | `Signal<string \| undefined>` | The computed test ID for the block.                                       |
 | `rootForm`                        | `ControlContainer`            | Getter for the parent form container.                                     |
-
-### Advanced
-
-| Property / Method | Type | Description |
-|---|---|---|
-| `setTestIdBuilderFn(fn)` | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this block only. |

@@ -1,4 +1,4 @@
-import { computed, Directive, inject, input, signal } from '@angular/core';
+import { computed, Directive, inject, input } from '@angular/core';
 import { ControlContainer } from '@angular/forms';
 import { withTestId } from '../composables/testId';
 import {
@@ -8,7 +8,6 @@ import {
 import {
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbBaseContent,
-  TestIdBuilderFn,
 } from '@ngx-formbar/core';
 
 /**
@@ -83,14 +82,6 @@ export class NgxfbBlockDirective<T extends NgxFbBaseContent> {
   );
 
   /**
-   * Signal for the test ID builder function.
-   * Used to customize how test IDs are generated.
-   */
-  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
-    undefined,
-  );
-
-  /**
    * Computed test ID derived from the block's name.
    * Used for automated testing identification.
    *
@@ -99,7 +90,7 @@ export class NgxfbBlockDirective<T extends NgxFbBaseContent> {
    * <div [attr.data-testid]="testId()">...</div>
    * ```
    */
-  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name);
 
   /**
    * Computed signal for the hidden state.
@@ -132,15 +123,5 @@ export class NgxfbBlockDirective<T extends NgxFbBaseContent> {
    */
   get rootForm() {
     return this.parentContainer;
-  }
-
-  /**
-   * Sets the function to use for building a test id.
-   * This allows custom test ID generation strategies to be used.
-   *
-   * @param builderFn Function that returns the test id
-   */
-  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
-    this.testIdBuilder.set(builderFn);
   }
 }

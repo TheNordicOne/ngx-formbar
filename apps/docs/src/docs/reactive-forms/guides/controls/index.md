@@ -349,9 +349,8 @@ The `NgxfbControlDirective<T>` exposes the following public properties and metho
 
 ### Advanced
 
-| Property / Method | Type | Description |
-|---|---|---|
-| `parentFormGroup` | `FormGroup \| null` | Getter for the parent `FormGroup` containing this control. |
-| `parentValueStrategy` | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance. |
-| `setDisabledHandling(handling)` | `(StateHandling) => void` | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
-| `setTestIdBuilderFn(fn)` | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this control only. |
+| Property / Method               | Type                                 | Description                                                            |
+|---------------------------------|--------------------------------------|------------------------------------------------------------------------|
+| `parentFormGroup`               | `FormGroup \| null`                  | Getter for the parent `FormGroup` containing this control.             |
+| `parentValueStrategy`           | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance.                     |
+| `setDisabledHandling(handling)` | `(StateHandling) => void`            | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |

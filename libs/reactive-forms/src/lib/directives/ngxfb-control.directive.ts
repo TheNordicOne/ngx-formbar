@@ -11,7 +11,6 @@ import {
   NgxFbFormGroup,
   ValueStrategy,
   StateHandling,
-  TestIdBuilderFn,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
@@ -104,9 +103,6 @@ export class NgxfbControlDirective<T extends NgxFbControl>
     () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
   );
   private readonly disabledHandling = signal<StateHandling>('auto');
-  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
-    undefined,
-  );
 
   /**
    * Computed test ID derived from the control's ID
@@ -117,7 +113,7 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    * <input [attr.data-testid]="testId()" ... />
    * ```
    */
-  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name);
 
   /**
    * Computed signal for the control's hide strategy
@@ -313,15 +309,6 @@ export class NgxfbControlDirective<T extends NgxFbControl>
    */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
-  }
-
-  /**
-   * Sets the function to use for building a test id.
-   *
-   * @param builderFn Function that returns the test id
-   */
-  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
-    this.testIdBuilder.set(builderFn);
   }
 
   private setControl() {

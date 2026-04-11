@@ -1,6 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
 import {
-  TestIdBuilderFn,
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbConfigurationService,
@@ -17,13 +16,11 @@ import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
  * @template T - Type extending NgxFbBaseContent
  * @param content - Signal containing the control or group content configuration
  * @param name - Signal containing the name of the control
- * @param testIdBuilder - Signal holding a testIdBuilder function
  * @returns Computed signal that resolves to the element's ID for testing
  */
 export function withTestId(
   content: Signal<NgxFbBaseContent>,
   name: Signal<string>,
-  testIdBuilder: Signal<TestIdBuilderFn | undefined>,
 ): Signal<string> {
   const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxfbGroupDirective<NgxFbFormGroup>, {
@@ -36,7 +33,6 @@ export function withTestId(
   return resolveTestId(
     content,
     name,
-    testIdBuilder,
     globalConfig.testIdBuilder,
     computed(() => parentGroupDirective?.testId()),
   );

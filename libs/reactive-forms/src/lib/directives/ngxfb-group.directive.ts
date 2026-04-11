@@ -10,7 +10,6 @@ import {
 import {
   NgxFbFormGroup,
   StateHandling,
-  TestIdBuilderFn,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormGroup } from '@angular/forms';
@@ -112,14 +111,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
   private readonly disabledHandling = signal<StateHandling>('auto');
 
   /**
-   * Signal for the test ID builder function
-   * Used to customize how test IDs are generated
-   */
-  private readonly testIdBuilder = signal<TestIdBuilderFn | undefined>(
-    undefined,
-  );
-
-  /**
    * Computed test ID derived from the group's name
    * Used for automated testing identification
    *
@@ -128,7 +119,7 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    * <div [attr.data-testid]="testId()">...</div>
    * ```
    */
-  readonly testId = withTestId(this.content, this.name, this.testIdBuilder);
+  readonly testId = withTestId(this.content, this.name);
 
   /**
    * Computed signal for the group's hide strategy
@@ -313,16 +304,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    */
   setDisabledHandling(disabledHandling: StateHandling) {
     this.disabledHandling.set(disabledHandling);
-  }
-
-  /**
-   * Sets the function to use for building a test id.
-   * This allows custom test ID generation strategies to be used.
-   *
-   * @param builderFn Function that returns the test id
-   */
-  setTestIdBuilderFn(builderFn: TestIdBuilderFn | undefined) {
-    this.testIdBuilder.set(builderFn);
   }
 
   /**

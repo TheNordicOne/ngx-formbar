@@ -332,4 +332,3 @@ The `NgxfbGroupDirective<T>` exposes the following public properties and methods
 | `parentFormGroup`               | `FormGroup \| null`                      | Getter for the parent `FormGroup` containing this group.               |
 | `parentValueStrategy`           | `Signal<ValueStrategy \| undefined>`     | The parent's value strategy, used for inheritance.                     |
 | `setDisabledHandling(handling)` | `(StateHandling) => void`                | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
-| `setTestIdBuilderFn(fn)`        | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this group only.            |
