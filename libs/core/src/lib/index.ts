@@ -16,3 +16,4 @@ export * from './services/configuration.service';
 export * from './helper/registration';
 export * from './helper/string';
 export * from './composables';
+export * from './helper/type-guards';

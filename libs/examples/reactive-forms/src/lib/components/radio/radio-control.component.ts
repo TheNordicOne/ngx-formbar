@@ -21,5 +21,6 @@ export class RadioControlComponent
   readonly hidden = input(false);
   readonly label = input('');
   readonly testId = input('');
-  readonly options = input.required<{ id: string; value: string; label: string }[]>();
+  readonly options =
+    input.required<{ id: string; value: string; label: string }[]>();
 }

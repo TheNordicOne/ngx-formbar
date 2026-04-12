@@ -8,13 +8,13 @@ import {
   Signal,
 } from '@angular/core';
 import {
+  NGX_FW_COMPONENT_RESOLVER,
   NgxFbFormGroup,
   StateHandling,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
-import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
   withDisabledState,
@@ -98,9 +98,12 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    * - 'auto': directive handles visibility via hidden attribute
    * - 'manual': component handles visibility in its own template
    */
-  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
+  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER)
+    .registrations;
   private readonly handleVisibility = computed(
-    () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
+    () =>
+      (this.registrations().get(this.content().type)?.visibilityHandling ??
+        'auto') === 'auto',
   );
 
   /**
@@ -250,7 +253,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
    */
   readonly controls = computed(() => Object.entries(this.content().controls));
 
-
   /**
    * Access to the parent FormGroup containing this group
    */
@@ -287,7 +289,6 @@ export class NgxfbGroupDirective<T extends NgxFbFormGroup>
       disableFunction: this.disableGroup.bind(this),
     });
   }
-
 
   /**
    * Sets the disabled handling strategy
