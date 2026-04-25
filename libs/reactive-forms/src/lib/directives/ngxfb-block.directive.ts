@@ -16,7 +16,6 @@ import {
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
-import { ControlContainer, FormGroup } from '@angular/forms';
 import { createBindings } from '../setup/bindings';
 
 @Directive({
@@ -25,7 +24,7 @@ import { createBindings } from '../setup/bindings';
 export class NgxfbBlockDirective {
   private viewContainerRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
-  private parentContainer = inject(ControlContainer);
+
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
   );
@@ -40,7 +39,6 @@ export class NgxfbBlockDirective {
     this.contentRegistrationService.registrations;
 
   private readonly controlConfig = computed(() => this.config().config);
-  private readonly controlName = computed(() => this.config().name);
 
   private readonly registrationEntry = computed(() => {
     const registrations = this.registrations();
@@ -50,20 +48,13 @@ export class NgxfbBlockDirective {
 
   readonly component = withLoadedComponent(this.registrationEntry);
 
-  /**
-   * Access to the parent FormGroup containing this block
-   */
-  get parentFormGroup() {
-    return this.parentContainer.control as FormGroup | null;
-  }
-
   constructor() {
     afterRenderEffect(() => {
       const component = this.component();
 
       this.viewContainerRef.clear();
 
-      if (!component || !this.parentFormGroup) {
+      if (!component) {
         return;
       }
 
@@ -81,9 +72,6 @@ export class NgxfbBlockDirective {
 
     this.destroyRef.onDestroy(() => {
       this.componentRef?.destroy();
-      this.parentFormGroup?.removeControl(this.controlName(), {
-        emitEvent: false,
-      });
     });
   }
 }
