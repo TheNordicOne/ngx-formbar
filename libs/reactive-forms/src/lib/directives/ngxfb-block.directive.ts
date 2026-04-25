@@ -1,127 +1,89 @@
-import { computed, Directive, inject, input } from '@angular/core';
-import { ControlContainer } from '@angular/forms';
-import { withTestId } from '../composables/testId';
 import {
-  withHiddenAttribute,
-  withHiddenState,
-} from '../composables/hidden.state';
+  afterRenderEffect,
+  ComponentRef,
+  computed,
+  DestroyRef,
+  Directive,
+  inject,
+  input,
+  Signal,
+  ViewContainerRef,
+} from '@angular/core';
 import {
+  isFormbarBlock,
   NGX_FW_COMPONENT_RESOLVER,
-  NgxFbBaseContent,
+  NgxFbBlock,
 } from '@ngx-formbar/core';
+import { FormConfigEntry } from '../types/control-component.type';
+import { withLoadedComponent } from '../composables/loaded-component';
+import { ControlContainer, FormGroup } from '@angular/forms';
+import { createBindings } from '../setup/bindings';
 
-/**
- * Core directive for non-form elements that appear in forms.
- *
- * Block elements represent UI components that don't contribute to the form's value
- * but provide information or functionality within forms, such as:
- * - Information blocks
- * - Images
- * - Dividers
- * - Help text
- * - Custom UI elements
- *
- * This directive handles visibility conditions and test ID generation for block elements.
- *
- * Use this directive with hostDirectives in your custom block components:
- *
- * ```typescript
- * @Component({
- *   hostDirectives: [
- *     {
- *       directive: NgxfbBlockDirective,
- *       inputs: ['content', 'name'],
- *     }
- *   ],
- * })
- * export class InfoBlockComponent {
- *   private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
- *   readonly content = this.blockDirective.content;
- *   readonly message = computed(() => this.content().message);
- * }
- * ```
- *
- * @template T Type of the block configuration, must extend NgxFbBaseContent
- */
 @Directive({
   selector: '[ngxfbBlock]',
-  host: {
-    '[attr.hidden]': 'hiddenAttribute()',
-  },
 })
-export class NgxfbBlockDirective<T extends NgxFbBaseContent> {
-  /**
-   * Reference to the parent form container.
-   * Provides access to the form that contains this block.
-   */
+export class NgxfbBlockDirective {
+  private viewContainerRef = inject(ViewContainerRef);
+  private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
-
-  /**
-   * Required input containing the block configuration.
-   * Defines properties like type, hidden condition, and custom properties.
-   */
-  readonly content = input.required<T>();
-
-  /**
-   * Required input for the block's name.
-   * Used as an identifier within the form.
-   */
-  readonly name = input.required<string>();
-
-  /**
-   * Signal for managing the visibility handling strategy ('auto' or 'manual').
-   * - 'auto': directive handles visibility via hidden attribute
-   * - 'manual': component handles visibility in its own template
-   */
-  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER)
-    .registrations;
-  private readonly handleVisibility = computed(
-    () =>
-      (this.registrations().get(this.content().type)?.visibilityHandling ??
-        'auto') === 'auto',
+  private readonly contentRegistrationService = inject(
+    NGX_FW_COMPONENT_RESOLVER,
   );
 
-  /**
-   * Computed test ID derived from the block's name.
-   * Used for automated testing identification.
-   *
-   * Access this in your component template:
-   * ```html
-   * <div [attr.data-testid]="testId()">...</div>
-   * ```
-   */
-  readonly testId = withTestId(this.content, this.name);
-
-  /**
-   * Computed signal for the hidden state.
-   * True when the block should be hidden based on 'hidden' expression.
-   *
-   * Use this in your component when implementing custom visibility handling:
-   * ```typescript
-   * readonly isHidden = this.blockDirective.isHidden;
-   * ```
-   */
-  readonly isHidden = withHiddenState(this.content);
-
-  /**
-   * Computed signal for the hidden attribute.
-   * Used in DOM binding to show/hide the block element.
-   */
-  readonly hiddenAttribute = withHiddenAttribute({
-    hiddenSignal: this.isHidden,
-    handleVisibility: this.handleVisibility,
+  readonly config = input.required<FormConfigEntry<NgxFbBlock>>({
+    alias: 'ngxfbBlock',
   });
 
+  private componentRef?: ComponentRef<unknown>;
+
+  private readonly registrations =
+    this.contentRegistrationService.registrations;
+
+  private readonly controlConfig = computed(() => this.config().config);
+  private readonly controlName = computed(() => this.config().name);
+
+  private readonly registrationEntry = computed(() => {
+    const registrations = this.registrations();
+    const content = this.controlConfig();
+    return registrations.get(content.type) ?? null;
+  });
+
+  readonly component = withLoadedComponent(this.registrationEntry);
+
   /**
-   * Returns the parent form container.
-   * Provides access to the form instance that contains this block.
-   *
-   * Use this to access form data or methods:
-   * ```typescript
-   * const formData = this.blockDirective.rootForm.control.value;
-   * ```
+   * Access to the parent FormGroup containing this block
    */
-  get rootForm() {
-    return this.parentContainer;
+  get parentFormGroup() {
+    return this.parentContainer.control as FormGroup | null;
+  }
+
+  constructor() {
+    afterRenderEffect(() => {
+      const component = this.component();
+
+      this.viewContainerRef.clear();
+
+      if (!component || !this.parentFormGroup) {
+        return;
+      }
+
+      if (!isFormbarBlock(this.controlConfig)) {
+        return;
+      }
+
+      const signalMap = new Map<string, Signal<unknown>>();
+      const bindings = createBindings(component, signalMap, this.controlConfig);
+
+      this.componentRef = this.viewContainerRef.createComponent(component, {
+        bindings: [...bindings],
+      });
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.componentRef?.destroy();
+      this.parentFormGroup?.removeControl(this.controlName(), {
+        emitEvent: false,
+      });
+    });
   }
 }

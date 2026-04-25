@@ -6,7 +6,7 @@ import {
   resolveUpdateStrategy,
   NGX_FW_DEFAULT_UPDATE_STRATEGY,
 } from '@ngx-formbar/core';
-import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
+import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
 
 /**
  * Creates a computed signal for the control's update strategy
@@ -26,8 +26,8 @@ import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
  * @returns Computed signal providing the resolved update strategy
  */
 export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>): Signal<UpdateStrategy> {
-  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

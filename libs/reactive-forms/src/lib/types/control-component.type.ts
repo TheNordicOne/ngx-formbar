@@ -1,6 +1,11 @@
 import {
   ExtendedBlockInputs,
+  isFormbarBlock,
+  isFormbarControl,
+  isFormbarGroup,
+  NgxFbBaseContent,
   NgxFbBlock,
+  NgxFbContent,
   NgxFbControl,
   NgxFbFormGroup,
   SignalInput,

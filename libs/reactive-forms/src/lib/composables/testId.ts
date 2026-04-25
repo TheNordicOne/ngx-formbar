@@ -5,7 +5,7 @@ import {
   NgxFbConfigurationService,
   resolveTestId,
 } from '@ngx-formbar/core';
-import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
+import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
 
 /**
  * Creates a computed signal that extracts the ID for testing purposes
@@ -22,8 +22,8 @@ export function withTestId(
   content: Signal<NgxFbBaseContent>,
   name: Signal<string>,
 ): Signal<string> {
-  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

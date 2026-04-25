@@ -62,6 +62,9 @@ export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
    * Computed value containing form content
    */
   readonly formContent = computed(() =>
-    Object.entries(this.formConfig().content),
+    Object.entries(this.formConfig().content).map(([name, config]) => ({
+      name,
+      config,
+    })),
   );
 }
