@@ -3,13 +3,12 @@ import {
   computed,
   Injector,
   inputBinding,
-  reflectComponentType,
   Signal,
   Type,
   ViewContainerRef,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { createBinding } from './bindings';
+import { createBinding, getInputNames } from './bindings';
 import { NGXFB_GROUP_CONTROLS } from '../tokens/group-controls';
 
 export function setupGroup(params: {
@@ -33,8 +32,7 @@ export function setupGroup(params: {
     emitEvent: false,
   });
 
-  const mirror = reflectComponentType(component);
-  const inputNames = mirror?.inputs.map((i) => i.templateName) ?? [];
+  const inputNames = getInputNames(component);
 
   const bindings = inputNames.map((templateName) => {
     switch (templateName) {

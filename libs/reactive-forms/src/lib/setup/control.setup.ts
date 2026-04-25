@@ -2,13 +2,12 @@ import { NgxFbControl } from '@ngx-formbar/core';
 import {
   computed,
   inputBinding,
-  reflectComponentType,
   Signal,
   Type,
   ViewContainerRef,
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { createBinding } from './bindings';
+import { createBinding, getInputNames } from './bindings';
 
 export function setupControl(params: {
   component: Type<unknown>;
@@ -31,8 +30,7 @@ export function setupControl(params: {
     emitEvent: false,
   });
 
-  const mirror = reflectComponentType(component);
-  const inputNames = mirror?.inputs.map((i) => i.templateName) ?? [];
+  const inputNames = getInputNames(component);
 
   const bindings = inputNames.map((templateName) => {
     switch (templateName) {
