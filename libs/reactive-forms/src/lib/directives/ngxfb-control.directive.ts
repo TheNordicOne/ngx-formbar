@@ -15,6 +15,7 @@ import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { createBindings } from '../setup/bindings';
+import { withDynamicLabel } from '../composables/dynamic-label';
 
 @Directive({
   selector: '[ngxfbControl]',
@@ -50,6 +51,7 @@ export class NgxfbControlDirective {
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['label', computed(() => this.controlConfig().label)],
+    ['dynamicLabel', withDynamicLabel(this.controlConfig)],
   ]);
 
   /**

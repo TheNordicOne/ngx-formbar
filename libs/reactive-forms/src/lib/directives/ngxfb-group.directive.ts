@@ -22,6 +22,7 @@ import { withLoadedComponent } from '../composables/loaded-component';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { createBindings } from '../setup/bindings';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
+import { withDynamicTitle } from '../composables/dynamic-title';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -57,6 +58,7 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['title', computed(() => this.controlConfig().title)],
+    ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
 
   /**
