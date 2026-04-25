@@ -1,6 +1,6 @@
 import { InjectionToken, Signal } from '@angular/core';
 import { NgxFbContent } from '@ngx-formbar/core';
 
-export const NGXFB_GROUP_CONTROLS = new InjectionToken<
+export const NGXFB_CONTROL_ENTRIES = new InjectionToken<
   Signal<[string, NgxFbContent][]>
->('ngxfb-group-controls');
+>('ngxfb-control-entries');

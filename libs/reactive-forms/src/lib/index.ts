@@ -1,6 +1,6 @@
 export * from './components/form/ngxfb-form.component';
 export * from './components/control-outlet/ngxfb-control-outlet.component';
-export { NGXFB_GROUP_CONTROLS } from './tokens/group-controls';
+export { NGXFB_CONTROL_ENTRIES } from './tokens/control-entries';
 export * from './types/control-component.type';
 export * from './types/validation.type';
 export * from './types/validator-resolver.type';

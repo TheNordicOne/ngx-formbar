@@ -5,7 +5,7 @@ import {
   inject,
 } from '@angular/core';
 import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-control.directive';
-import { NGXFB_GROUP_CONTROLS } from '../../tokens/group-controls';
+import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 @Component({
   selector: 'ngxfb-control-outlet',
@@ -18,6 +18,6 @@ import { NGXFB_GROUP_CONTROLS } from '../../tokens/group-controls';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgxfbControlOutlet {
-  private readonly token = inject(NGXFB_GROUP_CONTROLS, { optional: true });
+  private readonly token = inject(NGXFB_CONTROL_ENTRIES, { optional: true });
   readonly controls = computed(() => this.token?.() ?? []);
 }

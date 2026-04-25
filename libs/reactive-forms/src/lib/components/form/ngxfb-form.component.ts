@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
 } from '@angular/core';
 import { FormService } from '../../services/form.service';
@@ -15,7 +16,8 @@ import {
   NgxFbContent,
   NgxFbForm,
 } from '@ngx-formbar/core';
-import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-control.directive';
+import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
+import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 /**
  * Ngx Formbar Form Component
@@ -32,8 +34,8 @@ import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-c
  */
 @Component({
   selector: 'ngxfb-form',
-  imports: [NgxfbAbstractControlDirective],
-  templateUrl: './ngxfb-form.component.html',
+  imports: [NgxfbControlOutlet],
+  template: `<ngxfb-control-outlet />`,
   providers: [
     FormService,
     {
@@ -42,7 +44,13 @@ import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-c
     },
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  viewProviders: [controlContainerViewProviders],
+  viewProviders: [
+    controlContainerViewProviders,
+    {
+      provide: NGXFB_CONTROL_ENTRIES,
+      useFactory: () => inject(NgxfbFormComponent).formContent,
+    },
+  ],
 })
 export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
   /**

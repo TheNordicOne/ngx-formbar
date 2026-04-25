@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { createBindings } from './bindings';
-import { NGXFB_GROUP_CONTROLS } from '../tokens/group-controls';
+import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 
 export function setupGroup(params: {
   component: Type<unknown>;
@@ -43,7 +43,7 @@ export function setupGroup(params: {
   );
 
   const injector = Injector.create({
-    providers: [{ provide: NGXFB_GROUP_CONTROLS, useValue: groupControls }],
+    providers: [{ provide: NGXFB_CONTROL_ENTRIES, useValue: groupControls }],
     parent: viewContainerRef.injector,
   });
 
