@@ -1,7 +1,7 @@
 @if (!hidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{
-      label()
+      displayLabel()
     }}</label>
     <div>
       <input

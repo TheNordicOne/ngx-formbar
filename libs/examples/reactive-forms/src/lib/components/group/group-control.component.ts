@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   NgxfbControlOutlet,
@@ -23,6 +28,15 @@ export class GroupControlComponent
   readonly readonly = input(false);
   readonly hidden = input(false);
   readonly title = input('');
+  readonly dynamicTitle = input<string>();
   readonly testId = input('');
   readonly legend = input<string>();
+
+  readonly displayTitle = computed(() => {
+    const dynamic = this.dynamicTitle();
+    if (dynamic && dynamic.trim() !== '') {
+      return dynamic;
+    }
+    return this.title() || (this.legend() ?? '');
+  });
 }
