@@ -1,4 +1,4 @@
-@if (!hidden()) {
+@if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{
       displayLabel()
@@ -7,7 +7,7 @@
       type="date"
       [id]="name()"
       [formControlName]="name()"
-      [attr.readonly]="readonly() || null"
+      [attr.readonly]="isReadonly() || null"
       [min]="minDate()"
       [max]="maxDate()"
       [attr.data-testid]="`${testId()}-input`"

@@ -15,9 +15,9 @@ import {
 /** Common signal inputs shared by all formbar component types. */
 export interface ReactiveFormbarAbstractControl {
   readonly name: SignalInput<string>;
-  readonly disabled?: SignalInput<boolean>;
-  readonly readonly?: SignalInput<boolean>;
-  readonly hidden?: SignalInput<boolean>;
+  readonly isDisabled?: SignalInput<boolean>;
+  readonly isReadonly?: SignalInput<boolean>;
+  readonly isHidden?: SignalInput<boolean>;
   readonly testId?: SignalInput<string>;
 }
 
@@ -35,7 +35,7 @@ export interface ReactiveFormbarAbstractControl {
  * @Component({ ... })
  * export class TextComponent implements ReactiveFormbarControl<TextControl> {
  *   readonly name = input.required<string>();
- *   readonly label = input<string>();
+ *   readonly labelText = input<string>();
  *   readonly placeholder = input<string>();
  * }
  * ```
@@ -43,7 +43,7 @@ export interface ReactiveFormbarAbstractControl {
 export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
   ReactiveFormbarAbstractControl &
     ToSignalInputs<Omit<T, keyof NgxFbControl>> & {
-      readonly label?: SignalInput<string>;
+      readonly labelText?: SignalInput<string>;
       readonly dynamicLabel?: SignalInput<string | undefined>;
     };
 
@@ -66,14 +66,14 @@ export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
  * })
  * export class GroupComponent implements ReactiveFormbarGroup {
  *   readonly name = input.required<string>();
- *   readonly title = input<string>();
+ *   readonly titleText = input<string>();
  * }
  * ```
  */
 export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
   ReactiveFormbarAbstractControl &
     ToSignalInputs<Omit<T, keyof NgxFbFormGroup>> & {
-      readonly title?: SignalInput<string>;
+      readonly titleText?: SignalInput<string>;
       readonly dynamicTitle?: SignalInput<string | undefined>;
     };
 
@@ -99,7 +99,7 @@ export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
 export type FormbarBlock<T extends NgxFbBlock = NgxFbBlock> = ToSignalInputs<
   ExtendedBlockInputs<T>
 > & {
-  readonly hidden?: SignalInput<boolean>;
+  readonly isHidden?: SignalInput<boolean>;
   readonly testId?: SignalInput<string>;
 };
 

@@ -50,7 +50,7 @@ export class NgxfbControlDirective {
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
-    ['label', computed(() => this.controlConfig().label)],
+    ['labelText', computed(() => this.controlConfig().label)],
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
   ]);
 

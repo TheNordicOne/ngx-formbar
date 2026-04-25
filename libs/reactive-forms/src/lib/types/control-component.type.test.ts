@@ -50,10 +50,10 @@ interface NoteControl extends NgxFbBlock {
 // full implementation with all properties
 declare class FullTextControl implements ReactiveFormbarControl<TextControl> {
   readonly name: InputSignalWithTransform<string, string>;
-  readonly disabled: InputSignal<boolean>;
-  readonly readonly: InputSignal<boolean>;
-  readonly hidden: InputSignal<boolean>;
-  readonly label: InputSignal<string>;
+  readonly isDisabled: InputSignal<boolean>;
+  readonly isReadonly: InputSignal<boolean>;
+  readonly isHidden: InputSignal<boolean>;
+  readonly labelText: InputSignal<string>;
   readonly dynamicLabel: InputSignal<string | undefined>;
   readonly testId: InputSignal<string>;
   readonly hint: InputSignal<string | undefined>;
@@ -88,10 +88,10 @@ declare class MinimalNumberControl
 // full group with all properties
 declare class FullGroupControl implements ReactiveFormbarGroup<GroupControl> {
   readonly name: InputSignalWithTransform<string, string>;
-  readonly disabled: InputSignal<boolean>;
-  readonly readonly: InputSignal<boolean>;
-  readonly hidden: InputSignal<boolean>;
-  readonly title: InputSignal<string>;
+  readonly isDisabled: InputSignal<boolean>;
+  readonly isReadonly: InputSignal<boolean>;
+  readonly isHidden: InputSignal<boolean>;
+  readonly titleText: InputSignal<string>;
   readonly dynamicTitle: InputSignal<string | undefined>;
   readonly testId: InputSignal<string>;
   readonly legend: InputSignal<string | undefined>;
@@ -107,7 +107,7 @@ declare class MinimalGroupControl
 
 // full block with all properties
 declare class FullNoteBlock implements FormbarBlock<NoteControl> {
-  readonly hidden: InputSignal<boolean>;
+  readonly isHidden: InputSignal<boolean>;
   readonly testId: InputSignal<string>;
   readonly message: InputSignalWithTransform<string, string>;
   readonly severity: InputSignal<'info' | 'warn' | 'danger' | undefined>;
@@ -133,7 +133,7 @@ declare class MissingCustomProps
 
 // @ts-expect-error — missing required 'name'
 declare class MissingName implements ReactiveFormbarControl<CheckboxControl> {
-  readonly disabled: InputSignal<boolean>;
+  readonly isDisabled: InputSignal<boolean>;
 }
 
 // @ts-expect-error — missing required 'legend'
@@ -143,5 +143,5 @@ declare class MissingLegend implements ReactiveFormbarGroup<GroupControl> {
 
 // @ts-expect-error — missing required 'message' and 'severity'
 declare class MissingMessage implements FormbarBlock<NoteControl> {
-  readonly hidden: InputSignal<boolean>;
+  readonly isHidden: InputSignal<boolean>;
 }

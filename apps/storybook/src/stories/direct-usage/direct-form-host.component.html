@@ -1,14 +1,14 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <ngxfb-examples-text-control
     name="firstName"
-    label="First Name"
+    labelText="First Name"
     testId="firstName"
     placeHolder="Enter your name"
   />
 
   <ngxfb-examples-number-control
     name="age"
-    label="Age"
+    labelText="Age"
     testId="age"
     [min]="0"
     [max]="150"
@@ -16,27 +16,27 @@
 
   <ngxfb-examples-checkbox-control
     name="agree"
-    label="I agree to the terms"
+    labelText="I agree to the terms"
     testId="agree"
   />
 
   <ngxfb-examples-radio-control
     name="favoriteColor"
-    label="Favorite Color"
+    labelText="Favorite Color"
     testId="favoriteColor"
     [options]="colorOptions"
   />
 
   <ngxfb-examples-dropdown-control
     name="country"
-    label="Country"
+    labelText="Country"
     testId="country"
     [options]="countryOptions"
   />
 
   <ngxfb-examples-textarea-control
     name="bio"
-    label="Biography"
+    labelText="Biography"
     testId="bio"
     placeHolder="Tell us about yourself"
     [rows]="4"
@@ -45,7 +45,7 @@
 
   <ngxfb-examples-date-control
     name="birthDate"
-    label="Birth Date"
+    labelText="Birth Date"
     testId="birthDate"
     minDate="1900-01-01"
     maxDate="2026-12-31"
@@ -53,26 +53,26 @@
 
   <ngxfb-examples-file-control
     name="attachment"
-    label="Attachment"
+    labelText="Attachment"
     testId="attachment"
     [accept]="['.pdf', '.txt']"
   />
 
   <ngxfb-examples-group-control
     name="address"
-    title="Address"
+    titleText="Address"
     testId="address"
     legend="Address"
   >
     <ng-container formGroupName="address">
       <ngxfb-examples-text-control
         name="street"
-        label="Street"
+        labelText="Street"
         testId="street"
       />
       <ngxfb-examples-text-control
         name="city"
-        label="City"
+        labelText="City"
         testId="city"
       />
     </ng-container>

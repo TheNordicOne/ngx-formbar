@@ -1,11 +1,11 @@
-@if (!hidden()) {
+@if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <textarea
       [id]="name()"
       [placeholder]="placeHolder() ?? ''"
       [formControlName]="name()"
-      [readonly]="readonly()"
+      [readonly]="isReadonly()"
       [attr.rows]="rows() ?? null"
       [attr.maxlength]="maxLength() ?? null"
       [attr.data-testid]="`${testId()}-input`"

@@ -1,4 +1,4 @@
-@if (!hidden()) {
+@if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <div class="radio-group">

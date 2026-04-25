@@ -57,7 +57,7 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
-    ['title', computed(() => this.controlConfig().title)],
+    ['titleText', computed(() => this.controlConfig().title)],
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
 

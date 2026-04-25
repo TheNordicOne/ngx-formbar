@@ -24,10 +24,10 @@ export class GroupControlComponent
   implements ReactiveFormbarGroup<GroupControl>
 {
   readonly name = input.required<string>();
-  readonly disabled = input(false);
-  readonly readonly = input(false);
-  readonly hidden = input(false);
-  readonly title = input('');
+  readonly isDisabled = input(false);
+  readonly isReadonly = input(false);
+  readonly isHidden = input(false);
+  readonly titleText = input('');
   readonly dynamicTitle = input<string>();
   readonly testId = input('');
   readonly legend = input<string>();
@@ -37,6 +37,6 @@ export class GroupControlComponent
     if (dynamic && dynamic.trim() !== '') {
       return dynamic;
     }
-    return this.title() || (this.legend() ?? '');
+    return this.titleText() || (this.legend() ?? '');
   });
 }

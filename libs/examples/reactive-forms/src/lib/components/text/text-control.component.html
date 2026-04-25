@@ -6,7 +6,7 @@
     [placeholder]="placeHolder() ?? ''"
     [title]="hint()"
     [formControlName]="name()"
-    [attr.readonly]="readonly() || null"
+    [attr.readonly]="isReadonly() || null"
     [attr.data-testid]="`${testId()}-input`"
   />
   @if (hint()) {

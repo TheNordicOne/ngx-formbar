@@ -21,10 +21,10 @@ export class TextControlComponent
   implements ReactiveFormbarControl<TextControl>
 {
   readonly name = input.required<string>();
-  readonly disabled = input(false);
-  readonly readonly = input(false);
-  readonly hidden = input(false);
-  readonly label = input('');
+  readonly isDisabled = input(false);
+  readonly isReadonly = input(false);
+  readonly isHidden = input(false);
+  readonly labelText = input('');
   readonly dynamicLabel = input<string>();
   readonly testId = input('');
   readonly hint = input<string>();
@@ -35,6 +35,6 @@ export class TextControlComponent
     if (dynamic && dynamic.trim() !== '') {
       return dynamic;
     }
-    return this.label();
+    return this.labelText();
   });
 }

@@ -19,7 +19,7 @@ import { NoteControl } from '@ngx-formbar/examples';
   },
 })
 export class NoteControlComponent implements FormbarBlock<NoteControl> {
-  readonly hidden = input(false);
+  readonly isHidden = input(false);
   readonly testId = input('');
   readonly message = input.required<string>();
   readonly severity = input<'info' | 'warn' | 'danger'>();
