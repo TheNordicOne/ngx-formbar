@@ -1,8 +1,7 @@
 <ng-container [formGroupName]="name()">
   <fieldset class="demo-form-group" [attr.data-testid]="testId()">
     <legend [attr.data-testid]="`${testId()}-title`">{{ legend() }}</legend>
-    @for (content of controls(); track content[0]) {
-      <ng-template *ngxfbAbstractControl="content" />
-    }
+    <ngxfb-control-outlet />
+    <ng-content />
   </fieldset>
 </ng-container>

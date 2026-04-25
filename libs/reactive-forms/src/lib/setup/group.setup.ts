@@ -1,6 +1,7 @@
 import { NgxFbFormGroup } from '@ngx-formbar/core';
 import {
   computed,
+  Injector,
   inputBinding,
   reflectComponentType,
   Signal,
@@ -9,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { createBinding } from './bindings';
+import { NGXFB_GROUP_CONTROLS } from '../tokens/group-controls';
 
 export function setupGroup(params: {
   component: Type<unknown>;
@@ -43,17 +45,22 @@ export function setupGroup(params: {
           templateName,
           computed(() => controlConfig().title),
         );
-      case 'controls':
-        return inputBinding(
-          templateName,
-          computed(() => Object.entries(controlConfig().controls)),
-        );
       default:
         return createBinding(templateName, controlConfig());
     }
   });
 
+  const groupControls = computed(() =>
+    Object.entries(controlConfig().controls),
+  );
+
+  const injector = Injector.create({
+    providers: [{ provide: NGXFB_GROUP_CONTROLS, useValue: groupControls }],
+    parent: viewContainerRef.injector,
+  });
+
   return viewContainerRef.createComponent(component, {
     bindings: [...bindings],
+    injector,
   });
 }
