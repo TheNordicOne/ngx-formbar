@@ -2,13 +2,12 @@ import { NgxFbFormGroup } from '@ngx-formbar/core';
 import {
   computed,
   Injector,
-  inputBinding,
   Signal,
   Type,
   ViewContainerRef,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { createBinding, getInputNames } from './bindings';
+import { createBindings } from './bindings';
 import { NGXFB_GROUP_CONTROLS } from '../tokens/group-controls';
 
 export function setupGroup(params: {
@@ -32,21 +31,12 @@ export function setupGroup(params: {
     emitEvent: false,
   });
 
-  const inputNames = getInputNames(component);
+  const signalMap = new Map<string, Signal<unknown>>([
+    ['name', controlName],
+    ['title', computed(() => controlConfig().title)],
+  ]);
 
-  const bindings = inputNames.map((templateName) => {
-    switch (templateName) {
-      case 'name':
-        return inputBinding(templateName, controlName);
-      case 'title':
-        return inputBinding(
-          templateName,
-          computed(() => controlConfig().title),
-        );
-      default:
-        return createBinding(templateName, controlConfig());
-    }
-  });
+  const bindings = createBindings(component, signalMap, controlConfig);
 
   const groupControls = computed(() =>
     Object.entries(controlConfig().controls),

@@ -1,13 +1,7 @@
 import { NgxFbControl } from '@ngx-formbar/core';
-import {
-  computed,
-  inputBinding,
-  Signal,
-  Type,
-  ViewContainerRef,
-} from '@angular/core';
+import { computed, Signal, Type, ViewContainerRef } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { createBinding, getInputNames } from './bindings';
+import { createBindings } from './bindings';
 
 export function setupControl(params: {
   component: Type<unknown>;
@@ -30,21 +24,12 @@ export function setupControl(params: {
     emitEvent: false,
   });
 
-  const inputNames = getInputNames(component);
+  const signalMap = new Map<string, Signal<unknown>>([
+    ['name', controlName],
+    ['label', computed(() => controlConfig().label)],
+  ]);
 
-  const bindings = inputNames.map((templateName) => {
-    switch (templateName) {
-      case 'name':
-        return inputBinding(templateName, controlName);
-      case 'label':
-        return inputBinding(
-          templateName,
-          computed(() => controlConfig().label),
-        );
-      default:
-        return createBinding(templateName, controlConfig());
-    }
-  });
+  const bindings = createBindings(component, signalMap, controlConfig);
 
   return viewContainerRef.createComponent(component, {
     bindings: [...bindings],

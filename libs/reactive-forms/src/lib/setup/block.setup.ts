@@ -1,6 +1,6 @@
 import { NgxFbBlock } from '@ngx-formbar/core';
 import { Signal, Type, ViewContainerRef } from '@angular/core';
-import { createBinding, getInputNames } from './bindings';
+import { createBindings } from './bindings';
 
 export function setupBlock(params: {
   component: Type<unknown>;
@@ -9,11 +9,8 @@ export function setupBlock(params: {
 }) {
   const { component, controlConfig, viewContainerRef } = params;
 
-  const inputNames = getInputNames(component);
-
-  const bindings = inputNames.map((templateName) =>
-    createBinding(templateName, controlConfig()),
-  );
+  const signalMap = new Map<string, Signal<unknown>>();
+  const bindings = createBindings(component, signalMap, controlConfig);
 
   return viewContainerRef.createComponent(component, {
     bindings: [...bindings],
