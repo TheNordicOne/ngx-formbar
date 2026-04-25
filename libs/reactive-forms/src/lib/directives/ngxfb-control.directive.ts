@@ -84,8 +84,12 @@ export class NgxfbControlDirective {
     });
   }
 
+  private resolveInitialValue() {
+    return this.controlConfig().defaultValue;
+  }
+
   private setControl() {
-    const controlInstance = new FormControl(null, {});
+    const controlInstance = new FormControl(this.resolveInitialValue(), {});
 
     this.parentFormGroup?.setControl(this.controlName(), controlInstance, {
       emitEvent: false,
