@@ -14,7 +14,7 @@ import {
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
-import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
+import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
 /**
  * Computes a reactive hidden state based on control content
@@ -33,8 +33,8 @@ import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.dire
 export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

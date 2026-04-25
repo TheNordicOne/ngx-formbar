@@ -23,6 +23,7 @@ import { ControlContainer, FormGroup } from '@angular/forms';
 import { createBindings } from '../setup/bindings';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
+import { withHiddenState } from '../composables/hidden.state';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -55,8 +56,12 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
 
   private readonly component = withLoadedComponent(this.registrationEntry);
 
+  // Public API
+  readonly isHidden = withHiddenState(this.controlConfig);
+
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
+    ['isHidden', this.isHidden],
     ['titleText', computed(() => this.controlConfig().title)],
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
@@ -64,7 +69,7 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
   /**
    * Access to the parent FormGroup containing this group
    */
-  get parentFormGroup() {
+  private get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
   }
 
