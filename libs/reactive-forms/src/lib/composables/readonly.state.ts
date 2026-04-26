@@ -45,10 +45,7 @@ export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
 
   const option = computed(() => content().readonly);
 
-  const formContext = computed<FormContext>(
-    () =>
-      formService.formValue() ?? (formService.formGroup.value as FormContext),
-  );
+  const formContext = computed<FormContext>(() => formService.formValue());
 
   return resolveInheritableExpression(
     option,
