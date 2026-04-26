@@ -1,11 +1,9 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
-  ExpressionService,
   FormContext,
   HideStrategy,
   NgxFbBaseContent,
   NgxFbContent,
-  NgxFbFormGroup,
   resolveHiddenAttribute,
   resolveHiddenState,
   SimpleFunction,
@@ -14,53 +12,15 @@ import {
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
-import { NgxfbGroupDirective } from '../directives/ngxfb-group.directive';
 
-/**
- * Computes a reactive hidden state based on control content
- *
- * The hidden state is determined using the following priority:
- * 1. If content.hidden is an expression string, it's parsed to AST and evaluated
- *    against the current form values
- * 2. If no hidden expression is defined, the control inherits the hidden state
- *    from its parent group
- * 3. Both conditions can be combined - a control is hidden if either its own
- *    condition evaluates to true OR its parent group is hidden
- *
- * @param content Signal containing control configuration with potential hidden expression
- * @returns Computed signal that resolves to boolean hidden state
- */
 export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);
-  const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbGroupDirective<NgxFbFormGroup>, {
-      optional: true,
-      skipSelf: true,
-    });
-
-  const parentGroupIsHidden: Signal<boolean> = computed<boolean>(() => {
-    const parentGroup = parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.isHidden();
-  });
 
   const option = computed(() => content().hidden);
 
-  const formContext = computed<FormContext>(
-    () =>
-      formService.formValue() ?? (formService.formGroup.value as FormContext),
-  );
+  const formContext = computed<FormContext>(() => formService.formValue());
 
-  return resolveHiddenState(
-    option,
-    formContext,
-    expressionService,
-    parentGroupIsHidden,
-  );
+  return resolveHiddenState(option, formContext);
 }
 
 /**

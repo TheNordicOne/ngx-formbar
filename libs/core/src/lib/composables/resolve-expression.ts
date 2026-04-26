@@ -31,11 +31,11 @@ export function resolveExpression<T>(
   expressionService: ExpressionService,
 ) {
   const ast = computed<Program | null>(() => {
-    const value = option();
-    if (typeof value !== 'string') {
+    const expression = option();
+    if (typeof expression !== 'string') {
       return null;
     }
-    return expressionService.parseExpressionToAst(value);
+    return expressionService.parseExpressionToAst(expression);
   });
 
   return computed<T | undefined>(() => {
@@ -49,6 +49,8 @@ export function resolveExpression<T>(
       return value(formContext());
     }
 
+    // When it's not an expression passed as a string, return the value as is
+    // e.g.: boolean, number
     if (typeof value !== 'string') {
       return value;
     }
