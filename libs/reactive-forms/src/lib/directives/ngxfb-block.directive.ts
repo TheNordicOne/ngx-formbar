@@ -7,16 +7,15 @@ import {
   inject,
   input,
   Signal,
+  Type,
   ViewContainerRef,
 } from '@angular/core';
-import {
-  isFormbarBlock,
-  NGX_FW_COMPONENT_RESOLVER,
-  NgxFbBlock,
-} from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_RESOLVER, NgxFbBlock } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
 import { createBindings } from '../setup/bindings';
+import { withHiddenState } from '../composables/hidden.state';
+import { withTestId } from '../composables/testId';
 
 @Directive({
   selector: '[ngxfbBlock]',
@@ -39,6 +38,7 @@ export class NgxfbBlockDirective {
     this.contentRegistrationService.registrations;
 
   private readonly controlConfig = computed(() => this.config().config);
+  private readonly controlName = computed(() => this.config().name);
 
   private readonly registrationEntry = computed(() => {
     const registrations = this.registrations();
@@ -47,6 +47,15 @@ export class NgxfbBlockDirective {
   });
 
   readonly component = withLoadedComponent(this.registrationEntry);
+
+  private readonly isHidden = withHiddenState(this.controlConfig);
+
+  private readonly testId = withTestId(this.controlConfig, this.controlName);
+
+  private readonly signalMap = new Map<string, Signal<unknown>>([
+    ['isHidden', this.isHidden],
+    ['testId', this.testId],
+  ]);
 
   constructor() {
     afterRenderEffect(() => {
@@ -58,20 +67,23 @@ export class NgxfbBlockDirective {
         return;
       }
 
-      if (!isFormbarBlock(this.controlConfig)) {
-        return;
-      }
-
-      const signalMap = new Map<string, Signal<unknown>>();
-      const bindings = createBindings(component, signalMap, this.controlConfig);
-
-      this.componentRef = this.viewContainerRef.createComponent(component, {
-        bindings: [...bindings],
-      });
+      this.instantiateComponent(component);
     });
 
     this.destroyRef.onDestroy(() => {
       this.componentRef?.destroy();
+    });
+  }
+
+  private instantiateComponent(component: Type<unknown>) {
+    const bindings = createBindings(
+      component,
+      this.signalMap,
+      this.controlConfig,
+    );
+
+    this.componentRef = this.viewContainerRef.createComponent(component, {
+      bindings: [...bindings],
     });
   }
 }
