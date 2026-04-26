@@ -152,13 +152,6 @@ export class NgxFbControlDirective implements OnDestroy {
 
       this.applyVisibleState();
     });
-
-    this.destroyRef.onDestroy(() => {
-      this.componentRef?.destroy();
-      this.parentFormGroup?.removeControl(this.controlName(), {
-        emitEvent: false,
-      });
-    });
   }
 
   private applyHiddenState() {
@@ -277,8 +270,8 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.componentRef?.destroy();
     const control = this.formControl;
-
     if (control) {
       this.saveLastValue();
     }

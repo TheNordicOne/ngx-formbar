@@ -2,7 +2,6 @@ import {
   afterRenderEffect,
   ComponentRef,
   computed,
-  DestroyRef,
   Directive,
   effect,
   inject,
@@ -38,7 +37,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy
 {
   private viewContainerRef = inject(ViewContainerRef);
-  private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
@@ -141,13 +139,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       }
 
       this.applyVisibleState();
-    });
-
-    this.destroyRef.onDestroy(() => {
-      this.componentRef?.destroy();
-      this.parentFormGroup?.removeControl(this.controlName(), {
-        emitEvent: false,
-      });
     });
   }
 
@@ -268,6 +259,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   ngOnDestroy() {
+    this.componentRef?.destroy();
     this.removeGroup();
   }
 }
