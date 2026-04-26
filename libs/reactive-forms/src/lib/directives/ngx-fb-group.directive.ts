@@ -81,7 +81,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
 
   private readonly component = withLoadedComponent(this.registrationEntry);
 
-  private readonly isHidden = withHiddenState(this.controlConfig);
+  readonly isHidden = withHiddenState(this.controlConfig);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],

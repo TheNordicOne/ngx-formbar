@@ -3,6 +3,7 @@ import {
   FormContext,
   HideStrategy,
   NgxFbBaseContent,
+  NgxFbFormGroup,
   NgxFbItem,
   resolveHiddenAttribute,
   resolveHiddenState,
@@ -12,6 +13,7 @@ import {
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
+import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);
@@ -20,7 +22,22 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
 
   const formContext = computed<FormContext>(() => formService.formValue());
 
-  return resolveHiddenState(option, formContext);
+  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
+      optional: true,
+      skipSelf: true,
+    });
+
+  const parentGroupIsHidden: Signal<boolean> = computed<boolean>(() => {
+    const parentGroup = parentGroupDirective;
+    if (!parentGroup) {
+      return false;
+    }
+
+    return parentGroup.isHidden();
+  });
+
+  return resolveHiddenState(option, formContext, parentGroupIsHidden);
 }
 
 /**

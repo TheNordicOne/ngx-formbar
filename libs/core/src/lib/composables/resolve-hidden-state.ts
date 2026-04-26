@@ -9,11 +9,13 @@ import { resolveExpression } from './resolve-expression';
  * The hidden state does not inherit from its parent
  * @param option Signal containing the hidden expression option
  * @param formContext Signal providing the current form context for expression evaluation
+ * @param parentGroupIsHidden Signal providing the visibility state of the parent form group
  * @returns Computed signal that resolves to a boolean hidden state
  */
 export function resolveHiddenState(
   option: Signal<Expression<boolean> | boolean | undefined>,
   formContext: Signal<FormContext>,
+  parentGroupIsHidden: Signal<boolean>,
 ) {
   const expressionService = inject(ExpressionService);
 
@@ -23,5 +25,7 @@ export function resolveHiddenState(
     expressionService,
   );
 
-  return computed<boolean>(() => expressionResult() ?? false);
+  return computed<boolean>(
+    () => parentGroupIsHidden() || (expressionResult() ?? false),
+  );
 }
