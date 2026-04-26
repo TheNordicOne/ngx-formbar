@@ -3,7 +3,7 @@ import {
   FormContext,
   HideStrategy,
   NgxFbBaseContent,
-  NgxFbContent,
+  NgxFbItem,
   resolveHiddenAttribute,
   resolveHiddenState,
   SimpleFunction,
@@ -43,7 +43,7 @@ export function withHiddenAttribute(options: {
 }
 
 export function hiddenEffect(options: {
-  content: Signal<NgxFbContent>;
+  item: Signal<NgxFbItem>;
   name: Signal<string>;
   controlInstance: Signal<AbstractControl>;
   hiddenSignal: Signal<boolean>;

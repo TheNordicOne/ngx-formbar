@@ -1,4 +1,4 @@
-import { staticComponent, loadComponent } from '@ngx-formbar/core';
+import { loadComponent, staticComponent } from '@ngx-formbar/core';
 import { ComponentRegistrations } from '@ngx-formbar/examples';
 import { TextControlComponent } from '../components/text/text-control.component';
 import { CheckboxControlComponent } from '../components/checkbox/checkbox-control.component';
@@ -42,9 +42,9 @@ export const componentRegistrations: ComponentRegistrations = {
   ),
   'manual-text': loadComponent(
     () =>
-      import(
-        '../components/manual-text/manual-text-control.component'
-      ).then((m) => m.ManualTextControlComponent),
-    { visibilityHandling: 'manual' },
+      import('../components/manual-text/manual-text-control.component').then(
+        (m) => m.ManualTextControlComponent,
+      ),
+    { keepValueWhenHidden: 'manual' },
   ),
 };

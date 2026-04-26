@@ -11,11 +11,7 @@ import {
   FORM_LIFECYCLE_STATE,
   formLifecycleStateFactory,
 } from '../../services/form-lifecycle-state';
-import {
-  NgxFbBaseContent,
-  NgxFbContent,
-  NgxFbForm,
-} from '@ngx-formbar/core';
+import { NgxFbBaseContent, NgxFbForm, NgxFbItem } from '@ngx-formbar/core';
 import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
 import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
@@ -52,7 +48,7 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
     },
   ],
 })
-export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
+export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
   /**
    * Required input containing form configuration
    */

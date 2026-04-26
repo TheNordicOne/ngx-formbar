@@ -102,7 +102,7 @@ export class NgxfbLegacyGroupDirective<T extends NgxFbFormGroup>
     .registrations;
   private readonly handleVisibility = computed(
     () =>
-      (this.registrations().get(this.content().type)?.visibilityHandling ??
+      (this.registrations().get(this.content().type)?.keepValueWhenHidden ??
         'auto') === 'auto',
   );
 
@@ -270,7 +270,7 @@ export class NgxfbLegacyGroupDirective<T extends NgxFbFormGroup>
 
   constructor() {
     hiddenEffect({
-      content: this.content,
+      item: this.content,
       name: this.name,
       controlInstance: this.groupInstance,
       hiddenSignal: this.isHidden,

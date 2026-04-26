@@ -5,10 +5,7 @@ import {
   withHiddenAttribute,
   withHiddenState,
 } from '../composables/hidden.state';
-import {
-  NGX_FW_COMPONENT_RESOLVER,
-  NgxFbBaseContent,
-} from '@ngx-formbar/core';
+import { NGX_FW_COMPONENT_RESOLVER, NgxFbBaseContent } from '@ngx-formbar/core';
 
 /**
  * Core directive for non-form elements that appear in forms.
@@ -77,7 +74,7 @@ export class NgxfbLegacyBlockDirective<T extends NgxFbBaseContent> {
     .registrations;
   private readonly handleVisibility = computed(
     () =>
-      (this.registrations().get(this.content().type)?.visibilityHandling ??
+      (this.registrations().get(this.content().type)?.keepValueWhenHidden ??
         'auto') === 'auto',
   );
 

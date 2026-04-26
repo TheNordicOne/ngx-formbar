@@ -9,14 +9,14 @@ import {
   isFormbarControl,
   isFormbarGroup,
 } from '@ngx-formbar/core';
-import { NgxfbControlDirective } from '../../directives/ngxfb-control.directive';
-import { NgxfbGroupDirective } from '../../directives/ngxfb-group.directive';
+import { NgxFbControlDirective } from '../../directives/ngx-fb-control.directive';
+import { NgxFbGroupDirective } from '../../directives/ngx-fb-group.directive';
 import { NgxfbBlockDirective } from '../../directives/ngxfb-block.directive';
 import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 @Component({
   selector: 'ngxfb-control-outlet',
-  imports: [NgxfbControlDirective, NgxfbGroupDirective, NgxfbBlockDirective],
+  imports: [NgxFbControlDirective, NgxFbGroupDirective, NgxfbBlockDirective],
   templateUrl: './ngxfb-control-outlet.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

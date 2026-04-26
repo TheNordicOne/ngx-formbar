@@ -4,18 +4,21 @@ import {
   computed,
   DestroyRef,
   Directive,
+  effect,
   inject,
   Injector,
   input,
   Signal,
   Type,
+  untracked,
   ViewContainerRef,
 } from '@angular/core';
 import {
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbBaseContent,
-  NgxFbContent,
   NgxFbFormGroup,
+  NgxFbItem,
+  ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
@@ -28,13 +31,19 @@ import { withHiddenState } from '../composables/hidden.state';
 @Directive({
   selector: '[ngxfbGroup]',
 })
-export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
+export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
   private viewContainerRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
   );
+
+  private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
+      optional: true,
+      skipSelf: true,
+    });
 
   readonly config = input.required<FormConfigEntry<NgxFbFormGroup<T>>>({
     alias: 'ngxfbGroup',
@@ -54,14 +63,31 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
     return registrations.get(config.type) ?? null;
   });
 
+  private readonly hideStrategy = computed(
+    () => this.controlConfig().hideStrategy,
+  );
+
+  private readonly parentValueStrategy = computed(() =>
+    this.parentGroupDirective?.valueStrategy(),
+  );
+
+  readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
+    () => this.controlConfig().valueStrategy ?? this.parentValueStrategy(),
+  );
+
+  private readonly handleVisibility = computed(
+    () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',
+  );
+
   private readonly component = withLoadedComponent(this.registrationEntry);
 
-  // Public API
-  readonly isHidden = withHiddenState(this.controlConfig);
+  private readonly isHidden = withHiddenState(this.controlConfig);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
+    ['hideStrategy', this.hideStrategy],
+    ['valueStrategy', this.valueStrategy],
     ['titleText', computed(() => this.controlConfig().title)],
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
@@ -71,6 +97,10 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
    */
   private get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
+  }
+
+  private get formGroup() {
+    return this.parentFormGroup?.get(this.controlName()) as FormGroup | null;
   }
 
   constructor() {
@@ -83,9 +113,21 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
         return;
       }
 
-      this.setGroup();
-
       this.instantiateComponent(component);
+    });
+
+    effect(() => {
+      const isHidden = this.isHidden();
+      const controlName = this.controlName();
+      const groupInParent = this.formGroup;
+      const handleVisibility = this.handleVisibility();
+
+      if (isHidden) {
+        this.applyHiddenState(controlName, groupInParent, handleVisibility);
+        return;
+      }
+
+      this.applyVisibleState(controlName, groupInParent, handleVisibility);
     });
 
     this.destroyRef.onDestroy(() => {
@@ -96,12 +138,50 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
     });
   }
 
-  private setGroup() {
-    const controlInstance = new FormGroup({}, {});
+  private applyHiddenState(
+    controlName: string,
+    formGroup: FormGroup | null | undefined,
+    handleVisibility: boolean,
+  ) {
+    if (handleVisibility) {
+      this.destroyComponent();
+    }
+    this.removeGroup(controlName, formGroup);
+  }
 
-    this.parentFormGroup?.setControl(this.controlName(), controlInstance, {
+  private applyVisibleState(
+    controlName: string,
+    formGroup: FormGroup | null | undefined,
+    handleVisibility: boolean,
+  ) {
+    if (!formGroup) {
+      this.setGroup(controlName);
+    }
+
+    // untracked because changes to that signal are already handled elsewhere
+    const component = untracked(() => this.component());
+
+    if (handleVisibility && component) {
+      this.instantiateComponent(component);
+    }
+  }
+
+  private setGroup(controlName: string) {
+    const controlInstance = new FormGroup({}, {});
+    this.parentFormGroup?.setControl(controlName, controlInstance, {
       emitEvent: false,
     });
+  }
+
+  private removeGroup(
+    controlName: string,
+    formGroup: FormGroup | null | undefined,
+  ) {
+    // Check if control exists immediately before attempting removal
+    if (!formGroup) {
+      return;
+    }
+    this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
   }
 
   private instantiateComponent(component: Type<unknown>) {
@@ -111,7 +191,7 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
       this.controlConfig,
     );
 
-    const groupControls = computed<FormConfigEntry<NgxFbContent>[]>(() =>
+    const groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
       Object.entries(this.controlConfig().controls).map(([name, config]) => ({
         name,
         config,
@@ -127,5 +207,15 @@ export class NgxfbGroupDirective<T extends NgxFbBaseContent = NgxFbContent> {
       bindings: [...bindings],
       injector: componentInjector,
     });
+  }
+
+  private destroyComponent() {
+    const instance = this.componentRef;
+
+    if (!instance) {
+      return;
+    }
+
+    this.viewContainerRef.detach();
   }
 }

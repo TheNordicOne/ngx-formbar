@@ -42,41 +42,42 @@ Then implement the component.
 > Be sure to bind to `[formControlName]` on the actual input element
 
 {% raw %}
+
 ```typescript group="text-control" name="text-control.component.ts" icon="angular"
-import { Component, Signal, computed, inject } from '@angular/core';
-import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Component, Signal, computed, inject} from '@angular/core';
+import {ReactiveFormsModule, ControlContainer} from '@angular/forms';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  selector: 'app-text-control',
-  imports: [ReactiveFormsModule],
-  templateUrl: './text-control.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    }
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbControlDirective,
-      inputs: ['content', 'name'],
-    }
-  ],
+    selector: 'app-text-control',
+    imports: [ReactiveFormsModule],
+    templateUrl: './text-control.component.html',
+    viewProviders: [
+        {
+            provide: ControlContainer,
+            useFactory: () => inject(ControlContainer, {skipSelf: true}),
+        }
+    ],
+    hostDirectives: [
+        {
+            directive: NgxFbControlDirective,
+            inputs: ['content', 'name'],
+        }
+    ],
 })
 export class TextControlComponent {
-  // Inject the Directive to gain access to all public properties
-  // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
+    // Inject the Directive to gain access to all public properties
+    // Make sure to pass the correct type parameter to get proper type information
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
 
-  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<TextControl> = this.control.content; // The configuration object of the control instance
+    // Explicitly setting a type definition is not required, but some IDEs work better if they are present
+    readonly content: Signal<TextControl> = this.control.content; // The configuration object of the control instance
 
-  // We get proper type information when accessing this.content()
-  readonly hint = computed(() => this.content().hint);
-  readonly label = computed(() => this.content().label);
-  readonly name: Signal<string> = this.control.name;
+    // We get proper type information when accessing this.content()
+    readonly hint = computed(() => this.content().hint);
+    readonly label = computed(() => this.content().label);
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -119,21 +120,22 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 {% include "../../../shared/hidden-intro.md" %}
 
 {% raw %}
+
 ```typescript group="hidden-control" name="text-control.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
-  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
-  readonly isHidden: Signal<unknown> = this.control.isHidden;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
+    // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+    readonly isHidden: Signal<unknown> = this.control.isHidden;
+    readonly name: Signal<string> = this.control.name;
 
-  // Manual visibility handling is configured in the component registration
+    // Manual visibility handling is configured in the component registration
 }
 ```
 
@@ -157,18 +159,19 @@ export class TextControlComponent {
 {% include "../../../shared/disabled-intro.md" %}
 
 {% raw %}
+
 ```typescript group="disabled-control" name="text-control.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
-  readonly disabled: Signal<boolean> = this.control.disabled;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
+    readonly disabled: Signal<boolean> = this.control.disabled;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -187,18 +190,19 @@ export class TextControlComponent {
 {% include "../../../shared/readonly-intro.md" %}
 
 {% raw %}
+
 ```typescript group="readonly-control" name="text-control.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
-  readonly readonly: Signal<boolean> = this.control.readonly;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
+    readonly readonly: Signal<boolean> = this.control.readonly;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -234,32 +238,33 @@ Your component can access this computed dynamic label via a signal (e.g., this.c
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
 {% raw %}
+
 ```typescript group="dynamic-label" name="text-control.component.ts" icon="angular"
-import { Signal, computed, inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Signal, computed, inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
 
-  // Access the computed dynamic label from the directive.
-  // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
-  readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
+    // Access the computed dynamic label from the directive.
+    // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
+    readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
 
-  readonly staticConfigLabel = computed(() => this.content().label);
-  readonly name: Signal<string> = this.control.name;
+    readonly staticConfigLabel = computed(() => this.content().label);
+    readonly name: Signal<string> = this.control.name;
 
-  readonly displayLabel = computed(() => {
-    const dynamic = this.dynamicLabel();
-    if (dynamic && dynamic.trim() !== '') {
-      return dynamic;
-    }
+    readonly displayLabel = computed(() => {
+        const dynamic = this.dynamicLabel();
+        if (dynamic && dynamic.trim() !== '') {
+            return dynamic;
+        }
 
-    return this.staticConfigLabel() || '';
-  });
+        return this.staticConfigLabel() || '';
+    });
 }
 ```
 
@@ -274,18 +279,19 @@ export class TextControlComponent {
 {% include "../../../shared/test-id.md" %}
 
 {% raw %}
+
 ```typescript group="test-id-control" name="text-control.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import {TextControl} from './text-control.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class TextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
-  readonly testId: Signal<string> = this.control.testId;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbControlDirective<TextControl>);
+    readonly testId: Signal<string> = this.control.testId;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -308,15 +314,18 @@ Showing errors works pretty much the same as always. You get access to the form 
 In TypeScript set up a getter
 
 ```typescript name="text-control.component.ts" icon="angular"
-import { inject } from '@angular/core';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import {inject} from '@angular/core';
+import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
 
 // inject the instance of the directive
-private readonly textControl = inject(NgxfbControlDirective<Control>);
+private readonly
+textControl = inject(NgxFbControlDirective<Control>);
 
 // Get access to the underlying form textControl}
-get formControl() {
-  return this.textControl.formControl
+get
+formControl()
+{
+    return this.textControl.formControl
 }
 ```
 

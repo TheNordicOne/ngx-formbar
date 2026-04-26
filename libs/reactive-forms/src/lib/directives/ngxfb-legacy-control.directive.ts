@@ -7,15 +7,15 @@ import {
   signal,
 } from '@angular/core';
 import {
+  NGX_FW_COMPONENT_RESOLVER,
   NgxFbControl,
   NgxFbFormGroup,
-  ValueStrategy,
   StateHandling,
+  ValueStrategy,
 } from '@ngx-formbar/core';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 import { FormService } from '../services/form.service';
-import { NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
 import {
   disabledEffect,
   withDisabledState,
@@ -98,9 +98,12 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
    */
   readonly name = input.required<string>();
 
-  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
+  private readonly registrations = inject(NGX_FW_COMPONENT_RESOLVER)
+    .registrations;
   private readonly handleVisibility = computed(
-    () => (this.registrations().get(this.content().type)?.visibilityHandling ?? 'auto') === 'auto',
+    () =>
+      (this.registrations().get(this.content().type)?.keepValueWhenHidden ??
+        'auto') === 'auto',
   );
   private readonly disabledHandling = signal<StateHandling>('auto');
 
@@ -273,7 +276,7 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
 
   constructor() {
     hiddenEffect({
-      content: this.content,
+      item: this.content,
       name: this.name,
       controlInstance: this.controlInstance,
       hiddenSignal: this.isHidden,
@@ -299,7 +302,6 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
       formResetSignal: this.formService.formReset,
     });
   }
-
 
   /**
    * Sets the disabled handling strategy

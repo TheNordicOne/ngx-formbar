@@ -75,7 +75,7 @@ export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
 /**
  * Represents a group of controls that can be nested within a form.
  */
-export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>
+export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem>
   extends NgxFbAbstractControl {
   /**
    * Specifies a title for the group
@@ -128,7 +128,7 @@ export interface NgxFbBlock extends NgxFbBaseContent {
 /**
  * Union type representing all possible content types that can be used in a form.
  */
-export type NgxFbContent = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
+export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
 
 /**
  * Specifies how to handle the control when hidden:

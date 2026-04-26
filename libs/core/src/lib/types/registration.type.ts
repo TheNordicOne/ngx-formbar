@@ -34,7 +34,7 @@ export interface ComponentRegistrationOptions {
    *   signal but is responsible for handling its own hiding, form model management, and value
    *   strategy. The library only handles initial form control registration.
    */
-  visibilityHandling?: StateHandling;
+  keepValueWhenHidden?: StateHandling;
 }
 
 /**

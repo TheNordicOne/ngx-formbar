@@ -40,38 +40,38 @@ Then implement the component.
 > Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
 
 ```typescript group="group-component" name="group.component.ts" icon="angular"
-import { Component, Signal, inject } from '@angular/core';
-import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxFbContent } from '@ngx-formbar/core';
-import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Component, Signal, inject} from '@angular/core';
+import {ReactiveFormsModule, ControlContainer} from '@angular/forms';
+import {NgxFbContent} from '@ngx-formbar/core';
+import {NgxfbAbstractControlDirective, NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  selector: 'ngxfb-group',
-  imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
-  templateUrl: './group.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    },
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbGroupDirective,
-      inputs: ['content', 'name'],
-    }
-  ],
+    selector: 'ngxfb-group',
+    imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
+    templateUrl: './group.component.html',
+    viewProviders: [
+        {
+            provide: ControlContainer,
+            useFactory: () => inject(ControlContainer, {skipSelf: true}),
+        },
+    ],
+    hostDirectives: [
+        {
+            directive: NgxFbGroupDirective,
+            inputs: ['content', 'name'],
+        }
+    ],
 })
 export class GroupComponent {
-  // Inject the Directive to gain access to all public properties
-  // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfbGroupDirective<Group>);
+    // Inject the Directive to gain access to all public properties
+    // Make sure to pass the correct type parameter to get proper type information
+    private readonly control = inject(NgxFbGroupDirective<Group>);
 
-  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
-  readonly name: Signal<string> = this.control.name;
-  readonly controls: Signal<[string, NgxFbContent][]> = this.control.controls;
+    // Explicitly setting a type definition is not required, but some IDEs work better if they are present
+    readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
+    readonly name: Signal<string> = this.control.name;
+    readonly controls: Signal<[string, NgxFbContent][]> = this.control.controls;
 }
 ```
 
@@ -112,20 +112,20 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 {% include "../../../shared/hidden-intro.md" %}
 
 ```typescript group="hidden-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
-  readonly isHidden: Signal<unknown> = this.control.isHidden;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbGroupDirective<Group>);
+    // Really only should ever be a boolean return value, but an expression could also return a number, string or object
+    readonly isHidden: Signal<unknown> = this.control.isHidden;
+    readonly name: Signal<string> = this.control.name;
 
-  // Manual visibility handling is configured in the component registration
+    // Manual visibility handling is configured in the component registration
 }
 ```
 
@@ -151,17 +151,17 @@ export class GroupComponent {
 {% include "../../../shared/disabled-intro.md" %}
 
 ```typescript group="disabled-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly disabled: Signal<boolean> = this.control.disabled;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbGroupDirective<Group>);
+    readonly disabled: Signal<boolean> = this.control.disabled;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -182,17 +182,17 @@ export class GroupComponent {
 {% include "../../../shared/readonly-intro.md" %}
 
 ```typescript group="readonly-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly readonly: Signal<boolean> = this.control.readonly;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbGroupDirective<Group>);
+    readonly readonly: Signal<boolean> = this.control.readonly;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -216,31 +216,32 @@ Your component can access this computed dynamic title via a signal (e.g., this.c
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
 {% raw %}
+
 ```typescript group="dynamic-title" name="group.component.ts" icon="angular"
-import { Signal, computed, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Signal, computed, inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
+    private readonly control = inject(NgxFbGroupDirective<Group>);
 
-  // Access the computed dynamic title from the directive.
-  // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
-  readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
+    // Access the computed dynamic title from the directive.
+    // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
+    readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
 
-  readonly staticConfigTitle: Signal<string | undefined> = this.control.title;
+    readonly staticConfigTitle: Signal<string | undefined> = this.control.title;
 
-  readonly displayTitle = computed(() => {
-    const dynamic = this.dynamicTitle();
-    if (dynamic && dynamic.trim() !== '') {
-      return dynamic;
-    }
+    readonly displayTitle = computed(() => {
+        const dynamic = this.dynamicTitle();
+        if (dynamic && dynamic.trim() !== '') {
+            return dynamic;
+        }
 
-    return this.staticConfigTitle() || '';
-  });
+        return this.staticConfigTitle() || '';
+    });
 }
 ```
 
@@ -254,17 +255,17 @@ export class GroupComponent {
 {% include "../../../shared/test-id.md" %}
 
 ```typescript group="test-id-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {Signal, inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
 export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly testId: Signal<string> = this.control.testId;
-  readonly name: Signal<string> = this.control.name;
+    private readonly control = inject(NgxFbGroupDirective<Group>);
+    readonly testId: Signal<string> = this.control.testId;
+    readonly name: Signal<string> = this.control.name;
 }
 ```
 
@@ -283,16 +284,19 @@ Showing errors works pretty much the same as always. You get access to the form 
 In TypeScript set up a getter
 
 ```typescript name="group.component.ts" icon="angular"
-import { inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
+import {inject} from '@angular/core';
+import {NgxFbGroupDirective} from '@ngx-formbar/reactive-forms';
+import {Group} from './group.type';
 
 // inject the instance of the directive
-private readonly groupDirective = inject(NgxfbGroupDirective<Group>);
+private readonly
+groupDirective = inject(NgxFbGroupDirective<Group>);
 
 // Get access to the underlying form group
-get formGroup() {
-  return this.groupDirective.formGroup
+get
+formGroup()
+{
+    return this.groupDirective.formGroup
 }
 ```
 
