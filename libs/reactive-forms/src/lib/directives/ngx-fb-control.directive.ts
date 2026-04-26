@@ -14,6 +14,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import {
+  HideStrategy,
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbControl,
   NgxFbFormGroup,
@@ -64,9 +65,13 @@ export class NgxFbControlDirective implements OnDestroy {
     return registrations.get(content.type) ?? null;
   });
 
-  private readonly hideStrategy = computed(
-    () => this.controlConfig().hideStrategy,
+  private readonly parentHideStrategy = computed<HideStrategy | undefined>(() =>
+    this.parentGroupDirective?.hideStrategy(),
   );
+
+  readonly hideStrategy: Signal<HideStrategy | undefined> = computed<
+    HideStrategy | undefined
+  >(() => this.controlConfig().hideStrategy ?? this.parentHideStrategy());
 
   private readonly keepValueWhenHidden = computed(
     () => this.hideStrategy() === 'keep',
@@ -76,7 +81,7 @@ export class NgxFbControlDirective implements OnDestroy {
     this.parentGroupDirective?.valueStrategy(),
   );
 
-  private readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
+  readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
     () => this.controlConfig().valueStrategy ?? this.parentValueStrategy(),
   );
 
@@ -199,9 +204,10 @@ export class NgxFbControlDirective implements OnDestroy {
       case 'reset':
         this.formControl?.reset(undefined, { emitEvent: false });
         break;
-      default:
+      default: {
         this.formControl?.setValue(defaultValue);
         break;
+      }
     }
   }
 
@@ -272,9 +278,16 @@ export class NgxFbControlDirective implements OnDestroy {
 
   ngOnDestroy(): void {
     const control = this.formControl;
+
     if (control) {
       this.saveLastValue();
-      this.removeControl();
     }
+
+    this.setValue();
+
+    if (this.keepValueWhenHidden() || !control) {
+      return;
+    }
+    this.removeControl();
   }
 }

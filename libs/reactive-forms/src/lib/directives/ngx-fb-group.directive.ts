@@ -15,6 +15,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import {
+  HideStrategy,
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbBaseContent,
   NgxFbFormGroup,
@@ -67,8 +68,12 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     return registrations.get(config.type) ?? null;
   });
 
-  private readonly hideStrategy = computed(
-    () => this.controlConfig().hideStrategy,
+  private readonly parentHideStrategy = computed(() =>
+    this.parentGroupDirective?.hideStrategy(),
+  );
+
+  readonly hideStrategy: Signal<HideStrategy | undefined> = computed(
+    () => this.controlConfig().hideStrategy ?? this.parentHideStrategy(),
   );
 
   private readonly keepValueWhenHidden = computed(
@@ -259,7 +264,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       return;
     }
 
-    this.viewContainerRef.detach();
+    this.viewContainerRef.clear();
   }
 
   ngOnDestroy() {
