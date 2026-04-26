@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   input,
+  OnDestroy,
   Signal,
   Type,
   untracked,
@@ -26,14 +27,16 @@ import { withDynamicLabel } from '../composables/dynamic-label';
 import { withHiddenState } from '../composables/hidden.state';
 import { NgxFbGroupDirective } from './ngx-fb-group.directive';
 import { withTestId } from '../composables/testId';
+import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 
 @Directive({
   selector: '[ngxfbControl]',
 })
-export class NgxFbControlDirective {
+export class NgxFbControlDirective implements OnDestroy {
   private viewContainerRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
+  private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
   );
@@ -117,6 +120,10 @@ export class NgxFbControlDirective {
     return this.parentFormGroup.get(name) as FormControl | null;
   }
 
+  private get controlPath(): string {
+    return [...(this.parentContainer.path ?? []), this.controlName()].join('.');
+  }
+
   constructor() {
     afterRenderEffect(() => {
       const component = this.component();
@@ -150,7 +157,6 @@ export class NgxFbControlDirective {
   }
 
   private applyHiddenState() {
-    const controlName = this.controlName();
     const handleVisibility = this.handleVisibility();
     const keepValueWhenHidden = this.keepValueWhenHidden();
 
@@ -164,7 +170,8 @@ export class NgxFbControlDirective {
       return;
     }
 
-    this.removeControl(controlName, this.formControl);
+    this.saveLastValue();
+    this.removeControl();
   }
 
   private applyVisibleState() {
@@ -199,7 +206,24 @@ export class NgxFbControlDirective {
   }
 
   private resolveInitialValue() {
-    return this.controlConfig().defaultValue;
+    const valueStrategy = this.valueStrategy();
+
+    switch (valueStrategy) {
+      case 'last': {
+        const hasSaved = this.formLifecycleState.hasSavedValue(
+          this.controlPath,
+        )();
+
+        if (!hasSaved) {
+          return this.controlConfig().defaultValue;
+        }
+        return this.formLifecycleState.getSavedValue(this.controlPath)();
+      }
+      case 'reset':
+        return undefined;
+      default:
+        return this.controlConfig().defaultValue;
+    }
   }
 
   private setControl(controlName: string) {
@@ -210,15 +234,24 @@ export class NgxFbControlDirective {
     });
   }
 
-  private removeControl(
-    controlName: string,
-    formControl: FormControl | null | undefined,
-  ) {
+  private removeControl() {
+    const controlName = this.controlName();
     // Check if control exists immediately before attempting removal
-    if (!formControl) {
+    if (!this.formControl) {
       return;
     }
     this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
+  }
+
+  private saveLastValue() {
+    if (this.valueStrategy() !== 'last') {
+      return;
+    }
+
+    this.formLifecycleState.saveValue(
+      this.controlPath,
+      this.formControl?.value,
+    );
   }
 
   private instantiateComponent(component: Type<unknown>) {
@@ -235,5 +268,13 @@ export class NgxFbControlDirective {
 
   private destroyComponent() {
     this.viewContainerRef.clear();
+  }
+
+  ngOnDestroy(): void {
+    const control = this.formControl;
+    if (control) {
+      this.saveLastValue();
+      this.removeControl();
+    }
   }
 }

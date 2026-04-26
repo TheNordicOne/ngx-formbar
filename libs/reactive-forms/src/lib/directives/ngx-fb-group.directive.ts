@@ -8,6 +8,7 @@ import {
   inject,
   Injector,
   input,
+  OnDestroy,
   Signal,
   Type,
   untracked,
@@ -32,7 +33,9 @@ import { withTestId } from '../composables/testId';
 @Directive({
   selector: '[ngxfbGroup]',
 })
-export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
+export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
+  implements OnDestroy
+{
   private viewContainerRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
@@ -144,7 +147,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
   }
 
   private applyHiddenState() {
-    const controlName = this.controlName();
     const handleVisibility = this.handleVisibility();
     const keepValueWhenHidden = this.keepValueWhenHidden();
 
@@ -158,7 +160,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
       return;
     }
 
-    this.removeGroup(controlName, this.formGroup);
+    this.removeGroup();
   }
 
   private applyVisibleState() {
@@ -215,12 +217,11 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
     });
   }
 
-  private removeGroup(
-    controlName: string,
-    formGroup: FormGroup | null | undefined,
-  ) {
+  private removeGroup() {
+    const controlName = this.controlName();
+
     // Check if control exists immediately before attempting removal
-    if (!formGroup) {
+    if (!this.formGroup) {
       return;
     }
     this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
@@ -259,5 +260,9 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
     }
 
     this.viewContainerRef.detach();
+  }
+
+  ngOnDestroy() {
+    this.removeGroup();
   }
 }
