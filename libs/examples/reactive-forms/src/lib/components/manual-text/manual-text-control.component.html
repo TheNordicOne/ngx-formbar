@@ -1,3 +1,4 @@
+<span hidden [attr.data-testid]="`${name()}-marker`">alive</span>
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
     <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>

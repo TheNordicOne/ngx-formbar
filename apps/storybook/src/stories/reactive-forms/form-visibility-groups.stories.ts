@@ -11,8 +11,21 @@ const meta: Meta<StoryFormHostComponent> = {
 export default meta;
 type Story = StoryObj<StoryFormHostComponent>;
 
+function getFormValue(): Record<string, unknown> {
+  return StoryFormHostComponent.lastInstance!.form.getRawValue();
+}
+
+function getFormPath(...path: string[]): unknown {
+  let current: unknown = getFormValue();
+  for (const key of path) {
+    if (typeof current !== 'object' || current === null) return undefined;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
 // ---------------------------------------------------------------------------
-// Keep & Last
+// Keep
 // ---------------------------------------------------------------------------
 
 export const GroupKeepLast: Story = {
@@ -21,7 +34,7 @@ export const GroupKeepLast: Story = {
     docs: {
       description: {
         story:
-          'Keep strategy with last value — group stays in DOM, values preserved.',
+          'Keep parent — group is removed from the DOM but kept in the form model. Each leaf applies its own (or inherited) valueStrategy.',
       },
     },
   },
@@ -64,409 +77,65 @@ export const GroupKeepLast: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childDefaultField = await canvas.findByRole('textbox', {
-      name: 'Child with default strategy',
-    });
-    const childResetField = await canvas.findByRole('textbox', {
-      name: 'Child with reset strategy',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childDefaultField);
-    await userEvent.type(childDefaultField, 'Custom child default value');
-    await userEvent.clear(childResetField);
-    await userEvent.type(childResetField, 'Custom child reset value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+      'Custom child default value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+      'Custom child reset value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
+    // Group's DOM is gone
     await expect(
-      await canvas.findByText('Keep and use last value'),
-    ).not.toBeVisible();
+      canvas.queryByText('Keep and use last value'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values according to strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+    // Group is still in the form model (keep), each leaf reflects its strategy
+    await expect(getFormPath('keepLastGroup', 'childField')).toBe(
+      'Custom child value',
     );
-    // Child inherits parent's last value strategy
-    await expect(
-      await canvas.findByTestId('keepLastGroup.childField-value'),
-    ).toHaveTextContent('Custom child value');
+    await expect(getFormPath('keepLastGroup', 'childDefaultField')).toBe(
+      'default-child-default',
+    );
+    await expect(getFormPath('keepLastGroup', 'childResetField')).toBeNull();
 
-    // Child with default strategy overrides parent
-    await expect(
-      await canvas.findByTestId('keepLastGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
-
-    // Child with reset strategy overrides parent (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('keepLastGroup.childResetField-value'),
-    ).toHaveTextContent('');
-
-    // Show fields again
+    // Re-show — values are unchanged
     await userEvent.clear(triggerInput);
-
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('keepLastGroup.childField-value'),
-    ).toHaveTextContent('Custom child value');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('Custom child value');
     await expect(
-      await canvas.findByTestId('keepLastGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    ).toHaveValue('default-child-default');
     await expect(
-      await canvas.findByTestId('keepLastGroup.childResetField-value'),
-    ).toHaveTextContent('');
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    ).toHaveValue('');
   },
 };
-
-// ---------------------------------------------------------------------------
-// Remove & Last
-// ---------------------------------------------------------------------------
-
-export const GroupRemoveLast: Story = {
-  name: 'Remove & Last',
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Remove strategy with last value — group removed, values restored on show.',
-      },
-    },
-  },
-  args: {
-    formConfig: formConfig({
-      hideControl: {
-        type: 'text',
-        label: 'Type "hide" to hide everything',
-      },
-      removeLastGroup: {
-        type: 'group',
-        legend: 'Remove but remember last value',
-        hidden: 'hideControl === "hide"',
-        hideStrategy: 'remove',
-        valueStrategy: 'last',
-
-        controls: {
-          childField: {
-            type: 'text',
-            label: 'Child field',
-            defaultValue: 'default-child',
-          },
-          childDefaultField: {
-            type: 'text',
-            label: 'Child with default strategy',
-            defaultValue: 'default-child-default',
-            valueStrategy: 'default',
-          },
-          childResetField: {
-            type: 'text',
-            label: 'Child with reset strategy',
-            defaultValue: 'default-child-reset',
-            valueStrategy: 'reset',
-          },
-        },
-      },
-    }),
-  },
-  play: async ({ canvas, userEvent }) => {
-    const triggerInput = await canvas.findByRole('textbox', {
-      name: 'Type "hide" to hide everything',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childDefaultField = await canvas.findByRole('textbox', {
-      name: 'Child with default strategy',
-    });
-    const childResetField = await canvas.findByRole('textbox', {
-      name: 'Child with reset strategy',
-    });
-
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childDefaultField);
-    await userEvent.type(childDefaultField, 'Custom child default value');
-    await userEvent.clear(childResetField);
-    await userEvent.type(childResetField, 'Custom child reset value');
-
-    // Hide the group
-    await userEvent.clear(triggerInput);
-    await userEvent.type(triggerInput, 'hide');
-
-    // Group is removed from the DOM (remove strategy)
-    await expect(
-      canvas.queryByText('Remove but remember last value'),
-    ).not.toBeInTheDocument();
-
-    // Control is removed from form model
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(
-      canvas.queryByTestId('removeLastGroup.childField-value'),
-    ).not.toBeInTheDocument();
-
-    // Show fields again
-    await userEvent.clear(triggerInput);
-
-    // Submit and verify values are handled according to their strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    // Child inherits parent's last value strategy
-    await expect(
-      await canvas.findByTestId('removeLastGroup.childField-value'),
-    ).toHaveTextContent('Custom child value');
-
-    // Child with default strategy overrides parent
-    await expect(
-      await canvas.findByTestId('removeLastGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
-
-    // Child with reset strategy overrides parent (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('removeLastGroup.childResetField-value'),
-    ).toHaveTextContent('');
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Remove & Default
-// ---------------------------------------------------------------------------
-
-export const GroupRemoveDefault: Story = {
-  name: 'Remove & Default',
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Remove strategy with default value — reverts to defaults on show.',
-      },
-    },
-  },
-  args: {
-    formConfig: formConfig({
-      hideControl: {
-        type: 'text',
-        label: 'Type "hide" to hide everything',
-      },
-      removeDefaultGroup: {
-        type: 'group',
-        legend: 'Remove but use default value',
-        hidden: 'hideControl === "hide"',
-        hideStrategy: 'remove',
-        valueStrategy: 'default',
-
-        controls: {
-          childField: {
-            type: 'text',
-            label: 'Child field',
-            defaultValue: 'default-child',
-          },
-          childLastField: {
-            type: 'text',
-            label: 'Child with last strategy',
-            defaultValue: 'default-child-last',
-            valueStrategy: 'last',
-          },
-          childResetField: {
-            type: 'text',
-            label: 'Child with reset strategy',
-            defaultValue: 'default-child-reset',
-            valueStrategy: 'reset',
-          },
-        },
-      },
-    }),
-  },
-  play: async ({ canvas, userEvent }) => {
-    const triggerInput = await canvas.findByRole('textbox', {
-      name: 'Type "hide" to hide everything',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childLastField = await canvas.findByRole('textbox', {
-      name: 'Child with last strategy',
-    });
-    const childResetField = await canvas.findByRole('textbox', {
-      name: 'Child with reset strategy',
-    });
-
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childLastField);
-    await userEvent.type(childLastField, 'Custom child last value');
-    await userEvent.clear(childResetField);
-    await userEvent.type(childResetField, 'Custom child reset value');
-
-    // Hide the group
-    await userEvent.clear(triggerInput);
-    await userEvent.type(triggerInput, 'hide');
-
-    // Group is removed from the DOM (remove strategy)
-    await expect(
-      canvas.queryByText('Remove but use default value'),
-    ).not.toBeInTheDocument();
-
-    // Control is removed from form model
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(
-      canvas.queryByTestId('removeDefaultGroup.childField-value'),
-    ).not.toBeInTheDocument();
-
-    // Show fields again
-    await userEvent.clear(triggerInput);
-
-    // Submit and verify values are handled according to their strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    // Child inherits parent's default value strategy
-    await expect(
-      await canvas.findByTestId('removeDefaultGroup.childField-value'),
-    ).toHaveTextContent('default-child');
-
-    // Child with last strategy overrides parent
-    await expect(
-      await canvas.findByTestId('removeDefaultGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
-
-    // Child with reset strategy overrides parent (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('removeDefaultGroup.childResetField-value'),
-    ).toHaveTextContent('');
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Remove & Reset
-// ---------------------------------------------------------------------------
-
-export const GroupRemoveReset: Story = {
-  name: 'Remove & Reset',
-  parameters: {
-    docs: {
-      description: {
-        story: 'Remove strategy with reset — clears values on show.',
-      },
-    },
-  },
-  args: {
-    formConfig: formConfig({
-      hideControl: {
-        type: 'text',
-        label: 'Type "hide" to hide everything',
-      },
-      removeResetGroup: {
-        type: 'group',
-        legend: 'Remove and reset value',
-        hidden: 'hideControl === "hide"',
-        hideStrategy: 'remove',
-        valueStrategy: 'reset',
-
-        controls: {
-          childField: {
-            type: 'text',
-            label: 'Child field',
-            defaultValue: 'default-child',
-          },
-          childLastField: {
-            type: 'text',
-            label: 'Child with last strategy',
-            defaultValue: 'default-child-last',
-            valueStrategy: 'last',
-          },
-          childDefaultField: {
-            type: 'text',
-            label: 'Child with default strategy',
-            defaultValue: 'default-child-default',
-            valueStrategy: 'default',
-          },
-        },
-      },
-    }),
-  },
-  play: async ({ canvas, userEvent }) => {
-    const triggerInput = await canvas.findByRole('textbox', {
-      name: 'Type "hide" to hide everything',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childLastField = await canvas.findByRole('textbox', {
-      name: 'Child with last strategy',
-    });
-    const childDefaultField = await canvas.findByRole('textbox', {
-      name: 'Child with default strategy',
-    });
-
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childLastField);
-    await userEvent.type(childLastField, 'Custom child last value');
-    await userEvent.clear(childDefaultField);
-    await userEvent.type(childDefaultField, 'Custom child default value');
-
-    // Hide the group
-    await userEvent.clear(triggerInput);
-    await userEvent.type(triggerInput, 'hide');
-
-    // Group is removed from the DOM (remove strategy)
-    await expect(
-      canvas.queryByText('Remove and reset value'),
-    ).not.toBeInTheDocument();
-
-    // Control is removed from form model
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(
-      canvas.queryByTestId('removeResetGroup.childField-value'),
-    ).not.toBeInTheDocument();
-
-    // Show fields again
-    await userEvent.clear(triggerInput);
-
-    // Submit and verify values are handled according to their strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    // Child inherits parent's reset value strategy (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('removeResetGroup.childField-value'),
-    ).toHaveTextContent('');
-
-    // Child with last strategy overrides parent
-    await expect(
-      await canvas.findByTestId('removeResetGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
-
-    // Child with default strategy overrides parent
-    await expect(
-      await canvas.findByTestId('removeResetGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Keep & Default
-// ---------------------------------------------------------------------------
 
 export const GroupKeepDefault: Story = {
   name: 'Keep & Default',
@@ -474,7 +143,7 @@ export const GroupKeepDefault: Story = {
     docs: {
       description: {
         story:
-          'Keep strategy with default value — reverts to defaults when hidden.',
+          'Keep parent with default — children that inherit revert to defaultValue, child overrides take effect.',
       },
     },
   },
@@ -517,81 +186,64 @@ export const GroupKeepDefault: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childLastField = await canvas.findByRole('textbox', {
-      name: 'Child with last strategy',
-    });
-    const childResetField = await canvas.findByRole('textbox', {
-      name: 'Child with reset strategy',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childLastField);
-    await userEvent.type(childLastField, 'Custom child last value');
-    await userEvent.clear(childResetField);
-    await userEvent.type(childResetField, 'Custom child reset value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+      'Custom child last value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+      'Custom child reset value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
     await expect(
-      await canvas.findByText('Keep but use default value'),
-    ).not.toBeVisible();
+      canvas.queryByText('Keep but use default value'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values according to strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+    await expect(getFormPath('keepDefaultGroup', 'childField')).toBe(
+      'default-child',
     );
-    // Child inherits parent's default value strategy
-    await expect(
-      await canvas.findByTestId('keepDefaultGroup.childField-value'),
-    ).toHaveTextContent('default-child');
+    await expect(getFormPath('keepDefaultGroup', 'childLastField')).toBe(
+      'Custom child last value',
+    );
+    await expect(getFormPath('keepDefaultGroup', 'childResetField')).toBeNull();
 
-    // Child with last strategy overrides parent
-    await expect(
-      await canvas.findByTestId('keepDefaultGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
-
-    // Child with reset strategy overrides parent (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('keepDefaultGroup.childResetField-value'),
-    ).toHaveTextContent('');
-
-    // Show fields again
     await userEvent.clear(triggerInput);
-
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('keepDefaultGroup.childField-value'),
-    ).toHaveTextContent('default-child');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('default-child');
     await expect(
-      await canvas.findByTestId('keepDefaultGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    ).toHaveValue('Custom child last value');
     await expect(
-      await canvas.findByTestId('keepDefaultGroup.childResetField-value'),
-    ).toHaveTextContent('');
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    ).toHaveValue('');
   },
 };
-
-// ---------------------------------------------------------------------------
-// Keep & Reset
-// ---------------------------------------------------------------------------
 
 export const GroupKeepReset: Story = {
   name: 'Keep & Reset',
   parameters: {
     docs: {
       description: {
-        story: 'Keep strategy with reset — clears values when hidden.',
+        story:
+          'Keep parent with reset — children that inherit clear to null, child overrides take effect.',
       },
     },
   },
@@ -634,80 +286,450 @@ export const GroupKeepReset: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childLastField = await canvas.findByRole('textbox', {
-      name: 'Child with last strategy',
-    });
-    const childDefaultField = await canvas.findByRole('textbox', {
-      name: 'Child with default strategy',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childLastField);
-    await userEvent.type(childLastField, 'Custom child last value');
-    await userEvent.clear(childDefaultField);
-    await userEvent.type(childDefaultField, 'Custom child default value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+      'Custom child last value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+      'Custom child default value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
     await expect(
-      await canvas.findByText('Keep but reset value'),
-    ).not.toBeVisible();
+      canvas.queryByText('Keep but reset value'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values according to strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+    await expect(getFormPath('keepResetGroup', 'childField')).toBeNull();
+    await expect(getFormPath('keepResetGroup', 'childLastField')).toBe(
+      'Custom child last value',
     );
-    // Child inherits parent's reset value strategy (reset produces empty string)
-    await expect(
-      await canvas.findByTestId('keepResetGroup.childField-value'),
-    ).toHaveTextContent('');
+    await expect(getFormPath('keepResetGroup', 'childDefaultField')).toBe(
+      'default-child-default',
+    );
 
-    // Child with last strategy overrides parent
-    await expect(
-      await canvas.findByTestId('keepResetGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
-
-    // Child with default strategy overrides parent
-    await expect(
-      await canvas.findByTestId('keepResetGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
-
-    // Show fields again
     await userEvent.clear(triggerInput);
-
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('keepResetGroup.childField-value'),
-    ).toHaveTextContent('');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('');
     await expect(
-      await canvas.findByTestId('keepResetGroup.childLastField-value'),
-    ).toHaveTextContent('Custom child last value');
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    ).toHaveValue('Custom child last value');
     await expect(
-      await canvas.findByTestId('keepResetGroup.childDefaultField-value'),
-    ).toHaveTextContent('default-child-default');
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    ).toHaveValue('default-child-default');
   },
 };
 
 // ---------------------------------------------------------------------------
-// Parent Remove Precedence// ---------------------------------------------------------------------------
+// Remove
+// ---------------------------------------------------------------------------
+
+export const GroupRemoveLast: Story = {
+  name: 'Remove & Last',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Remove parent — group is gone from both DOM and form model while hidden, leaves restore on show per their strategies.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      removeLastGroup: {
+        type: 'group',
+        legend: 'Remove but remember last value',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'last',
+
+        controls: {
+          childField: {
+            type: 'text',
+            label: 'Child field',
+            defaultValue: 'default-child',
+          },
+          childDefaultField: {
+            type: 'text',
+            label: 'Child with default strategy',
+            defaultValue: 'default-child-default',
+            valueStrategy: 'default',
+          },
+          childResetField: {
+            type: 'text',
+            label: 'Child with reset strategy',
+            defaultValue: 'default-child-reset',
+            valueStrategy: 'reset',
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+      'Custom child default value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+      'Custom child reset value',
+    );
+
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // Group's DOM is gone
+    await expect(
+      canvas.queryByText('Remove but remember last value'),
+    ).not.toBeInTheDocument();
+
+    // Group is gone from the form model
+    await expect(getFormValue()['removeLastGroup']).toBeUndefined();
+
+    // Re-show — leaves apply their strategies
+    await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('Custom child value');
+    await expect(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    ).toHaveValue('default-child-default');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    ).toHaveValue('');
+  },
+};
+
+export const GroupRemoveDefault: Story = {
+  name: 'Remove & Default',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Remove parent with default — leaves render their (inherited or own) strategy on re-show.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      removeDefaultGroup: {
+        type: 'group',
+        legend: 'Remove but use default value',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'default',
+
+        controls: {
+          childField: {
+            type: 'text',
+            label: 'Child field',
+            defaultValue: 'default-child',
+          },
+          childLastField: {
+            type: 'text',
+            label: 'Child with last strategy',
+            defaultValue: 'default-child-last',
+            valueStrategy: 'last',
+          },
+          childResetField: {
+            type: 'text',
+            label: 'Child with reset strategy',
+            defaultValue: 'default-child-reset',
+            valueStrategy: 'reset',
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+      'Custom child last value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+      'Custom child reset value',
+    );
+
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    await expect(
+      canvas.queryByText('Remove but use default value'),
+    ).not.toBeInTheDocument();
+    await expect(getFormValue()['removeDefaultGroup']).toBeUndefined();
+
+    await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('default-child');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    ).toHaveValue('Custom child last value');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child with reset strategy' }),
+    ).toHaveValue('');
+  },
+};
+
+export const GroupRemoveReset: Story = {
+  name: 'Remove & Reset',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Remove parent with reset — leaves render their (inherited or own) strategy on re-show.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      removeResetGroup: {
+        type: 'group',
+        legend: 'Remove and reset value',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'reset',
+
+        controls: {
+          childField: {
+            type: 'text',
+            label: 'Child field',
+            defaultValue: 'default-child',
+          },
+          childLastField: {
+            type: 'text',
+            label: 'Child with last strategy',
+            defaultValue: 'default-child-last',
+            valueStrategy: 'last',
+          },
+          childDefaultField: {
+            type: 'text',
+            label: 'Child with default strategy',
+            defaultValue: 'default-child-default',
+            valueStrategy: 'default',
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+      'Custom child last value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+      'Custom child default value',
+    );
+
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    await expect(
+      canvas.queryByText('Remove and reset value'),
+    ).not.toBeInTheDocument();
+    await expect(getFormValue()['removeResetGroup']).toBeUndefined();
+
+    await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child with last strategy' }),
+    ).toHaveValue('Custom child last value');
+    await expect(
+      await canvas.findByRole('textbox', {
+        name: 'Child with default strategy',
+      }),
+    ).toHaveValue('default-child-default');
+  },
+};
+
+export const GroupRemoveLastResetClearsCache: Story = {
+  name: 'Remove & Last — Reset clears cache',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'When form.reset() runs while a remove-hidden group is gone, the cached "last" values for its leaves are discarded. On re-show, leaves render their defaultValue.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      cachedGroup: {
+        type: 'group',
+        legend: 'Cached group',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'last',
+
+        controls: {
+          childA: {
+            type: 'text',
+            label: 'Cached child A',
+            defaultValue: 'default-a',
+          },
+          childB: {
+            type: 'text',
+            label: 'Cached child B',
+            defaultValue: 'default-b',
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    for (const round of ['First', 'Second']) {
+      const childA = await canvas.findByRole('textbox', {
+        name: 'Cached child A',
+      });
+      const childB = await canvas.findByRole('textbox', {
+        name: 'Cached child B',
+      });
+
+      await userEvent.clear(childA);
+      await userEvent.type(childA, `${round} A`);
+      await userEvent.clear(childB);
+      await userEvent.type(childB, `${round} B`);
+
+      const triggerInput = await canvas.findByRole('textbox', {
+        name: 'Type "hide" to hide everything',
+      });
+      await userEvent.clear(triggerInput);
+      await userEvent.type(triggerInput, 'hide');
+
+      await expect(
+        canvas.queryByText('Cached group'),
+      ).not.toBeInTheDocument();
+
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Reset' }),
+      );
+
+      // Re-show — leaves render their defaults, NOT the stale cached values
+      await expect(
+        await canvas.findByRole('textbox', { name: 'Cached child A' }),
+      ).toHaveValue('default-a');
+      await expect(
+        await canvas.findByRole('textbox', { name: 'Cached child B' }),
+      ).toHaveValue('default-b');
+    }
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Composition
+// ---------------------------------------------------------------------------
 
 export const ParentRemovePrecedence: Story = {
   name: 'Parent Remove Precedence',
   parameters: {
     docs: {
       description: {
-        story: 'Parent remove strategy takes precedence over child keep.',
+        story:
+          'Parent remove takes precedence — a keep child inside a remove parent is gone with the parent regardless of its own strategy.',
       },
     },
   },
@@ -752,64 +774,50 @@ export const ParentRemovePrecedence: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const parentField = await canvas.findByRole('textbox', {
-      name: 'Parent field',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(parentField);
-    await userEvent.type(parentField, 'Custom parent value');
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+      'Custom parent value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is removed from the DOM (remove strategy)
+    // Whole subtree gone from DOM
     await expect(
       canvas.queryByText('Parent with Remove Strategy'),
     ).not.toBeInTheDocument();
+    // Whole subtree gone from form model
+    await expect(getFormValue()['parentRemove']).toBeUndefined();
 
-    // Controls are removed from form model
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(
-      canvas.queryByTestId('parentRemove.parentRemoveField-value'),
-    ).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByTestId('parentRemove.childKeep.childKeepField-value'),
-    ).not.toBeInTheDocument();
-
-    // Show fields again
+    // Re-show — last values restored
     await userEvent.clear(triggerInput);
-
-    // Submit and verify values are restored with 'last' strategy
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('parentRemove.parentRemoveField-value'),
-    ).toHaveTextContent('Custom parent value');
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    ).toHaveValue('Custom parent value');
     await expect(
-      await canvas.findByTestId('parentRemove.childKeep.childKeepField-value'),
-    ).toHaveTextContent('Custom child value');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('Custom child value');
   },
 };
-
-// ---------------------------------------------------------------------------
-// Inherited Strategies// ---------------------------------------------------------------------------
 
 export const InheritedStrategies: Story = {
   name: 'Inherited Strategies',
   parameters: {
     docs: {
       description: {
-        story: "Child group inherits parent's keep & last strategies.",
+        story:
+          "Child group with no own valueStrategy inherits the parent's keep + last semantics.",
       },
     },
   },
@@ -852,63 +860,55 @@ export const InheritedStrategies: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const parentField = await canvas.findByRole('textbox', {
-      name: 'Parent field',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(parentField);
-    await userEvent.type(parentField, 'Custom parent value');
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+      'Custom parent value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
     await expect(
-      await canvas.findByText('Parent Group - Keep & Last'),
-    ).not.toBeVisible();
+      canvas.queryByText('Parent Group - Keep & Last'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values — both keep last (custom values)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+    // Both leaves preserved (last)
+    await expect(getFormPath('parentGroup', 'parentField')).toBe(
+      'Custom parent value',
     );
-    await expect(
-      await canvas.findByTestId('parentGroup.parentField-value'),
-    ).toHaveTextContent('Custom parent value');
-    await expect(
-      await canvas.findByTestId('parentGroup.childGroup.childField-value'),
-    ).toHaveTextContent('Custom child value');
+    await expect(getFormPath('parentGroup', 'childGroup', 'childField')).toBe(
+      'Custom child value',
+    );
 
-    // Show fields again
     await userEvent.clear(triggerInput);
-
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('parentGroup.parentField-value'),
-    ).toHaveTextContent('Custom parent value');
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    ).toHaveValue('Custom parent value');
     await expect(
-      await canvas.findByTestId('parentGroup.childGroup.childField-value'),
-    ).toHaveTextContent('Custom child value');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('Custom child value');
   },
 };
-
-// ---------------------------------------------------------------------------
-// Strategy Override// ---------------------------------------------------------------------------
 
 export const StrategyOverride: Story = {
   name: 'Strategy Override',
   parameters: {
     docs: {
-      description: { story: "Child group overrides parent's value strategy." },
+      description: {
+        story:
+          "Child group declares its own valueStrategy and overrides the parent's.",
+      },
     },
   },
   args: {
@@ -951,67 +951,54 @@ export const StrategyOverride: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const parentField = await canvas.findByRole('textbox', {
-      name: 'Parent field',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
 
-    // Fill fields with custom values
-    await userEvent.clear(parentField);
-    await userEvent.type(parentField, 'Custom parent value');
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+      'Custom parent value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
     await expect(
-      await canvas.findByText('Parent Group - Keep & Last'),
-    ).not.toBeVisible();
+      canvas.queryByText('Parent Group - Keep & Last'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+    // Parent leaf preserved (last); child leaf reverts (default — overridden by child group)
+    await expect(getFormPath('parentGroup', 'parentField')).toBe(
+      'Custom parent value',
     );
-    // Parent keeps last (custom value)
-    await expect(
-      await canvas.findByTestId('parentGroup.parentField-value'),
-    ).toHaveTextContent('Custom parent value');
+    await expect(getFormPath('parentGroup', 'childGroup', 'childField')).toBe(
+      'default-child',
+    );
 
-    // Child reverts to default (overrides parent's last strategy)
-    await expect(
-      await canvas.findByTestId('parentGroup.childGroup.childField-value'),
-    ).toHaveTextContent('default-child');
-
-    // Show fields again
     await userEvent.clear(triggerInput);
-
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
     await expect(
-      await canvas.findByTestId('parentGroup.parentField-value'),
-    ).toHaveTextContent('Custom parent value');
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    ).toHaveValue('Custom parent value');
     await expect(
-      await canvas.findByTestId('parentGroup.childGroup.childField-value'),
-    ).toHaveTextContent('default-child');
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('default-child');
   },
 };
-
-// ---------------------------------------------------------------------------
-// Three-Level Inheritance// ---------------------------------------------------------------------------
 
 export const ThreeLevelInheritance: Story = {
   name: 'Three-Level Inheritance',
   parameters: {
     docs: {
       description: {
-        story: 'Three-level hierarchy with strategy overrides at each level.',
+        story:
+          'Three-level hierarchy with strategy overrides at each level — each leaf resolves to the closest declared valueStrategy.',
       },
     },
   },
@@ -1080,92 +1067,195 @@ export const ThreeLevelInheritance: Story = {
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
-    const grandparentField = await canvas.findByRole('textbox', {
-      name: 'Grandparent field',
-    });
-    const parentField = await canvas.findByRole('textbox', {
-      name: 'Parent field',
-    });
-    const childField = await canvas.findByRole('textbox', {
-      name: 'Child field',
-    });
-    const childOverrideField = await canvas.findByRole('textbox', {
-      name: 'Child override field',
-    });
 
-    // Fill all fields with custom values
-    await userEvent.clear(grandparentField);
-    await userEvent.type(grandparentField, 'Custom grandparent value');
-    await userEvent.clear(parentField);
-    await userEvent.type(parentField, 'Custom parent value');
-    await userEvent.clear(childField);
-    await userEvent.type(childField, 'Custom child value');
-    await userEvent.clear(childOverrideField);
-    await userEvent.type(childOverrideField, 'Custom child override value');
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Grandparent field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Grandparent field' }),
+      'Custom grandparent value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+      'Custom parent value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+      'Custom child value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child override field' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child override field' }),
+      'Custom child override value',
+    );
 
-    // Hide the group
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Group is hidden via [hidden] attribute but stays in the DOM
     await expect(
-      await canvas.findByText('Grandparent Group - Keep & Default'),
-    ).not.toBeVisible();
+      canvas.queryByText('Grandparent Group - Keep & Default'),
+    ).not.toBeInTheDocument();
 
-    // Submit and check rendered values according to strategies
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    // Grandparent field uses grandparent's default strategy
+    // grandparent's default applies to its direct leaf
     await expect(
-      await canvas.findByTestId('grandparentGroup.grandparentField-value'),
-    ).toHaveTextContent('default-grandparent');
-
-    // Parent field uses parent's last strategy (overrides grandparent's default)
+      getFormPath('grandparentGroup', 'grandparentField'),
+    ).toBe('default-grandparent');
+    // parent overrides to last → parent's leaves preserve their typed values
     await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.parentField-value',
+      getFormPath('grandparentGroup', 'parentGroup', 'parentField'),
+    ).toBe('Custom parent value');
+    await expect(
+      getFormPath(
+        'grandparentGroup',
+        'parentGroup',
+        'childGroup',
+        'childField',
       ),
-    ).toHaveTextContent('Custom parent value');
-
-    // Child field inherits parent's last strategy
+    ).toBe('Custom child value');
+    // childGroupWithOverride.reset wins for its leaf
     await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.childGroup.childField-value',
+      getFormPath(
+        'grandparentGroup',
+        'parentGroup',
+        'childGroupWithOverride',
+        'childOverrideField',
       ),
-    ).toHaveTextContent('Custom child value');
+    ).toBeNull();
 
-    // Child override field uses reset strategy (overrides parent's last)
-    await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField-value',
-      ),
-    ).toHaveTextContent('');
-
-    // Show fields again
     await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Grandparent field' }),
+    ).toHaveValue('default-grandparent');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Parent field' }),
+    ).toHaveValue('Custom parent value');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child field' }),
+    ).toHaveValue('Custom child value');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child override field' }),
+    ).toHaveValue('');
+  },
+};
 
-    // Submit again and verify values are maintained
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
+export const MixedChildStrategies: Story = {
+  name: 'Mixed Child Strategies',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A keep parent contains two children with different hideStrategy values, each driven by its own hidden expression. Asserts hideStrategy is per-control (no inheritance) and the children flip independently of each other and of the parent.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      toggleA: {
+        type: 'text',
+        label: 'Type "hide" to hide A',
+      },
+      toggleB: {
+        type: 'text',
+        label: 'Type "hide" to hide B',
+      },
+      parentVisible: {
+        type: 'group',
+        legend: 'Always-visible parent',
+        hideStrategy: 'keep',
+        valueStrategy: 'last',
+
+        controls: {
+          childKeep: {
+            type: 'text',
+            label: 'Child keep',
+            defaultValue: 'default-keep',
+            hidden: 'toggleA === "hide"',
+            hideStrategy: 'keep',
+            valueStrategy: 'last',
+          },
+          childRemove: {
+            type: 'text',
+            label: 'Child remove',
+            defaultValue: 'default-remove',
+            hidden: 'toggleB === "hide"',
+            hideStrategy: 'remove',
+            valueStrategy: 'last',
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const toggleA = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide A',
+    });
+    const toggleB = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide B',
+    });
+
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child keep' }),
     );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child keep' }),
+      'keep value',
+    );
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Child remove' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Child remove' }),
+      'remove value',
+    );
+
+    // Hide only the keep child — remove child untouched
+    await userEvent.type(toggleA, 'hide');
+
     await expect(
-      await canvas.findByTestId('grandparentGroup.grandparentField-value'),
-    ).toHaveTextContent('default-grandparent');
+      canvas.queryByRole('textbox', { name: 'Child keep' }),
+    ).not.toBeInTheDocument();
     await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.parentField-value',
-      ),
-    ).toHaveTextContent('Custom parent value');
+      canvas.getByRole('textbox', { name: 'Child remove' }),
+    ).toBeInTheDocument();
+
+    // childKeep stays in the form model with its last-typed value
+    await expect(getFormPath('parentVisible', 'childKeep')).toBe('keep value');
+    // childRemove unaffected
+    await expect(getFormPath('parentVisible', 'childRemove')).toBe(
+      'remove value',
+    );
+
+    // Now also hide the remove child
+    await userEvent.type(toggleB, 'hide');
+
     await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.childGroup.childField-value',
-      ),
-    ).toHaveTextContent('Custom child value');
+      canvas.queryByRole('textbox', { name: 'Child remove' }),
+    ).not.toBeInTheDocument();
+
+    await expect(getFormPath('parentVisible', 'childKeep')).toBe('keep value');
+    await expect(getFormPath('parentVisible', 'childRemove')).toBeUndefined();
+
+    // Show only the remove child — childKeep stays hidden
+    await userEvent.clear(toggleB);
     await expect(
-      await canvas.findByTestId(
-        'grandparentGroup.parentGroup.childGroupWithOverride.childOverrideField-value',
-      ),
-    ).toHaveTextContent('');
+      canvas.queryByRole('textbox', { name: 'Child keep' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child remove' }),
+    ).toHaveValue('remove value');
+
+    // Show the keep child too
+    await userEvent.clear(toggleA);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Child keep' }),
+    ).toHaveValue('keep value');
   },
 };
