@@ -65,6 +65,10 @@ export class NgxFbControlDirective {
     () => this.controlConfig().hideStrategy,
   );
 
+  private readonly keepValueWhenHidden = computed(
+    () => this.hideStrategy() === 'keep',
+  );
+
   readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
@@ -148,10 +152,16 @@ export class NgxFbControlDirective {
   private applyHiddenState() {
     const controlName = this.controlName();
     const handleVisibility = this.handleVisibility();
+    const keepValueWhenHidden = this.keepValueWhenHidden();
 
     if (handleVisibility) {
       this.destroyComponent();
     }
+
+    if (keepValueWhenHidden) {
+      return;
+    }
+
     this.removeControl(controlName, this.formControl);
   }
 
