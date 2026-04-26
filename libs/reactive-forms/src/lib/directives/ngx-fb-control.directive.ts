@@ -25,6 +25,7 @@ import { createBindings } from '../setup/bindings';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { withHiddenState } from '../composables/hidden.state';
 import { NgxFbGroupDirective } from './ngx-fb-group.directive';
+import { withTestId } from '../composables/testId';
 
 @Directive({
   selector: '[ngxfbControl]',
@@ -80,11 +81,14 @@ export class NgxFbControlDirective {
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
+  private readonly testId = withTestId(this.controlConfig, this.controlName);
+
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
+    ['testId', this.testId],
     ['labelText', computed(() => this.controlConfig().label)],
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
   ]);

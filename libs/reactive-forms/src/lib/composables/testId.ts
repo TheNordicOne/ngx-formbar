@@ -1,11 +1,11 @@
 import { computed, inject, Signal } from '@angular/core';
 import {
   NgxFbBaseContent,
-  NgxFbFormGroup,
   NgxFbConfigurationService,
+  NgxFbFormGroup,
   resolveTestId,
 } from '@ngx-formbar/core';
-import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
+import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
  * Creates a computed signal that extracts the ID for testing purposes
@@ -22,8 +22,8 @@ export function withTestId(
   content: Signal<NgxFbBaseContent>,
   name: Signal<string>,
 ): Signal<string> {
-  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });

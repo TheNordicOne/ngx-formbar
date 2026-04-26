@@ -27,6 +27,7 @@ import { createBindings } from '../setup/bindings';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { withHiddenState } from '../composables/hidden.state';
+import { withTestId } from '../composables/testId';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -83,11 +84,14 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
+  readonly testId = withTestId(this.controlConfig, this.controlName);
+
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
+    ['testId', this.testId],
     ['titleText', computed(() => this.controlConfig().title)],
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
