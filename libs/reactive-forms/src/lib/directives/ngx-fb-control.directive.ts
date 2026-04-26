@@ -65,7 +65,7 @@ export class NgxFbControlDirective {
     () => this.controlConfig().hideStrategy,
   );
 
-  private readonly parentValueStrategy = computed(() =>
+  readonly parentValueStrategy = computed(() =>
     this.parentGroupDirective?.valueStrategy(),
   );
 
@@ -75,6 +75,10 @@ export class NgxFbControlDirective {
 
   private readonly handleVisibility = computed(
     () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',
+  );
+
+  private readonly defaultValue = computed(
+    () => this.controlConfig().defaultValue,
   );
 
   private readonly component = withLoadedComponent(this.registrationEntry);
@@ -124,16 +128,13 @@ export class NgxFbControlDirective {
 
     effect(() => {
       const isHidden = this.isHidden();
-      const controlName = this.controlName();
-      const controlInParent = this.formControl;
-      const handleVisibility = this.handleVisibility();
 
       if (isHidden) {
-        this.applyHiddenState(controlName, controlInParent, handleVisibility);
+        this.applyHiddenState();
         return;
       }
 
-      this.applyVisibleState(controlName, controlInParent, handleVisibility);
+      this.applyVisibleState();
     });
 
     this.destroyRef.onDestroy(() => {
@@ -144,31 +145,46 @@ export class NgxFbControlDirective {
     });
   }
 
-  private applyHiddenState(
-    controlName: string,
-    formControl: FormControl | null | undefined,
-    handleVisibility: boolean,
-  ) {
+  private applyHiddenState() {
+    const controlName = this.controlName();
+    const handleVisibility = this.handleVisibility();
+
     if (handleVisibility) {
       this.destroyComponent();
     }
-    this.removeControl(controlName, formControl);
+    this.removeControl(controlName, this.formControl);
   }
 
-  private applyVisibleState(
-    controlName: string,
-    formControl: FormControl | null | undefined,
-    handleVisibility: boolean,
-  ) {
-    if (!formControl) {
+  private applyVisibleState() {
+    const controlName = this.controlName();
+    const handleVisibility = this.handleVisibility();
+
+    if (!this.formControl) {
       this.setControl(controlName);
     }
+
+    this.setValue();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());
 
     if (handleVisibility && component) {
       this.instantiateComponent(component);
+    }
+  }
+
+  private setValue() {
+    const valueStrategy = this.valueStrategy();
+    const defaultValue = this.defaultValue();
+    switch (valueStrategy) {
+      case 'last':
+        break;
+      case 'reset':
+        this.formControl?.reset(undefined, { emitEvent: false });
+        break;
+      default:
+        this.formControl?.setValue(defaultValue);
+        break;
     }
   }
 

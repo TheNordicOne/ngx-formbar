@@ -122,16 +122,13 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
 
     effect(() => {
       const isHidden = this.isHidden();
-      const controlName = this.controlName();
-      const groupInParent = this.formGroup;
-      const handleVisibility = this.handleVisibility();
 
       if (isHidden) {
-        this.applyHiddenState(controlName, groupInParent, handleVisibility);
+        this.applyHiddenState();
         return;
       }
 
-      this.applyVisibleState(controlName, groupInParent, handleVisibility);
+      this.applyVisibleState();
     });
 
     this.destroyRef.onDestroy(() => {
@@ -142,31 +139,62 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
     });
   }
 
-  private applyHiddenState(
-    controlName: string,
-    formGroup: FormGroup | null | undefined,
-    handleVisibility: boolean,
-  ) {
+  private applyHiddenState() {
+    const controlName = this.controlName();
+    const handleVisibility = this.handleVisibility();
+
     if (handleVisibility) {
       this.destroyComponent();
     }
-    this.removeGroup(controlName, formGroup);
+    this.removeGroup(controlName, this.formGroup);
   }
 
-  private applyVisibleState(
-    controlName: string,
-    formGroup: FormGroup | null | undefined,
-    handleVisibility: boolean,
-  ) {
-    if (!formGroup) {
+  private applyVisibleState() {
+    const controlName = this.controlName();
+    const handleVisibility = this.handleVisibility();
+
+    if (!this.formGroup) {
       this.setGroup(controlName);
     }
+
+    this.setValue();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());
 
     if (handleVisibility && component) {
       this.instantiateComponent(component);
+    }
+  }
+
+  private setValue() {
+    const valueStrategy = this.valueStrategy();
+
+    switch (valueStrategy) {
+      case 'last':
+        break;
+      case 'default':
+        break;
+      default:
+        // Instead of resetting  the group, we need to reset the controls individually
+        // to allow them to overwrite the value strategy
+        // If a control doesn't have a value strategy, we reset it
+        Object.entries(this.controlConfig().controls).forEach(
+          ([name, control]) => {
+            if (!('valueStrategy' in control)) {
+              return;
+            }
+
+            if (control.valueStrategy) {
+              return;
+            }
+            const formControl = this.formGroup?.get(name);
+            if (formControl) {
+              formControl.reset(undefined, { emitEvent: false });
+            }
+          },
+        );
+        break;
     }
   }
 
