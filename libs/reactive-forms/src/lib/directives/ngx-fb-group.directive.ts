@@ -152,6 +152,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
       this.destroyComponent();
     }
 
+    this.setValue();
+
     if (keepValueWhenHidden) {
       return;
     }
@@ -166,8 +168,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem> {
     if (!this.formGroup) {
       this.setGroup(controlName);
     }
-
-    this.setValue();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());

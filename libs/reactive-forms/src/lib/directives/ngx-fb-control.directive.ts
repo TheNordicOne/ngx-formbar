@@ -158,6 +158,8 @@ export class NgxFbControlDirective {
       this.destroyComponent();
     }
 
+    this.setValue();
+
     if (keepValueWhenHidden) {
       return;
     }
@@ -172,8 +174,6 @@ export class NgxFbControlDirective {
     if (!this.formControl) {
       this.setControl(controlName);
     }
-
-    this.setValue();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());
