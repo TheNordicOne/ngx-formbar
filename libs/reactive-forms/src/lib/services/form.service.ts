@@ -10,7 +10,7 @@ export class FormService {
   private controlContainer = inject(ControlContainer);
   private formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
-  get formGroup() {
+  get formGroup(): FormGroup {
     return this.controlContainer.control as FormGroup;
   }
 
@@ -21,7 +21,7 @@ export class FormService {
     },
   );
 
-  readonly formReset = toSignal(
+  readonly formReset: Signal<FormResetEvent | undefined> = toSignal(
     this.formGroup.events.pipe(
       filter((event) => event instanceof FormResetEvent),
     ),
