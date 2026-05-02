@@ -1,7 +1,6 @@
 import {
   afterRenderEffect,
   ComponentRef,
-  computed,
   DestroyRef,
   Directive,
   inject,
@@ -10,12 +9,12 @@ import {
   Type,
   ViewContainerRef,
 } from '@angular/core';
-import { NGX_FW_COMPONENT_RESOLVER, NgxFbBlock } from '@ngx-formbar/core';
+import { NgxFbBlock } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
-import { withLoadedComponent } from '../composables/loaded-component';
 import { createBindings } from '../setup/bindings';
 import { withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
+import { withBase } from '../composables/base';
 
 @Directive({
   selector: '[ngxfbBlock]',
@@ -24,29 +23,15 @@ export class NgxfbBlockDirective {
   private viewContainerRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
 
-  private readonly contentRegistrationService = inject(
-    NGX_FW_COMPONENT_RESOLVER,
-  );
-
   readonly config = input.required<FormConfigEntry<NgxFbBlock>>({
     alias: 'ngxfbBlock',
   });
 
   private componentRef?: ComponentRef<unknown>;
 
-  private readonly registrations =
-    this.contentRegistrationService.registrations;
-
-  private readonly controlConfig = computed(() => this.config().config);
-  private readonly controlName = computed(() => this.config().name);
-
-  private readonly registrationEntry = computed(() => {
-    const registrations = this.registrations();
-    const content = this.controlConfig();
-    return registrations.get(content.type) ?? null;
-  });
-
-  readonly component = withLoadedComponent(this.registrationEntry);
+  private readonly base = withBase(this.config);
+  private readonly controlConfig = this.base.controlConfig;
+  private readonly controlName = this.base.controlName;
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
@@ -59,7 +44,7 @@ export class NgxfbBlockDirective {
 
   constructor() {
     afterRenderEffect(() => {
-      const component = this.component();
+      const component = this.base.component();
 
       this.viewContainerRef.clear();
 

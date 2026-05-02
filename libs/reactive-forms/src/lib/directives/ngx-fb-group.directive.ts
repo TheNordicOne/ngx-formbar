@@ -15,14 +15,13 @@ import {
 } from '@angular/core';
 import {
   HideStrategy,
-  NGX_FW_COMPONENT_RESOLVER,
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
-import { withLoadedComponent } from '../composables/loaded-component';
+import { withBase } from '../composables/base';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { createBindings } from '../setup/bindings';
@@ -46,9 +45,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 {
   private viewContainerRef = inject(ViewContainerRef);
   private parentContainer = inject(ControlContainer);
-  private readonly contentRegistrationService = inject(
-    NGX_FW_COMPONENT_RESOLVER,
-  );
 
   private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxFbGroupDirective<NgxFbFormGroup>, {
@@ -62,17 +58,10 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   private componentRef?: ComponentRef<unknown>;
 
-  private readonly registrations =
-    this.contentRegistrationService.registrations;
-
-  private readonly controlConfig = computed(() => this.config().config);
-  private readonly controlName = computed(() => this.config().name);
-
-  private readonly registrationEntry = computed(() => {
-    const registrations = this.registrations();
-    const config = this.controlConfig();
-    return registrations.get(config.type) ?? null;
-  });
+  private readonly base = withBase(this.config);
+  private readonly controlConfig = this.base.controlConfig;
+  private readonly controlName = this.base.controlName;
+  private readonly registrationEntry = this.base.registrationEntry;
 
   private readonly groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
     Object.entries(this.controlConfig().controls).map(([name, config]) => ({
@@ -104,8 +93,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly handleVisibility = computed(
     () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',
   );
-
-  private readonly component = withLoadedComponent(this.registrationEntry);
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
@@ -163,7 +150,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   constructor() {
     afterRenderEffect(() => {
-      const component = this.component();
+      const component = this.base.component();
 
       this.viewContainerRef.clear();
 
@@ -220,7 +207,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     this.setGroup();
 
     // untracked because changes to that signal are already handled elsewhere
-    const component = untracked(() => this.component());
+    const component = untracked(() => this.base.component());
 
     if (handleVisibility && component) {
       this.instantiateComponent(component);

@@ -14,13 +14,11 @@ import {
 } from '@angular/core';
 import {
   HideStrategy,
-  NGX_FW_COMPONENT_RESOLVER,
   NgxFbControl,
   NgxFbFormGroup,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
-import { withLoadedComponent } from '../composables/loaded-component';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { createBindings } from '../setup/bindings';
@@ -40,6 +38,7 @@ import {
 } from '../composables/computed-value';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
+import { withBase } from '../composables/base';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -50,9 +49,6 @@ export class NgxFbControlDirective implements OnDestroy {
   private parentContainer = inject(ControlContainer);
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
-  private readonly contentRegistrationService = inject(
-    NGX_FW_COMPONENT_RESOLVER,
-  );
 
   private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxFbGroupDirective<NgxFbFormGroup>, {
@@ -65,17 +61,10 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private componentRef?: ComponentRef<unknown>;
 
-  private readonly registrations =
-    this.contentRegistrationService.registrations;
-
-  private readonly controlConfig = computed(() => this.config().config);
-  private readonly controlName = computed(() => this.config().name);
-
-  private readonly registrationEntry = computed(() => {
-    const registrations = this.registrations();
-    const content = this.controlConfig();
-    return registrations.get(content.type) ?? null;
-  });
+  private readonly base = withBase(this.config);
+  private readonly controlConfig = this.base.controlConfig;
+  private readonly controlName = this.base.controlName;
+  private readonly registrationEntry = this.base.registrationEntry;
 
   private readonly parentHideStrategy = computed<HideStrategy | undefined>(() =>
     this.parentGroupDirective?.hideStrategy(),
@@ -104,8 +93,6 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly defaultValue = computed(
     () => this.controlConfig().defaultValue,
   );
-
-  private readonly component = withLoadedComponent(this.registrationEntry);
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
@@ -170,7 +157,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
   constructor() {
     afterRenderEffect(() => {
-      const component = this.component();
+      const component = this.base.component();
 
       this.viewContainerRef.clear();
 
@@ -235,7 +222,7 @@ export class NgxFbControlDirective implements OnDestroy {
     this.setControl();
 
     // untracked because changes to that signal are already handled elsewhere
-    const component = untracked(() => this.component());
+    const component = untracked(() => this.base.component());
 
     if (handleVisibility && component) {
       this.instantiateComponent(component);
