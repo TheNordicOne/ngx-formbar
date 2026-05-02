@@ -23,8 +23,9 @@ import {
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
 import { withInheritedValue } from '../composables/inherited-value';
+import { withFormParent } from '../composables/form-parent';
 import { toSignalMap } from '../setup/signal-map';
-import { ControlContainer, FormGroup } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
@@ -41,7 +42,7 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy
 {
-  private parentContainer = inject(ControlContainer);
+  private readonly parent = withFormParent();
 
   private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxFbGroupDirective<NgxFbFormGroup>, {
@@ -146,7 +147,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
    * Access to the parent FormGroup containing this group
    */
   private get parentFormGroup() {
-    return this.parentContainer.control as FormGroup | null;
+    return this.parent.formGroup;
   }
 
   constructor() {

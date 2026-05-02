@@ -13,7 +13,7 @@ import {
   FormConfigEntry,
   ReactiveFormbarControl,
 } from '../types/control-component.type';
-import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { withHiddenState } from '../composables/hidden.state';
@@ -31,6 +31,7 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
 import { withInheritedValue } from '../composables/inherited-value';
+import { withFormParent } from '../composables/form-parent';
 import { toSignalMap } from '../setup/signal-map';
 import { FormService } from '../services/form.service';
 
@@ -38,7 +39,7 @@ import { FormService } from '../services/form.service';
   selector: '[ngxfbControl]',
 })
 export class NgxFbControlDirective implements OnDestroy {
-  private parentContainer = inject(ControlContainer);
+  private readonly parent = withFormParent();
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
@@ -140,11 +141,11 @@ export class NgxFbControlDirective implements OnDestroy {
    * Access to the parent FormGroup containing this control
    */
   get parentFormGroup() {
-    return this.parentContainer.control as FormGroup | null;
+    return this.parent.formGroup;
   }
 
   private get controlPath(): string {
-    return [...(this.parentContainer.path ?? []), this.controlName()].join('.');
+    return this.parent.pathTo(this.controlName());
   }
 
   constructor() {
