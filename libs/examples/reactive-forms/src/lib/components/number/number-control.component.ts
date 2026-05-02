@@ -24,7 +24,7 @@ export class NumberControlComponent
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
-  readonly labelText = input('');
+  readonly labelText = input<string | undefined>('');
   readonly dynamicLabel = input<string>();
   readonly testId = input('');
   readonly min = input.required<number>();

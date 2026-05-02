@@ -24,10 +24,11 @@ export class DropdownControlComponent
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
-  readonly labelText = input('');
+  readonly labelText = input<string | undefined>('');
   readonly dynamicLabel = input<string>();
   readonly testId = input('');
-  readonly options = input.required<{ id: string; value: string; label: string }[]>();
+  readonly options =
+    input.required<{ id: string; value: string; label: string }[]>();
 
   readonly displayLabel = computed(() => {
     const dynamic = this.dynamicLabel();

@@ -28,7 +28,7 @@ export class GroupControlComponent
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
-  readonly titleText = input('');
+  readonly titleText = input<string | undefined>('');
   readonly dynamicTitle = input<string>();
   readonly testId = input('');
   readonly legend = input<string>();
