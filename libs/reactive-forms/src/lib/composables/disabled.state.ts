@@ -40,7 +40,7 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
       return false;
     }
 
-    return parentGroup.disabled();
+    return parentGroup.isDisabled();
   });
 
   const option = computed(() => content().disabled);

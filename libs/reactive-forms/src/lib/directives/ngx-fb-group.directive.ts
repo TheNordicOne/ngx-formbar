@@ -105,7 +105,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
-  readonly disabled = withDisabledState(this.controlConfig);
+  readonly isDisabled = withDisabledState(this.controlConfig);
   private readonly handleDisable = computed(
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
   );
@@ -115,7 +115,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
-    ['isDisabled', this.disabled],
+    ['isDisabled', this.isDisabled],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],

@@ -99,7 +99,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
-  private readonly disabled = withDisabledState(this.controlConfig);
+  private readonly isDisabled = withDisabledState(this.controlConfig);
   private readonly handleDisable = computed(
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
   );
@@ -109,7 +109,7 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
-    ['isDisabled', this.disabled],
+    ['isDisabled', this.isDisabled],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],
