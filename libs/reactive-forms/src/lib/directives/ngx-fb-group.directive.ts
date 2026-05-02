@@ -34,6 +34,7 @@ import {
   withDisabledState,
 } from '../composables/disabled.state';
 import { withReadonlyState } from '../composables/readonly.state';
+import { withUpdateStrategy } from '../composables/update-strategy';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -112,6 +113,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly handleDisable = computed(
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
   );
+
+  readonly updateStrategy = withUpdateStrategy(this.controlConfig);
 
   readonly testId = withTestId(this.controlConfig, this.controlName);
 

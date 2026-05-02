@@ -37,6 +37,7 @@ import {
   setComputedValueEffect,
   withComputedValue,
 } from '../composables/computed-value';
+import { withUpdateStrategy } from '../composables/update-strategy';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -118,6 +119,8 @@ export class NgxFbControlDirective implements OnDestroy {
     () => this.controlConfig().computedValue !== undefined,
   );
 
+  private readonly updateStrategy = withUpdateStrategy(this.controlConfig);
+
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
@@ -132,8 +135,14 @@ export class NgxFbControlDirective implements OnDestroy {
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
   ]);
 
- private readonly controlInstance = computed(
-    () => new FormControl(untracked(() => this.resolveInitialValue()), {}),
+  readonly controlInstance = computed(
+    () =>
+      new FormControl(
+        untracked(() => this.resolveInitialValue()),
+        {
+          updateOn: this.updateStrategy(),
+        },
+      ),
   );
 
   /**

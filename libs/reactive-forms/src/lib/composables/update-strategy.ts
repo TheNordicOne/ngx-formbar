@@ -6,28 +6,29 @@ import {
   resolveUpdateStrategy,
   NGX_FW_DEFAULT_UPDATE_STRATEGY,
 } from '@ngx-formbar/core';
-import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
+import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
- * Creates a computed signal for the control's update strategy
+ * Creates a computed signal for the control's update strategy.
  *
- * This function determines when form controls should update:
- * - Uses the control's specified updateOn strategy if defined
- * - Falls back to parent group's strategy when not defined in the control
- * - Handles inheritance of update strategies through the form hierarchy
- * - Uses the application's default strategy as final fallback
+ * Resolution priority:
+ * 1. The control's own `updateOn` if defined
+ * 2. The parent group's update strategy
+ * 3. The application's default update strategy
  *
  * Update strategies control when form values and validation happen:
- * - 'change': Update on every change event (default Angular behavior)
- * - 'blur': Update when the control loses focus
- * - 'submit': Update only when the form is submitted
+ * - `'change'`: every change event (Angular default)
+ * - `'blur'`: when the control loses focus
+ * - `'submit'`: only on form submission
  *
- * @param content Signal containing the NgxFbAbstractControl with possible updateOn configuration
+ * @param content Signal containing the NgxFbAbstractControl with optional `updateOn`
  * @returns Computed signal providing the resolved update strategy
  */
-export function withUpdateStrategy(content: Signal<NgxFbAbstractControl>): Signal<UpdateStrategy> {
-  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
+export function withUpdateStrategy(
+  content: Signal<NgxFbAbstractControl>,
+): Signal<UpdateStrategy> {
+  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });
