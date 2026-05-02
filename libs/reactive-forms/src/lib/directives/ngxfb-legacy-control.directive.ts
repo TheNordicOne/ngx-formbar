@@ -296,7 +296,9 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
     });
 
     setComputedValueEffect({
-      controlInstance: this.controlInstance,
+      setValueFunction: (value) => {
+        this.controlInstance().setValue(value, { emitEvent: false });
+      },
       computeValueSignal: this.computedValue,
       isComputedValueDefined: this.isComputedValueDefined,
       formResetSignal: this.formService.formReset,

@@ -33,6 +33,11 @@ import {
   withDisabledState,
 } from '../composables/disabled.state';
 import { withReadonlyState } from '../composables/readonly.state';
+import {
+  setComputedValueEffect,
+  withComputedValue,
+} from '../composables/computed-value';
+import { FormService } from '../services/form.service';
 
 @Directive({
   selector: '[ngxfbControl]',
@@ -40,6 +45,7 @@ import { withReadonlyState } from '../composables/readonly.state';
 export class NgxFbControlDirective implements OnDestroy {
   private viewContainerRef = inject(ViewContainerRef);
   private parentContainer = inject(ControlContainer);
+  private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
   private readonly contentRegistrationService = inject(
     NGX_FW_COMPONENT_RESOLVER,
@@ -107,6 +113,11 @@ export class NgxFbControlDirective implements OnDestroy {
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
   );
 
+  private readonly computedValue = withComputedValue(this.controlConfig);
+  private readonly isComputedValueDefined = computed(
+    () => this.controlConfig().computedValue !== undefined,
+  );
+
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
@@ -166,6 +177,13 @@ export class NgxFbControlDirective implements OnDestroy {
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
     });
+
+    setComputedValueEffect({
+      setValueFunction: this.setValue.bind(this),
+      computeValueSignal: this.computedValue,
+      isComputedValueDefined: this.isComputedValueDefined,
+      formResetSignal: this.formService.formReset,
+    });
   }
 
   private applyHiddenState() {
@@ -202,7 +220,11 @@ export class NgxFbControlDirective implements OnDestroy {
     }
   }
 
-  private setValue() {
+  private setValue(value?: unknown) {
+    if (value) {
+      this.formControl?.setValue(value);
+      return;
+    }
     const valueStrategy = this.valueStrategy();
     const defaultValue = this.defaultValue();
     switch (valueStrategy) {
