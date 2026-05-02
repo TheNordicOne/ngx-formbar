@@ -16,10 +16,14 @@ import {
   NgxFbItem,
   ValueStrategy,
 } from '@ngx-formbar/core';
-import { FormConfigEntry } from '../types/control-component.type';
+import {
+  FormConfigEntry,
+  ReactiveFormbarGroup,
+} from '../types/control-component.type';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
 import { withInheritedValue } from '../composables/inherited-value';
+import { toSignalMap } from '../setup/signal-map';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
@@ -61,12 +65,11 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     })),
   );
 
-  readonly hideStrategy: Signal<HideStrategy | undefined> =
-    withInheritedValue(
-      this.controlConfig,
-      'hideStrategy',
-      this.parentGroupDirective?.hideStrategy,
-    );
+  readonly hideStrategy: Signal<HideStrategy | undefined> = withInheritedValue(
+    this.controlConfig,
+    'hideStrategy',
+    this.parentGroupDirective?.hideStrategy,
+  );
 
   private readonly keepValueWhenHidden = computed(
     () => this.hideStrategy() === 'keep',
@@ -116,20 +119,20 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly testId = withTestId(this.controlConfig, this.controlName);
 
-  private readonly signalMap = new Map<string, Signal<unknown>>([
-    ['name', this.controlName],
-    ['isHidden', this.isHidden],
-    ['isDisabled', this.isDisabled],
-    ['isReadonly', this.isReadonly],
-    ['hideStrategy', this.hideStrategy],
-    ['valueStrategy', this.valueStrategy],
-    ['testId', this.testId],
-    ['titleText', computed(() => this.controlConfig().title)],
-    ['dynamicTitle', withDynamicTitle(this.controlConfig)],
-    ['errors', this.errors],
-    ['isDirty', this.isDirty],
-    ['groupInstance', this.formGroupInstance],
-  ]);
+  private readonly signalMap = toSignalMap<ReactiveFormbarGroup>({
+    name: this.controlName,
+    isHidden: this.isHidden,
+    isDisabled: this.isDisabled,
+    isReadonly: this.isReadonly,
+    hideStrategy: this.hideStrategy,
+    valueStrategy: this.valueStrategy,
+    testId: this.testId,
+    titleText: computed(() => this.controlConfig().title),
+    dynamicTitle: withDynamicTitle(this.controlConfig),
+    errors: this.errors,
+    isDirty: this.isDirty,
+    groupInstance: this.formGroupInstance,
+  });
 
   private readonly host = withComponentHost({
     signalMap: this.signalMap,

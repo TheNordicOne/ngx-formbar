@@ -45,7 +45,7 @@ export interface ReactiveFormbarAbstractControl {
 export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
   ReactiveFormbarAbstractControl &
     ToSignalInputs<Omit<T, keyof NgxFbControl>> & {
-      readonly labelText?: SignalInput<string>;
+      readonly labelText?: SignalInput<string | undefined>;
       readonly dynamicLabel?: SignalInput<string | undefined>;
       readonly controlInstance?: SignalInput<FormControl>;
     };
@@ -76,7 +76,7 @@ export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
 export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
   ReactiveFormbarAbstractControl &
     ToSignalInputs<Omit<T, keyof NgxFbFormGroup>> & {
-      readonly titleText?: SignalInput<string>;
+      readonly titleText?: SignalInput<string | undefined>;
       readonly dynamicTitle?: SignalInput<string | undefined>;
       readonly groupInstance?: SignalInput<FormGroup>;
     };

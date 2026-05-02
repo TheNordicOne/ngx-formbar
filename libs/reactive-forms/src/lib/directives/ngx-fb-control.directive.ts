@@ -6,11 +6,13 @@ import {
   inject,
   input,
   OnDestroy,
-  Signal,
   untracked,
 } from '@angular/core';
 import { NgxFbControl, NgxFbFormGroup } from '@ngx-formbar/core';
-import { FormConfigEntry } from '../types/control-component.type';
+import {
+  FormConfigEntry,
+  ReactiveFormbarControl,
+} from '../types/control-component.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { withDynamicLabel } from '../composables/dynamic-label';
@@ -29,6 +31,7 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
 import { withInheritedValue } from '../composables/inherited-value';
+import { toSignalMap } from '../setup/signal-map';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -113,20 +116,20 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
-  private readonly signalMap = new Map<string, Signal<unknown>>([
-    ['name', this.controlName],
-    ['isHidden', this.isHidden],
-    ['isDisabled', this.isDisabled],
-    ['isReadonly', this.isReadonly],
-    ['hideStrategy', this.hideStrategy],
-    ['valueStrategy', this.valueStrategy],
-    ['testId', this.testId],
-    ['labelText', computed(() => this.controlConfig().label)],
-    ['dynamicLabel', withDynamicLabel(this.controlConfig)],
-    ['errors', this.errors],
-    ['isDirty', this.isDirty],
-    ['controlInstance', this.controlInstance],
-  ]);
+  private readonly signalMap = toSignalMap<ReactiveFormbarControl>({
+    name: this.controlName,
+    isHidden: this.isHidden,
+    isDisabled: this.isDisabled,
+    isReadonly: this.isReadonly,
+    hideStrategy: this.hideStrategy,
+    valueStrategy: this.valueStrategy,
+    testId: this.testId,
+    labelText: computed(() => this.controlConfig().label),
+    dynamicLabel: withDynamicLabel(this.controlConfig),
+    errors: this.errors,
+    isDirty: this.isDirty,
+    controlInstance: this.controlInstance,
+  });
 
   private readonly host = withComponentHost({
     signalMap: this.signalMap,

@@ -1,10 +1,14 @@
-import { afterRenderEffect, Directive, input, Signal } from '@angular/core';
+import { afterRenderEffect, Directive, input } from '@angular/core';
 import { NgxFbBlock } from '@ngx-formbar/core';
-import { FormConfigEntry } from '../types/control-component.type';
+import {
+  FormbarBlock,
+  FormConfigEntry,
+} from '../types/control-component.type';
 import { withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
+import { toSignalMap } from '../setup/signal-map';
 
 @Directive({
   selector: '[ngxfbBlock]',
@@ -22,10 +26,10 @@ export class NgxfbBlockDirective {
 
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
-  private readonly signalMap = new Map<string, Signal<unknown>>([
-    ['isHidden', this.isHidden],
-    ['testId', this.testId],
-  ]);
+  private readonly signalMap = toSignalMap<FormbarBlock>({
+    isHidden: this.isHidden,
+    testId: this.testId,
+  });
 
   private readonly host = withComponentHost({
     signalMap: this.signalMap,
