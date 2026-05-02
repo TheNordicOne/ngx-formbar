@@ -136,6 +136,7 @@ export class NgxFbControlDirective implements OnDestroy {
       new FormControl(
         untracked(() => this.resolveInitialValue()),
         {
+          nonNullable: this.controlConfig().nonNullable,
           updateOn: this.updateStrategy(),
           validators: this.validators(),
           asyncValidators: this.asyncValidators(),
