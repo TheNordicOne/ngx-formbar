@@ -36,10 +36,7 @@ import {
 } from '../composables/disabled.state';
 import { withReadonlyState } from '../composables/readonly.state';
 import { withUpdateStrategy } from '../composables/update-strategy';
-import {
-  withAsyncValidators,
-  withValidators,
-} from '../composables/validators';
+import { withAsyncValidators, withValidators } from '../composables/validators';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -154,6 +151,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
     ['errors', this.errors],
     ['isDirty', this.isDirty],
+    ['groupInstance', this.formGroupInstance],
   ]);
 
   /**

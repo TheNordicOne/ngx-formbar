@@ -154,6 +154,7 @@ export class NgxFbControlDirective implements OnDestroy {
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
     ['errors', this.errors],
     ['isDirty', this.isDirty],
+    ['controlInstance', this.controlInstance],
   ]);
 
   /**

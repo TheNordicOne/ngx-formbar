@@ -1,11 +1,14 @@
 import {
   ExtendedBlockInputs,
+  HideStrategy,
   NgxFbBlock,
   NgxFbControl,
   NgxFbFormGroup,
   SignalInput,
   ToSignalInputs,
+  ValueStrategy,
 } from '@ngx-formbar/core';
+import { FormControl, FormGroup, ValidationErrors } from '@angular/forms';
 
 /** Common signal inputs shared by all formbar component types. */
 export interface ReactiveFormbarAbstractControl {
@@ -14,6 +17,10 @@ export interface ReactiveFormbarAbstractControl {
   readonly isReadonly?: SignalInput<boolean>;
   readonly isHidden?: SignalInput<boolean>;
   readonly testId?: SignalInput<string>;
+  readonly hideStrategy?: SignalInput<HideStrategy | undefined>;
+  readonly valueStrategy?: SignalInput<ValueStrategy | undefined>;
+  readonly errors?: SignalInput<ValidationErrors | null>;
+  readonly isDirty?: SignalInput<boolean>;
 }
 
 /**
@@ -40,6 +47,7 @@ export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
     ToSignalInputs<Omit<T, keyof NgxFbControl>> & {
       readonly labelText?: SignalInput<string>;
       readonly dynamicLabel?: SignalInput<string | undefined>;
+      readonly controlInstance?: SignalInput<FormControl>;
     };
 
 /**
@@ -70,6 +78,7 @@ export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
     ToSignalInputs<Omit<T, keyof NgxFbFormGroup>> & {
       readonly titleText?: SignalInput<string>;
       readonly dynamicTitle?: SignalInput<string | undefined>;
+      readonly groupInstance?: SignalInput<FormGroup>;
     };
 
 /**
