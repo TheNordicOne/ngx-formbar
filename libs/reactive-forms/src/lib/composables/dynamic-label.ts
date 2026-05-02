@@ -1,5 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NgxFbControl, ExpressionService, FormContext, resolveExpression } from '@ngx-formbar/core';
+import { NgxFbControl, ExpressionService, resolveExpression } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 
 /**
@@ -12,11 +12,9 @@ export function withDynamicLabel(content: Signal<NgxFbControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   return resolveExpression<string>(
     computed(() => content().dynamicLabel),
-    formContext,
+    formService.formValue,
     expressionService,
   );
 }

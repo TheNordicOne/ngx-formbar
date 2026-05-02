@@ -1,7 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import {
   ExpressionService,
-  FormContext,
   NgxFbFormGroup,
   resolveExpression,
 } from '@ngx-formbar/core';
@@ -17,11 +16,9 @@ export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   return resolveExpression<string>(
     computed(() => content().dynamicTitle),
-    formContext,
+    formService.formValue,
     expressionService,
   );
 }

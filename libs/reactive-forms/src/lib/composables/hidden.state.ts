@@ -1,6 +1,5 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
-  FormContext,
   HideStrategy,
   NgxFbBaseContent,
   NgxFbFormGroup,
@@ -20,8 +19,6 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
 
   const option = computed(() => content().hidden);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
     inject(NgxFbGroupDirective<NgxFbFormGroup>, {
       optional: true,
@@ -37,7 +34,7 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
     return parentGroup.isHidden();
   });
 
-  return resolveHiddenState(option, formContext, parentGroupIsHidden);
+  return resolveHiddenState(option, formService.formValue, parentGroupIsHidden);
 }
 
 /**

@@ -1,7 +1,6 @@
 import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
   ExpressionService,
-  FormContext,
   NgxFbAbstractControl,
   NgxFbFormGroup,
   resolveInheritableExpression,
@@ -47,11 +46,9 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
 
   const option = computed(() => content().disabled);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   return resolveInheritableExpression(
     option,
-    formContext,
+    formService.formValue,
     expressionService,
     parentGroupIsDisabled,
   );

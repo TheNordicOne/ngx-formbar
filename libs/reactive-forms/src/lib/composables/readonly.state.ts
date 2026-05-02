@@ -1,7 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import {
   ExpressionService,
-  FormContext,
   NgxFbAbstractControl,
   NgxFbFormGroup,
   resolveInheritableExpression,
@@ -45,11 +44,9 @@ export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
 
   const option = computed(() => content().readonly);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   return resolveInheritableExpression(
     option,
-    formContext,
+    formService.formValue,
     expressionService,
     parentGroupIsReadonly,
   );

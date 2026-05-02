@@ -2,7 +2,6 @@ import { computed, effect, inject, Signal } from '@angular/core';
 import {
   Expression,
   ExpressionService,
-  FormContext,
   NgxFbAbstractControl,
   resolveExpression,
 } from '@ngx-formbar/core';
@@ -19,11 +18,9 @@ export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
 
-  const formContext = computed<FormContext>(() => formService.formValue());
-
   return resolveExpression<T>(
     computed(() => content().computedValue as Expression<T> | T | undefined),
-    formContext,
+    formService.formValue,
     expressionService,
   );
 }

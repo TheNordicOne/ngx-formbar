@@ -1,4 +1,4 @@
-import { effect, inject, Injectable, Signal } from '@angular/core';
+import { computed, effect, inject, Injectable, Signal } from '@angular/core';
 import { ControlContainer, FormGroup, FormResetEvent } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormContext } from '@ngx-formbar/core';
@@ -14,11 +14,12 @@ export class FormService {
     return this.controlContainer.control as FormGroup;
   }
 
-  readonly formValue: Signal<FormContext> = toSignal(
+  private readonly valueChangesSignal = toSignal<FormContext>(
     this.formGroup.valueChanges,
-    {
-      initialValue: {},
-    },
+  );
+
+  readonly formValue: Signal<FormContext> = computed(
+    () => this.valueChangesSignal() ?? (this.formGroup.value as FormContext),
   );
 
   readonly formReset: Signal<FormResetEvent | undefined> = toSignal(
