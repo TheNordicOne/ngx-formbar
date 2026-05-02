@@ -260,6 +260,11 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   ngOnDestroy() {
     this.componentRef?.destroy();
+
+    const keepValueWhenHidden = this.keepValueWhenHidden();
+    if (keepValueWhenHidden) {
+      return;
+    }
     this.removeGroup();
   }
 }
