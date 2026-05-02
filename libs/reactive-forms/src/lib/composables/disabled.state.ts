@@ -5,7 +5,6 @@ import {
   NgxFbFormGroup,
   resolveInheritableExpression,
   SimpleFunction,
-  StateHandling,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
@@ -55,28 +54,28 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
 }
 
 /**
- * Creates an effect that manages disabled state transitions
+ * Creates an effect that manages disabled state transitions.
  *
- * When disabledHandling is 'auto', calls the appropriate enable/disable
- * function based on the disabled signal. When 'manual', does nothing.
+ * When `handleDisable` is true, calls the appropriate enable/disable function
+ * based on the disabled signal. When false, the effect is a no-op and the
+ * component is responsible for applying the disabled state itself.
  *
- * @param options Configuration object for disabled effect
- * @param options.disabledSignal Signal that indicates if the component should be disabled
- * @param options.disabledHandlingSignal Signal that determines how disabled state changes should be handled
- * @param options.enableFunction Function to call when component should be enabled
- * @param options.disableFunction Function to call when component should be disabled
+ * @param options.disabledSignal Signal indicating whether the component should be disabled
+ * @param options.handleDisableSignal Signal indicating whether the library should apply the disabled state
+ * @param options.enableFunction Function to call when the component should be enabled
+ * @param options.disableFunction Function to call when the component should be disabled
  */
 export function disabledEffect(options: {
   disabledSignal: Signal<boolean>;
-  disabledHandlingSignal: Signal<StateHandling>;
+  handleDisableSignal: Signal<boolean>;
   enableFunction: SimpleFunction;
   disableFunction: SimpleFunction;
 }) {
   effect(() => {
     const disabled = options.disabledSignal();
-    const disabledHandling = options.disabledHandlingSignal();
+    const handleDisable = options.handleDisableSignal();
 
-    if (disabledHandling === 'manual') {
+    if (!handleDisable) {
       return;
     }
 

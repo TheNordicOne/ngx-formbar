@@ -290,7 +290,7 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
 
     disabledEffect({
       disabledSignal: this.disabled,
-      disabledHandlingSignal: this.disabledHandling,
+      handleDisableSignal: computed(() => this.disabledHandling() === 'auto'),
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
     });

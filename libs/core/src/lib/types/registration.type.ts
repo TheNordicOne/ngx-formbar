@@ -35,6 +35,16 @@ export interface ComponentRegistrationOptions {
    *   strategy. The library only handles initial form control registration.
    */
   keepValueWhenHidden?: StateHandling;
+
+  /**
+   * Controls how the disabled state is applied to the underlying form control.
+   *
+   * - `'auto'` (default): The library calls `enable()`/`disable()` on the form control
+   *   in response to changes in the resolved `disabled` signal.
+   * - `'manual'`: The library does not touch the form control's disabled state. The component
+   *   receives the `isDisabled` signal and is responsible for applying it itself.
+   */
+  disabledHandling?: StateHandling;
 }
 
 /**

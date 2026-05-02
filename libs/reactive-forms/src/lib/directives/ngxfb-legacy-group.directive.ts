@@ -284,7 +284,7 @@ export class NgxfbLegacyGroupDirective<T extends NgxFbFormGroup>
 
     disabledEffect({
       disabledSignal: this.disabled,
-      disabledHandlingSignal: this.disabledHandling,
+      handleDisableSignal: computed(() => this.disabledHandling() === 'auto'),
       enableFunction: this.enableGroup.bind(this),
       disableFunction: this.disableGroup.bind(this),
     });

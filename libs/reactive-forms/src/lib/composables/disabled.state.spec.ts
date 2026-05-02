@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { StateHandling } from '@ngx-formbar/core';
 import { disabledEffect } from './disabled.state';
 
 describe('disabledEffect', () => {
@@ -8,14 +7,14 @@ describe('disabledEffect', () => {
     TestBed.configureTestingModule({});
   });
 
-  it('should call disableFunction when disabled is true and handling is auto', () => {
+  it('should call disableFunction when disabled is true and handleDisable is true', () => {
     TestBed.runInInjectionContext(() => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
       disabledEffect({
         disabledSignal: signal(true),
-        disabledHandlingSignal: signal<StateHandling>('auto'),
+        handleDisableSignal: signal(true),
         enableFunction: enableFn,
         disableFunction: disableFn,
       });
@@ -27,14 +26,14 @@ describe('disabledEffect', () => {
     });
   });
 
-  it('should call enableFunction when disabled is false and handling is auto', () => {
+  it('should call enableFunction when disabled is false and handleDisable is true', () => {
     TestBed.runInInjectionContext(() => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
       disabledEffect({
         disabledSignal: signal(false),
-        disabledHandlingSignal: signal<StateHandling>('auto'),
+        handleDisableSignal: signal(true),
         enableFunction: enableFn,
         disableFunction: disableFn,
       });
@@ -46,14 +45,14 @@ describe('disabledEffect', () => {
     });
   });
 
-  it('should not call any function when handling is manual', () => {
+  it('should not call any function when handleDisable is false', () => {
     TestBed.runInInjectionContext(() => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
       disabledEffect({
         disabledSignal: signal(true),
-        disabledHandlingSignal: signal<StateHandling>('manual'),
+        handleDisableSignal: signal(false),
         enableFunction: enableFn,
         disableFunction: disableFn,
       });
@@ -73,7 +72,7 @@ describe('disabledEffect', () => {
 
       disabledEffect({
         disabledSignal: disabled,
-        disabledHandlingSignal: signal<StateHandling>('auto'),
+        handleDisableSignal: signal(true),
         enableFunction: enableFn,
         disableFunction: disableFn,
       });
@@ -87,15 +86,15 @@ describe('disabledEffect', () => {
     });
   });
 
-  it('should react to handling signal changes', () => {
+  it('should react to handleDisable signal changes', () => {
     TestBed.runInInjectionContext(() => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
-      const handling = signal<StateHandling>('manual');
+      const handleDisable = signal(false);
 
       disabledEffect({
         disabledSignal: signal(true),
-        disabledHandlingSignal: handling,
+        handleDisableSignal: handleDisable,
         enableFunction: enableFn,
         disableFunction: disableFn,
       });
@@ -103,7 +102,7 @@ describe('disabledEffect', () => {
       TestBed.tick();
       expect(disableFn).not.toHaveBeenCalled();
 
-      handling.set('auto');
+      handleDisable.set(true);
       TestBed.tick();
       expect(disableFn).toHaveBeenCalledTimes(1);
     });

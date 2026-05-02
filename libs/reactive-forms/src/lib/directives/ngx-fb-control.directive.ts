@@ -7,7 +7,6 @@ import {
   inject,
   input,
   OnDestroy,
-  signal,
   Signal,
   Type,
   untracked,
@@ -18,7 +17,6 @@ import {
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbControl,
   NgxFbFormGroup,
-  StateHandling,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
@@ -102,7 +100,9 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly isHidden = withHiddenState(this.controlConfig);
 
   private readonly disabled = withDisabledState(this.controlConfig);
-  private readonly disabledHandling = signal<StateHandling>('auto');
+  private readonly handleDisable = computed(
+    () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
+  );
 
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
@@ -158,7 +158,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
     disabledEffect({
       disabledSignal: this.disabled,
-      disabledHandlingSignal: this.disabledHandling,
+      handleDisableSignal: this.handleDisable,
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
     });

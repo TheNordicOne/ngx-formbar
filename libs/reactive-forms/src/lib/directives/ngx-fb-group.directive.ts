@@ -8,7 +8,6 @@ import {
   Injector,
   input,
   OnDestroy,
-  signal,
   Signal,
   Type,
   untracked,
@@ -20,7 +19,6 @@ import {
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
-  StateHandling,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
@@ -108,7 +106,9 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   readonly isHidden = withHiddenState(this.controlConfig);
 
   readonly disabled = withDisabledState(this.controlConfig);
-  private readonly disabledHandling = signal<StateHandling>('auto');
+  private readonly handleDisable = computed(
+    () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
+  );
 
   readonly testId = withTestId(this.controlConfig, this.controlName);
 
@@ -160,7 +160,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
     disabledEffect({
       disabledSignal: this.disabled,
-      disabledHandlingSignal: this.disabledHandling,
+      handleDisableSignal: this.handleDisable,
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
     });
