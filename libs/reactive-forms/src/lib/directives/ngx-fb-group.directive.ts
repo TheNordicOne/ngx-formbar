@@ -66,6 +66,13 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     return registrations.get(config.type) ?? null;
   });
 
+  private readonly groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
+    Object.entries(this.controlConfig().controls).map(([name, config]) => ({
+      name,
+      config,
+    })),
+  );
+
   private readonly parentHideStrategy = computed(() =>
     this.parentGroupDirective?.hideStrategy(),
   );
@@ -230,15 +237,10 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       this.controlConfig,
     );
 
-    const groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
-      Object.entries(this.controlConfig().controls).map(([name, config]) => ({
-        name,
-        config,
-      })),
-    );
-
     const componentInjector = Injector.create({
-      providers: [{ provide: NGXFB_CONTROL_ENTRIES, useValue: groupControls }],
+      providers: [
+        { provide: NGXFB_CONTROL_ENTRIES, useValue: this.groupControls },
+      ],
       parent: this.viewContainerRef.injector,
     });
 
