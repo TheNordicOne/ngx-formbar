@@ -239,7 +239,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     if (this.parentFormGroup?.get(name) === instance) {
       return;
     }
-    this.parentFormGroup?.setControl(name, instance, { emitEvent: false });
+    this.parentFormGroup?.setControl(name, instance);
   }
 
   private removeGroup() {
@@ -247,7 +247,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     if (!this.parentFormGroup?.get(name)) {
       return;
     }
-    this.parentFormGroup.removeControl(name, { emitEvent: false });
+    this.parentFormGroup.removeControl(name);
   }
 
   private enableControl() {

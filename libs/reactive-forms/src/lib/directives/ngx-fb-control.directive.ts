@@ -263,7 +263,7 @@ export class NgxFbControlDirective implements OnDestroy {
     if (this.parentFormGroup?.get(name) === instance) {
       return;
     }
-    this.parentFormGroup?.setControl(name, instance, { emitEvent: false });
+    this.parentFormGroup?.setControl(name, instance);
   }
 
   private removeControl() {
@@ -271,7 +271,7 @@ export class NgxFbControlDirective implements OnDestroy {
     if (!this.parentFormGroup?.get(name)) {
       return;
     }
-    this.parentFormGroup.removeControl(name, { emitEvent: false });
+    this.parentFormGroup.removeControl(name);
   }
 
   private enableControl() {
