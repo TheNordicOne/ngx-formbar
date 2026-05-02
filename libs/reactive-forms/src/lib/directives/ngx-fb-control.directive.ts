@@ -157,6 +157,10 @@ export class NgxFbControlDirective implements OnDestroy {
         return;
       }
 
+      if (untracked(() => this.isHidden())) {
+        return;
+      }
+
       this.instantiateComponent(component);
     });
 

@@ -146,6 +146,10 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
         return;
       }
 
+      if (untracked(() => this.isHidden())) {
+        return;
+      }
+
       this.instantiateComponent(component);
     });
 
