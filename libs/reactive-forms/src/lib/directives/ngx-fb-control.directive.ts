@@ -39,10 +39,7 @@ import {
   withComputedValue,
 } from '../composables/computed-value';
 import { withUpdateStrategy } from '../composables/update-strategy';
-import {
-  withAsyncValidators,
-  withValidators,
-} from '../composables/validators';
+import { withAsyncValidators, withValidators } from '../composables/validators';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -224,7 +221,7 @@ export class NgxFbControlDirective implements OnDestroy {
       this.destroyComponent();
     }
 
-    this.applyValueStrategy();
+    this.setValueByStrategy();
 
     if (keepValueWhenHidden) {
       return;
@@ -247,7 +244,7 @@ export class NgxFbControlDirective implements OnDestroy {
     }
   }
 
-  private applyValueStrategy() {
+  private setValueByStrategy() {
     const valueStrategy = this.valueStrategy();
     const defaultValue = this.defaultValue();
     switch (valueStrategy) {
@@ -338,7 +335,7 @@ export class NgxFbControlDirective implements OnDestroy {
   ngOnDestroy(): void {
     this.componentRef?.destroy();
     this.saveLastValue();
-    this.applyValueStrategy();
+    this.setValueByStrategy();
 
     if (this.keepValueWhenHidden()) {
       return;
