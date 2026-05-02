@@ -6,7 +6,7 @@ import {
   resolveInheritableExpression,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
+import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
  * Computes a reactive readonly state based on control content
@@ -27,8 +27,8 @@ import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.dire
 export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });
@@ -39,7 +39,7 @@ export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
       return false;
     }
 
-    return parentGroup.readonly();
+    return parentGroup.isReadonly();
   });
 
   const option = computed(() => content().readonly);

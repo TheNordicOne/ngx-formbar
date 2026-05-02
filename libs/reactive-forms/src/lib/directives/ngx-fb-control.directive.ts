@@ -32,6 +32,7 @@ import {
   disabledEffect,
   withDisabledState,
 } from '../composables/disabled.state';
+import { withReadonlyState } from '../composables/readonly.state';
 
 @Directive({
   selector: '[ngxfbControl]',
@@ -99,6 +100,8 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
+  private readonly isReadonly = withReadonlyState(this.controlConfig);
+
   private readonly isDisabled = withDisabledState(this.controlConfig);
   private readonly handleDisable = computed(
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
@@ -110,6 +113,7 @@ export class NgxFbControlDirective implements OnDestroy {
     ['name', this.controlName],
     ['isHidden', this.isHidden],
     ['isDisabled', this.isDisabled],
+    ['isReadonly', this.isReadonly],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],
@@ -157,7 +161,7 @@ export class NgxFbControlDirective implements OnDestroy {
     });
 
     disabledEffect({
-      disabledSignal: this.disabled,
+      disabledSignal: this.isDisabled,
       handleDisableSignal: this.handleDisable,
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),

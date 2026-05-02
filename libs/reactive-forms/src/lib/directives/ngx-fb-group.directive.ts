@@ -33,6 +33,7 @@ import {
   disabledEffect,
   withDisabledState,
 } from '../composables/disabled.state';
+import { withReadonlyState } from '../composables/readonly.state';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -105,6 +106,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
+  readonly isReadonly = withReadonlyState(this.controlConfig);
+
   readonly isDisabled = withDisabledState(this.controlConfig);
   private readonly handleDisable = computed(
     () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
@@ -116,6 +119,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ['name', this.controlName],
     ['isHidden', this.isHidden],
     ['isDisabled', this.isDisabled],
+    ['isReadonly', this.isReadonly],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],
@@ -159,7 +163,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     });
 
     disabledEffect({
-      disabledSignal: this.disabled,
+      disabledSignal: this.isDisabled,
       handleDisableSignal: this.handleDisable,
       enableFunction: this.enableControl.bind(this),
       disableFunction: this.disableControl.bind(this),
