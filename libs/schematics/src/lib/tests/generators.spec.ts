@@ -20,11 +20,10 @@ import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   appConfigProvidersComponentRegistrationsMapHasIdentifier,
   classDeclarationExists,
+  classImplementsInterface,
   componentRegistrationsMapProviderHasIdentifier,
   componentSelectorEquals,
-  decoratorArrayPropContainsIdentifier,
-  decoratorArrayPropContainsProviderObject,
-  decoratorHostDirectivesHasInlineDirectiveWithInputs,
+  decoratorHasProp,
   decoratorPropInitializerIsIdentifier,
   defineFormbarConfigComponentRegistrationsHasIdentifier,
   directComponentRegistrationsHasIdentifier,
@@ -36,7 +35,6 @@ import {
   provideFormbarComponentRegistrationsHasIdentifier,
 } from '@ngx-formbar/setup';
 import {
-  DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
   DEFAULT_VIEW_PROVIDER_HELPER,
   REACTIVE_FORMS_PACKAGE_NAME,
 } from '../shared/constants';
@@ -60,11 +58,9 @@ describe('control schematic', () => {
     'control-container.view-provider.ts#controlContainterViewProviders';
   const viewProviderHelperPathOption = `${viewProviderHelperPath}/${viewProviderHelper}`;
 
-  const hostDirectiveHelperPath = 'app/shared/helper';
-  const hostDirectiveHelperFile = 'control.directive.ts#controlHost';
-  const hostDirectiveHelperPathOption = `${hostDirectiveHelperPath}/${hostDirectiveHelperFile}`;
-
   const defaultComponentOutputPath = app('test/test-control.component.ts');
+  const groupComponentOutputPath = app('test/test-control.component.ts');
+  const blockComponentOutputPath = app('test/test-control.component.ts');
   const appConfigPath = app(appConfigPathRaw);
 
   async function runSchematic(
@@ -285,178 +281,133 @@ describe('control schematic', () => {
       });
     });
 
-    describe('control host directive helper', () => {
-      it('imports host directive from barrel export using default file name and identifier', async () => {
-        addHelperIndexFile(appTree, hostDirectiveHelperPath);
-        const tree = await runSchematic('control', {
-          hostDirectiveHelperPath,
-        });
-
-        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
-        const identifier = parts[1];
-        const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-        const controlHostDirectiveImportPath = buildRelativePath(
-          defaultComponentOutputPath,
-          src(hostDirectiveHelperPath),
-        );
-
-        const importsControlHostDirectiveHelper = hasNamedImport(
-          sf,
-          controlHostDirectiveImportPath,
-          identifier,
-        );
-
-        const hasControlHostDirectiveInDecorator =
-          decoratorArrayPropContainsIdentifier(
-            sf,
-            'Component',
-            'hostDirectives',
-            identifier,
-          );
-
-        expect(importsControlHostDirectiveHelper).toBe(true);
-        expect(hasControlHostDirectiveInDecorator).toBe(true);
-      });
-
-      it('imports host directive from file using default file name and identifier', async () => {
-        const tree = await runSchematic('control', {
-          hostDirectiveHelperPath,
-        });
-
-        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
-        const fileName = parts[0].replace('.ts', '');
-        const identifier = parts[1];
-        const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-        const controlHostDirectiveImportPath = buildRelativePath(
-          defaultComponentOutputPath,
-          src(`${hostDirectiveHelperPath}/${fileName}`),
-        );
-
-        const importsControlHostDirectiveHelper = hasNamedImport(
-          sf,
-          controlHostDirectiveImportPath,
-          identifier,
-        );
-
-        const hasControlHostDirectiveInDecorator =
-          decoratorArrayPropContainsIdentifier(
-            sf,
-            'Component',
-            'hostDirectives',
-            identifier,
-          );
-
-        expect(importsControlHostDirectiveHelper).toBe(true);
-        expect(hasControlHostDirectiveInDecorator).toBe(true);
-      });
-
-      it('imports host directive from barrel export using file name and identifier from option', async () => {
-        addHelperIndexFile(appTree, hostDirectiveHelperPath);
-        const tree = await runSchematic('control', {
-          hostDirectiveHelperPath: hostDirectiveHelperPathOption,
-        });
-
-        const parts = hostDirectiveHelperFile.split('#');
-        const identifier = parts[1];
-
-        const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-        const controlHostDirectiveImportPath = buildRelativePath(
-          defaultComponentOutputPath,
-          src(hostDirectiveHelperPath),
-        );
-
-        const importsControlHostDirectiveHelper = hasNamedImport(
-          sf,
-          controlHostDirectiveImportPath,
-          identifier,
-        );
-
-        const hasControlHostDirectiveInDecorator =
-          decoratorArrayPropContainsIdentifier(
-            sf,
-            'Component',
-            'hostDirectives',
-            identifier,
-          );
-
-        expect(importsControlHostDirectiveHelper).toBe(true);
-        expect(hasControlHostDirectiveInDecorator).toBe(true);
-      });
-
-      it('imports host directive from file using file name from option and default identifier', async () => {
-        const path = `${hostDirectiveHelperPath}/control.directive.ts`;
-        const tree = await runSchematic('control', {
-          hostDirectiveHelperPath: path,
-        });
-
-        const parts = DEFAULT_CONTROL_HOST_PROVIDER_HELPER.split('#');
-        const fileName = 'control.directive';
-        const identifier = parts[1];
-
-        const sf = parseTS(read(tree, defaultComponentOutputPath));
-
-        const controlHostDirectiveImportPath = buildRelativePath(
-          defaultComponentOutputPath,
-          src(`${hostDirectiveHelperPath}/${fileName}`),
-        );
-
-        const importsControlHostDirectiveHelper = hasNamedImport(
-          sf,
-          controlHostDirectiveImportPath,
-          identifier,
-        );
-
-        const hasControlHostDirectiveInDecorator =
-          decoratorArrayPropContainsIdentifier(
-            sf,
-            'Component',
-            'hostDirectives',
-            identifier,
-          );
-
-        expect(importsControlHostDirectiveHelper).toBe(true);
-        expect(hasControlHostDirectiveInDecorator).toBe(true);
-      });
-
-      it('falls back to inline providers and host directive when helpers are not provided', async () => {
+    describe('interface-based control output', () => {
+      it('falls back to inline view providers and emits no hostDirectives', async () => {
         const tree = await runSchematic('control');
         const sf = parseTS(read(tree, defaultComponentOutputPath));
-        console.log(read(tree, defaultComponentOutputPath));
+
         const importsControlContainerFromAngular = hasNamedImport(
           sf,
           '@angular/forms',
           'ControlContainer',
         );
 
-        const hasViewProvidersInDecorator =
-          decoratorArrayPropContainsProviderObject(
-            sf,
-            'Component',
-            'viewProviders',
-            'ControlContainer',
-          );
-
-        const importsDirective = hasNamedImport(
+        const hasViewProvidersInDecorator = decoratorHasProp(
           sf,
-          REACTIVE_FORMS_PACKAGE_NAME,
-          'NgxfbControlDirective',
+          'Component',
+          'viewProviders',
         );
 
-        const hasControlDirectiveInDecorator =
-          decoratorHostDirectivesHasInlineDirectiveWithInputs(
-            sf,
-            'NgxfbControlDirective',
-            ['content', 'name'],
-          );
+        const hasHostDirectivesInDecorator = decoratorHasProp(
+          sf,
+          'Component',
+          'hostDirectives',
+        );
 
         expect(importsControlContainerFromAngular).toBe(true);
         expect(hasViewProvidersInDecorator).toBe(true);
-        expect(hasControlDirectiveInDecorator).toBe(true);
-        expect(importsDirective).toBe(true);
-        expect(hasControlDirectiveInDecorator).toBe(true);
+        expect(hasHostDirectivesInDecorator).toBe(false);
+      });
+
+      it('control implements ReactiveFormbarControl with signal inputs', async () => {
+        const tree = await runSchematic('control');
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        const implementsControl = classImplementsInterface(
+          sf,
+          'TestControlComponent',
+          'ReactiveFormbarControl',
+        );
+
+        const importsReactiveFormbarControl = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'ReactiveFormbarControl',
+        );
+
+        const importsInputFromCore = hasNamedImport(
+          sf,
+          '@angular/core',
+          'input',
+        );
+
+        expect(implementsControl).toBe(true);
+        expect(importsReactiveFormbarControl).toBe(true);
+        expect(importsInputFromCore).toBe(true);
+      });
+
+      it('group implements ReactiveFormbarGroup and imports NgxfbControlOutlet', async () => {
+        const tree = await runSchematic('group');
+        const sf = parseTS(read(tree, groupComponentOutputPath));
+
+        const implementsGroup = classImplementsInterface(
+          sf,
+          'TestControlComponent',
+          'ReactiveFormbarGroup',
+        );
+
+        const importsReactiveFormbarGroup = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'ReactiveFormbarGroup',
+        );
+
+        const importsControlOutlet = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'NgxfbControlOutlet',
+        );
+
+        const hasHostDirectivesInDecorator = decoratorHasProp(
+          sf,
+          'Component',
+          'hostDirectives',
+        );
+
+        expect(implementsGroup).toBe(true);
+        expect(importsReactiveFormbarGroup).toBe(true);
+        expect(importsControlOutlet).toBe(true);
+        expect(hasHostDirectivesInDecorator).toBe(false);
+      });
+
+      it('group template uses ngxfb-control-outlet', async () => {
+        const tree = await runSchematic('group');
+        const html = read(tree, app('test/test-control.component.html'));
+        expect(html).toContain('<ngxfb-control-outlet');
+      });
+
+      it('block implements FormbarBlock with no viewProviders or hostDirectives', async () => {
+        const tree = await runSchematic('block');
+        const sf = parseTS(read(tree, blockComponentOutputPath));
+
+        const implementsBlock = classImplementsInterface(
+          sf,
+          'TestControlComponent',
+          'FormbarBlock',
+        );
+
+        const importsFormbarBlock = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'FormbarBlock',
+        );
+
+        const hasViewProviders = decoratorHasProp(
+          sf,
+          'Component',
+          'viewProviders',
+        );
+
+        const hasHostDirectives = decoratorHasProp(
+          sf,
+          'Component',
+          'hostDirectives',
+        );
+
+        expect(implementsBlock).toBe(true);
+        expect(importsFormbarBlock).toBe(true);
+        expect(hasViewProviders).toBe(false);
+        expect(hasHostDirectives).toBe(false);
       });
     });
   });

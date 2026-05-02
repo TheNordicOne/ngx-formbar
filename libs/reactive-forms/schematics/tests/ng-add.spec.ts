@@ -105,12 +105,19 @@ describe('ng-add schematic', () => {
       ).toBe(true);
       expect(exists(tree, `${registrations}/index.ts`)).toBe(true);
 
-      expect(exists(tree, `${helperDir}/block.host-directive.ts`)).toBe(true);
-      expect(exists(tree, `${helperDir}/group.host-directive.ts`)).toBe(true);
-      expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(true);
       expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(true);
 
       expect(exists(tree, formbarConfigPath)).toBe(true);
+    });
+
+    it('does not create obsolete host directive helper files', async () => {
+      const tree = await runAdd();
+
+      expect(exists(tree, `${helperDir}/block.host-directive.ts`)).toBe(false);
+      expect(exists(tree, `${helperDir}/group.host-directive.ts`)).toBe(false);
+      expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(
+        false,
+      );
     });
 
     it('uses schematic config without values', async () => {
@@ -123,15 +130,6 @@ describe('ng-add schematic', () => {
       expect(schematicsConfig.registrationType).toBeUndefined();
       expect(schematicsConfig.controlRegistrationsPath).toBeUndefined();
       expect(schematicsConfig.viewProviderHelperPath).toBe(DEFAULT_HELPER_PATH);
-      expect(schematicsConfig.control?.hostDirectiveHelperPath).toBe(
-        DEFAULT_HELPER_PATH,
-      );
-      expect(schematicsConfig.group?.hostDirectiveHelperPath).toBe(
-        DEFAULT_HELPER_PATH,
-      );
-      expect(schematicsConfig.block?.hostDirectiveHelperPath).toBe(
-        DEFAULT_HELPER_PATH,
-      );
     });
   });
 
@@ -592,11 +590,6 @@ describe('ng-add schematic', () => {
         useHelper: false,
       });
 
-      expect(exists(tree, `${helperDir}/block.host-directive.ts`)).toBe(false);
-      expect(exists(tree, `${helperDir}/group.host-directive.ts`)).toBe(false);
-      expect(exists(tree, `${helperDir}/control.host-directive.ts`)).toBe(
-        false,
-      );
       expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(false);
     });
 
@@ -608,9 +601,6 @@ describe('ng-add schematic', () => {
         helperPath,
       });
 
-      expect(exists(tree, `${finalPath}/block.host-directive.ts`)).toBe(true);
-      expect(exists(tree, `${finalPath}/group.host-directive.ts`)).toBe(true);
-      expect(exists(tree, `${finalPath}/control.host-directive.ts`)).toBe(true);
       expect(exists(tree, `${finalPath}/view-provider.ts`)).toBe(true);
     });
 
@@ -650,9 +640,15 @@ describe('ng-add schematic', () => {
           projects: {
             'test-app': {
               schematics: {
-                '@ngx-formbar/core:control'?: BaseGenerateSchematicConfig;
-                '@ngx-formbar/core:group'?: BaseGenerateSchematicConfig;
-                '@ngx-formbar/core:block'?: BaseGenerateSchematicConfig;
+                '@ngx-formbar/core:control'?: BaseGenerateSchematicConfig & {
+                  viewProviderHelperPath?: string;
+                };
+                '@ngx-formbar/core:group'?: BaseGenerateSchematicConfig & {
+                  viewProviderHelperPath?: string;
+                };
+                '@ngx-formbar/core:block'?: BaseGenerateSchematicConfig & {
+                  viewProviderHelperPath?: string;
+                };
               };
             };
           };
@@ -662,9 +658,9 @@ describe('ng-add schematic', () => {
         const groupConfig = schematicsConfig['@ngx-formbar/core:group'];
         const blockConfig = schematicsConfig['@ngx-formbar/core:block'];
 
-        expect(controlConfig?.hostDirectiveHelperPath).toBe(helperPath);
-        expect(groupConfig?.hostDirectiveHelperPath).toBe(helperPath);
-        expect(blockConfig?.hostDirectiveHelperPath).toBe(helperPath);
+        expect(controlConfig?.viewProviderHelperPath).toBe(helperPath);
+        expect(groupConfig?.viewProviderHelperPath).toBe(helperPath);
+        expect(blockConfig?.viewProviderHelperPath).toBe(helperPath);
       });
     });
 
@@ -693,16 +689,6 @@ describe('ng-add schematic', () => {
           registrationsPath,
         );
         expect(schematicsConfig.viewProviderHelperPath).toBe(helperPath);
-
-        expect(schematicsConfig.control?.hostDirectiveHelperPath).toBe(
-          helperPath,
-        );
-        expect(schematicsConfig.group?.hostDirectiveHelperPath).toBe(
-          helperPath,
-        );
-        expect(schematicsConfig.block?.hostDirectiveHelperPath).toBe(
-          helperPath,
-        );
       });
 
       it('uses the user provided schematicsConfigPath && schematicConfigFileName', async () => {

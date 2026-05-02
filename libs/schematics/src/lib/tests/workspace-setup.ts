@@ -246,10 +246,8 @@ export function provideMapNoSplit(
 
 export function addHelperIndexFile(appTree: UnitTestTree, helperPath: string) {
   const index = [
-    "export { ngxfbBlockHostDirective } from './block.host-directive';",
-    "export { ngxfbControlHostDirective } from './control.host-directive';",
     "export { controlContainerViewProviders } from './control-container.view-provider';",
-    "export { ngxfbGroupHostDirective } from './group.host-directive';",
+    "export { viewProviders } from './view-provider';",
   ].join('\n');
 
   writeTs(appTree, src(`${helperPath}/index.ts`), index);
@@ -273,21 +271,21 @@ export function createControlComponent(
 
   const [providers, imports] = providersAndImports;
 
-  return `import { Component } from '@angular/core';
-  import { NgxfbControlDirective } from '${REACTIVE_FORMS_PACKAGE_NAME}';
-  import { ReactiveFormsModule } from '@angular/forms';
-  ${imports}
+  return `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '${REACTIVE_FORMS_PACKAGE_NAME}';
+import { ReactiveFormsModule } from '@angular/forms';
+${imports}
 
-  @Component({
+@Component({
   selector: 'app-${name}-control',
   imports: [ReactiveFormsModule],
   templateUrl: './${name}-control.component.html',
   ${providers}
 })
-export class ${className} {
-  private readonly control = inject(NgxfbControlDirective<${classifiedName}Control>);
+export class ${className} implements ReactiveFormbarControl<${classifiedName}Control> {
+  readonly name = input.required<string>();
 }
-  `;
+`;
 }
 
 export type TestComponentDetails = {
@@ -303,24 +301,15 @@ export const inlineProviders: [string, string] = [
     {
       provide: ControlContainer,
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    }
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbControlDirective,
-      inputs: ['content', 'name'],
-    }
+    },
   ],`,
-  `import { ControlContainer } from '@angular/forms';`,
+  `import { inject } from '@angular/core';
+import { ControlContainer } from '@angular/forms';`,
 ];
 
 export const helperProviders: [string, string] = [
-  `viewProviders: viewProviders,
-  hostDirectives: [
-    ngxfbControlHostDirective
-  ],`,
-  `import { viewProviders } from '../shared/helper';
-    import { ngxfbControlHostDirective } from '../shared/helper';`,
+  `viewProviders: viewProviders,`,
+  `import { viewProviders } from '../shared/helper';`,
 ];
 
 export function createUnrelatedComponent(name: string, className: string) {
