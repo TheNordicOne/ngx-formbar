@@ -26,10 +26,7 @@ import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
-import {
-  disabledEffect,
-  withDisabledState,
-} from '../composables/disabled.state';
+import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withReadonlyState } from '../composables/readonly.state';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
@@ -90,17 +87,10 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly isReadonly = withReadonlyState(this.controlConfig);
 
-  readonly isDisabled = withDisabledState(this.controlConfig);
-  private readonly handleDisable = computed(
-    () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
-  );
-
   readonly updateStrategy = withUpdateStrategy(this.controlConfig);
 
   private readonly validators = withValidators(this.controlConfig);
   private readonly asyncValidators = withAsyncValidators(this.controlConfig);
-
-  readonly testId = withTestId(this.controlConfig, this.controlName);
 
   readonly formGroupInstance = computed(
     () =>
@@ -114,9 +104,17 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       ),
   );
 
+  readonly isDisabled = withDisabledLifecycle({
+    controlConfig: this.controlConfig,
+    registrationEntry: this.registrationEntry,
+    instance: this.formGroupInstance,
+  });
+
   private readonly groupState = withControlState(this.formGroupInstance);
   readonly errors = this.groupState.errors;
   readonly isDirty = this.groupState.isDirty;
+
+  readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
@@ -174,13 +172,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       }
 
       this.applyVisibleState();
-    });
-
-    disabledEffect({
-      disabledSignal: this.isDisabled,
-      handleDisableSignal: this.handleDisable,
-      enableFunction: this.enableControl.bind(this),
-      disableFunction: this.disableControl.bind(this),
     });
   }
 
@@ -260,14 +251,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       return;
     }
     this.parentFormGroup.removeControl(name);
-  }
-
-  private enableControl() {
-    this.formGroupInstance().enable({ emitEvent: false });
-  }
-
-  private disableControl() {
-    this.formGroupInstance().disable({ emitEvent: false });
   }
 
   ngOnDestroy() {

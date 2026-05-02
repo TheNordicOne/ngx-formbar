@@ -18,10 +18,7 @@ import { withHiddenState } from '../composables/hidden.state';
 import { NgxFbGroupDirective } from './ngx-fb-group.directive';
 import { withTestId } from '../composables/testId';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
-import {
-  disabledEffect,
-  withDisabledState,
-} from '../composables/disabled.state';
+import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withReadonlyState } from '../composables/readonly.state';
 import {
   setComputedValueEffect,
@@ -84,22 +81,10 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly isReadonly = withReadonlyState(this.controlConfig);
 
-  private readonly isDisabled = withDisabledState(this.controlConfig);
-  private readonly handleDisable = computed(
-    () => (this.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',
-  );
-
-  private readonly computedValue = withComputedValue(this.controlConfig);
-  private readonly isComputedValueDefined = computed(
-    () => this.controlConfig().computedValue !== undefined,
-  );
-
   private readonly updateStrategy = withUpdateStrategy(this.controlConfig);
 
   private readonly validators = withValidators(this.controlConfig);
   private readonly asyncValidators = withAsyncValidators(this.controlConfig);
-
-  private readonly testId = withTestId(this.controlConfig, this.controlName);
 
   readonly controlInstance = computed(
     () =>
@@ -111,9 +96,22 @@ export class NgxFbControlDirective implements OnDestroy {
       }),
   );
 
+  private readonly isDisabled = withDisabledLifecycle({
+    controlConfig: this.controlConfig,
+    registrationEntry: this.registrationEntry,
+    instance: this.controlInstance,
+  });
+
   private readonly controlState = withControlState(this.controlInstance);
   readonly errors = this.controlState.errors;
   readonly isDirty = this.controlState.isDirty;
+
+  private readonly computedValue = withComputedValue(this.controlConfig);
+  private readonly isComputedValueDefined = computed(
+    () => this.controlConfig().computedValue !== undefined,
+  );
+
+  private readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
@@ -172,13 +170,6 @@ export class NgxFbControlDirective implements OnDestroy {
       }
 
       this.applyVisibleState();
-    });
-
-    disabledEffect({
-      disabledSignal: this.isDisabled,
-      handleDisableSignal: this.handleDisable,
-      enableFunction: this.enableControl.bind(this),
-      disableFunction: this.disableControl.bind(this),
     });
 
     setComputedValueEffect({
@@ -271,14 +262,6 @@ export class NgxFbControlDirective implements OnDestroy {
       return;
     }
     this.parentFormGroup.removeControl(name);
-  }
-
-  private enableControl() {
-    this.controlInstance().enable({ emitEvent: false });
-  }
-
-  private disableControl() {
-    this.controlInstance().disable({ emitEvent: false });
   }
 
   private saveLastValue() {

@@ -4,8 +4,8 @@ import {
   NgxFbAbstractControl,
   NgxFbFormGroup,
   resolveInheritableExpression,
-  SimpleFunction,
 } from '@ngx-formbar/core';
+import { AbstractControl } from '@angular/forms';
 import { FormService } from '../services/form.service';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
@@ -54,22 +54,20 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
 }
 
 /**
- * Creates an effect that manages disabled state transitions.
+ * Creates an effect that toggles the form instance's enabled/disabled state.
  *
- * When `handleDisable` is true, calls the appropriate enable/disable function
- * based on the disabled signal. When false, the effect is a no-op and the
- * component is responsible for applying the disabled state itself.
+ * When `handleDisable` is true, calls `enable()` or `disable()` on the
+ * resolved instance based on the disabled signal. When false, the effect is
+ * a no-op and the component is responsible for applying the state itself.
  *
  * @param options.disabledSignal Signal indicating whether the component should be disabled
  * @param options.handleDisableSignal Signal indicating whether the library should apply the disabled state
- * @param options.enableFunction Function to call when the component should be enabled
- * @param options.disableFunction Function to call when the component should be disabled
+ * @param options.instance Signal resolving to the FormControl/FormGroup to toggle
  */
 export function disabledEffect(options: {
   disabledSignal: Signal<boolean>;
   handleDisableSignal: Signal<boolean>;
-  enableFunction: SimpleFunction;
-  disableFunction: SimpleFunction;
+  instance: Signal<AbstractControl>;
 }) {
   effect(() => {
     const disabled = options.disabledSignal();
@@ -79,14 +77,13 @@ export function disabledEffect(options: {
       return;
     }
 
-    if (!disabled) {
-      untracked(() => {
-        options.enableFunction();
-      });
-      return;
-    }
     untracked(() => {
-      options.disableFunction();
+      const control = options.instance();
+      if (disabled) {
+        control.disable({ emitEvent: false });
+        return;
+      }
+      control.enable({ emitEvent: false });
     });
   });
 }
