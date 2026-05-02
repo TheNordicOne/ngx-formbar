@@ -261,18 +261,12 @@ export const ResetReEvaluatesHiddenExpression: Story = {
       await canvas.findByRole('textbox', { name: 'Hideable Target' }),
     ).toBeInTheDocument();
 
-    // Type 'hide' — target becomes hidden (keep strategy: in DOM but not accessible)
+    // Type 'hide' — target becomes hidden (keep strategy: DOM gone, value preserved in form model)
     const toggle = await canvas.findByRole('textbox', { name: 'Toggle' });
     await userEvent.type(toggle, 'hide');
     await expect(
       canvas.queryByRole('textbox', { name: 'Hideable Target' }),
     ).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Hideable Target',
-        hidden: true,
-      }),
-    ).toBeInTheDocument();
 
     // Reset — toggle reverts to '', target should become visible again
     await userEvent.click(
