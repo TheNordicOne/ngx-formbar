@@ -132,15 +132,15 @@ export class NgxFbControlDirective implements OnDestroy {
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
   ]);
 
+ private readonly controlInstance = computed(
+    () => new FormControl(untracked(() => this.resolveInitialValue()), {}),
+  );
+
   /**
    * Access to the parent FormGroup containing this control
    */
   get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
-  }
-
-  get formControl() {
-    return this.parentFormGroup?.get(this.controlName()) as FormControl | null;
   }
 
   private get controlPath(): string {
@@ -179,7 +179,7 @@ export class NgxFbControlDirective implements OnDestroy {
     });
 
     setComputedValueEffect({
-      setValueFunction: this.setValue.bind(this),
+      controlInstance: this.controlInstance,
       computeValueSignal: this.computedValue,
       isComputedValueDefined: this.isComputedValueDefined,
       formResetSignal: this.formService.formReset,
@@ -194,7 +194,7 @@ export class NgxFbControlDirective implements OnDestroy {
       this.destroyComponent();
     }
 
-    this.setValue();
+    this.applyValueStrategy();
 
     if (keepValueWhenHidden) {
       return;
@@ -205,12 +205,9 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   private applyVisibleState() {
-    const controlName = this.controlName();
     const handleVisibility = this.handleVisibility();
 
-    if (!this.formControl) {
-      this.setControl(controlName);
-    }
+    this.setControl();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());
@@ -220,23 +217,18 @@ export class NgxFbControlDirective implements OnDestroy {
     }
   }
 
-  private setValue(value?: unknown) {
-    if (value) {
-      this.formControl?.setValue(value);
-      return;
-    }
+  private applyValueStrategy() {
     const valueStrategy = this.valueStrategy();
     const defaultValue = this.defaultValue();
     switch (valueStrategy) {
       case 'last':
         break;
       case 'reset':
-        this.formControl?.reset(undefined, { emitEvent: false });
+        this.controlInstance().reset(undefined, { emitEvent: false });
         break;
-      default: {
-        this.formControl?.setValue(defaultValue);
+      default:
+        this.controlInstance().setValue(defaultValue);
         break;
-      }
     }
   }
 
@@ -261,29 +253,29 @@ export class NgxFbControlDirective implements OnDestroy {
     }
   }
 
-  private setControl(controlName: string) {
-    const controlInstance = new FormControl(this.resolveInitialValue(), {});
-
-    this.parentFormGroup?.setControl(controlName, controlInstance, {
-      emitEvent: false,
-    });
+  private setControl() {
+    const name = this.controlName();
+    const instance = this.controlInstance();
+    if (this.parentFormGroup?.get(name) === instance) {
+      return;
+    }
+    this.parentFormGroup?.setControl(name, instance, { emitEvent: false });
   }
 
   private removeControl() {
-    const controlName = this.controlName();
-    // Check if control exists immediately before attempting removal
-    if (!this.formControl) {
+    const name = this.controlName();
+    if (!this.parentFormGroup?.get(name)) {
       return;
     }
-    this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
+    this.parentFormGroup.removeControl(name, { emitEvent: false });
   }
 
   private enableControl() {
-    this.formControl?.enable({ emitEvent: false });
+    this.controlInstance().enable({ emitEvent: false });
   }
 
   private disableControl() {
-    this.formControl?.disable({ emitEvent: false });
+    this.controlInstance().disable({ emitEvent: false });
   }
 
   private saveLastValue() {
@@ -293,7 +285,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
     this.formLifecycleState.saveValue(
       this.controlPath,
-      this.formControl?.value,
+      this.controlInstance().value,
     );
   }
 
@@ -315,14 +307,10 @@ export class NgxFbControlDirective implements OnDestroy {
 
   ngOnDestroy(): void {
     this.componentRef?.destroy();
-    const control = this.formControl;
-    if (control) {
-      this.saveLastValue();
-    }
+    this.saveLastValue();
+    this.applyValueStrategy();
 
-    this.setValue();
-
-    if (this.keepValueWhenHidden() || !control) {
+    if (this.keepValueWhenHidden()) {
       return;
     }
     this.removeControl();

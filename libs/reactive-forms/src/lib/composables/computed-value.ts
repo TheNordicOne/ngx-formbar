@@ -5,6 +5,7 @@ import {
   NgxFbAbstractControl,
   resolveExpression,
 } from '@ngx-formbar/core';
+import { AbstractControl } from '@angular/forms';
 import { FormService } from '../services/form.service';
 
 /**
@@ -30,18 +31,19 @@ export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
  * Only applies when a `computedValue` is defined in the control's configuration.
  * Controls without `computedValue` are never touched by this effect.
  *
- * @param options.setValueFunction Function called with the resolved value; the caller decides how to apply it (e.g. `formControl?.setValue(value, { emitEvent: false })`). Invoked lazily so the form control reference can be looked up at apply time rather than captured eagerly.
+ * @param options.controlInstance Signal resolving to the AbstractControl receiving the computed value
  * @param options.computeValueSignal Signal containing the resolved computed value
  * @param options.isComputedValueDefined Signal indicating whether computedValue is configured
  * @param options.formResetSignal Signal that fires on form reset, retriggering the effect
  */
 export function setComputedValueEffect(options: {
-  setValueFunction: (value: unknown) => void;
+  controlInstance: Signal<AbstractControl>;
   computeValueSignal: Signal<unknown>;
   isComputedValueDefined: Signal<boolean>;
   formResetSignal: Signal<unknown>;
 }) {
   effect(() => {
+    const control = options.controlInstance();
     const value = options.computeValueSignal();
     options.formResetSignal();
 
@@ -50,7 +52,7 @@ export function setComputedValueEffect(options: {
     }
 
     untracked(() => {
-      options.setValueFunction(value);
+      control.setValue(value);
     });
   });
 }

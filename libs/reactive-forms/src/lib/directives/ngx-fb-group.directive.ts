@@ -127,15 +127,13 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
   ]);
 
+  readonly formGroupInstance = computed(() => new FormGroup({}, {}));
+
   /**
    * Access to the parent FormGroup containing this group
    */
   private get parentFormGroup() {
     return this.parentContainer.control as FormGroup | null;
-  }
-
-  private get formGroup() {
-    return this.parentFormGroup?.get(this.controlName()) as FormGroup | null;
   }
 
   constructor() {
@@ -178,7 +176,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       this.destroyComponent();
     }
 
-    this.setValue();
+    this.setValueByStrategy();
 
     if (keepValueWhenHidden) {
       return;
@@ -188,12 +186,9 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   private applyVisibleState() {
-    const controlName = this.controlName();
     const handleVisibility = this.handleVisibility();
 
-    if (!this.formGroup) {
-      this.setGroup(controlName);
-    }
+    this.setGroup();
 
     // untracked because changes to that signal are already handled elsewhere
     const component = untracked(() => this.component());
@@ -203,7 +198,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     }
   }
 
-  private setValue() {
+  private setValueByStrategy() {
     const valueStrategy = this.valueStrategy();
 
     switch (valueStrategy) {
@@ -212,7 +207,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       case 'default':
         break;
       default:
-        // Instead of resetting  the group, we need to reset the controls individually
+        // Instead of resetting the group, we need to reset the controls individually
         // to allow them to overwrite the value strategy
         // If a control doesn't have a value strategy, we reset it
         Object.entries(this.controlConfig().controls).forEach(
@@ -224,7 +219,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
             if (control.valueStrategy) {
               return;
             }
-            const formControl = this.formGroup?.get(name);
+            const formControl = this.formGroupInstance().get(name);
             if (formControl) {
               formControl.reset(undefined, { emitEvent: false });
             }
@@ -234,29 +229,29 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     }
   }
 
-  private setGroup(controlName: string) {
-    const controlInstance = new FormGroup({}, {});
-    this.parentFormGroup?.setControl(controlName, controlInstance, {
-      emitEvent: false,
-    });
+  private setGroup() {
+    const name = this.controlName();
+    const instance = this.formGroupInstance();
+    if (this.parentFormGroup?.get(name) === instance) {
+      return;
+    }
+    this.parentFormGroup?.setControl(name, instance, { emitEvent: false });
   }
 
   private removeGroup() {
-    const controlName = this.controlName();
-
-    // Check if control exists immediately before attempting removal
-    if (!this.formGroup) {
+    const name = this.controlName();
+    if (!this.parentFormGroup?.get(name)) {
       return;
     }
-    this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
+    this.parentFormGroup.removeControl(name, { emitEvent: false });
   }
 
   private enableControl() {
-    this.formGroup?.enable({ emitEvent: false });
+    this.formGroupInstance().enable({ emitEvent: false });
   }
 
   private disableControl() {
-    this.formGroup?.disable({ emitEvent: false });
+    this.formGroupInstance().disable({ emitEvent: false });
   }
 
   private instantiateComponent(component: Type<unknown>) {
