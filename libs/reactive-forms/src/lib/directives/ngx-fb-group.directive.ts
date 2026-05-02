@@ -1,17 +1,13 @@
 import {
   afterRenderEffect,
-  ComponentRef,
   computed,
   Directive,
   effect,
   inject,
-  Injector,
   input,
   OnDestroy,
   Signal,
-  Type,
   untracked,
-  ViewContainerRef,
 } from '@angular/core';
 import {
   HideStrategy,
@@ -22,9 +18,9 @@ import {
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
 import { withBase } from '../composables/base';
+import { withComponentHost } from '../composables/component-host';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
-import { createBindings } from '../setup/bindings';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { withHiddenState } from '../composables/hidden.state';
@@ -43,7 +39,6 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy
 {
-  private viewContainerRef = inject(ViewContainerRef);
   private parentContainer = inject(ControlContainer);
 
   private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
@@ -55,8 +50,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   readonly config = input.required<FormConfigEntry<NgxFbFormGroup<T>>>({
     alias: 'ngxfbGroup',
   });
-
-  private componentRef?: ComponentRef<unknown>;
 
   private readonly base = withBase(this.config);
   private readonly controlConfig = this.base.controlConfig;
@@ -141,6 +134,14 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ['groupInstance', this.formGroupInstance],
   ]);
 
+  private readonly host = withComponentHost({
+    signalMap: this.signalMap,
+    controlConfig: this.controlConfig,
+    additionalProviders: [
+      { provide: NGXFB_CONTROL_ENTRIES, useValue: this.groupControls },
+    ],
+  });
+
   /**
    * Access to the parent FormGroup containing this group
    */
@@ -152,7 +153,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     afterRenderEffect(() => {
       const component = this.base.component();
 
-      this.viewContainerRef.clear();
+      this.host.clear();
 
       if (!component || !this.parentFormGroup) {
         return;
@@ -162,7 +163,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
         return;
       }
 
-      this.instantiateComponent(component);
+      this.host.mount(component);
     });
 
     effect(() => {
@@ -189,7 +190,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     const keepValueWhenHidden = this.keepValueWhenHidden();
 
     if (handleVisibility) {
-      this.destroyComponent();
+      this.host.clear();
     }
 
     this.setValueByStrategy();
@@ -210,7 +211,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     const component = untracked(() => this.base.component());
 
     if (handleVisibility && component) {
-      this.instantiateComponent(component);
+      this.host.mount(component);
     }
   }
 
@@ -270,39 +271,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     this.formGroupInstance().disable({ emitEvent: false });
   }
 
-  private instantiateComponent(component: Type<unknown>) {
-    const bindings = createBindings(
-      component,
-      this.signalMap,
-      this.controlConfig,
-    );
-
-    const componentInjector = Injector.create({
-      providers: [
-        { provide: NGXFB_CONTROL_ENTRIES, useValue: this.groupControls },
-      ],
-      parent: this.viewContainerRef.injector,
-    });
-
-    this.componentRef = this.viewContainerRef.createComponent(component, {
-      bindings: [...bindings],
-      injector: componentInjector,
-    });
-  }
-
-  private destroyComponent() {
-    const instance = this.componentRef;
-
-    if (!instance) {
-      return;
-    }
-
-    this.viewContainerRef.clear();
-  }
-
   ngOnDestroy() {
-    this.componentRef?.destroy();
-
     const keepValueWhenHidden = this.keepValueWhenHidden();
     if (keepValueWhenHidden) {
       return;

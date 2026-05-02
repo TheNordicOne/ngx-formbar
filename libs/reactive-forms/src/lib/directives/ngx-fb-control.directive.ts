@@ -1,6 +1,5 @@
 import {
   afterRenderEffect,
-  ComponentRef,
   computed,
   Directive,
   effect,
@@ -8,9 +7,7 @@ import {
   input,
   OnDestroy,
   Signal,
-  Type,
   untracked,
-  ViewContainerRef,
 } from '@angular/core';
 import {
   HideStrategy,
@@ -21,7 +18,6 @@ import {
 import { FormConfigEntry } from '../types/control-component.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
-import { createBindings } from '../setup/bindings';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { withHiddenState } from '../composables/hidden.state';
 import { NgxFbGroupDirective } from './ngx-fb-group.directive';
@@ -39,13 +35,13 @@ import {
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withBase } from '../composables/base';
+import { withComponentHost } from '../composables/component-host';
 import { FormService } from '../services/form.service';
 
 @Directive({
   selector: '[ngxfbControl]',
 })
 export class NgxFbControlDirective implements OnDestroy {
-  private viewContainerRef = inject(ViewContainerRef);
   private parentContainer = inject(ControlContainer);
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
@@ -58,8 +54,6 @@ export class NgxFbControlDirective implements OnDestroy {
   readonly config = input.required<FormConfigEntry<NgxFbControl>>({
     alias: 'ngxfbControl',
   });
-
-  private componentRef?: ComponentRef<unknown>;
 
   private readonly base = withBase(this.config);
   private readonly controlConfig = this.base.controlConfig;
@@ -144,6 +138,11 @@ export class NgxFbControlDirective implements OnDestroy {
     ['controlInstance', this.controlInstance],
   ]);
 
+  private readonly host = withComponentHost({
+    signalMap: this.signalMap,
+    controlConfig: this.controlConfig,
+  });
+
   /**
    * Access to the parent FormGroup containing this control
    */
@@ -159,7 +158,7 @@ export class NgxFbControlDirective implements OnDestroy {
     afterRenderEffect(() => {
       const component = this.base.component();
 
-      this.viewContainerRef.clear();
+      this.host.clear();
 
       if (!component || !this.parentFormGroup) {
         return;
@@ -169,7 +168,7 @@ export class NgxFbControlDirective implements OnDestroy {
         return;
       }
 
-      this.instantiateComponent(component);
+      this.host.mount(component);
     });
 
     effect(() => {
@@ -203,7 +202,7 @@ export class NgxFbControlDirective implements OnDestroy {
     const keepValueWhenHidden = this.keepValueWhenHidden();
 
     if (handleVisibility) {
-      this.destroyComponent();
+      this.host.clear();
     }
 
     this.setValueByStrategy();
@@ -225,7 +224,7 @@ export class NgxFbControlDirective implements OnDestroy {
     const component = untracked(() => this.base.component());
 
     if (handleVisibility && component) {
-      this.instantiateComponent(component);
+      this.host.mount(component);
     }
   }
 
@@ -301,24 +300,7 @@ export class NgxFbControlDirective implements OnDestroy {
     );
   }
 
-  private instantiateComponent(component: Type<unknown>) {
-    const bindings = createBindings(
-      component,
-      this.signalMap,
-      this.controlConfig,
-    );
-
-    this.componentRef = this.viewContainerRef.createComponent(component, {
-      bindings: [...bindings],
-    });
-  }
-
-  private destroyComponent() {
-    this.viewContainerRef.clear();
-  }
-
   ngOnDestroy(): void {
-    this.componentRef?.destroy();
     this.saveLastValue();
     this.setValueByStrategy();
 
