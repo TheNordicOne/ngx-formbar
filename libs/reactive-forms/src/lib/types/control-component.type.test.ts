@@ -53,7 +53,7 @@ declare class FullTextControl implements ReactiveFormbarControl<TextControl> {
   readonly isDisabled: InputSignal<boolean>;
   readonly isReadonly: InputSignal<boolean>;
   readonly isHidden: InputSignal<boolean>;
-  readonly labelText: InputSignal<string>;
+  readonly labelText: InputSignal<string | undefined>;
   readonly dynamicLabel: InputSignal<string | undefined>;
   readonly testId: InputSignal<string>;
   readonly hint: InputSignal<string | undefined>;
@@ -91,7 +91,7 @@ declare class FullGroupControl implements ReactiveFormbarGroup<GroupControl> {
   readonly isDisabled: InputSignal<boolean>;
   readonly isReadonly: InputSignal<boolean>;
   readonly isHidden: InputSignal<boolean>;
-  readonly titleText: InputSignal<string>;
+  readonly titleText: InputSignal<string | undefined>;
   readonly dynamicTitle: InputSignal<string | undefined>;
   readonly testId: InputSignal<string>;
   readonly legend: InputSignal<string | undefined>;
