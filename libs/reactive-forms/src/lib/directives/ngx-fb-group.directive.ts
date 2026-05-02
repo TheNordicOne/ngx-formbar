@@ -24,6 +24,7 @@ import {
 import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
 import { ControlContainer, FormGroup } from '@angular/forms';
+import { withControlState } from '../composables/control-state';
 import { createBindings } from '../setup/bindings';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
@@ -35,6 +36,10 @@ import {
 } from '../composables/disabled.state';
 import { withReadonlyState } from '../composables/readonly.state';
 import { withUpdateStrategy } from '../composables/update-strategy';
+import {
+  withAsyncValidators,
+  withValidators,
+} from '../composables/validators';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -116,7 +121,26 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly updateStrategy = withUpdateStrategy(this.controlConfig);
 
+  private readonly validators = withValidators(this.controlConfig);
+  private readonly asyncValidators = withAsyncValidators(this.controlConfig);
+
   readonly testId = withTestId(this.controlConfig, this.controlName);
+
+  readonly formGroupInstance = computed(
+    () =>
+      new FormGroup(
+        {},
+        {
+          updateOn: this.updateStrategy(),
+          validators: this.validators(),
+          asyncValidators: this.asyncValidators(),
+        },
+      ),
+  );
+
+  private readonly groupState = withControlState(this.formGroupInstance);
+  readonly errors = this.groupState.errors;
+  readonly isDirty = this.groupState.isDirty;
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
@@ -128,9 +152,9 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ['testId', this.testId],
     ['titleText', computed(() => this.controlConfig().title)],
     ['dynamicTitle', withDynamicTitle(this.controlConfig)],
+    ['errors', this.errors],
+    ['isDirty', this.isDirty],
   ]);
-
-  readonly formGroupInstance = computed(() => new FormGroup({}, {}));
 
   /**
    * Access to the parent FormGroup containing this group

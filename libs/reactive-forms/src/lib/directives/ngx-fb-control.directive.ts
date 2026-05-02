@@ -22,6 +22,7 @@ import {
 import { FormConfigEntry } from '../types/control-component.type';
 import { withLoadedComponent } from '../composables/loaded-component';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
+import { withControlState } from '../composables/control-state';
 import { createBindings } from '../setup/bindings';
 import { withDynamicLabel } from '../composables/dynamic-label';
 import { withHiddenState } from '../composables/hidden.state';
@@ -38,6 +39,10 @@ import {
   withComputedValue,
 } from '../composables/computed-value';
 import { withUpdateStrategy } from '../composables/update-strategy';
+import {
+  withAsyncValidators,
+  withValidators,
+} from '../composables/validators';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -121,7 +126,26 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly updateStrategy = withUpdateStrategy(this.controlConfig);
 
+  private readonly validators = withValidators(this.controlConfig);
+  private readonly asyncValidators = withAsyncValidators(this.controlConfig);
+
   private readonly testId = withTestId(this.controlConfig, this.controlName);
+
+  readonly controlInstance = computed(
+    () =>
+      new FormControl(
+        untracked(() => this.resolveInitialValue()),
+        {
+          updateOn: this.updateStrategy(),
+          validators: this.validators(),
+          asyncValidators: this.asyncValidators(),
+        },
+      ),
+  );
+
+  private readonly controlState = withControlState(this.controlInstance);
+  readonly errors = this.controlState.errors;
+  readonly isDirty = this.controlState.isDirty;
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
@@ -133,17 +157,9 @@ export class NgxFbControlDirective implements OnDestroy {
     ['testId', this.testId],
     ['labelText', computed(() => this.controlConfig().label)],
     ['dynamicLabel', withDynamicLabel(this.controlConfig)],
+    ['errors', this.errors],
+    ['isDirty', this.isDirty],
   ]);
-
-  readonly controlInstance = computed(
-    () =>
-      new FormControl(
-        untracked(() => this.resolveInitialValue()),
-        {
-          updateOn: this.updateStrategy(),
-        },
-      ),
-  );
 
   /**
    * Access to the parent FormGroup containing this control

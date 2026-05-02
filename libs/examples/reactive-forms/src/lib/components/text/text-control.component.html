@@ -12,4 +12,5 @@
   @if (hint()) {
     <span [attr.data-testid]="`${testId()}-hint`">{{ hint() }}</span>
   }
+  <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
 </div>

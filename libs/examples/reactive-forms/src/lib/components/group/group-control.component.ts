@@ -4,17 +4,18 @@ import {
   computed,
   input,
 } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import {
   NgxfbControlOutlet,
   ReactiveFormbarGroup,
 } from '@ngx-formbar/reactive-forms';
 import { GroupControl } from '@ngx-formbar/examples';
 import { viewProviders } from '../../helpers';
+import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
 
 @Component({
   selector: 'ngxfb-examples-group-control',
-  imports: [ReactiveFormsModule, NgxfbControlOutlet],
+  imports: [ReactiveFormsModule, NgxfbControlOutlet, ValidationErrorsComponent],
   templateUrl: './group-control.component.html',
   styleUrl: './group-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,8 @@ export class GroupControlComponent
   readonly dynamicTitle = input<string>();
   readonly testId = input('');
   readonly legend = input<string>();
+  readonly errors = input<ValidationErrors | null>(null);
+  readonly isDirty = input(false);
 
   readonly displayTitle = computed(() => {
     const dynamic = this.dynamicTitle();

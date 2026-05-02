@@ -3,5 +3,6 @@
     <legend [attr.data-testid]="`${testId()}-title`">{{ displayTitle() }}</legend>
     <ngxfb-control-outlet />
     <ng-content />
+    <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
   </fieldset>
 </ng-container>
