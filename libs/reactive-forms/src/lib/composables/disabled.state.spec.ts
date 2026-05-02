@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { StateHandling } from '../types/registration.type';
-import { resolveDisabledEffect } from './resolve-disabled-effect';
+import { StateHandling } from '@ngx-formbar/core';
+import { disabledEffect } from './disabled.state';
 
-describe('resolveDisabledEffect', () => {
+describe('disabledEffect', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({});
   });
@@ -13,7 +13,7 @@ describe('resolveDisabledEffect', () => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
-      resolveDisabledEffect({
+      disabledEffect({
         disabledSignal: signal(true),
         disabledHandlingSignal: signal<StateHandling>('auto'),
         enableFunction: enableFn,
@@ -32,7 +32,7 @@ describe('resolveDisabledEffect', () => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
-      resolveDisabledEffect({
+      disabledEffect({
         disabledSignal: signal(false),
         disabledHandlingSignal: signal<StateHandling>('auto'),
         enableFunction: enableFn,
@@ -51,7 +51,7 @@ describe('resolveDisabledEffect', () => {
       const enableFn = vi.fn();
       const disableFn = vi.fn();
 
-      resolveDisabledEffect({
+      disabledEffect({
         disabledSignal: signal(true),
         disabledHandlingSignal: signal<StateHandling>('manual'),
         enableFunction: enableFn,
@@ -71,7 +71,7 @@ describe('resolveDisabledEffect', () => {
       const disableFn = vi.fn();
       const disabled = signal(false);
 
-      resolveDisabledEffect({
+      disabledEffect({
         disabledSignal: disabled,
         disabledHandlingSignal: signal<StateHandling>('auto'),
         enableFunction: enableFn,
@@ -93,7 +93,7 @@ describe('resolveDisabledEffect', () => {
       const disableFn = vi.fn();
       const handling = signal<StateHandling>('manual');
 
-      resolveDisabledEffect({
+      disabledEffect({
         disabledSignal: signal(true),
         disabledHandlingSignal: handling,
         enableFunction: enableFn,

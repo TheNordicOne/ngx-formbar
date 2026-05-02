@@ -362,6 +362,7 @@ export class NgxfbLegacyControlDirective<T extends NgxFbControl>
     const formControl = this.controlInstance();
     formControl.enable({ emitEvent: false });
   }
+
   private disableControl() {
     const formControl = this.controlInstance();
 

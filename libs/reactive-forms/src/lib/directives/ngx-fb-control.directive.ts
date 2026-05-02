@@ -2,12 +2,12 @@ import {
   afterRenderEffect,
   ComponentRef,
   computed,
-  DestroyRef,
   Directive,
   effect,
   inject,
   input,
   OnDestroy,
+  signal,
   Signal,
   Type,
   untracked,
@@ -18,6 +18,7 @@ import {
   NGX_FW_COMPONENT_RESOLVER,
   NgxFbControl,
   NgxFbFormGroup,
+  StateHandling,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
@@ -29,13 +30,16 @@ import { withHiddenState } from '../composables/hidden.state';
 import { NgxFbGroupDirective } from './ngx-fb-group.directive';
 import { withTestId } from '../composables/testId';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
+import {
+  disabledEffect,
+  withDisabledState,
+} from '../composables/disabled.state';
 
 @Directive({
   selector: '[ngxfbControl]',
 })
 export class NgxFbControlDirective implements OnDestroy {
   private viewContainerRef = inject(ViewContainerRef);
-  private destroyRef = inject(DestroyRef);
   private parentContainer = inject(ControlContainer);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
   private readonly contentRegistrationService = inject(
@@ -97,11 +101,15 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private readonly isHidden = withHiddenState(this.controlConfig);
 
+  private readonly disabled = withDisabledState(this.controlConfig);
+  private readonly disabledHandling = signal<StateHandling>('auto');
+
   private readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
+    ['isDisabled', this.disabled],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],
@@ -117,12 +125,7 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   get formControl() {
-    const name = this.controlName();
-    if (!this.parentFormGroup?.contains(name)) {
-      return null;
-    }
-
-    return this.parentFormGroup.get(name) as FormControl | null;
+    return this.parentFormGroup?.get(this.controlName()) as FormControl | null;
   }
 
   private get controlPath(): string {
@@ -151,6 +154,13 @@ export class NgxFbControlDirective implements OnDestroy {
       }
 
       this.applyVisibleState();
+    });
+
+    disabledEffect({
+      disabledSignal: this.disabled,
+      disabledHandlingSignal: this.disabledHandling,
+      enableFunction: this.enableControl.bind(this),
+      disableFunction: this.disableControl.bind(this),
     });
   }
 
@@ -240,6 +250,14 @@ export class NgxFbControlDirective implements OnDestroy {
       return;
     }
     this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
+  }
+
+  private enableControl() {
+    this.formControl?.enable({ emitEvent: false });
+  }
+
+  private disableControl() {
+    this.formControl?.disable({ emitEvent: false });
   }
 
   private saveLastValue() {

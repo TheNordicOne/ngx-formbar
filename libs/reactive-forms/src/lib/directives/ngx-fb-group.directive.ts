@@ -8,6 +8,7 @@ import {
   Injector,
   input,
   OnDestroy,
+  signal,
   Signal,
   Type,
   untracked,
@@ -19,6 +20,7 @@ import {
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
+  StateHandling,
   ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
@@ -29,6 +31,10 @@ import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
 import { withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
+import {
+  disabledEffect,
+  withDisabledState,
+} from '../composables/disabled.state';
 
 @Directive({
   selector: '[ngxfbGroup]',
@@ -101,11 +107,15 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly isHidden = withHiddenState(this.controlConfig);
 
+  readonly disabled = withDisabledState(this.controlConfig);
+  private readonly disabledHandling = signal<StateHandling>('auto');
+
   readonly testId = withTestId(this.controlConfig, this.controlName);
 
   private readonly signalMap = new Map<string, Signal<unknown>>([
     ['name', this.controlName],
     ['isHidden', this.isHidden],
+    ['isDisabled', this.disabled],
     ['hideStrategy', this.hideStrategy],
     ['valueStrategy', this.valueStrategy],
     ['testId', this.testId],
@@ -146,6 +156,13 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       }
 
       this.applyVisibleState();
+    });
+
+    disabledEffect({
+      disabledSignal: this.disabled,
+      disabledHandlingSignal: this.disabledHandling,
+      enableFunction: this.enableControl.bind(this),
+      disableFunction: this.disableControl.bind(this),
     });
   }
 
@@ -228,6 +245,14 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       return;
     }
     this.parentFormGroup?.removeControl(controlName, { emitEvent: false });
+  }
+
+  private enableControl() {
+    this.formGroup?.enable({ emitEvent: false });
+  }
+
+  private disableControl() {
+    this.formGroup?.disable({ emitEvent: false });
   }
 
   private instantiateComponent(component: Type<unknown>) {

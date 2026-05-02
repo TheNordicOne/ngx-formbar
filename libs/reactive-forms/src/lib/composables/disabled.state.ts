@@ -1,13 +1,15 @@
-import { computed, inject, Signal } from '@angular/core';
+import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
   ExpressionService,
   FormContext,
   NgxFbAbstractControl,
   NgxFbFormGroup,
   resolveInheritableExpression,
+  SimpleFunction,
+  StateHandling,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.directive';
+import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
  * Computes a reactive disabled state based on control content
@@ -28,8 +30,8 @@ import { NgxfbLegacyGroupDirective } from '../directives/ngxfb-legacy-group.dire
 export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
   const expressionService = inject(ExpressionService);
-  const parentGroupDirective: NgxfbLegacyGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxfbLegacyGroupDirective<NgxFbFormGroup>, {
+  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
+    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
       optional: true,
       skipSelf: true,
     });
@@ -56,7 +58,10 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
 }
 
 /**
- * Creates an effect that manages control/group disabled state
+ * Creates an effect that manages disabled state transitions
+ *
+ * When disabledHandling is 'auto', calls the appropriate enable/disable
+ * function based on the disabled signal. When 'manual', does nothing.
  *
  * @param options Configuration object for disabled effect
  * @param options.disabledSignal Signal that indicates if the component should be disabled
@@ -64,4 +69,28 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
  * @param options.enableFunction Function to call when component should be enabled
  * @param options.disableFunction Function to call when component should be disabled
  */
-export { resolveDisabledEffect as disabledEffect } from '@ngx-formbar/core';
+export function disabledEffect(options: {
+  disabledSignal: Signal<boolean>;
+  disabledHandlingSignal: Signal<StateHandling>;
+  enableFunction: SimpleFunction;
+  disableFunction: SimpleFunction;
+}) {
+  effect(() => {
+    const disabled = options.disabledSignal();
+    const disabledHandling = options.disabledHandlingSignal();
+
+    if (disabledHandling === 'manual') {
+      return;
+    }
+
+    if (!disabled) {
+      untracked(() => {
+        options.enableFunction();
+      });
+      return;
+    }
+    untracked(() => {
+      options.disableFunction();
+    });
+  });
+}
