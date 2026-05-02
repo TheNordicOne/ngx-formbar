@@ -1,18 +1,22 @@
-import { computed, effect, inject, Signal, untracked } from '@angular/core';
 import {
-  HideStrategy,
+  afterRenderEffect,
+  computed,
+  effect,
+  inject,
+  Signal,
+  Type,
+  untracked,
+} from '@angular/core';
+import {
   NgxFbBaseContent,
   NgxFbFormGroup,
-  NgxFbItem,
   resolveHiddenAttribute,
   resolveHiddenState,
-  SimpleFunction,
-  ValueHandleFunction,
-  ValueStrategy,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
-import { AbstractControl, ControlContainer, FormGroup } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
+import { ComponentHost } from './component-host';
 
 export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);
@@ -56,49 +60,50 @@ export function withHiddenAttribute(options: {
   return resolveHiddenAttribute(options);
 }
 
-export function hiddenEffect(options: {
-  item: Signal<NgxFbItem>;
-  name: Signal<string>;
-  controlInstance: Signal<AbstractControl>;
-  hiddenSignal: Signal<boolean>;
-  hideStrategySignal: Signal<HideStrategy | undefined>;
-  valueStrategySignal: Signal<ValueStrategy | undefined>;
-  parentValueStrategySignal: Signal<ValueStrategy | undefined>;
-  handleVisibility: Signal<boolean>;
-  attachFunction: SimpleFunction;
-  valueHandleFunction: ValueHandleFunction;
+/**
+ * Drives the directive's mount lifecycle from the resolved component and the
+ * hidden state signal:
+ *
+ * - On the initial render, mounts the component into the host once the
+ *   parent form group is available and the directive is not hidden.
+ * - On every subsequent change to `isHidden`, invokes the matching hook so
+ *   each directive applies its own form-attachment policy.
+ *
+ * The composable owns the orchestration; the per-directive logic
+ * (setControl/removeControl, value-strategy, etc.) lives behind the hooks.
+ */
+export function hiddenEffects(options: {
+  component: Signal<Type<unknown> | null>;
+  isHidden: Signal<boolean>;
+  parentFormGroup: () => FormGroup | null;
+  host: ComponentHost;
+  onHidden: () => void;
+  onVisible: () => void;
 }) {
-  const parentContainer = inject(ControlContainer);
-  const parentFormGroup = parentContainer.control as FormGroup | null;
+  afterRenderEffect(() => {
+    const component = options.component();
+
+    options.host.clear();
+
+    if (!component || !options.parentFormGroup()) {
+      return;
+    }
+
+    if (untracked(() => options.isHidden())) {
+      return;
+    }
+
+    options.host.mount(component);
+  });
+
   effect(() => {
-    options.controlInstance();
-    const isHidden = options.hiddenSignal();
-    const hideStrategy = options.hideStrategySignal();
-    const handleVisibility = options.handleVisibility();
-    const valueStrategy =
-      options.valueStrategySignal() ?? options.parentValueStrategySignal();
-    const formControl = untracked(() => parentFormGroup?.get(options.name()));
+    const isHidden = options.isHidden();
 
-    // Attach control if not yet registered in the form model
-    if (!formControl) {
-      untracked(() => {
-        options.attachFunction();
-      });
-      return;
-    }
-
-    // Only auto + keep handles value strategy when hidden.
-    // Manual mode: component handles everything.
-    // Remove mode: structural directive handles the lifecycle.
-    if (!handleVisibility || hideStrategy === 'remove') {
-      return;
-    }
-
-    // Keep strategy: handle value when hidden
     if (isHidden) {
-      untracked(() => {
-        options.valueHandleFunction(valueStrategy);
-      });
+      options.onHidden();
+      return;
     }
+
+    options.onVisible();
   });
 }

@@ -1,8 +1,6 @@
 import {
-  afterRenderEffect,
   computed,
   Directive,
-  effect,
   inject,
   input,
   OnDestroy,
@@ -29,7 +27,7 @@ import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
 import { withDynamicTitle } from '../composables/dynamic-title';
-import { withHiddenState } from '../composables/hidden.state';
+import { hiddenEffects, withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withReadonlyState } from '../composables/readonly.state';
@@ -151,31 +149,13 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   constructor() {
-    afterRenderEffect(() => {
-      const component = this.base.component();
-
-      this.host.clear();
-
-      if (!component || !this.parentFormGroup) {
-        return;
-      }
-
-      if (untracked(() => this.isHidden())) {
-        return;
-      }
-
-      this.host.mount(component);
-    });
-
-    effect(() => {
-      const isHidden = this.isHidden();
-
-      if (isHidden) {
-        this.applyHiddenState();
-        return;
-      }
-
-      this.applyVisibleState();
+    hiddenEffects({
+      component: this.base.component,
+      isHidden: this.isHidden,
+      parentFormGroup: () => this.parentFormGroup,
+      host: this.host,
+      onHidden: this.applyHiddenState.bind(this),
+      onVisible: this.applyVisibleState.bind(this),
     });
   }
 

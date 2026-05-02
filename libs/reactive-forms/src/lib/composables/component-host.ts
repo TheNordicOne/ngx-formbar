@@ -16,6 +16,11 @@ export interface ComponentHostOptions {
   additionalProviders?: Provider[];
 }
 
+export interface ComponentHost {
+  mount(component: Type<unknown>): void;
+  clear(): void;
+}
+
 /**
  * Provisions a managed host for a single dynamically created component.
  * The returned handle exposes `mount(component)` to populate the host and
