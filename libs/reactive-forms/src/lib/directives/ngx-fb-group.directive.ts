@@ -19,6 +19,7 @@ import {
 import { FormConfigEntry } from '../types/control-component.type';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
+import { withInheritedValue } from '../composables/inherited-value';
 import { ControlContainer, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
@@ -63,25 +64,23 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     })),
   );
 
-  private readonly parentHideStrategy = computed(() =>
-    this.parentGroupDirective?.hideStrategy(),
-  );
-
-  readonly hideStrategy: Signal<HideStrategy | undefined> = computed(
-    () => this.controlConfig().hideStrategy ?? this.parentHideStrategy(),
-  );
+  readonly hideStrategy: Signal<HideStrategy | undefined> =
+    withInheritedValue(
+      this.controlConfig,
+      'hideStrategy',
+      this.parentGroupDirective?.hideStrategy,
+    );
 
   private readonly keepValueWhenHidden = computed(
     () => this.hideStrategy() === 'keep',
   );
 
-  private readonly parentValueStrategy = computed(() =>
-    this.parentGroupDirective?.valueStrategy(),
-  );
-
-  readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
-    () => this.controlConfig().valueStrategy ?? this.parentValueStrategy(),
-  );
+  readonly valueStrategy: Signal<ValueStrategy | undefined> =
+    withInheritedValue(
+      this.controlConfig,
+      'valueStrategy',
+      this.parentGroupDirective?.valueStrategy,
+    );
 
   private readonly handleVisibility = computed(
     () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',

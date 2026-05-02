@@ -9,12 +9,7 @@ import {
   Signal,
   untracked,
 } from '@angular/core';
-import {
-  HideStrategy,
-  NgxFbControl,
-  NgxFbFormGroup,
-  ValueStrategy,
-} from '@ngx-formbar/core';
+import { NgxFbControl, NgxFbFormGroup } from '@ngx-formbar/core';
 import { FormConfigEntry } from '../types/control-component.type';
 import { ControlContainer, FormControl, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
@@ -36,6 +31,7 @@ import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withBase } from '../composables/base';
 import { withComponentHost } from '../composables/component-host';
+import { withInheritedValue } from '../composables/inherited-value';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -60,24 +56,20 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly controlName = this.base.controlName;
   private readonly registrationEntry = this.base.registrationEntry;
 
-  private readonly parentHideStrategy = computed<HideStrategy | undefined>(() =>
-    this.parentGroupDirective?.hideStrategy(),
+  readonly hideStrategy = withInheritedValue(
+    this.controlConfig,
+    'hideStrategy',
+    this.parentGroupDirective?.hideStrategy,
   );
-
-  readonly hideStrategy: Signal<HideStrategy | undefined> = computed<
-    HideStrategy | undefined
-  >(() => this.controlConfig().hideStrategy ?? this.parentHideStrategy());
 
   private readonly keepValueWhenHidden = computed(
     () => this.hideStrategy() === 'keep',
   );
 
-  readonly parentValueStrategy = computed(() =>
-    this.parentGroupDirective?.valueStrategy(),
-  );
-
-  readonly valueStrategy: Signal<ValueStrategy | undefined> = computed(
-    () => this.controlConfig().valueStrategy ?? this.parentValueStrategy(),
+  readonly valueStrategy = withInheritedValue(
+    this.controlConfig,
+    'valueStrategy',
+    this.parentGroupDirective?.valueStrategy,
   );
 
   private readonly handleVisibility = computed(
