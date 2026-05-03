@@ -53,7 +53,7 @@ The following configurations options are only applicable to the interface `NgxFb
 | label         | `string`              | No       | Specifies the label for the control                                                                          |
 | dynamicLabel  | `Expression<string>`  | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
 | defaultValue  | `unknown`             | No       | Should be overwritten with the proper value type of the control                                              |
-| nonNullable   | `boolean`             | No       | Whether this control can have a null value. Used to set the same property through the reactive forms API     |
+| nonNullable   | `boolean`             | No       | Whether this control can have a null value. Used to set the same property through Angular's form API         |
 
 
 ### Group
