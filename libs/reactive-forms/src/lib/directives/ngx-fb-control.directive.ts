@@ -8,28 +8,27 @@ import {
 } from '@angular/core';
 import {
   FormConfigEntry,
+  NGX_FW_PARENT_CONTEXT,
   NgxFbControl,
-  NgxFbFormGroup,
+  NgxFwParentContext,
   toSignalMap,
   withBase,
   withComponentHost,
+  withComputedValue,
+  withDynamicLabel,
+  withHiddenState,
   withInheritedValue,
+  withReadonlyState,
+  withTestId,
+  withUpdateStrategy,
 } from '@ngx-formbar/core';
 import { ReactiveFormbarControl } from '../types/control-component.type';
 import { FormControl } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
-import { withDynamicLabel } from '../composables/dynamic-label';
-import { hiddenEffects, withHiddenState } from '../composables/hidden.state';
-import { NgxFbGroupDirective } from './ngx-fb-group.directive';
-import { withTestId } from '../composables/testId';
+import { hiddenEffects } from '../composables/hidden.state';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
-import { withReadonlyState } from '../composables/readonly.state';
-import {
-  setComputedValueEffect,
-  withComputedValue,
-} from '../composables/computed-value';
-import { withUpdateStrategy } from '../composables/update-strategy';
+import { setComputedValueEffect } from '../composables/computed-value';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withFormParent } from '../composables/form-parent';
 import { FormService } from '../services/form.service';
@@ -42,10 +41,10 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
 
-  private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
-      optional: true,
-    });
+  private readonly parentContext = inject<NgxFwParentContext | null>(
+    NGX_FW_PARENT_CONTEXT,
+    { optional: true },
+  );
 
   readonly config = input.required<FormConfigEntry<NgxFbControl>>({
     alias: 'ngxfbControl',
@@ -59,7 +58,7 @@ export class NgxFbControlDirective implements OnDestroy {
   readonly hideStrategy = withInheritedValue(
     this.controlConfig,
     'hideStrategy',
-    this.parentGroupDirective?.hideStrategy,
+    this.parentContext?.hideStrategy,
   );
 
   private readonly keepFormValue = computed(
@@ -69,7 +68,7 @@ export class NgxFbControlDirective implements OnDestroy {
   readonly valueStrategy = withInheritedValue(
     this.controlConfig,
     'valueStrategy',
-    this.parentGroupDirective?.valueStrategy,
+    this.parentContext?.valueStrategy,
   );
 
   private readonly handleVisibility = computed(

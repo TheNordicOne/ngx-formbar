@@ -12,3 +12,11 @@ export {
 } from './component-host';
 export { withInheritedValue } from './inherited-value';
 export { withLoadedComponent } from './loaded-component';
+export { withDynamicLabel } from './dynamic-label';
+export { withDynamicTitle } from './dynamic-title';
+export { withComputedValue } from './computed-value';
+export { withHiddenState } from './hidden-state';
+export { withDisabledState } from './disabled-state';
+export { withReadonlyState } from './readonly-state';
+export { withTestId } from './test-id';
+export { withUpdateStrategy } from './update-strategy';

@@ -13,7 +13,7 @@ New package containing all reactive forms functionality previously bundled in `@
 - **Services:** `FormService`, `ValidatorRegistrationService`.
 - **Tokens:** `NGXFB_CONTROL_ENTRIES`, `NGX_FW_VALIDATOR_REGISTRATIONS`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_FW_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_DEFAULT_VALIDATOR_REGISTRATIONS`, `NGX_FW_DEFAULT_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_VALIDATOR_RESOLVER`.
 - **Types:** `FormbarConfig`, `ValidatorConfig`, `AsyncValidatorConfig`, `RegistrationRecord`, `ValidatorKey`, `ValidatorResolver`.
-- **Composables:** `withFormParent`, `withControlState`, `withComputedValue`, `setComputedValueEffect`, `withDisabledState`, `withDisabledLifecycle`, `disabledEffect`, `withHiddenState`, `hiddenEffects`, `withReadonlyState`, `withValidators`, `withAsyncValidators`, `withUpdateStrategy`, `withDynamicLabel`, `withDynamicTitle`, `withTestId`.
+- **Composables:** `setComputedValueEffect`, `disabledEffect`, `hiddenEffects`, `withValidators`, `withAsyncValidators`. (Resolution-only composables such as `withDynamicLabel`, `withHiddenState`, `withDisabledState`, `withReadonlyState`, `withTestId`, `withUpdateStrategy`, `withComputedValue`, `withDynamicTitle` live in `@ngx-formbar/core`.)
 - **Helpers:** `controlContainerViewProviders`.
 - **Form-level lifecycle cache.** Values from destroyed controls are stored against their dotted form path and restored when the control is recreated, so `valueStrategy: 'last'` survives both hide/show cycles and `hideStrategy: 'remove'` cycles. The cache is cleared on form reset.
 - **Schematics:** `ng-add` schematic for automated project setup.

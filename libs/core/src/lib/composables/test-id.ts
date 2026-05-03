@@ -1,11 +1,8 @@
 import { computed, inject, Signal } from '@angular/core';
-import {
-  NgxFbBaseContent,
-  NgxFbConfigurationService,
-  NgxFbFormGroup,
-  resolveTestId,
-} from '@ngx-formbar/core';
-import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
+import { NgxFbBaseContent } from '../types/content.type';
+import { NgxFbConfigurationService } from '../services/configuration.service';
+import { NGX_FW_PARENT_CONTEXT } from '../tokens/parent-context';
+import { resolveTestId } from './resolve-test-id';
 
 /**
  * Derives the test identifier for a control or group, scoped under the parent
@@ -21,11 +18,10 @@ export function withTestId(
   content: Signal<NgxFbBaseContent>,
   name: Signal<string>,
 ): Signal<string> {
-  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
-      optional: true,
-      skipSelf: true,
-    });
+  const parent = inject(NGX_FW_PARENT_CONTEXT, {
+    optional: true,
+    skipSelf: true,
+  });
 
   const globalConfig = inject(NgxFbConfigurationService);
 
@@ -33,6 +29,6 @@ export function withTestId(
     content,
     name,
     globalConfig.testIdBuilder,
-    computed(() => parentGroupDirective?.testId()),
+    computed(() => parent?.testId()),
   );
 }

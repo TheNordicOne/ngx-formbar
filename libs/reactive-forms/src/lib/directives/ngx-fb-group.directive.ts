@@ -10,41 +10,49 @@ import {
 import {
   FormConfigEntry,
   HideStrategy,
+  NGX_FW_PARENT_CONTEXT,
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
+  NgxFwParentContext,
   toSignalMap,
   ValueStrategy,
   withBase,
   withComponentHost,
+  withDynamicTitle,
+  withHiddenState,
   withInheritedValue,
+  withReadonlyState,
+  withTestId,
+  withUpdateStrategy,
 } from '@ngx-formbar/core';
 import { ReactiveFormbarGroup } from '../types/control-component.type';
 import { withFormParent } from '../composables/form-parent';
 import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
-import { withDynamicTitle } from '../composables/dynamic-title';
-import { hiddenEffects, withHiddenState } from '../composables/hidden.state';
-import { withTestId } from '../composables/testId';
+import { hiddenEffects } from '../composables/hidden.state';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
-import { withReadonlyState } from '../composables/readonly.state';
-import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 
 @Directive({
   selector: '[ngxfbGroup]',
+  providers: [
+    { provide: NGX_FW_PARENT_CONTEXT, useExisting: NgxFbGroupDirective },
+  ],
 })
 export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
-  implements OnDestroy
+  implements OnDestroy, NgxFwParentContext
 {
   private readonly parent = withFormParent();
 
-  private readonly parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
+  private readonly parentContext = inject<NgxFwParentContext | null>(
+    NGX_FW_PARENT_CONTEXT,
+    {
       optional: true,
       skipSelf: true,
-    });
+    },
+  );
 
   readonly config = input.required<FormConfigEntry<NgxFbFormGroup<T>>>({
     alias: 'ngxfbGroup',
@@ -65,7 +73,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   readonly hideStrategy: Signal<HideStrategy | undefined> = withInheritedValue(
     this.controlConfig,
     'hideStrategy',
-    this.parentGroupDirective?.hideStrategy,
+    this.parentContext?.hideStrategy,
   );
 
   private readonly keepFormValue = computed(
@@ -76,7 +84,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     withInheritedValue(
       this.controlConfig,
       'valueStrategy',
-      this.parentGroupDirective?.valueStrategy,
+      this.parentContext?.valueStrategy,
     );
 
   private readonly handleVisibility = computed(

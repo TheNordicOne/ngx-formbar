@@ -5,10 +5,10 @@ import {
   toSignalMap,
   withBase,
   withComponentHost,
+  withHiddenState,
+  withTestId,
 } from '@ngx-formbar/core';
 import { FormbarBlock } from '../types/control-component.type';
-import { withHiddenState } from '../composables/hidden.state';
-import { withTestId } from '../composables/testId';
 
 @Directive({
   selector: '[ngxfbBlock]',

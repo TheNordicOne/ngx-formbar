@@ -1,44 +1,12 @@
 import {
   afterRenderEffect,
-  computed,
   effect,
-  inject,
   Signal,
   Type,
   untracked,
 } from '@angular/core';
-import {
-  ComponentHost,
-  NgxFbBaseContent,
-  NgxFbFormGroup,
-  resolveHiddenState,
-} from '@ngx-formbar/core';
-import { FormService } from '../services/form.service';
+import { ComponentHost } from '@ngx-formbar/core';
 import { FormGroup } from '@angular/forms';
-import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
-
-export function withHiddenState(content: Signal<NgxFbBaseContent>) {
-  const formService = inject(FormService);
-
-  const option = computed(() => content().hidden);
-
-  const parentGroupDirective: NgxFbGroupDirective<NgxFbFormGroup> | null =
-    inject(NgxFbGroupDirective<NgxFbFormGroup>, {
-      optional: true,
-      skipSelf: true,
-    });
-
-  const parentGroupIsHidden: Signal<boolean> = computed<boolean>(() => {
-    const parentGroup = parentGroupDirective;
-    if (!parentGroup) {
-      return false;
-    }
-
-    return parentGroup.isHidden();
-  });
-
-  return resolveHiddenState(option, formService.formValue, parentGroupIsHidden);
-}
 
 /**
  * Drives the mount lifecycle from the resolved component and the hidden

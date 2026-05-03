@@ -3,8 +3,9 @@ import { AbstractControl } from '@angular/forms';
 import {
   ComponentRegistrationEntry,
   NgxFbAbstractControl,
+  withDisabledState,
 } from '@ngx-formbar/core';
-import { disabledEffect, withDisabledState } from './disabled.state';
+import { disabledEffect } from './disabled.state';
 
 /**
  * Resolves the disabled state from the directive's config and wires the

@@ -11,7 +11,12 @@ import {
   FORM_LIFECYCLE_STATE,
   formLifecycleStateFactory,
 } from '../../services/form-lifecycle-state';
-import { NgxFbBaseContent, NgxFbForm, NgxFbItem } from '@ngx-formbar/core';
+import {
+  NGX_FW_FORM_VALUE,
+  NgxFbBaseContent,
+  NgxFbForm,
+  NgxFbItem,
+} from '@ngx-formbar/core';
 import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
 import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
@@ -28,6 +33,10 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
     {
       provide: FORM_LIFECYCLE_STATE,
       useFactory: formLifecycleStateFactory,
+    },
+    {
+      provide: NGX_FW_FORM_VALUE,
+      useFactory: () => inject(FormService).formValue,
     },
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

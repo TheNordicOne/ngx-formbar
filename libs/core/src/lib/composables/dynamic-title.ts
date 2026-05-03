@@ -1,10 +1,8 @@
 import { computed, inject, Signal } from '@angular/core';
-import {
-  ExpressionService,
-  NgxFbFormGroup,
-  resolveExpression,
-} from '@ngx-formbar/core';
-import { FormService } from '../services/form.service';
+import { NgxFbFormGroup } from '../types/content.type';
+import { ExpressionService } from '../services/expression.service';
+import { NGX_FW_FORM_VALUE } from '../tokens/form-value';
+import { resolveExpression } from './resolve-expression';
 
 /**
  * Resolves the `dynamicTitle` expression on a group to a signal of the
@@ -17,12 +15,12 @@ import { FormService } from '../services/form.service';
  *   the consuming component prefer the dynamic value when present.
  */
 export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
-  const formService = inject(FormService);
+  const formValue = inject(NGX_FW_FORM_VALUE);
   const expressionService = inject(ExpressionService);
 
   return resolveExpression<string>(
     computed(() => content().dynamicTitle),
-    formService.formValue,
+    formValue,
     expressionService,
   );
 }
