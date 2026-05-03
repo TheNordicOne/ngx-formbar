@@ -1,8 +1,10 @@
-A control can be whatever you need it to be. It can be as generic as a `TextControl`. be more specific like an `EMailControl`, just wrap existing controls like a `DateRangeControl` or have custom logic like a `SearchableDropdownControl`.
+A control can be whatever you need it to be. It can be as generic as a `TextControl`, be more specific like an `EMailControl`, just wrap existing controls like a `DateRangeControl` or have custom logic like a `SearchableDropdownControl`.
+
+Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, controls are plain Angular components that implement the `ReactiveFormbarControl<T>` contract. The library writes its state into your component through signal inputs, so you only declare the inputs you actually care about. There is no host directive, no injection, and no manual signal forwarding.
 
 ## Scaffolding via Schematics
 
-Run the Angular schematic to scaffold a new control and register it:
+Run the Angular schematic to scaffold a new control and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarControl<T>`:
 
 ```bash
 ng generate @ngx-formbar/schematics:control --key <control-key> [--name <ComponentName>]
@@ -23,16 +25,17 @@ First create an interface for your control.
 import { NgxFbControl } from '@ngx-formbar/core';
 
 export interface TextControl extends NgxFbControl {
-  // Unique Key of your control that is used for differentiating controls
+  // Unique key of your control that is used for differentiating controls.
   // This can be descriptive like "email-control"
   type: 'text-control';
 
-  // Overwrite defaultValue with correct value type
-  // the default value type is "unknown"
+  // Overwrite defaultValue with the correct value type.
+  // The default value type is "unknown"
   defaultValue?: string;
 
   // Additional options only applicable to this control
   hint?: string;
+  placeHolder?: string;
 }
 ```
 
@@ -44,72 +47,79 @@ Then implement the component.
 {% raw %}
 
 ```typescript group="text-control" name="text-control.component.ts" icon="angular"
-import {Component, Signal, computed, inject} from '@angular/core';
-import {ReactiveFormsModule, ControlContainer} from '@angular/forms';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+import { controlContainerViewProviders } from './control-container.view-provider';
 
 @Component({
     selector: 'app-text-control',
     imports: [ReactiveFormsModule],
     templateUrl: './text-control.component.html',
-    viewProviders: [
-        {
-            provide: ControlContainer,
-            useFactory: () => inject(ControlContainer, {skipSelf: true}),
-        }
-    ],
-    hostDirectives: [
-        {
-            directive: NgxFbControlDirective,
-            inputs: ['content', 'name'],
-        }
-    ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    viewProviders: controlContainerViewProviders,
 })
-export class TextControlComponent {
-    // Inject the Directive to gain access to all public properties
-    // Make sure to pass the correct type parameter to get proper type information
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    // Required. The library always provides this
+    readonly name = input.required<string>();
 
-    // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-    readonly content: Signal<TextControl> = this.control.content; // The configuration object of the control instance
+    // Optional contract inputs. Declare only the ones you use
+    readonly isDisabled = input(false);
+    readonly isReadonly = input(false);
+    readonly isHidden = input(false);
+    readonly labelText = input<string | undefined>('');
+    readonly dynamicLabel = input<string>();
+    readonly testId = input('');
+    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);
 
-    // We get proper type information when accessing this.content()
-    readonly hint = computed(() => this.content().hint);
-    readonly label = computed(() => this.content().label);
-    readonly name: Signal<string> = this.control.name;
+    // Custom inputs from TextControl beyond NgxFbControl
+    readonly hint = input<string>();
+    readonly placeHolder = input<string>();
 }
 ```
 
 ```html group="text-control" name="text-control.component.html"
-<!-- Just an example -->
-<label [htmlFor]="name()">{{ label() }}</label>
+<label [htmlFor]="name()">{{ labelText() }}</label>
 <input
   [id]="name()"
+  [placeholder]="placeHolder() ?? ''"
   [formControlName]="name()"
 />
-<span>{{hint()}}</span>
+<span>{{ hint() }}</span>
 ```
+
 {% endraw %}
 
 Finally, register the control in _app.config.ts_
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
-import { loadComponent } from '@ngx-formbar/core';
+import { loadComponent, staticComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { TextControlComponent } from './text-control.component';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormbar({
       componentRegistrations: {
-        text: loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))
-      }
-    })
+        // Eager registration
+        text: staticComponent(TextControlComponent),
+
+        // Or lazy registration
+        // text: loadComponent(() =>
+        //   import('./text-control.component').then((m) => m.TextControlComponent),
+        // ),
+      },
+    }),
   ],
 };
 ```
+
+> **Note**
+> `staticComponent` and `loadComponent` come from `@ngx-formbar/core`. `provideFormbar` comes from `@ngx-formbar/reactive-forms`.
 
 ## Configuration
 
@@ -119,36 +129,49 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 
 {% include "../../../shared/hidden-intro.md" %}
 
+The `isHidden` input on the contract is the resolved hidden state for this control. The resolution rules above already account for parent inheritance, so reading `isHidden()` in your template is enough; you do not need to walk up the configuration yourself.
+
+Declare the input and use it directly in your template:
+
 {% raw %}
 
 ```typescript group="hidden-control" name="text-control.component.ts" icon="angular"
-import {Signal, inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
 @Component({
     // ...
 })
-export class TextControlComponent {
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
-    // Really only should ever be a boolean return value, but an expression could also return a number, string or object
-    readonly isHidden: Signal<unknown> = this.control.isHidden;
-    readonly name: Signal<string> = this.control.name;
-
-    // Manual visibility handling is configured in the component registration
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly labelText = input<string | undefined>('');
+    readonly isHidden = input(false);
+    readonly hint = input<string>();
 }
 ```
 
 ```html group="hidden-control" name="text-control.component.html"
-@if(isHidden()){
-<span>Some placeholder you want to use</span>
-} @if(!isHidden()){
-<label [htmlFor]="name()">{{ label() }}</label>
-<input [id]="name()" [formControlName]="name()" />
-<span>{{hint()}}</span>
+@if (isHidden()) {
+  <span>Some placeholder you want to use</span>
+} @else {
+  <label [htmlFor]="name()">{{ labelText() }}</label>
+  <input [id]="name()" [formControlName]="name()" />
+  <span>{{ hint() }}</span>
 }
 ```
+
 {% endraw %}
+
+When you want to opt out of the library's automatic visibility behavior, for example to keep the host mounted but swap in a placeholder, set `keepValueWhenHidden: 'manual'` in the registration. The library will then still resolve and supply the `isHidden` signal, but it will neither destroy the component nor apply the value strategy. The component stays mounted at all times and your template decides what to render.
+
+```typescript name="app.config.ts"
+provideFormbar({
+  componentRegistrations: {
+    text: staticComponent(TextControlComponent, { keepValueWhenHidden: 'manual' }),
+  },
+});
+```
 
 {% include "../../../shared/hide-strategy.md" %}
 
@@ -158,72 +181,93 @@ export class TextControlComponent {
 
 {% include "../../../shared/disabled-intro.md" %}
 
+Declare the `isDisabled` input and use it in your template:
+
 {% raw %}
 
 ```typescript group="disabled-control" name="text-control.component.ts" icon="angular"
-import {Signal, inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
 @Component({
     // ...
 })
-export class TextControlComponent {
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
-    readonly disabled: Signal<boolean> = this.control.disabled;
-    readonly name: Signal<string> = this.control.name;
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly labelText = input<string | undefined>('');
+    readonly isDisabled = input(false);
+    readonly hint = input<string>();
 }
 ```
 
 ```html group="disabled-control" name="text-control.component.html"
-<label [htmlFor]="name()">{{ label() }}</label>
+<label [htmlFor]="name()">{{ labelText() }}</label>
 <input [id]="name()" [formControlName]="name()" />
+
 <!-- Only show hint when control is disabled -->
-@if(disabled()){
-<span>{{hint()}}</span>
+@if (isDisabled()) {
+  <span>{{ hint() }}</span>
 }
 ```
+
 {% endraw %}
+
+By default the library calls `enable()`/`disable()` on the underlying form control whenever the resolved disabled state changes. If you want to manage disabled state yourself, for example to apply it to a custom widget rather than the form control, set `disabledHandling: 'manual'` in the registration. The library will then only forward the `isDisabled` signal and leave the form control alone.
+
+```typescript name="app.config.ts"
+provideFormbar({
+  componentRegistrations: {
+    text: staticComponent(TextControlComponent, { disabledHandling: 'manual' }),
+  },
+});
+```
 
 ## Readonly
 
 {% include "../../../shared/readonly-intro.md" %}
 
+Declare the `isReadonly` input and reflect it onto the input element:
+
 {% raw %}
 
 ```typescript group="readonly-control" name="text-control.component.ts" icon="angular"
-import {Signal, inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
 @Component({
     // ...
 })
-export class TextControlComponent {
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
-    readonly readonly: Signal<boolean> = this.control.readonly;
-    readonly name: Signal<string> = this.control.name;
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly labelText = input<string | undefined>('');
+    readonly isReadonly = input(false);
+    readonly hint = input<string>();
 }
 ```
 
 ```html group="readonly-control" name="text-control.component.html"
-<label [htmlFor]="name()">{{ label() }}</label>
+<label [htmlFor]="name()">{{ labelText() }}</label>
 <input
   [id]="name()"
   [formControlName]="name()"
-  [attr.readonly]="readonly() || null"
+  [attr.readonly]="isReadonly() || null"
 />
-<span>{{hint()}}</span>
+<span>{{ hint() }}</span>
 ```
+
 {% endraw %}
 
 ## Computed Values
 
-In some cases it is desirable to (pre)-fill certain inputs with a value based on other controls. This can be done by utilizing the `computedValue` property. It will automatically set the value based on the provided expression. If the control can be edited by the user, it will only overwrite the value if a dependency changes. Usually you will want to make it readonly though.
+In some cases it is desirable to (pre-)fill certain inputs with a value based on other controls. This can be done by utilizing the `computedValue` property on the control configuration. The library will automatically set the value based on the provided expression. If the control can be edited by the user, it will only overwrite the value when a dependency changes. Usually you will want to make the control readonly though.
+
+The result is reflected through Angular's reactive form value, so your component does not need a special input for it. `[formControlName]` already shows the up-to-date value.
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
-> **Known issue:** String expressions that reference fields inside sibling groups do not resolve correctly on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). Use optional chaining as a workaround:
+> **Known issue:** String expressions that reference fields inside sibling groups do not resolve correctly on initial display ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). Use optional chaining as a workaround:
 >
 > ```typescript
 > computedValue: 'groupA?.fieldA + " " + groupB?.fieldB'
@@ -231,47 +275,42 @@ See the [Expressions guide](/fundamentals/expressions) for details on how expres
 
 ## Dynamic Label
 
-A control's label can be made responsive to other form data by using the `dynamicLabel` configuration property. You provide an expression string to dynamicLabel (e.g., 'Hello, ' + user.name), and the control's label text will then be computed based on this expression.
+A control's label can be made responsive to other form data by using the `dynamicLabel` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`), and the library evaluates it and forwards the result through the `dynamicLabel` signal input.
 
-Your component can access this computed dynamic label via a signal (e.g., this.control.dynamicLabel). Typically, you'd use this dynamic label if it's available and evaluates to a meaningful string; otherwise, you might fall back to a statically configured label (e.g., this.control.label).
+Declare both `labelText` (the static value from the configuration) and `dynamicLabel`, then derive a `displayLabel` that prefers the dynamic value when it resolves to something meaningful:
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
 {% raw %}
 
 ```typescript group="dynamic-label" name="text-control.component.ts" icon="angular"
-import {Signal, computed, inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { Component, computed, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
 @Component({
     // ...
 })
-export class TextControlComponent {
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
-
-    // Access the computed dynamic label from the directive.
-    // It will be `undefined` if no 'dynamicLabel' expression is set or if it doesn't resolve to a string.
-    readonly dynamicLabel: Signal<string | undefined> = this.control.dynamicLabel;
-
-    readonly staticConfigLabel = computed(() => this.content().label);
-    readonly name: Signal<string> = this.control.name;
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly labelText = input<string | undefined>('');
+    readonly dynamicLabel = input<string>();
 
     readonly displayLabel = computed(() => {
         const dynamic = this.dynamicLabel();
         if (dynamic && dynamic.trim() !== '') {
             return dynamic;
         }
-
-        return this.staticConfigLabel() || '';
+        return this.labelText();
     });
 }
 ```
 
 ```html group="dynamic-label" name="text-control.component.html"
-<label [htmlFor]="name()"> {{ displayLabel() }} </label>
+<label [htmlFor]="name()">{{ displayLabel() }}</label>
 <input [id]="name()" [formControlName]="name()" />
 ```
+
 {% endraw %}
 
 ## Test ID
@@ -281,85 +320,98 @@ export class TextControlComponent {
 {% raw %}
 
 ```typescript group="test-id-control" name="text-control.component.ts" icon="angular"
-import {Signal, inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
-import {TextControl} from './text-control.type';
+import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
 @Component({
     // ...
 })
-export class TextControlComponent {
-    private readonly control = inject(NgxFbControlDirective<TextControl>);
-    readonly testId: Signal<string> = this.control.testId;
-    readonly name: Signal<string> = this.control.name;
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly labelText = input<string | undefined>('');
+    readonly testId = input('');
 }
 ```
 
 ```html group="test-id-control" name="text-control.component.html"
-<label [htmlFor]="name()" [attr.data-testId]="testId() + '-label'"
-  >{{ label() }}</label
->
+<label
+  [htmlFor]="name()"
+  [attr.data-testid]="testId() + '-label'"
+>{{ labelText() }}</label>
 <input
-  [attr.data-testId]="testId() + '-input'"
+  [attr.data-testid]="testId() + '-input'"
   [id]="name()"
   [formControlName]="name()"
 />
 ```
+
 {% endraw %}
 
 ## Showing Errors
 
-Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+The contract exposes the resolved validation errors through the `errors` signal input and the touched/dirty status through `isDirty`. This is the recommended way to show errors. There is no need to reach into the underlying form control.
 
-In TypeScript set up a getter
+{% raw %}
+
+```typescript group="errors-control" name="text-control.component.ts" icon="angular"
+import { Component, input } from '@angular/core';
+import { ValidationErrors } from '@angular/forms';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
+@Component({
+    // ...
+})
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);
+}
+```
+
+```html group="errors-control" name="text-control.component.html"
+<input [id]="name()" [formControlName]="name()" />
+
+@if (isDirty() && errors()?.['required']) {
+  <span>Required</span>
+}
+```
+
+{% endraw %}
+
+For advanced cases that genuinely need the underlying `FormControl` (for example calling `markAsPristine()` or reading `pending`), declare the optional `controlInstance` input. The library writes the resolved `FormControl` into it:
 
 ```typescript name="text-control.component.ts" icon="angular"
-import {inject} from '@angular/core';
-import {NgxFbControlDirective} from '@ngx-formbar/reactive-forms';
+import { Component, input } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
 
-// inject the instance of the directive
-private readonly
-textControl = inject(NgxFbControlDirective<Control>);
-
-// Get access to the underlying form textControl}
-get
-formControl()
-{
-    return this.textControl.formControl
+@Component({
+    // ...
+})
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+    readonly controlInstance = input<FormControl>();
 }
 ```
 
-Then, in your template you can do something like this
+## Component Contract Reference
 
-```html name="text-control.component.html"
-@if(formControl?.hasError('required')) {
-<span>Required</span>
-}
-```
+The `ReactiveFormbarControl<T>` contract is implemented by your component. The library detects which inputs you declared (by name) and writes its resolved values into them, so every input below is optional except `name`. Any property you add to `T` beyond `NgxFbControl` becomes an additional signal input on the component.
 
-## Directive Reference
-
-The `NgxfbControlDirective<T>` exposes the following public properties and methods:
-
-| Property / Method                 | Type                                     | Description                                                               |
-|-----------------------------------|------------------------------------------|---------------------------------------------------------------------------|
-| `content`                         | `InputSignal<T>`                         | The configuration object of the control instance.                         |
-| `name`                            | `InputSignal<string>`                    | The control's name (the key used in the configuration).                   |
-| `isHidden`                        | `Signal<boolean>`                        | Whether the control is currently hidden.                                  |
-| `hiddenAttribute`                 | `Signal<string \| null>`                 | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
-| `disabled`                        | `Signal<boolean>`                        | Whether the control is currently disabled.                                |
-| `readonly`                        | `Signal<boolean>`                        | Whether the control is currently readonly.                                |
-| `dynamicLabel`                    | `Signal<string \| undefined>`            | The computed dynamic label, if a `dynamicLabel` expression is configured. |
-| `testId`                          | `Signal<string \| undefined>`            | The computed test ID for the control.                                     |
-| `hideStrategy`                    | `Signal<string \| undefined>`            | The control's hide strategy (`'keep'` or `'remove'`).                     |
-| `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The control's value strategy (`'last'`, `'default'`, or `'reset'`).       |
-| `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the control.                             |
-| `formControl`                     | `FormControl \| null`                    | Getter for the underlying `FormControl` instance.                         |
-
-### Advanced
-
-| Property / Method               | Type                                 | Description                                                            |
-|---------------------------------|--------------------------------------|------------------------------------------------------------------------|
-| `parentFormGroup`               | `FormGroup \| null`                  | Getter for the parent `FormGroup` containing this control.             |
-| `parentValueStrategy`           | `Signal<ValueStrategy \| undefined>` | The parent's value strategy, used for inheritance.                     |
-| `setDisabledHandling(handling)` | `(StateHandling) => void`            | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
+| Input             | Type                                      | Description                                                                                          |
+|-------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `name`            | `SignalInput<string>` (**required**)      | The control's name (the key used in the configuration).                                              |
+| `isDisabled`      | `SignalInput<boolean>`                    | Whether the control is currently disabled.                                                           |
+| `isReadonly`      | `SignalInput<boolean>`                    | Whether the control is currently readonly.                                                           |
+| `isHidden`        | `SignalInput<boolean>`                    | Whether the control is currently hidden (already accounts for parent inheritance).                   |
+| `testId`          | `SignalInput<string>`                     | The computed test ID for the control.                                                                |
+| `hideStrategy`    | `SignalInput<HideStrategy \| undefined>`  | The control's hide strategy (`'keep'` or `'remove'`).                                                |
+| `valueStrategy`   | `SignalInput<ValueStrategy \| undefined>` | The control's value strategy (`'last'`, `'default'`, or `'reset'`).                                  |
+| `errors`          | `SignalInput<ValidationErrors \| null>`   | Validation errors of the underlying form control.                                                    |
+| `isDirty`         | `SignalInput<boolean>`                    | Whether the underlying form control is dirty.                                                        |
+| `labelText`       | `SignalInput<string \| undefined>`        | The static `label` value from the control configuration.                                             |
+| `dynamicLabel`    | `SignalInput<string \| undefined>`        | The computed dynamic label, if a `dynamicLabel` expression is configured.                            |
+| `controlInstance` | `SignalInput<FormControl>`                | The underlying `FormControl` instance. Only declare this when you need direct access to the control. |

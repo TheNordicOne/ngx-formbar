@@ -256,4 +256,4 @@ export const exampleForm: NgxFbForm = {
 
 Once you have a configuration, see your integration package's guide on how to render it:
 
-- [Reactive Forms — Showing a Form](/reactive-forms/guides/showing-a-form)
+- [Reactive Forms: Showing a Form](/reactive-forms/guides/showing-a-form)

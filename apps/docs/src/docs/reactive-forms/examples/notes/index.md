@@ -20,13 +20,13 @@ along with the form configuration.
 
 All examples use these control components:
 
-- **text** — Single-line text input
-- **number** — Numeric input with min/max
-- **checkbox** — Boolean toggle
-- **radio** — Radio button group
-- **dropdown** — Select dropdown
-- **textarea** — Multi-line text input
-- **date** — Date picker
-- **file** — File upload
-- **group** — Fieldset grouping with legend
-- **note** — Informational block (not a form control)
+- **text**: Single-line text input
+- **number**: Numeric input with min/max
+- **checkbox**: Boolean toggle
+- **radio**: Radio button group
+- **dropdown**: Select dropdown
+- **textarea**: Multi-line text input
+- **date**: Date picker
+- **file**: File upload
+- **group**: Fieldset grouping with legend
+- **note**: Informational block (not a form control)

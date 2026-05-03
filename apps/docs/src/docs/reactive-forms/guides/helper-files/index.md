@@ -5,7 +5,7 @@ To reduce the amount of boilerplate needed with each component and to improve ma
 
 You can place the helper files in any folder in your project. If you put them in the default location (`app/shared/helper`), they can be discovered automatically.
 
-Otherwise, run schematics with the `--hostDirectiveHelperPath` and/or `--viewProviderHelperPath` flag to point to your files or configure them as defaults. The configuration for each schematic is described on the schematics pages Generators and Register.
+Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to your file or configure it as a default. The configuration for each schematic is described on the schematics pages Generators and Register.
 
 
 ### Control Container View Providers
@@ -28,51 +28,8 @@ export const controlContainerViewProviders = [
 })
 ```
 
-### Control Host Directive
+> **Note:** Earlier versions of _ngx-formbar_ shipped additional helpers (`ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, `ngxfbBlockHostDirective`) for applying host directives to consumer components. As of v2.0.0, components implement the interface contract directly, so those host-directive helpers are no longer needed and have been removed.
 
-This is a convenience helper to apply the `NgxfbControlDirective`.
-
-```typescript name="control.host-directive.ts"
-export const ngxfbControlHostDirective = {
-  directive: NgxfbControlDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```typescript name="text-control.component.ts" icon="angular"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfbControlHostDirective
-  ],
-})
-```
-
-### Group Host Directive
-
-This is a convenience helper to apply the `NgxfbGroupDirective`.
-
-```typescript name="group.host-directive.ts"
-export const ngxfbGroupHostDirective = {
-  directive: NgxfbGroupDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```typescript name="group.component.ts" icon="angular"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfbGroupHostDirective
-  ],
-})
-```
 
 ### Union Types
 

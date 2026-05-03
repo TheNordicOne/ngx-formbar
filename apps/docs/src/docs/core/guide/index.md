@@ -52,19 +52,6 @@ const hidden = resolveHiddenState(
 );
 ```
 
-### resolveDisabledEffect
-
-Creates an Angular effect that calls enable/disable functions based on a disabled signal. When `StateHandling` is `'auto'`, it manages state automatically. When `'manual'`, the component handles it.
-
-```typescript
-resolveDisabledEffect({
-  disabledSignal: disabled,
-  disabledHandlingSignal: stateHandling,
-  enableFunction: () => control.enable(),
-  disableFunction: () => control.disable(),
-});
-```
-
 ### resolveUpdateStrategy
 
 Resolves the update strategy using a priority chain: control value > parent group > application default.
@@ -94,7 +81,7 @@ const testId = resolveTestId(
 
 ### resolveHiddenAttribute
 
-Returns `true` or `null` for binding to the HTML `hidden` attribute. Respects `StateHandling` — when set to `'manual'`, always returns `null`.
+Returns `true` or `null` for binding to the HTML `hidden` attribute. Respects `StateHandling`: when set to `'manual'`, always returns `null`.
 
 ```typescript
 const hiddenAttr = resolveHiddenAttribute({

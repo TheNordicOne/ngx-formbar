@@ -27,12 +27,13 @@ export interface ComponentRegistrationOptions {
   /**
    * Controls how visibility is managed for this component type.
    *
-   * - `'auto'` (default): The library manages visibility — setting `[attr.hidden]` for the `keep`
-   *   strategy, structurally removing the component for the `remove` strategy, and applying
-   *   the `valueStrategy` when visibility changes.
-   * - `'manual'`: The library does not manage visibility. The component receives the `isHidden`
-   *   signal but is responsible for handling its own hiding, form model management, and value
-   *   strategy. The library only handles initial form control registration.
+   * - `'auto'` (default): The library destroys the consumer component when the resolved hidden state
+   *   becomes true and recreates it when the state becomes false again. The configured
+   *   `valueStrategy` is applied around the cycle, and the `hideStrategy` decides whether the
+   *   form control stays attached or is removed and reattached.
+   * - `'manual'`: The library does not destroy or recreate the component. It still resolves and
+   *   supplies the `isHidden` signal, but the component stays mounted and is responsible for
+   *   its own hiding, value strategy, and form model management.
    */
   keepValueWhenHidden?: StateHandling;
 
@@ -48,11 +49,11 @@ export interface ComponentRegistrationOptions {
 }
 
 /**
- * A component registration entry — either static or lazy,
+ * A component registration entry, either static or lazy,
  * optionally with additional configuration.
  *
- * - Static: `{ component: MyComponent }` — component is eagerly imported
- * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }` — loaded on demand
+ * - Static: `{ component: MyComponent }`. Component is eagerly imported
+ * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }`. Loaded on demand
  */
 export type ComponentRegistrationEntry =
   | (StaticRegistration & ComponentRegistrationOptions)

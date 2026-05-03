@@ -22,7 +22,6 @@ By default, the following things will be done
   - async validator registration
 - Setup helper files including
   - barrel export
-  - control host directives
   - control container view provider
 - Create a schematics configuration file
 - Provide formbar in your `app.config.ts`
@@ -45,7 +44,7 @@ By default, the following things will be done
 | --providerConfigFileName  | string              | No       | `formbar.config.ts`       | Name of the provider configuration file.                                                                                                                                                                                 |
 | --includeSyncValidators   | boolean             | No       | `true`                    | Whether to include the setup for validators.                                                                                                                                                                             |
 | --includeAsyncValidators  | boolean             | No       | `true`                    | Whether to include the setup for async validators.                                                                                                                                                                       |
-| --useHelper               | boolean             | No       | `true`                    | Include helper files for view providers and host directives.                                                                                                                                                             |
+| --useHelper               | boolean             | No       | `true`                    | Include helper files for the view provider used by control and group components.                                                                                                                                         |
 | --helperPath              | string              | No       | `app/shared/helper`       | Where helper files should be placed, relative to the project root.                                                                                                                                                       |
 | --splitRegistrations      | boolean             | No       | `true`                    | Whether to split the registrations into a separate file. If false, registrations will happen directly in the `formbar.config.ts` or `app.config.ts`, depending on the registration style and the `provideInline` option. |
 | --registrationsPath       | string              | No       | `app/registrations`       | Where registration files should be placed, relative to the project root.                                                                                                                                                 |

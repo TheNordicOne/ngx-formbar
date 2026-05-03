@@ -12,7 +12,7 @@ import { viewProviders } from '../../helpers';
 /**
  * A text control that handles its own visibility.
  *
- * Registered with `visibilityHandling: 'manual'` — the library does not
+ * Registered with `keepValueWhenHidden: 'manual'`. The library does not
  * manage hiding, form model removal, or value strategy for this component.
  * The component reads `isHidden` and decides what to render.
  */

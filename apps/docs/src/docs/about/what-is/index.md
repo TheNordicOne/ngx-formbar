@@ -4,7 +4,7 @@ The first key focus is on compatibility with JSON, so that the whole form config
 
 The second key focus is to be as close to Angular as possible. Not just the whole wording, but also in terms of technologies used. You still have full control over the form and use it pretty much like any other form. No additional API to know, just to access the forms value.
 
-_ngx-formbar_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Furthermore, it uses the [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api) instead of inheritance. While this may seem to make some things a little more verbose, it is the better approach to encapsulate the core logic.
+_ngx-formbar_ comes with **no** pre-built components by design. This gives you flexibility of what framework to use and how to structure the markup. Your components stay plain Angular components: they implement a small interface contract and declare `input()` signals instead of inheriting from a base class, which keeps the core logic encapsulated without locking you into a specific component shape.
 
 
 ## What is the motivation?

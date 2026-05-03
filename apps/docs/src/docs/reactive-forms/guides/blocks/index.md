@@ -1,5 +1,7 @@
 Sometimes you need additional information or functionality within a form. This could be the case for example if you need to add an information block, images or anything that does not contribute to the form's value.
 
+Blocks are non-control elements: they have no `FormControl`, are never disabled or readonly, and contribute nothing to the form's value.
+
 ## Scaffolding via Schematics
 
 Run the Angular schematic to scaffold a new block and register it:
@@ -8,8 +10,9 @@ Run the Angular schematic to scaffold a new block and register it:
 ng generate @ngx-formbar/schematics:block --key <block-key> [--name <ComponentName>]
 ```
 
-See the [Generators page](/fundamentals/generators) for more details.
+The schematic generates an interface extending `NgxFbBlock` and a component implementing `FormbarBlock<T>` with the appropriate signal inputs already declared.
 
+See the [Generators page](/fundamentals/generators) for more details.
 
 ## Manual Setup
 
@@ -18,56 +21,41 @@ Here is an example of a simple information block.
 First create an interface for your block by extending `NgxFbBlock`.
 
 > **Warning**
-> `NgxFbBlock` has a required property `isControl` which typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types.
+> `NgxFbBlock` has a required property `isControl` which is typed to always be `false`. This is necessary to allow TypeScript to properly narrow the types and route configuration entries to block components.
 
 ```typescript name="info-block.type.ts"
 import { NgxFbBlock } from '@ngx-formbar/core';
 
 export interface InfoBlock extends NgxFbBlock {
   type: 'info-block';
+  isControl: false;
   message: string;
 }
 ```
 
 Then implement the component.
 
+The component implements the `FormbarBlock<T>` contract. The contract type accepts your block interface as its type parameter and exposes every custom property on it as an additional signal input. You declare the inputs yourself using `input()` / `input.required()`, and Angular wires the configuration values into them at runtime.
+
 {% raw %}
 ```typescript group="info-block" name="info-block.component.ts" icon="angular"
-import { Component, Signal, computed, inject } from '@angular/core';
-import { ControlContainer } from '@angular/forms';
-import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { FormbarBlock } from '@ngx-formbar/reactive-forms';
 import { InfoBlock } from './info-block.type';
 
 @Component({
   selector: 'app-info-block',
   imports: [],
   templateUrl: './info-block.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    },
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbBlockDirective,
-      inputs: ['content', 'name'],
-    },
-  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InfoBlockComponent {
-  // Inject the Directive to gain access to all public properties
-  // Make sure to pass the correct type parameter to get proper type information
-  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
+export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
+  // Inputs from the abstract block contract. Both are optional.
+  readonly isHidden = input(false);
+  readonly testId = input('');
 
-  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<InfoBlock> = this.blockDirective.content;
-
-  // You also have access to the underlying form
-  readonly rootForm = this.blockDirective.rootForm;
-
-  // We get proper type information when accessing this.content()
-  readonly message = computed(() => this.content().message); // <- This is the custom property for your block
+  // Custom inputs declared on InfoBlock become required signal inputs.
+  readonly message = input.required<string>();
 }
 ```
 
@@ -76,19 +64,28 @@ export class InfoBlockComponent {
 ```
 {% endraw %}
 
-Finally, register the block in app.config.ts
+> **Note**
+> Block components do not need `viewProviders` for `ControlContainer` and do not use any host directives. They are not form controls, so they sit outside the reactive forms tree entirely.
+
+Finally, register the block in _app.config.ts_. Use `staticComponent` for eagerly imported components or `loadComponent` for lazy loading.
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
-import { loadComponent } from '@ngx-formbar/core';
+import { loadComponent, staticComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { InfoBlockComponent } from './info-block.component';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormbar({
       componentRegistrations: {
-        info: loadComponent(() => import('./info-block.component').then(m => m.InfoBlockComponent)),
+        // Eagerly imported
+        info: staticComponent(InfoBlockComponent),
+        // Or lazily loaded
+        infoLazy: loadComponent(() =>
+          import('./info-block.component').then((m) => m.InfoBlockComponent),
+        ),
       },
     }),
   ],
@@ -97,40 +94,50 @@ export const appConfig: ApplicationConfig = {
 
 ## Configuration
 
-Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a Block. A Block only has access to the base properties.
+Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a block. A block only has access to the base properties from `NgxFbBlock`. There is no `name`, no `isDisabled`, no `isReadonly`, and no value strategies, because blocks have no form value.
 
 ## Hidden
 
 {% include "../../../shared/hidden-intro.md" %}
 
+> **Note**
+> Blocks have no value, so the `valueStrategy` does not apply. Only the `hideStrategy` (`keep` vs. `remove`) and the visibility handling mode are relevant.
+
+To take over visibility yourself, register the block with `keepValueWhenHidden: 'manual'` and read the `isHidden` signal in your template.
+
 {% raw %}
 ```typescript group="hidden-block" name="info-block.component.ts" icon="angular"
-import { Signal, computed, inject } from '@angular/core';
-import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { FormbarBlock } from '@ngx-formbar/reactive-forms';
 import { InfoBlock } from './info-block.type';
 
 @Component({
-  // ...
+  selector: 'app-info-block',
+  imports: [],
+  templateUrl: './info-block.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InfoBlockComponent {
-  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
-
-  readonly content: Signal<InfoBlock> = this.blockDirective.content;
-  readonly message = computed(() => this.content().message);
-
-  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
-  readonly isHidden: Signal<unknown> = this.blockDirective.isHidden;
-
-  // Manual visibility handling is configured in the component registration
+export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
+  readonly isHidden = input(false);
+  readonly testId = input('');
+  readonly message = input.required<string>();
 }
 ```
 
 ```html group="hidden-block" name="info-block.component.html"
-@if(!isHidden()){
-<p>{{ message() }}</p>
+@if (!isHidden()) {
+  <p>{{ message() }}</p>
 }
 ```
 {% endraw %}
+
+```typescript name="app.config.ts"
+provideFormbar({
+  componentRegistrations: {
+    info: staticComponent(InfoBlockComponent, { keepValueWhenHidden: 'manual' }),
+  },
+});
+```
 
 ## Test ID
 
@@ -138,33 +145,20 @@ export class InfoBlockComponent {
 
 {% raw %}
 ```typescript group="test-id-block" name="info-block.component.ts" icon="angular"
-import { Component, Signal, computed, inject } from '@angular/core';
-import { ControlContainer } from '@angular/forms';
-import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { FormbarBlock } from '@ngx-formbar/reactive-forms';
 import { InfoBlock } from './info-block.type';
 
 @Component({
   selector: 'app-info-block',
   imports: [],
   templateUrl: './info-block.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    },
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbBlockDirective,
-      inputs: ['content', 'name'],
-    },
-  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InfoBlockComponent {
-  private readonly blockDirective = inject(NgxfbBlockDirective<InfoBlock>);
-  readonly content: Signal<InfoBlock> = this.blockDirective.content;
-  readonly testId: Signal<string> = this.blockDirective.testId;
-  readonly message = computed(() => this.content().message);
+export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
+  readonly isHidden = input(false);
+  readonly testId = input('');
+  readonly message = input.required<string>();
 }
 ```
 
@@ -173,15 +167,16 @@ export class InfoBlockComponent {
 ```
 {% endraw %}
 
-## Directive Reference
+## Component Contract Reference
 
-The `NgxfbBlockDirective<T>` exposes the following public properties and methods:
+The `FormbarBlock<T>` contract type accepts your block interface as its type parameter and combines a small set of base inputs with the custom properties declared on `T`.
 
-| Property / Method                 | Type                          | Description                                                               |
-|-----------------------------------|-------------------------------|---------------------------------------------------------------------------|
-| `content`                         | `InputSignal<T>`              | The configuration object of the block instance.                           |
-| `name`                            | `InputSignal<string>`         | The block's name (the key used in the configuration).                     |
-| `isHidden`                        | `Signal<boolean>`             | Whether the block is currently hidden.                                    |
-| `hiddenAttribute`                 | `Signal<string \| null>`      | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
-| `testId`                          | `Signal<string \| undefined>` | The computed test ID for the block.                                       |
-| `rootForm`                        | `ControlContainer`            | Getter for the parent form container.                                     |
+| Input      | Type                   | Description                                                                                  |
+|------------|------------------------|----------------------------------------------------------------------------------------------|
+| `isHidden` | `SignalInput<boolean>` | The resolved hidden state for the block. Optional on the contract; declare when you need it. |
+| `testId`   | `SignalInput<string>`  | The computed test ID for the block. Optional on the contract; declare when you need it.      |
+
+In addition to these base inputs, every custom property declared on your block interface (anything beyond the keys of `NgxFbBlock`) becomes an additional signal input on the component. The contract uses `ToSignalInputs<ExtendedBlockInputs<T>>` to derive those input declarations from `T`, so adding a new property to your interface is enough to make TypeScript require the matching `input()` on the component.
+
+> **Note**
+> Blocks intentionally have no `name`, `isDisabled`, `isReadonly`, `errors`, `isDirty`, `hideStrategy`, or `valueStrategy` inputs. Those belong to controls and groups, which participate in the reactive forms tree.

@@ -8,14 +8,18 @@ If you want you could also use the core package alone to build your own implemen
 
 ### Added
 
-- Composable functions for expression and state resolution: `resolveExpression`, `resolveInheritableExpression`, `resolveHiddenState`, `resolveDisabledEffect`, `resolveTestId`, `resolveHiddenAttribute`, `resolveUpdateStrategy`
+- Composable functions for expression and state resolution: `resolveExpression`, `resolveInheritableExpression`, `resolveHiddenState`, `resolveTestId`, `resolveHiddenAttribute`, `resolveUpdateStrategy`
+- Type guards for narrowing content entries: `isFormbarControl`, `isFormbarGroup`, `isFormbarBlock`. Each accepts either a value or a `Signal` and narrows to the corresponding `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock` shape
+- Utility types for building consumer-facing component contracts on top of Angular signal inputs: `SignalInput<T>`, `ToSignalInputs<T>`, `RemoveIndexSignature<T>`, `BlockManagedKeys`, `ExtendedBlockInputs<T>`. Used by `@ngx-formbar/reactive-forms` to derive the public input surface for blocks
+- New `disabledHandling?: StateHandling` option on component registrations, mirroring the existing visibility option. When set to `'manual'`, the library leaves the underlying form control's disabled state alone and the component receives the resolved `isDisabled` signal to apply itself. Defaults to `'auto'`
 - String helper utilities via `toSafeString`
 
 ### Changed
 
-- Removed `@angular/forms` and `@angular/cdk` as peer dependencies — the package now only depends on `@angular/core`
+- Peer dependencies are now limited to `@angular/core` (`>=20.0.0 <22.0.0`). `@angular/forms` and `@angular/cdk` are no longer required by the core package
 - Composable functions and low-level services are now part of the public API for consumers building custom form implementations
-- Component registrations now use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry is either a static registration (`{ component: Type<unknown> }`) or a lazy registration (`{ loadComponent: LoadComponentFn }`), optionally with a `ComponentRegistrationOptions` (e.g., `{ visibilityHandling: 'manual' }`). Helper functions `staticComponent()` and `loadComponent()` accept an optional second argument for these options. The `NGX_FW_COMPONENT_REGISTRATIONS` token and `ComponentResolver` interface use `ComponentRegistrationEntry` accordingly.
+- Component registrations now use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry is either a static registration (`{ component: Type<unknown> }`) or a lazy registration (`{ loadComponent: LoadComponentFn }`), optionally with a `ComponentRegistrationOptions`. Helper functions `staticComponent()` and `loadComponent()` accept an optional second argument for these options. The `NGX_FW_COMPONENT_REGISTRATIONS` token and `ComponentResolver` interface use `ComponentRegistrationEntry` accordingly
+- Registration option renamed: `visibilityHandling` is now `keepValueWhenHidden` (still typed as `StateHandling = 'auto' | 'manual'`, default `'auto'`). Update any registrations that previously passed `{ visibilityHandling: 'manual' }` to `{ keepValueWhenHidden: 'manual' }`
 
 ### Removed
 

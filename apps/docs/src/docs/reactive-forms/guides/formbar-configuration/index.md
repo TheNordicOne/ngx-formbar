@@ -19,8 +19,8 @@ The configuration object that is used by the `provideFormbar` function has these
 
 Each component registration is either **static** or **lazy**:
 
-- **Static** `{ component: Type<unknown> }` — the component is eagerly imported and included in the main bundle
-- **Lazy** `{ loadComponent: LoadComponentFn }` — the component is loaded on demand via dynamic `import()`
+- **Static** `{ component: Type<unknown> }`: the component is eagerly imported and included in the main bundle
+- **Lazy** `{ loadComponent: LoadComponentFn }`: the component is loaded on demand via dynamic `import()`
 
 The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
 
@@ -68,9 +68,9 @@ import { staticComponent, loadComponent } from '@ngx-formbar/core';
 
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
-    // Static registration — component is eagerly imported
+    // Static registration: component is eagerly imported
     // e.g. text: staticComponent(TextControlComponent)
-    // Lazy registration — component is loaded on demand
+    // Lazy registration: component is loaded on demand
     // e.g. select: loadComponent(() => import('./select.component').then(m => m.SelectComponent))
   },
   // validatorRegistrations are optional

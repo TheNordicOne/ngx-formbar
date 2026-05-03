@@ -48,10 +48,9 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
  * 1. Attaches the control to the form when not yet registered
  * 2. Applies the value strategy when the control becomes hidden
  *
- * For `remove` strategy, this effect is a no-op — the structural directive
- * (`NgxfbAbstractControlDirective`) owns the component lifecycle by destroying
- * and recreating the component. Registration and value restoration are handled
- * by `ngOnDestroy` / `controlInstance` respectively.
+ * For `remove` strategy, this effect is a no-op. The directive's hidden
+ * lifecycle owns component teardown and recreation, and registration plus
+ * value restoration is handled by `ngOnDestroy` and `controlInstance`.
  */
 export function withHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;
