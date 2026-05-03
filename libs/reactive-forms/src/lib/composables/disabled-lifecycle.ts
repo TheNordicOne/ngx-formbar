@@ -5,7 +5,7 @@ import {
   NgxFbAbstractControl,
   withDisabledState,
 } from '@ngx-formbar/core';
-import { disabledEffect } from './disabled.state';
+import { disabledEffect } from './disabled-effect';
 
 /**
  * Resolves the disabled state from the directive's config and wires the

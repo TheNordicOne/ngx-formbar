@@ -4,7 +4,6 @@ import {
   inject,
   input,
   OnDestroy,
-  untracked,
 } from '@angular/core';
 import {
   FormConfigEntry,
@@ -25,7 +24,7 @@ import {
 import { ReactiveFormbarControl } from '../types/control-component.type';
 import { FormControl } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
-import { hiddenEffects } from '../composables/hidden.state';
+import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { setComputedValueEffect } from '../composables/computed-value';
@@ -143,53 +142,26 @@ export class NgxFbControlDirective implements OnDestroy {
     return this.parent.pathTo(this.controlName());
   }
 
-  constructor() {
-    hiddenEffects({
-      component: this.base.component,
-      isHidden: this.isHidden,
-      parentFormGroup: () => this.parentFormGroup,
-      host: this.host,
-      onHidden: this.applyHiddenState.bind(this),
-      onVisible: this.applyVisibleState.bind(this),
-    });
+  private readonly lifecycle = withHiddenLifecycle({
+    component: this.base.component,
+    isHidden: this.isHidden,
+    host: this.host,
+    parentFormGroup: () => this.parentFormGroup,
+    controlName: this.controlName,
+    instance: this.controlInstance,
+    handleVisibility: this.handleVisibility,
+    keepFormValue: this.keepFormValue,
+    applyValueStrategy: this.setValueByStrategy.bind(this),
+    beforeDetach: this.saveLastValue.bind(this),
+  });
 
+  constructor() {
     setComputedValueEffect({
       controlInstance: this.controlInstance,
       computeValueSignal: this.computedValue,
       isComputedValueDefined: this.isComputedValueDefined,
       formResetSignal: this.formService.formReset,
     });
-  }
-
-  private applyHiddenState() {
-    const handleVisibility = this.handleVisibility();
-    const keepFormValue = this.keepFormValue();
-
-    if (handleVisibility) {
-      this.host.clear();
-    }
-
-    this.setValueByStrategy();
-
-    if (keepFormValue) {
-      return;
-    }
-
-    this.saveLastValue();
-    this.removeControl();
-  }
-
-  private applyVisibleState() {
-    const handleVisibility = this.handleVisibility();
-
-    this.setControl();
-
-    // untracked because changes to that signal are already handled elsewhere
-    const component = untracked(() => this.base.component());
-
-    if (handleVisibility && component) {
-      this.host.mount(component);
-    }
   }
 
   private setValueByStrategy() {
@@ -228,23 +200,6 @@ export class NgxFbControlDirective implements OnDestroy {
     }
   }
 
-  private setControl() {
-    const name = this.controlName();
-    const instance = this.controlInstance();
-    if (this.parentFormGroup?.get(name) === instance) {
-      return;
-    }
-    this.parentFormGroup?.setControl(name, instance);
-  }
-
-  private removeControl() {
-    const name = this.controlName();
-    if (!this.parentFormGroup?.get(name)) {
-      return;
-    }
-    this.parentFormGroup.removeControl(name);
-  }
-
   private saveLastValue() {
     if (this.valueStrategy() !== 'last') {
       return;
@@ -263,6 +218,6 @@ export class NgxFbControlDirective implements OnDestroy {
     if (this.keepFormValue()) {
       return;
     }
-    this.removeControl();
+    this.lifecycle.removeControl();
   }
 }

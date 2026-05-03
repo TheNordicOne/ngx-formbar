@@ -5,7 +5,6 @@ import {
   input,
   OnDestroy,
   Signal,
-  untracked,
 } from '@angular/core';
 import {
   FormConfigEntry,
@@ -31,7 +30,7 @@ import { withFormParent } from '../composables/form-parent';
 import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
-import { hiddenEffects } from '../composables/hidden.state';
+import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 
@@ -151,46 +150,17 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     return this.parent.formGroup;
   }
 
-  constructor() {
-    hiddenEffects({
-      component: this.base.component,
-      isHidden: this.isHidden,
-      parentFormGroup: () => this.parentFormGroup,
-      host: this.host,
-      onHidden: this.applyHiddenState.bind(this),
-      onVisible: this.applyVisibleState.bind(this),
-    });
-  }
-
-  private applyHiddenState() {
-    const handleVisibility = this.handleVisibility();
-    const keepFormValue = this.keepFormValue();
-
-    if (handleVisibility) {
-      this.host.clear();
-    }
-
-    this.setValueByStrategy();
-
-    if (keepFormValue) {
-      return;
-    }
-
-    this.removeGroup();
-  }
-
-  private applyVisibleState() {
-    const handleVisibility = this.handleVisibility();
-
-    this.setGroup();
-
-    // untracked because changes to that signal are already handled elsewhere
-    const component = untracked(() => this.base.component());
-
-    if (handleVisibility && component) {
-      this.host.mount(component);
-    }
-  }
+  private readonly lifecycle = withHiddenLifecycle({
+    component: this.base.component,
+    isHidden: this.isHidden,
+    host: this.host,
+    parentFormGroup: () => this.parentFormGroup,
+    controlName: this.controlName,
+    instance: this.formGroupInstance,
+    handleVisibility: this.handleVisibility,
+    keepFormValue: this.keepFormValue,
+    applyValueStrategy: this.setValueByStrategy.bind(this),
+  });
 
   private setValueByStrategy() {
     const valueStrategy = this.valueStrategy();
@@ -223,28 +193,10 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     }
   }
 
-  private setGroup() {
-    const name = this.controlName();
-    const instance = this.formGroupInstance();
-    if (this.parentFormGroup?.get(name) === instance) {
-      return;
-    }
-    this.parentFormGroup?.setControl(name, instance);
-  }
-
-  private removeGroup() {
-    const name = this.controlName();
-    if (!this.parentFormGroup?.get(name)) {
-      return;
-    }
-    this.parentFormGroup.removeControl(name);
-  }
-
   ngOnDestroy() {
-    const keepFormValue = this.keepFormValue();
-    if (keepFormValue) {
+    if (this.keepFormValue()) {
       return;
     }
-    this.removeGroup();
+    this.lifecycle.removeControl();
   }
 }
