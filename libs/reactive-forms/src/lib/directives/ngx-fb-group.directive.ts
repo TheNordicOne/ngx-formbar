@@ -8,19 +8,17 @@ import {
   untracked,
 } from '@angular/core';
 import {
+  FormConfigEntry,
   HideStrategy,
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
   ValueStrategy,
+  withBase,
+  withComponentHost,
+  withInheritedValue,
 } from '@ngx-formbar/core';
-import {
-  FormConfigEntry,
-  ReactiveFormbarGroup,
-} from '../types/control-component.type';
-import { withBase } from '../composables/base';
-import { withComponentHost } from '../composables/component-host';
-import { withInheritedValue } from '../composables/inherited-value';
+import { ReactiveFormbarGroup } from '../types/control-component.type';
 import { withFormParent } from '../composables/form-parent';
 import { toSignalMap } from '../setup/signal-map';
 import { FormGroup } from '@angular/forms';

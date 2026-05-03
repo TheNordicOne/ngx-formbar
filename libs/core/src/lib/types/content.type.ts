@@ -119,3 +119,10 @@ export type HideStrategy = 'keep' | 'remove';
  * - `reset`: clears the value.
  */
 export type ValueStrategy = 'last' | 'default' | 'reset';
+
+/**
+ * Pairs a content node with the name it is bound under in its parent group.
+ * Consumed by directives and outlets that render a single named entry from a
+ * configuration tree.
+ */
+export type FormConfigEntry<T> = { name: string; config: T };

@@ -81,14 +81,59 @@ const testId = resolveTestId(
 
 ### resolveHiddenAttribute
 
-Returns `true` or `null` for binding to the HTML `hidden` attribute. Respects `StateHandling`: when set to `'manual'`, always returns `null`.
+Returns `true` or `null` for binding to the HTML `hidden` attribute. Respects `StateHandling`: when `handleVisibility` resolves to `false` (the consumer manages visibility itself), always returns `null`.
 
 ```typescript
 const hiddenAttr = resolveHiddenAttribute({
   hiddenSignal: hidden,
-  hiddenHandlingSignal: stateHandling,
+  handleVisibility,    // Signal<boolean>: true when the library handles visibility
 });
 // Use in template: [attr.hidden]="hiddenAttr()"
+```
+
+### withBase
+
+Splits a directive's `FormConfigEntry` input into its constituent signals and resolves the matching component registration. Returns the inner config, the bound name, the registration entry (or `null`), and the loaded component class. Must run in an injection context because it reads `NGX_FW_COMPONENT_RESOLVER`.
+
+```typescript
+const { controlConfig, controlName, registrationEntry, component } =
+  withBase(this.config); // Signal<FormConfigEntry<T>>
+```
+
+### withComponentHost
+
+Manages a host for a dynamically created component. Returns `{ mount, clear }`; the component is destroyed automatically when the directive is torn down. Inputs declared on the mounted component but absent from `signalMap` fall back to values on `controlConfig`.
+
+```typescript
+const host = withComponentHost({
+  signalMap,        // Map<string, Signal<unknown>>
+  controlConfig,    // Signal<object>
+  additionalProviders, // optional Provider[] exposed via a child injector
+});
+
+host.mount(SomeComponent);
+host.clear();
+```
+
+### withInheritedValue
+
+Reads a field from the directive's own config and falls back to a parent group's signal for the same field when the own value is `undefined`. Useful for inheritable settings like `hideStrategy` or `valueStrategy`.
+
+```typescript
+const hideStrategy = withInheritedValue(
+  controlConfig,                     // Signal<T>
+  'hideStrategy',                    // K extends keyof T
+  parentGroup?.hideStrategy,         // Signal<T[K]> | undefined
+);
+```
+
+### withLoadedComponent
+
+Resolves a `ComponentRegistrationEntry` to its component class as a signal. Static registrations resolve synchronously; lazy registrations resolve when the dynamic import settles. Emits `null` until a class is available or when the entry is `null`.
+
+```typescript
+const component = withLoadedComponent(registrationEntry);
+// component(): Type<unknown> | null
 ```
 
 ## Services

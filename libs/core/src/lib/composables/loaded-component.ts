@@ -1,7 +1,7 @@
 import { Signal } from '@angular/core';
-import { ComponentRegistrationEntry } from '@ngx-formbar/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { from, of, switchMap } from 'rxjs';
+import { ComponentRegistrationEntry } from '../types/registration.type';
 
 export function withLoadedComponent(
   registrationEntry: Signal<ComponentRegistrationEntry | null>,

@@ -1,6 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
-import { NGX_FW_COMPONENT_RESOLVER, NgxFbBaseContent } from '@ngx-formbar/core';
-import { FormConfigEntry } from '../types/control-component.type';
+import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
+import { FormConfigEntry, NgxFbBaseContent } from '../types/content.type';
 import { withLoadedComponent } from './loaded-component';
 
 /**

@@ -6,14 +6,14 @@ New package containing all reactive forms functionality previously bundled in `@
 
 ### Added
 
-- **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `FormbarBlock<T>`, `FormConfigEntry<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock`) become additional signal inputs the consumer declares.
+- **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `FormbarBlock<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock`) become additional signal inputs the consumer declares.
 - **Components:** `NgxfbFormComponent` (root, takes `formConfig`) and `NgxfbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children).
 - **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxfbBlockDirective`.
 - **Provider setup:** `provideFormbar`, `defineFormbarConfig`.
 - **Services:** `FormService`, `ValidatorRegistrationService`.
 - **Tokens:** `NGXFB_CONTROL_ENTRIES`, `NGX_FW_VALIDATOR_REGISTRATIONS`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_FW_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_DEFAULT_VALIDATOR_REGISTRATIONS`, `NGX_FW_DEFAULT_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_VALIDATOR_RESOLVER`.
 - **Types:** `FormbarConfig`, `ValidatorConfig`, `AsyncValidatorConfig`, `RegistrationRecord`, `ValidatorKey`, `ValidatorResolver`.
-- **Composables:** `withBase`, `withComponentHost`, `withFormParent`, `withInheritedValue`, `withLoadedComponent`, `withControlState`, `withComputedValue`, `setComputedValueEffect`, `withDisabledState`, `withDisabledLifecycle`, `disabledEffect`, `withHiddenState`, `withHiddenAttribute`, `hiddenEffects`, `withReadonlyState`, `withValidators`, `withAsyncValidators`, `withUpdateStrategy`, `withDynamicLabel`, `withDynamicTitle`, `withTestId`.
+- **Composables:** `withFormParent`, `withControlState`, `withComputedValue`, `setComputedValueEffect`, `withDisabledState`, `withDisabledLifecycle`, `disabledEffect`, `withHiddenState`, `withHiddenAttribute`, `hiddenEffects`, `withReadonlyState`, `withValidators`, `withAsyncValidators`, `withUpdateStrategy`, `withDynamicLabel`, `withDynamicTitle`, `withTestId`.
 - **Helpers:** `controlContainerViewProviders`.
 - **Form-level lifecycle cache.** Values from destroyed controls are stored against their dotted form path and restored when the control is recreated, so `valueStrategy: 'last'` survives both hide/show cycles and `hideStrategy: 'remove'` cycles. The cache is cleared on form reset.
 - **Schematics:** `ng-add` schematic for automated project setup.

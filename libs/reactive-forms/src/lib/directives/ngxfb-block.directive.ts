@@ -1,13 +1,13 @@
 import { afterRenderEffect, Directive, input } from '@angular/core';
-import { NgxFbBlock } from '@ngx-formbar/core';
 import {
-  FormbarBlock,
   FormConfigEntry,
-} from '../types/control-component.type';
+  NgxFbBlock,
+  withBase,
+  withComponentHost,
+} from '@ngx-formbar/core';
+import { FormbarBlock } from '../types/control-component.type';
 import { withHiddenState } from '../composables/hidden.state';
 import { withTestId } from '../composables/testId';
-import { withBase } from '../composables/base';
-import { withComponentHost } from '../composables/component-host';
 import { toSignalMap } from '../setup/signal-map';
 
 @Directive({

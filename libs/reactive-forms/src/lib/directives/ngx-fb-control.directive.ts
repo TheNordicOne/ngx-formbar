@@ -6,11 +6,15 @@ import {
   OnDestroy,
   untracked,
 } from '@angular/core';
-import { NgxFbControl, NgxFbFormGroup } from '@ngx-formbar/core';
 import {
   FormConfigEntry,
-  ReactiveFormbarControl,
-} from '../types/control-component.type';
+  NgxFbControl,
+  NgxFbFormGroup,
+  withBase,
+  withComponentHost,
+  withInheritedValue,
+} from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '../types/control-component.type';
 import { FormControl } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { withDynamicLabel } from '../composables/dynamic-label';
@@ -26,9 +30,6 @@ import {
 } from '../composables/computed-value';
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
-import { withBase } from '../composables/base';
-import { withComponentHost } from '../composables/component-host';
-import { withInheritedValue } from '../composables/inherited-value';
 import { withFormParent } from '../composables/form-parent';
 import { toSignalMap } from '../setup/signal-map';
 import { FormService } from '../services/form.service';

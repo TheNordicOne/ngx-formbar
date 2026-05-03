@@ -8,6 +8,7 @@ import {
   untracked,
 } from '@angular/core';
 import {
+  ComponentHost,
   NgxFbBaseContent,
   NgxFbFormGroup,
   resolveHiddenAttribute,
@@ -16,7 +17,6 @@ import {
 import { FormService } from '../services/form.service';
 import { FormGroup } from '@angular/forms';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
-import { ComponentHost } from './component-host';
 
 export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   const formService = inject(FormService);

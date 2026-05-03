@@ -8,7 +8,7 @@ import {
   Type,
   ViewContainerRef,
 } from '@angular/core';
-import { createBindings } from '../setup/bindings';
+import { createBindings } from '../helper/bindings';
 
 export interface ComponentHostOptions {
   signalMap: Map<string, Signal<unknown>>;

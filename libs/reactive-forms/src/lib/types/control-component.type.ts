@@ -106,5 +106,3 @@ export type FormbarBlock<T extends NgxFbBlock = NgxFbBlock> = ToSignalInputs<
   readonly isHidden?: SignalInput<boolean>;
   readonly testId?: SignalInput<string>;
 };
-
-export type FormConfigEntry<T> = { name: string; config: T };
