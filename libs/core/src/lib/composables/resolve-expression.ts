@@ -10,20 +10,21 @@ function isExpressionFn<T>(
 }
 
 /**
- * Resolves an expression option into a computed signal value
+ * Resolves an expression option into a computed signal value.
  *
- * Handles three expression types:
- * - **string**: Parsed to AST and evaluated against the form context
- * - **function**: Called with the form context as argument
- * - **static value / undefined**: Returned as-is
+ * String expressions are parsed and evaluated against the form context.
+ * Functions are called with the form context. Static values pass through.
+ * The parsed AST is cached so it is only recomputed when the option changes.
  *
- * Internally caches the parsed AST in a separate computed signal
- * so it is only recalculated when the option itself changes.
- *
- * @param option Signal containing the expression option (string, function, static value, or undefined)
- * @param formContext Signal providing the current form context for expression evaluation
- * @param expressionService Service used to parse and evaluate string expressions
- * @returns Computed signal that resolves to the evaluated value or undefined
+ * @param option Signal carrying the configured value. May be a string
+ *   expression, a predicate function, a literal value, or `undefined`.
+ * @param formContext Signal exposing the current form value used as the
+ *   evaluation context for string and function expressions.
+ * @param expressionService Service used to parse and evaluate string
+ *   expressions through its cached AST.
+ * @returns Computed signal that re-evaluates whenever `option` or
+ *   `formContext` changes. Resolves to the evaluated value, or `undefined`
+ *   when the option is unset or the expression yields no result.
  */
 export function resolveExpression<T>(
   option: Signal<Expression<T> | T | undefined>,
@@ -49,8 +50,7 @@ export function resolveExpression<T>(
       return value(formContext());
     }
 
-    // When it's not an expression passed as a string, return the value as is
-    // e.g.: boolean, number
+    // Static values (boolean, number, etc.) pass through unchanged.
     if (typeof value !== 'string') {
       return value;
     }

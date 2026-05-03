@@ -8,15 +8,14 @@ import {
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
- * Creates a computed signal that extracts the ID for testing purposes
+ * Derives the test identifier for a control or group, scoped under the parent
+ * group's test id when present. The `testIdBuilder` from the global config
+ * controls how parent and child segments are joined.
  *
- * This utility function derives a test identifier from a form control's content,
- * which can be used for targeting elements in automated tests.
- *
- * @template T - Type extending NgxFbBaseContent
- * @param content - Signal containing the control or group content configuration
- * @param name - Signal containing the name of the control
- * @returns Computed signal that resolves to the element's ID for testing
+ * @template T Type of the content node, extending `NgxFbBaseContent`.
+ * @param content Signal of the control or group content config.
+ * @param name Signal of the entry name used as the leaf segment.
+ * @returns A signal of the resolved test id string.
  */
 export function withTestId(
   content: Signal<NgxFbBaseContent>,

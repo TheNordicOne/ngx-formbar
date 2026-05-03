@@ -1,4 +1,4 @@
-Sometimes you need additional information or functionality within a form. This could be the case for example if you need to add an information block, images or anything that does not contribute to the form's value.
+Sometimes you need additional information or functionality within a form. For example, you might want to add an information block, images, or anything else that does not contribute to the form's value.
 
 Blocks are non-control elements: they have no `FormControl`, are never disabled or readonly, and contribute nothing to the form's value.
 
@@ -35,7 +35,7 @@ export interface InfoBlock extends NgxFbBlock {
 
 Then implement the component.
 
-The component implements the `FormbarBlock<T>` contract. The contract type accepts your block interface as its type parameter and exposes every custom property on it as an additional signal input. You declare the inputs yourself using `input()` / `input.required()`, and Angular wires the configuration values into them at runtime.
+The component implements the `FormbarBlock<T>` contract. The contract type accepts your block interface as its type parameter and exposes every custom property on it as an additional signal input. You declare the inputs yourself using `input()` or `input.required()`. Angular wires the configuration values into them at runtime.
 
 {% raw %}
 ```typescript group="info-block" name="info-block.component.ts" icon="angular"

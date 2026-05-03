@@ -4,13 +4,19 @@ import { ExpressionService } from '../services/expression.service';
 import { resolveExpression } from './resolve-expression';
 
 /**
- * Resolves the hidden state
+ * Resolves the hidden state for an element.
  *
- * The hidden state does not inherit from its parent
- * @param option Signal containing the hidden expression option
- * @param formContext Signal providing the current form context for expression evaluation
- * @param parentGroupIsHidden Signal providing the visibility state of the parent form group
- * @returns Computed signal that resolves to a boolean hidden state
+ * Hidden when the parent group is hidden or when the expression evaluates to true.
+ * An undefined option resolves to false rather than inheriting the parent state.
+ *
+ * @param option Signal carrying the configured `hidden` value (boolean,
+ *   string expression, predicate function, or `undefined`).
+ * @param formContext Signal exposing the current form value used to evaluate
+ *   string and function expressions.
+ * @param parentGroupIsHidden Signal reporting the resolved hidden state of the
+ *   enclosing group. A hidden parent forces the child to hidden regardless of
+ *   the local expression.
+ * @returns Computed signal that resolves to the effective hidden state.
  */
 export function resolveHiddenState(
   option: Signal<Expression<boolean> | boolean | undefined>,

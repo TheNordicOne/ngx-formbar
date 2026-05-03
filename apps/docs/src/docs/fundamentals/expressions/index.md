@@ -53,7 +53,7 @@ The evaluator supports a range of node types:
 
 ## Function-based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more powerful and type-safe way to define dynamic behavior.
+In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more flexible and type-safe way to define dynamic behavior.
 
 ### Signature
 

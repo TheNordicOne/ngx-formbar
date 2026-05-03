@@ -9,20 +9,18 @@ import { FormService } from '../services/form.service';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
- * Computes a reactive readonly state based on control content
+ * Computes the reactive readonly state for a control. Inheritance from the
+ * parent group means a child is automatically readonly when its enclosing
+ * group is, unless the child explicitly overrides the value.
  *
- * The readonly state is determined using the following priority:
- * 1. If content.readonly is a boolean, that value is used directly
- * 2. If content.readonly is an expression string, it's parsed to AST and evaluated
- *    against the current form values
- * 3. If no readonly property is defined, the control inherits the readonly state
- *    from its parent group
+ * Resolution order:
+ * 1. `content.readonly` boolean is used as-is.
+ * 2. Expression string is evaluated against current form values.
+ * 3. Otherwise, inherits from the parent group.
  *
- * This hierarchical inheritance ensures that child controls are automatically
- * set to readonly when their parent group is readonly, unless explicitly overridden.
- *
- * @param content Signal containing control configuration with potential readonly property
- * @returns Computed signal that resolves to boolean readonly state
+ * @param content Signal of the control's content config. The `readonly`
+ *   field may be a boolean, expression string, or expression function.
+ * @returns A signal of the resolved boolean readonly state.
  */
 export function withReadonlyState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);

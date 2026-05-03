@@ -1,4 +1,4 @@
-Creating and registering a new control, group or block and be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
+Creating and registering a new control, group or block can be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
 
 ## Options
 
@@ -12,7 +12,7 @@ All three schematics (`control`, `group`, `block`) support the same options:
 | --path                    | string  | No       | current working directory     | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
 | --interfaceSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                                                                                                                                                                                                                                                               |
 | --componentSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                                                                                                                                                                                                                                                         |
-| --viewProviderHelperPath  | string  | No       | -                             | Path to the the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fallback to using the verbose syntax.                                                                                                                         |
+| --viewProviderHelperPath  | string  | No       | -                             | Path to the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fall back to using the verbose syntax.                                                                                                                            |
 | --schematicsConfig        | string  | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
 | --skipRegistration        | boolean | No       | `false`                       | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                                                                                                                                                                                          |
 
@@ -99,7 +99,7 @@ For implementation details and advanced usage, see the [Blocks](/reactive-forms/
 
 ## Setting Options
 
-There are two ways to set custom default options. This helps repeating the same parameters on every CLI command.
+There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
 
 ### In formbar.config.json
 

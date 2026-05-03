@@ -13,6 +13,6 @@ The two most important features are the JSON compatibility and the fact that you
 
 ## Who is this for?
 
-This is for everyone that needs a whole lot of flexibility and control when working with dynamic forms. This is by no means supposed to be a replacement for other solutions and it likely is not a good fit for every projects (or developer).
+This is for everyone that needs a whole lot of flexibility and control when working with dynamic forms. This is by no means supposed to be a replacement for other solutions and it likely is not a good fit for every project (or developer).
 
 Setting things up is (probably) about as complex as with other solutions, but of course it requires a little more work to create the components that can actually be used with **ngx-formbar**.

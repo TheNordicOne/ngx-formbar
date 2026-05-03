@@ -10,7 +10,7 @@ Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to y
 
 ### Control Container View Providers
 
-`ControlContainer` is required for all controls and groups that will be used within _ngx-formbar_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
+`ControlContainer` is required for all controls and groups used within _ngx-formbar_. Injecting the control container lets the components use reactive forms functionality without passing the form group through inputs or wrapping the template in extra tags. For a more detailed explanation, see this YouTube video: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI).
 
 ```typescript group="view-provider" name="control-container.view-provider.ts"
 export const controlContainerViewProviders = [
@@ -35,7 +35,7 @@ export const controlContainerViewProviders = [
 
 For official documentation of Union Types checkout the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
 
-Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
+Setting up a union type for your own controls is highly recommended. It gives you much better type safety when writing your forms in TypeScript.
 
 ```typescript name="app-controls.type.ts"
 export type MyAppControls = TestTextControl | TestGroup | InfoBlock;

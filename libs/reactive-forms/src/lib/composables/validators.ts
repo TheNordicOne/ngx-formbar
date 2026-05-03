@@ -3,13 +3,14 @@ import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 import { NgxFbAbstractControl } from '@ngx-formbar/core';
 
 /**
- * Computes a reactive array of validators based on control content
+ * Resolves the control's `validators` keys to a signal of `ValidatorFn[]`
+ * using the validator registration service. Unknown keys contribute no
+ * functions; missing or empty `validators` resolves to an empty array.
  *
- * Extracts validator keys from content and maps them to actual validator functions
- * by looking them up in the validator registration service.
- *
- * @param content Signal containing control configuration with validator keys
- * @returns Computed signal that resolves to an array of validator functions
+ * @param content Signal of the control's content config. Reads the
+ *   `validators` array of registration keys.
+ * @returns A signal of the flattened `ValidatorFn[]` to attach to the
+ *   `FormControl`/`FormGroup`.
  */
 export function withValidators(content: Signal<NgxFbAbstractControl>) {
   const validatorRegistrations = inject(NGX_VALIDATOR_RESOLVER).registrations;
@@ -23,13 +24,15 @@ export function withValidators(content: Signal<NgxFbAbstractControl>) {
 }
 
 /**
- * Computes a reactive array of async validators based on control content
+ * Resolves the control's `asyncValidators` keys to a signal of
+ * `AsyncValidatorFn[]` using the validator registration service. Unknown
+ * keys contribute no functions; missing or empty `asyncValidators` resolves
+ * to an empty array.
  *
- * Extracts async validator keys from content and maps them to actual async validator
- * functions by looking them up in the validator registration service.
- *
- * @param content Signal containing control configuration with async validator keys
- * @returns Computed signal that resolves to an array of async validator functions
+ * @param content Signal of the control's content config. Reads the
+ *   `asyncValidators` array of registration keys.
+ * @returns A signal of the flattened `AsyncValidatorFn[]` to attach to the
+ *   `FormControl`/`FormGroup`.
  */
 export function withAsyncValidators(content: Signal<NgxFbAbstractControl>) {
   const asyncValidatorRegistrations = inject(

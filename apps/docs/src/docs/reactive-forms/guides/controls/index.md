@@ -129,7 +129,7 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 
 {% include "../../../shared/hidden-intro.md" %}
 
-The `isHidden` input on the contract is the resolved hidden state for this control. The resolution rules above already account for parent inheritance, so reading `isHidden()` in your template is enough; you do not need to walk up the configuration yourself.
+The `isHidden` input on the contract is the resolved hidden state for this control. The resolution rules above already account for parent inheritance. Reading `isHidden()` in your template is enough. You do not need to walk up the configuration yourself.
 
 Declare the input and use it directly in your template:
 
@@ -163,7 +163,7 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 {% endraw %}
 
-When you want to opt out of the library's automatic visibility behavior, for example to keep the host mounted but swap in a placeholder, set `keepValueWhenHidden: 'manual'` in the registration. The library will then still resolve and supply the `isHidden` signal, but it will neither destroy the component nor apply the value strategy. The component stays mounted at all times and your template decides what to render.
+To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but swap in a placeholder), set `keepValueWhenHidden: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
 
 ```typescript name="app.config.ts"
 provideFormbar({
@@ -213,7 +213,7 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 {% endraw %}
 
-By default the library calls `enable()`/`disable()` on the underlying form control whenever the resolved disabled state changes. If you want to manage disabled state yourself, for example to apply it to a custom widget rather than the form control, set `disabledHandling: 'manual'` in the registration. The library will then only forward the `isDisabled` signal and leave the form control alone.
+By default, the library calls `enable()`/`disable()` on the underlying form control whenever the resolved disabled state changes. To manage disabled state yourself (for example, to apply it to a custom widget instead of the form control), set `disabledHandling: 'manual'` in the registration. The library then only forwards the `isDisabled` signal and leaves the form control alone.
 
 ```typescript name="app.config.ts"
 provideFormbar({
@@ -261,7 +261,7 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 ## Computed Values
 
-In some cases it is desirable to (pre-)fill certain inputs with a value based on other controls. This can be done by utilizing the `computedValue` property on the control configuration. The library will automatically set the value based on the provided expression. If the control can be edited by the user, it will only overwrite the value when a dependency changes. Usually you will want to make the control readonly though.
+Sometimes you want to pre-fill an input with a value derived from other controls. Use the `computedValue` property on the control configuration to do this. The library sets the value based on the provided expression. If the control is editable, the value is only overwritten when a dependency changes. Usually you will want to make the control readonly.
 
 The result is reflected through Angular's reactive form value, so your component does not need a special input for it. `[formControlName]` already shows the up-to-date value.
 
@@ -275,7 +275,7 @@ See the [Expressions guide](/fundamentals/expressions) for details on how expres
 
 ## Dynamic Label
 
-A control's label can be made responsive to other form data by using the `dynamicLabel` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`), and the library evaluates it and forwards the result through the `dynamicLabel` signal input.
+To make a control's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`). The library evaluates it and forwards the result through the `dynamicLabel` signal input.
 
 Declare both `labelText` (the static value from the configuration) and `dynamicLabel`, then derive a `displayLabel` that prefers the dynamic value when it resolves to something meaningful:
 

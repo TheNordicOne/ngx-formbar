@@ -8,4 +8,4 @@ The following strategies are available:
 |---------------------|-----------------------------------------------|
 | `default` (default) | Sets the specified default value              |
 | `last`              | Preserves the last input value                |
-| `reset`             | Resets the value using the reactive forms api |
+| `reset`             | Resets the value using the reactive forms API |

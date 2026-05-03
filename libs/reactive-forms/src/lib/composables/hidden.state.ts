@@ -42,15 +42,17 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
 }
 
 /**
- * Creates an effect that manages control registration and value strategy for the `keep` hide strategy.
+ * Computes the value of the host `hidden` attribute by delegating to
+ * `resolveHiddenAttribute`. Returns `true` (attribute present) when the
+ * library handles visibility and the element is hidden, otherwise `null`
+ * (attribute absent).
  *
- * For `keep` strategy:
- * 1. Attaches the control to the form when not yet registered
- * 2. Applies the value strategy when the control becomes hidden
- *
- * For `remove` strategy, this effect is a no-op. The directive's hidden
- * lifecycle owns component teardown and recreation, and registration plus
- * value restoration is handled by `ngOnDestroy` and `controlInstance`.
+ * @param options.hiddenSignal Signal of the resolved hidden state.
+ * @param options.handleVisibility Signal indicating whether the library
+ *   manages visibility. When `false`, the attribute is always omitted so the
+ *   component controls its own DOM presence.
+ * @returns A signal that produces `true` or `null`, suitable for binding to
+ *   the `hidden` host attribute.
  */
 export function withHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;
@@ -60,16 +62,23 @@ export function withHiddenAttribute(options: {
 }
 
 /**
- * Drives the directive's mount lifecycle from the resolved component and the
- * hidden state signal:
+ * Drives the mount lifecycle from the resolved component and the hidden
+ * state. On initial setup, mounts the component into the host once the
+ * parent form group is available and the directive is not hidden. Calls
+ * `onHidden` or `onVisible` on every subsequent change to `isHidden` so each
+ * directive applies its own form-attachment policy. The composable owns the
+ * orchestration; the per-directive logic (`setControl`/`removeControl`,
+ * value strategy, etc.) lives behind the hooks.
  *
- * - On the initial render, mounts the component into the host once the
- *   parent form group is available and the directive is not hidden.
- * - On every subsequent change to `isHidden`, invokes the matching hook so
- *   each directive applies its own form-attachment policy.
- *
- * The composable owns the orchestration; the per-directive logic
- * (setControl/removeControl, value-strategy, etc.) lives behind the hooks.
+ * @param options.component Signal of the resolved component class to mount,
+ *   or `null` while no component has been resolved yet.
+ * @param options.isHidden Signal of the directive's hidden state.
+ * @param options.parentFormGroup Getter for the enclosing `FormGroup`. The
+ *   initial mount is deferred until this returns a non-null group.
+ * @param options.host `ComponentHost` used to mount and clear the dynamic
+ *   component.
+ * @param options.onHidden Callback invoked when `isHidden` becomes `true`.
+ * @param options.onVisible Callback invoked when `isHidden` becomes `false`.
  */
 export function hiddenEffects(options: {
   component: Signal<Type<unknown> | null>;

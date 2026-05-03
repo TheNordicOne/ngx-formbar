@@ -1,69 +1,57 @@
 import { Type } from '@angular/core';
 
-/**
- * Function that lazily loads a component.
- * Works analog to lazily loading a component for a route.
- */
+/** Loads a component on demand, like a lazy route. */
 export type LoadComponentFn = () => Promise<Type<unknown>>;
 
-/**
- * Registration entry for a statically imported component.
- */
+/** Registration for an eagerly imported component. */
 export interface StaticRegistration {
   component: Type<unknown>;
 }
 
-/**
- * Registration entry for a lazily loaded component.
- */
+/** Registration for a lazily loaded component. */
 export interface LazyRegistration {
   loadComponent: LoadComponentFn;
 }
 
-/**
- * Optional configuration for a component registration entry.
- */
+/** Optional behavior flags for a component registration. */
 export interface ComponentRegistrationOptions {
   /**
-   * Controls how visibility is managed for this component type.
+   * How visibility is managed for this component type.
    *
-   * - `'auto'` (default): The library destroys the consumer component when the resolved hidden state
-   *   becomes true and recreates it when the state becomes false again. The configured
-   *   `valueStrategy` is applied around the cycle, and the `hideStrategy` decides whether the
-   *   form control stays attached or is removed and reattached.
-   * - `'manual'`: The library does not destroy or recreate the component. It still resolves and
-   *   supplies the `isHidden` signal, but the component stays mounted and is responsible for
-   *   its own hiding, value strategy, and form model management.
+   * - `auto` (default): the library destroys the component when the resolved
+   *   hidden state becomes true and recreates it when it becomes false. The
+   *   configured `valueStrategy` is applied around the cycle, and `hideStrategy`
+   *   decides whether the form control stays attached.
+   * - `manual`: the library leaves the component mounted and only supplies the
+   *   `isHidden` signal. The component handles its own hiding, value strategy,
+   *   and form model attachment.
    */
   keepValueWhenHidden?: StateHandling;
 
   /**
-   * Controls how the disabled state is applied to the underlying form control.
+   * How the disabled state is applied to the underlying form control.
    *
-   * - `'auto'` (default): The library calls `enable()`/`disable()` on the form control
-   *   in response to changes in the resolved `disabled` signal.
-   * - `'manual'`: The library does not touch the form control's disabled state. The component
-   *   receives the `isDisabled` signal and is responsible for applying it itself.
+   * - `auto` (default): the library calls `enable()` / `disable()` on the form
+   *   control when the resolved `disabled` signal changes.
+   * - `manual`: the library leaves the form control alone. The component
+   *   receives the `isDisabled` signal and applies it itself.
    */
   disabledHandling?: StateHandling;
 }
 
 /**
- * A component registration entry, either static or lazy,
- * optionally with additional configuration.
+ * A component registration entry, static or lazy, with optional behavior flags.
  *
- * - Static: `{ component: MyComponent }`. Component is eagerly imported
- * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }`. Loaded on demand
+ * - Static: `{ component: MyComponent }`.
+ * - Lazy: `{ loadComponent: () => import(...).then(m => m.MyComponent) }`.
  */
 export type ComponentRegistrationEntry =
   | (StaticRegistration & ComponentRegistrationOptions)
   | (LazyRegistration & ComponentRegistrationOptions);
 
 /**
- * Configuration for registering component types.
- *
- * Maps string type identifiers to component implementations for dynamic rendering.
- * Supports both static and lazy component registrations.
+ * Map from content `type` to component registration. Used when configuring
+ * the library at the application level.
  */
 export type ComponentRegistrationConfig = Record<
   string,
@@ -71,12 +59,9 @@ export type ComponentRegistrationConfig = Record<
 >;
 
 /**
- * Strategy for handling component states
+ * Who manages a component state (visibility, disabled, etc.).
  *
- * Determines how visibility, disabled, and other component states
- * are managed.
- *
- * - 'auto': Formbar automatically manages the state
- * - 'manual': The component/host manages the state itself
+ * - `auto`: the library manages it.
+ * - `manual`: the component manages it.
  */
 export type StateHandling = 'auto' | 'manual';

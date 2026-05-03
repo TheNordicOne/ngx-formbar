@@ -2,7 +2,7 @@ The form configuration defines the structure and behavior of your form. It is th
 
 ## Form
 
-The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbContent>` interface defines these properties.
+The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbItem>` interface defines these properties.
 
 | Name    | Type                          | Required | Description                                                                                             |
 |---------|-------------------------------|----------|---------------------------------------------------------------------------------------------------------|
@@ -10,14 +10,14 @@ The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbContent>` interface d
 
 ### Type Generic
 
-By default, you don't need to pass any type generic to `NgxFbForm`. But if you have set up a union type, you can pass that to get better type support.
+By default, you don't need to pass any type generic to `NgxFbForm`, but if you have set up a union type, you can pass that to get better type support.
 
 > **Note**
-> If you want to use Blocks you must either use a union type of your own controls or handle TypeScript errors by other mean.
+> If you want to use Blocks you must either use a union type of your own controls or handle TypeScript errors by other means.
 
 ## Content
 
-Following are configuration options that are supported out of the box. When setting up Controls or Groups you can add more options.
+The following configuration options are supported built in. When setting up Controls or Groups you can add more options.
 
 ### Base
 
@@ -58,13 +58,13 @@ The following configurations options are only applicable to the interface `NgxFb
 
 ### Group
 
-The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>`.
+The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem>`.
 
 | Name         | Type                 | Required | Description                                                                                                   |
 |--------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
 | title        | `string`             | No       | Specifies a title for the group                                                                               |
 | dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value.  |
-| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbContent` that configure the controls of the group                                |
+| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbItem` that configure the controls of the group                                   |
 
 
 ### Block
@@ -82,7 +82,7 @@ As you can see the configuration is just an object of controls and/or groups. Ev
 
 How to register validators depends on your integration package:
 
-- [Reactive Forms — Validation](/reactive-forms/guides/validation)
+- [Reactive Forms: Validation](/reactive-forms/guides/validation)
 
 > **Note**
 > This example assumes that additional control types have been registered

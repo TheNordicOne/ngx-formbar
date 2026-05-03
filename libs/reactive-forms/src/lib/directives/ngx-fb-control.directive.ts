@@ -135,9 +135,6 @@ export class NgxFbControlDirective implements OnDestroy {
     controlConfig: this.controlConfig,
   });
 
-  /**
-   * Access to the parent FormGroup containing this control
-   */
   get parentFormGroup() {
     return this.parent.formGroup;
   }

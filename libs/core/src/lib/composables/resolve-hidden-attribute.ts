@@ -1,16 +1,19 @@
 import { computed, Signal } from '@angular/core';
 
 /**
- * Resolves the hidden attribute value for DOM binding
+ * Resolves the value of the `hidden` DOM attribute.
  *
- * When the library handles visibility, returns `true` (attribute present)
- * or `null` (attribute absent) based on the hidden state.
- * When the component handles visibility itself, always returns `null`.
+ * Returns `true` when the library manages visibility and the element is hidden,
+ * `null` otherwise. When the component manages visibility itself, always returns `null`.
  *
- * @param options Configuration object
- * @param options.hiddenSignal Signal indicating whether the element should be hidden
- * @param options.handleVisibility Signal indicating whether the library manages visibility
- * @returns Computed signal resolving to `true` (hidden) or `null` (visible)
+ * @param options Inputs for the binding.
+ * @param options.hiddenSignal Signal that reports whether the element should be
+ *   hidden in the DOM.
+ * @param options.handleVisibility Signal indicating whether the library is
+ *   responsible for visibility. When `false` the attribute is never set so the
+ *   component can render its own hide behavior.
+ * @returns Computed signal whose value is suitable for binding to the native
+ *   `hidden` attribute: `true` to set it, `null` to remove it.
  */
 export function resolveHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;

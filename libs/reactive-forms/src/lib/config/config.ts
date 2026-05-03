@@ -2,8 +2,14 @@ import { RegistrationRecord } from '../types/validation.type';
 import { FormbarConfig } from '../types/provide.type';
 
 /**
- * Type helper to make it easier to use formbar.config.ts
- * accepts a direct {@link FormbarConfig} object
+ * Identity helper for typing a `formbar.config.ts` module. Returns the
+ * supplied {@link FormbarConfig} unchanged so the file can be imported by
+ * tooling (schematics, scripts) and by `provideFormbar` without losing the
+ * inferred validator and async-validator key types.
+ *
+ * @param config The {@link FormbarConfig} object to type-check.
+ * @returns The same `config` value, with its `S`/`A` registration types
+ *   preserved for downstream inference.
  */
 export function defineFormbarConfig<
   S extends RegistrationRecord,

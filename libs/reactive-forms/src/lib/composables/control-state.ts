@@ -8,14 +8,17 @@ import {
 import { filter, map, startWith, switchMap } from 'rxjs';
 
 /**
- * Exposes validation errors and dirty state of a (potentially recreated)
- * AbstractControl as separate signals, sharing a single underlying subscription.
+ * Exposes validation errors and dirty state of an AbstractControl as separate
+ * signals over one shared subscription. Re-subscribes when `controlInstance`
+ * emits a new control reference (e.g. validators or `updateOn` changed and
+ * the FormControl was rebuilt), so the signals always reflect the currently
+ * attached instance.
  *
- * Re-subscribes whenever `controlInstance` emits a new control reference
- * (e.g. validators or updateOn changed and the FormControl was rebuilt),
- * so the signals always reflect the currently attached instance.
- *
- * @param controlInstance Signal resolving to the AbstractControl to observe
+ * @param controlInstance Signal of the `AbstractControl` to observe. When the
+ *   signal emits a new reference, the inner subscription is swapped to the
+ *   new control via `switchMap`.
+ * @returns An object with `errors` (signal of `ValidationErrors | null`) and
+ *   `isDirty` (signal of `boolean`). Both share one underlying subscription.
  */
 export function withControlState(controlInstance: Signal<AbstractControl>) {
   const snapshot = (control: AbstractControl) => ({

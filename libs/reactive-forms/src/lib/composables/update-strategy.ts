@@ -9,20 +9,19 @@ import {
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
- * Creates a computed signal for the control's update strategy.
+ * Resolves the control's update strategy. The strategy controls when form
+ * values and validation run: `'change'` on every change event (Angular
+ * default), `'blur'` when the control loses focus, or `'submit'` only on
+ * form submission.
  *
- * Resolution priority:
- * 1. The control's own `updateOn` if defined
- * 2. The parent group's update strategy
- * 3. The application's default update strategy
+ * Resolution order:
+ * 1. The control's own `updateOn`.
+ * 2. The parent group's update strategy.
+ * 3. The application default.
  *
- * Update strategies control when form values and validation happen:
- * - `'change'`: every change event (Angular default)
- * - `'blur'`: when the control loses focus
- * - `'submit'`: only on form submission
- *
- * @param content Signal containing the NgxFbAbstractControl with optional `updateOn`
- * @returns Computed signal providing the resolved update strategy
+ * @param content Signal of the control's content config, read for the
+ *   optional `updateOn` field.
+ * @returns A signal of the resolved `UpdateStrategy`.
  */
 export function withUpdateStrategy(
   content: Signal<NgxFbAbstractControl>,

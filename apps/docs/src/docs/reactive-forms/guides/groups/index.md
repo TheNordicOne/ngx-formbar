@@ -1,6 +1,6 @@
 A group is used to group controls together. It results in an Angular `FormGroup` instance.
 
-Most of the time you will only need one or two different group types. Where they really are handy though, is if you need different behaviors. For example one that does not do anything special visually and one that is collapsible.
+Most of the time you only need one or two different group types. They become really handy when you need different behaviors. For example, one group that does nothing special visually and one that is collapsible.
 
 Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, groups are plain Angular components that implement the `ReactiveFormbarGroup<T>` contract. The library writes its state into your component through signal inputs, so you only declare the inputs you actually care about. There is no host directive, no injection, and no manual signal forwarding.
 
@@ -84,7 +84,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% endraw %}
 
-The `<ngxfb-control-outlet />` element marks the slot where the library projects the child controls registered for this group. You do not iterate the children yourself; the outlet picks them up automatically via injection. The optional `<ng-content />` lets consumers project additional template content alongside the children.
+The `<ngxfb-control-outlet />` element marks the slot where the library projects the child controls registered for this group. You do not iterate the children yourself. The outlet picks them up automatically via injection. The optional `<ng-content />` lets consumers project additional template content alongside the children.
 
 Finally, register the group in _app.config.ts_
 
@@ -126,7 +126,7 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 The `isHidden` input on the contract reflects the resolved hidden state for this group instance. Declare the input and use it in your template:
 
 > **Note**
-> `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `keepValueWhenHidden: 'auto'` (the default) the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `keepValueWhenHidden: 'manual'` you stay mounted and decide what to render based on `isHidden()` yourself.
+> `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `keepValueWhenHidden: 'auto'` (the default), the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `keepValueWhenHidden: 'manual'`, you stay mounted and decide what to render based on `isHidden()` yourself.
 
 {% raw %}
 
@@ -158,7 +158,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% endraw %}
 
-When you want to opt out of the library's automatic visibility behavior, for example to keep the host mounted but show a placeholder, set `keepValueWhenHidden: 'manual'` in the registration. The library will then still resolve and supply the `isHidden` signal, but it will neither destroy the component nor apply the value strategy. The component stays mounted at all times and your template decides what to render.
+To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but show a placeholder), set `keepValueWhenHidden: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
 
 ```typescript name="app.config.ts"
 provideFormbar({
@@ -209,7 +209,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% endraw %}
 
-By default the library calls `enable()`/`disable()` on the underlying `FormGroup` whenever the resolved disabled state changes. If you want to manage disabled state yourself, set `disabledHandling: 'manual'` in the registration. The library will then only forward the `isDisabled` signal and leave the `FormGroup` alone.
+By default, the library calls `enable()`/`disable()` on the underlying `FormGroup` whenever the resolved disabled state changes. To manage disabled state yourself, set `disabledHandling: 'manual'` in the registration. The library then only forwards the `isDisabled` signal and leaves the `FormGroup` alone.
 
 ```typescript name="app.config.ts"
 provideFormbar({
@@ -257,7 +257,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 ## Dynamic Title
 
-A group's title can be made responsive to other form data by using the `dynamicTitle` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`), and the library evaluates it and forwards the result through the `dynamicTitle` signal input.
+To make a group's title respond to other form data, use the `dynamicTitle` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`). The library evaluates it and forwards the result through the `dynamicTitle` signal input.
 
 Declare both `titleText` (the static value from the configuration) and `dynamicTitle`, then derive a `displayTitle` that prefers the dynamic value when it resolves to something meaningful:
 

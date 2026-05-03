@@ -24,7 +24,7 @@ import * as acorn from 'acorn';
 import type { FormContext } from '../types/expression.type';
 
 /**
- * Set of node types that are not supported in expressions for security or complexity reasons
+ * Node types blocked in expressions for security or complexity reasons.
  */
 const UNSUPPORTED_NODE_TYPES = new Set([
   'ThisExpression',
@@ -49,7 +49,7 @@ type SafeMethods = {
   array: string[];
 };
 /**
- * Mapping of safe methods that can be called on various types during evaluation
+ * Methods allowed to be called on each primitive type during evaluation.
  */
 const SAFE_METHODS: SafeMethods = {
   string: [
@@ -98,21 +98,23 @@ const SAFE_METHODS: SafeMethods = {
 type ObjectWithMethod = Record<string, unknown>;
 
 /**
- * Service for parsing and evaluating JavaScript expressions within a context object
+ * Parses and evaluates a restricted subset of JavaScript expressions
+ * against a form context object.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ExpressionService {
-  /**
-   * Cache for parsed ASTs to avoid re-parsing the same expression
-   */
   private readonly astCache = new Map<string, Program>();
 
   /**
-   * Parses an expression string into an abstract syntax tree (AST)
-   * @param expressionString - The expression to parse
-   * @returns The parsed AST or null
+   * Parses an expression string into an AST. Returns null for empty input.
+   * Results are cached per source string.
+   *
+   * @param expressionString Source text to parse. Empty or `undefined` input
+   *   short-circuits to `null` so callers do not need a separate guard.
+   * @returns The parsed acorn `Program`, or `null` when there is nothing to
+   *   parse. Throws when the input is not valid ECMAScript 2022.
    */
   parseExpressionToAst(expressionString?: string): Program | null {
     if (!expressionString) {
@@ -129,10 +131,16 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates an expression AST within the provided context
-   * @param ast - The parsed AST to evaluate
-   * @param context - The context containing variables and objects referenced in the expression
-   * @returns The result of evaluating the expression
+   * Evaluates a parsed AST against the given form context.
+   * Returns null when the AST or context is missing.
+   *
+   * @param ast Program produced by {@link ExpressionService.parseExpressionToAst}.
+   *   Must wrap a single `ExpressionStatement`; other top-level statements
+   *   throw.
+   * @param context Object whose own properties act as the variables visible
+   *   to identifier lookups inside the expression.
+   * @returns The evaluated value, or `null` when either argument is missing.
+   *   Throws on unsupported syntax or runtime type errors.
    */
   evaluateExpression(ast?: Program | null, context?: FormContext): unknown {
     if (!context || !ast) {
@@ -147,22 +155,14 @@ export class ExpressionService {
     return this.evaluateAstNode(node.expression, context);
   }
 
-  /**
-   * Evaluates a node in the AST
-   * @param node - The AST node to evaluate
-   * @param context - The context containing variables and objects
-   * @returns The result of evaluating the node
-   */
   private evaluateAstNode(
     node: Expression | PrivateIdentifier | Super | SpreadElement,
     context: FormContext,
   ): unknown {
-    // Check if the node type is unsupported first
     if (UNSUPPORTED_NODE_TYPES.has(node.type)) {
       throw new TypeError(`${node.type} is not supported in expressions`);
     }
 
-    // Handle supported node types
     switch (node.type) {
       case 'Identifier':
         return this.evaluateIdentifier(node, context);
@@ -199,21 +199,10 @@ export class ExpressionService {
     }
   }
 
-  /**
-   * Evaluates a literal value node
-   * @param node - The literal node to evaluate
-   * @returns The literal value
-   */
   private evaluateLiteral(node: Literal): unknown {
     return node.value;
   }
 
-  /**
-   * Evaluates a binary expression (e.g., a + b, x > y)
-   * @param node - The binary expression node
-   * @param context - The context containing variables and objects
-   * @returns The result of the binary operation
-   */
   private evaluateBinaryExpression(
     node: BinaryExpression,
     context: FormContext,
@@ -223,13 +212,6 @@ export class ExpressionService {
     return this.executeBinaryOperation(leftValue, node.operator, rightValue);
   }
 
-  /**
-   * Executes a binary operation with the given values and operator
-   * @param leftValue - The left operand
-   * @param operator - The binary operator
-   * @param rightValue - The right operand
-   * @returns The result of applying the operator to the operands
-   */
   private executeBinaryOperation(
     leftValue: unknown,
     operator: BinaryOperator,
@@ -402,10 +384,16 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates a member expression (e.g., obj.prop, arr[0]) with improved safety
-   * @param node - The member expression node
-   * @param context - The context containing variables and objects
-   * @returns The value of the member
+   * Evaluates a member expression like `obj.prop` or `arr[0]`,
+   * including optional chaining and primitive prototype access.
+   *
+   * @param node Member expression node from acorn. Both static (`a.b`) and
+   *   computed (`a[b]`) forms are accepted, with or without `?.`.
+   * @param context Form context forwarded when resolving the receiver and any
+   *   computed property key.
+   * @returns The looked-up property value. `undefined` when optional chaining
+   *   short-circuits; throws for null or undefined receivers without `?.` and
+   *   for invalid property accesses on numbers or booleans.
    */
   private evaluateMemberExpression(
     node: MemberExpression,
@@ -484,12 +472,6 @@ export class ExpressionService {
     );
   }
 
-  /**
-   * Gets a property from an object by key
-   * @param object - The object to retrieve the property from
-   * @param propertyKey - The property key (string or number)
-   * @returns The value of the property
-   */
   private getPropertyFromObject(
     object: Record<string, unknown> | null | undefined,
     propertyKey: string | number,
@@ -499,12 +481,6 @@ export class ExpressionService {
       : undefined;
   }
 
-  /**
-   * Evaluates an identifier node by looking it up in the context
-   * @param node - The identifier node
-   * @param context - The context containing variables and objects
-   * @returns The value of the identifier from the context
-   */
   private evaluateIdentifier(node: Identifier, context: FormContext): unknown {
     if (typeof context === 'object' && node.name in context) {
       return context[node.name];
@@ -512,12 +488,6 @@ export class ExpressionService {
     return undefined;
   }
 
-  /**
-   * Evaluates an array expression node
-   * @param node - The array expression node
-   * @param context - The context containing variables and objects
-   * @returns The evaluated array
-   */
   private evaluateArrayExpression(
     node: ArrayExpression,
     context: FormContext,
@@ -547,12 +517,6 @@ export class ExpressionService {
     return resultArray;
   }
 
-  /**
-   * Evaluates a unary expression (e.g., !x, -value, typeof obj)
-   * @param node - The unary expression node
-   * @param context - The context containing variables and objects
-   * @returns The result of the unary operation
-   */
   private evaluateUnaryExpression(
     node: UnaryExpression,
     context: FormContext,
@@ -600,12 +564,6 @@ export class ExpressionService {
     }
   }
 
-  /**
-   * Evaluates a logical expression (&&, ||, ??)
-   * @param node - The logical expression node
-   * @param context - The context containing variables and objects
-   * @returns The result of the logical operation
-   */
   private evaluateLogicalExpression(
     node: LogicalExpression,
     context: FormContext,
@@ -633,12 +591,6 @@ export class ExpressionService {
     }
   }
 
-  /**
-   * Evaluates a conditional (ternary) expression (condition ? trueValue : falseValue)
-   * @param node - The conditional expression node
-   * @param context - The context containing variables and objects
-   * @returns The result based on the condition evaluation
-   */
   private evaluateConditionalExpression(
     node: ConditionalExpression,
     context: FormContext,
@@ -653,12 +605,6 @@ export class ExpressionService {
     return this.evaluateAstNode(node.alternate, context);
   }
 
-  /**
-   * Evaluates an object expression (object literal)
-   * @param node - The object expression node
-   * @param context - The context containing variables and objects
-   * @returns The evaluated object
-   */
   private evaluateObjectExpression(
     node: ObjectExpression,
     context: FormContext,
@@ -686,12 +632,6 @@ export class ExpressionService {
     return result;
   }
 
-  /**
-   * Evaluates a sequence expression (comma-separated expressions)
-   * @param node - The sequence expression node
-   * @param context - The context containing variables and objects
-   * @returns The result of the last expression in the sequence
-   */
   private evaluateSequenceExpression(
     node: SequenceExpression,
     context: FormContext,
@@ -705,12 +645,6 @@ export class ExpressionService {
     return result;
   }
 
-  /**
-   * Evaluates a template literal
-   * @param node - The template literal node
-   * @param context - The context containing variables and objects
-   * @returns The evaluated template string
-   */
   private evaluateTemplateLiteral(
     node: TemplateLiteral,
     context: FormContext,
@@ -730,10 +664,16 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates a function call expression with strict type checking
-   * @param node - The function call expression node
-   * @param context - The context containing variables and objects
-   * @returns The result of the function call
+   * Evaluates a method call. Only `object.method(...)` form is supported,
+   * and the method must be in the safe list for the receiver type.
+   *
+   * @param node Call expression node from acorn. Bare function calls and
+   *   constructor calls are rejected; the callee must be a member expression.
+   * @param context Form context forwarded when resolving the receiver, the
+   *   computed method name (when present), and each argument.
+   * @returns The result of invoking the resolved method. Throws when the
+   *   receiver is null or undefined without optional chaining, or when the
+   *   method is not in {@link SAFE_METHODS} for the receiver's type.
    */
   private evaluateCallExpression(
     node: CallExpression,
@@ -778,13 +718,6 @@ export class ExpressionService {
     return this.callSafeMethod(object, methodName, args);
   }
 
-  /**
-   * Calls a method on an object after verifying it's safe to do so
-   * @param object - The object to call the method on
-   * @param methodName - The name of the method to call
-   * @param args - The arguments to pass to the method
-   * @returns The result of the method call
-   */
   private callSafeMethod(
     object: unknown,
     methodName: string,
@@ -829,10 +762,17 @@ export class ExpressionService {
   }
 
   /**
-   * Evaluates an arrow function expression
-   * @param node - The arrow function expression node
-   * @param context - The context containing variables and objects
-   * @returns A function that can be called from other expressions
+   * Builds a callable from an arrow function expression.
+   * Only expression bodies with simple identifier parameters are supported.
+   *
+   * @param node Arrow function node from acorn. Block bodies and destructured
+   *   or rest parameters are rejected.
+   * @param context Outer form context. The returned function shallow-copies it
+   *   on each call and binds the arrow's parameters on top so the original
+   *   context is never mutated.
+   * @returns A function whose call evaluates the arrow body against the
+   *   extended context. Useful for higher-order array methods such as
+   *   `arr.map(x => x * 2)`.
    */
   private evaluateArrowFunctionExpression(
     node: ArrowFunctionExpression,

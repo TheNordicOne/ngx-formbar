@@ -4,17 +4,22 @@ import { ExpressionService } from '../services/expression.service';
 import { resolveExpression } from './resolve-expression';
 
 /**
- * Resolves an inheritable boolean expression with parent state fallback
+ * Resolves a boolean expression that inherits from a parent state when undefined.
  *
- * Used for states like disabled and readonly that follow a common pattern:
- * 1. If the option is undefined, inherit the parent state
- * 2. Otherwise, resolve the expression and default to false
+ * Used for states like disabled and readonly. If the option is undefined,
+ * the parent state is returned. Otherwise the expression is resolved and
+ * defaults to false.
  *
- * @param option Signal containing the expression option (boolean, string expression, function, or undefined)
- * @param formContext Signal providing the current form context for expression evaluation
- * @param expressionService Service used to parse and evaluate string expressions
- * @param parentState Signal providing the parent group's state to inherit from
- * @returns Computed signal that resolves to a boolean state
+ * @param option Signal carrying the configured value (boolean, string
+ *   expression, predicate function, or `undefined`).
+ * @param formContext Signal exposing the current form value used to evaluate
+ *   string and function expressions.
+ * @param expressionService Service used to parse and evaluate string
+ *   expressions.
+ * @param parentState Signal reporting the resolved state of the enclosing
+ *   group. Inherited only when `option` is `undefined`; an explicit `false`
+ *   blocks inheritance.
+ * @returns Computed signal that resolves to the effective boolean state.
  */
 export function resolveInheritableExpression(
   option: Signal<Expression<boolean> | boolean | undefined>,

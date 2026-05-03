@@ -1,4 +1,4 @@
-Just like any other package, _ngx-formbar_ also has some known issues. Below you find a list including a link to a GitHub issue, if it exists.
+Like any other package, _ngx-formbar_ has some known issues. Below you find a list with links to GitHub issues, where they exist.
 This list is not exhaustive, so also check the [GitHub Issues](https://github.com/TheNordicOne/ngx-formbar/issues) for anything not listed here.
 
 - <span class="badge badge--improvement">Improvement</span> [Registering validators per token prevents from referencing other validators by key since we get the whole map.](https://github.com/TheNordicOne/ngx-formbar/issues/65)

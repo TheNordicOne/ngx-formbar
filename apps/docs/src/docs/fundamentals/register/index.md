@@ -1,4 +1,4 @@
-While the Generator Schematics, per default, already register every new component, you may not always use them. In those cases you could either manually register them or use this schematic.
+While the Generator Schematics, by default, already register every new component, you may not always use them. In those cases you can either manually register them or use this schematic.
 
 ## What does it do
 
@@ -17,7 +17,7 @@ This schematic tries to find all relevant controls and registers them at the app
 
 ## Setting Options
 
-There are two ways to set custom default options. This helps repeating the same parameters on every CLI command.
+There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
 
 ### In formbar.config.json
 

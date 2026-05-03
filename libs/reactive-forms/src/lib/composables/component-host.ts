@@ -22,14 +22,19 @@ export interface ComponentHost {
 }
 
 /**
- * Provisions a managed host for a single dynamically created component.
- * The returned handle exposes `mount(component)` to populate the host and
- * `clear()` to empty it; the underlying component is destroyed automatically
- * when the directive is torn down.
+ * Manages a host for a dynamically created component. Call `mount(component)`
+ * to populate the host and `clear()` to empty it. The component is destroyed
+ * automatically when the directive is torn down.
  *
  * @param options.signalMap Map of input names to the signals that back them.
- * @param options.controlConfig Signal of the directive's inner config; consulted for inputs not present in the signalMap.
- * @param options.additionalProviders Extra providers to attach via a child injector (e.g. NGXFB_CONTROL_ENTRIES for groups).
+ *   Each entry is converted into a reactive binding on the mounted component.
+ * @param options.controlConfig Signal of the directive's inner config. Used
+ *   to resolve any inputs declared on the component but absent from
+ *   `signalMap`, so unmapped inputs still receive their static config value.
+ * @param options.additionalProviders Optional providers attached via a child
+ *   injector that wraps the host's own injector. Use to expose tokens such
+ *   as `NGXFB_CONTROL_ENTRIES` to the mounted component tree.
+ * @returns A `ComponentHost` handle exposing `mount` and `clear`.
  */
 export function withComponentHost(options: ComponentHostOptions) {
   const viewContainerRef = inject(ViewContainerRef);

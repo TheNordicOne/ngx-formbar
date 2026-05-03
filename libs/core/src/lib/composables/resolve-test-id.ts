@@ -3,17 +3,20 @@ import { NgxFbBaseContent } from '../types/content.type';
 import { TestIdBuilderFn } from '../types/functions.type';
 
 /**
- * Resolves a test ID for a form element
+ * Resolves a test ID for a form element.
  *
- * The test ID is determined using the following priority:
- * 1. The global testIdBuilder function if provided
- * 2. Default: joins parentTestId and name with '-', or just name if no parent
+ * Uses the global `testIdBuilder` when provided. Otherwise joins the parent
+ * test ID and name with `-`, or returns just the name when there is no parent.
  *
- * @param content Signal containing the base content configuration
- * @param name Signal containing the control/group name
- * @param globalTestIdBuilder Optional global testIdBuilder function from configuration
- * @param parentTestId Signal providing the parent group's test ID
- * @returns Computed signal that resolves to the test ID string
+ * @param content Signal carrying the content configuration. Forwarded to a
+ *   custom builder so it can branch on the content type.
+ * @param name Signal carrying the control or group name.
+ * @param globalTestIdBuilder Optional builder supplied through library
+ *   configuration. When set it fully owns ID generation.
+ * @param parentTestId Signal exposing the parent group's resolved test ID.
+ *   `undefined` at the top of the form.
+ * @returns Computed signal that resolves to the test ID string used for
+ *   `data-testid` bindings.
  */
 export function resolveTestId(
   content: Signal<NgxFbBaseContent>,

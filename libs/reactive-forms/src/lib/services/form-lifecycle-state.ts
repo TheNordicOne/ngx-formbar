@@ -1,11 +1,9 @@
 import { computed, InjectionToken, Signal, signal } from '@angular/core';
 
 /**
- * Form-level cache of control values that persists across destroy/create cycles.
- *
- * Provided once at the form component level. Controls save their values
- * here on destroy (keyed by their full form path). On re-creation,
- * controls read their saved values to apply the appropriate value strategy.
+ * Form-level cache of control values keyed by full form path. Provided once
+ * at the form component. Controls save values on destroy and read them back
+ * on re-creation to apply their value strategy.
  */
 export interface FormLifecycleState {
   hasSavedValue(path: string): Signal<boolean>;

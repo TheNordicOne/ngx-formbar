@@ -10,20 +10,18 @@ import { FormService } from '../services/form.service';
 import { NgxFbGroupDirective } from '../directives/ngx-fb-group.directive';
 
 /**
- * Computes a reactive disabled state based on control content
+ * Computes the reactive disabled state for a control. Inheritance from the
+ * parent group means a child is automatically disabled when its enclosing
+ * group is, unless the child explicitly overrides the value.
  *
- * The disabled state is determined using the following priority:
- * 1. If content.disabled is a boolean, that value is used directly
- * 2. If content.disabled is an expression string, it's parsed to AST and evaluated
- *    against the current form values
- * 3. If no disabled property is defined, the control inherits the disabled state
- *    from its parent group
+ * Resolution order:
+ * 1. `content.disabled` boolean is used as-is.
+ * 2. Expression string is evaluated against current form values.
+ * 3. Otherwise, inherits from the parent group.
  *
- * This hierarchical inheritance ensures that child controls are automatically
- * disabled when their parent group is disabled, unless explicitly overridden.
- *
- * @param content Signal containing control configuration with potential disabled property
- * @returns Computed signal that resolves to boolean disabled state
+ * @param content Signal of the control's content config. The `disabled`
+ *   field may be a boolean, expression string, or expression function.
+ * @returns A signal of the resolved boolean disabled state.
  */
 export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
@@ -55,14 +53,16 @@ export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
 
 /**
  * Creates an effect that toggles the form instance's enabled/disabled state.
- *
  * When `handleDisable` is true, calls `enable()` or `disable()` on the
- * resolved instance based on the disabled signal. When false, the effect is
- * a no-op and the component is responsible for applying the state itself.
+ * resolved instance with `emitEvent: false`. When false, the effect is a
+ * no-op and the component applies the state itself.
  *
- * @param options.disabledSignal Signal indicating whether the component should be disabled
- * @param options.handleDisableSignal Signal indicating whether the library should apply the disabled state
- * @param options.instance Signal resolving to the FormControl/FormGroup to toggle
+ * @param options.disabledSignal Signal of the resolved disabled state.
+ * @param options.handleDisableSignal Signal indicating whether the library
+ *   should apply the state. Mirrors the registration's `disabledHandling`.
+ * @param options.instance Signal of the `FormControl` or `FormGroup` to
+ *   toggle. Read inside `untracked` so re-creating the instance does not
+ *   re-run the effect on its own.
  */
 export function disabledEffect(options: {
   disabledSignal: Signal<boolean>;

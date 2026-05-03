@@ -7,10 +7,14 @@ import {
 import { FormService } from '../services/form.service';
 
 /**
- * Computes a dynamic title for a form group based on expression evaluation
+ * Resolves the `dynamicTitle` expression on a group to a signal of the
+ * evaluated string (or undefined when not configured).
  *
- * @param content Signal containing group configuration with dynamicTitle property
- * @returns Computed signal that resolves to the evaluated dynamic title string or undefined
+ * @param content Signal of the group's content config. The `dynamicTitle`
+ *   field may be a literal string, expression string, or expression function.
+ * @returns A signal of the evaluated title, or `undefined` when no
+ *   `dynamicTitle` is configured. Bind alongside the static `title` and let
+ *   the consuming component prefer the dynamic value when present.
  */
 export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
   const formService = inject(FormService);

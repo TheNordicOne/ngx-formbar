@@ -16,17 +16,8 @@ import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.compo
 import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 /**
- * Ngx Formbar Form Component
- *
- * This component serves as the main container for Ngx Formbar forms:
- * - Takes a form configuration
- * - Establishes the form context through FormService provider
- * - Renders each content item using NgxfbAbstractControlDirective
- * - Handles component registration and dependency injection
- *
- * The component acts as the root element for declarative form creation,
- * processing the form content configuration and rendering the appropriate
- * components for each control defined in the configuration.
+ * Root component for an Ngx Formbar form. Takes a form configuration and
+ * mounts each entry through the control outlet.
  */
 @Component({
   selector: 'ngxfb-form',
@@ -49,14 +40,8 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
   ],
 })
 export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
-  /**
-   * Required input containing form configuration
-   */
   readonly formConfig = input.required<NgxFbForm<T>>();
 
-  /**
-   * Computed value containing form content
-   */
   readonly formContent = computed(() =>
     Object.entries(this.formConfig().content).map(([name, config]) => ({
       name,

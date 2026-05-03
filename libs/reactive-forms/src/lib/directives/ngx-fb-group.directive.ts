@@ -141,9 +141,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ],
   });
 
-  /**
-   * Access to the parent FormGroup containing this group
-   */
   private get parentFormGroup() {
     return this.parent.formGroup;
   }

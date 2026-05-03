@@ -4,7 +4,7 @@
 
 The core package has been narrowed to focus on content rendering, expression evaluation, and DI infrastructure. All reactive forms code has been moved to `@ngx-formbar/reactive-forms`.
 
-If you want you could also use the core package alone to build your own implementations or use it as a utility library.
+If you want, you can also use the core package on its own to build your own implementations, or use it as a utility library.
 
 ### Added
 
@@ -20,6 +20,7 @@ If you want you could also use the core package alone to build your own implemen
 - Composable functions and low-level services are now part of the public API for consumers building custom form implementations
 - Component registrations now use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry is either a static registration (`{ component: Type<unknown> }`) or a lazy registration (`{ loadComponent: LoadComponentFn }`), optionally with a `ComponentRegistrationOptions`. Helper functions `staticComponent()` and `loadComponent()` accept an optional second argument for these options. The `NGX_FW_COMPONENT_REGISTRATIONS` token and `ComponentResolver` interface use `ComponentRegistrationEntry` accordingly
 - Registration option renamed: `visibilityHandling` is now `keepValueWhenHidden` (still typed as `StateHandling = 'auto' | 'manual'`, default `'auto'`). Update any registrations that previously passed `{ visibilityHandling: 'manual' }` to `{ keepValueWhenHidden: 'manual' }`
+- Type renamed: `NgxFbContent` is now `NgxFbItem`. The shape is unchanged (`NgxFbFormGroup | NgxFbControl | NgxFbBlock`). Update any imports or type annotations that referenced `NgxFbContent`
 
 ### Removed
 

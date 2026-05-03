@@ -9,10 +9,13 @@ import { AbstractControl } from '@angular/forms';
 import { FormService } from '../services/form.service';
 
 /**
- * Resolves the computedValue expression from a control's configuration
+ * Resolves the `computedValue` expression from a control's configuration to a
+ * signal of the evaluated value (or undefined when not configured).
  *
- * @param content Signal containing control configuration with computedValue property
- * @returns Computed signal that resolves to the evaluated computed value or undefined
+ * @param content Signal of the control's content config. The `computedValue`
+ *   field may be a literal, an expression string, or an expression function.
+ * @returns A signal that resolves to the evaluated value, or `undefined` when
+ *   the control declares no `computedValue`.
  */
 export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
   const formService = inject(FormService);
@@ -26,15 +29,21 @@ export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
 }
 
 /**
- * Creates an effect that applies computed values to a form control.
+ * Creates an effect that writes the computed value to the form control. Only
+ * runs when the control's configuration defines `computedValue`. Controls
+ * without `computedValue` are never touched, so user input on them is
+ * preserved.
  *
- * Only applies when a `computedValue` is defined in the control's configuration.
- * Controls without `computedValue` are never touched by this effect.
- *
- * @param options.controlInstance Signal resolving to the AbstractControl receiving the computed value
- * @param options.computeValueSignal Signal containing the resolved computed value
- * @param options.isComputedValueDefined Signal indicating whether computedValue is configured
- * @param options.formResetSignal Signal that fires on form reset, retriggering the effect
+ * @param options.controlInstance Signal resolving to the `AbstractControl`
+ *   that should receive the computed value via `setValue`.
+ * @param options.computeValueSignal Signal of the resolved computed value to
+ *   write into the control.
+ * @param options.isComputedValueDefined Signal indicating whether the
+ *   control's config declares `computedValue`. When `false`, the effect
+ *   returns without writing.
+ * @param options.formResetSignal Signal that fires on form reset; tracking it
+ *   forces the effect to re-run so the computed value is re-applied after
+ *   the underlying control is reset.
  */
 export function setComputedValueEffect(options: {
   controlInstance: Signal<AbstractControl>;
