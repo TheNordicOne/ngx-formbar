@@ -22,11 +22,11 @@ New package containing all reactive forms functionality previously bundled in `@
 
 - **Component authoring is interface-based.** Consumer components implement `ReactiveFormbarControl<T>` / `ReactiveFormbarGroup<T>` / `FormbarBlock<T>` and declare the corresponding `input()` signals. Inputs are wired via `createComponent` bindings; there is no host directive on the consumer component and no directive to inject.
 - **Group composition uses `<ngxfb-control-outlet />`.** Group components place the outlet in their template wherever child controls should appear; child entries flow in via `NGXFB_CONTROL_ENTRIES`.
-- **The hidden lifecycle destroys and recreates the consumer component.** With `keepValueWhenHidden: 'auto'` (the default), the directive clears its host and unmounts the consumer component when the resolved hidden state becomes true, then mounts a fresh instance when it becomes false again. This applies for both `hideStrategy: 'keep'` and `hideStrategy: 'remove'`. The two strategies differ only in what happens to the underlying form control: `'keep'` leaves it attached to the parent group, `'remove'` removes it from the parent group on hide and reattaches it on show.
-- **Visibility and disabled handling are per-registration.** `keepValueWhenHidden: 'auto' | 'manual'` and `disabledHandling: 'auto' | 'manual'` are read from the component registration entry. With `'auto'` the directive applies state automatically; with `'manual'` the consumer component owns it.
+- **The hidden lifecycle destroys and recreates the consumer component.** With `hiddenHandling: 'auto'` (the default), the directive clears its host and unmounts the consumer component when the resolved hidden state becomes true, then mounts a fresh instance when it becomes false again. This applies for both `hideStrategy: 'keep'` and `hideStrategy: 'remove'`. The two strategies differ only in what happens to the underlying form control: `'keep'` leaves it attached to the parent group, `'remove'` removes it from the parent group on hide and reattaches it on show.
+- **Visibility and disabled handling are per-registration.** `hiddenHandling: 'auto' | 'manual'` and `disabledHandling: 'auto' | 'manual'` are read from the component registration entry. With `'auto'` the directive applies state automatically; with `'manual'` the consumer component owns it.
 - **`hiddenEffects` orchestrates the mount and form-attachment hooks.** The directive provides `onHidden` / `onVisible` callbacks for its own attach/detach policy and value-strategy application.
 - **`setComputedValueEffect` only runs when a `computedValue` is configured.** It requires an `isComputedValueDefined` signal and never overwrites values on controls that don't opt in.
-- **`provideFormbar` accepts `ComponentRegistrationEntry` values** in `componentRegistrations`. Use `staticComponent()` for static or `loadComponent()` for lazy registrations. Registrations also carry `keepValueWhenHidden` and `disabledHandling`.
+- **`provideFormbar` accepts `ComponentRegistrationEntry` values** in `componentRegistrations`. Use `staticComponent()` for static or `loadComponent()` for lazy registrations. Registrations also carry `hiddenHandling` and `disabledHandling`.
 - **Schematics generate `ComponentRegistrationEntry`-based registrations.**
 
 ### Fixed
@@ -41,7 +41,7 @@ New package containing all reactive forms functionality previously bundled in `@
 - `NgxfbAbstractControlDirective`. Superseded by per-kind directives backed by composables.
 - Host directive helpers `ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, and `ngxfbBlockHostDirective`. Consumer components no longer need host directives.
 - The earlier `NgxfbControlDirective` / `NgxfbGroupDirective` class names. Replaced by `NgxFbControlDirective` / `NgxFbGroupDirective` (capital `Fb`). `NgxfbBlockDirective` keeps its name.
-- `setVisibilityHandling()` runtime method. Declare `keepValueWhenHidden` on the component registration instead.
+- `setVisibilityHandling()` runtime method. Declare `hiddenHandling` on the component registration instead.
 
 ### Migration
 

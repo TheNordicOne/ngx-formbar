@@ -11,4 +11,4 @@ The following strategies are available:
 | `keep` (default) | The form control stays attached to the parent group while the component is hidden |
 | `remove`         | The form control is removed from the parent group on hide and reattached on show  |
 
-With `keepValueWhenHidden: 'auto'` (the default), the consumer component is destroyed and recreated by the library on every hide/show cycle, regardless of the `hideStrategy`. The strategy only changes whether the form control survives the cycle. With `keepValueWhenHidden: 'manual'`, the component stays mounted at all times and the `hideStrategy` only governs the form control attachment.
+With `hiddenHandling: 'auto'` (the default), the consumer component is destroyed and recreated by the library on every hide/show cycle, regardless of the `hideStrategy`. The strategy only changes whether the form control survives the cycle. With `hiddenHandling: 'manual'`, the component stays mounted at all times and the `hideStrategy` only governs the form control attachment.

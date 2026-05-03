@@ -375,13 +375,13 @@ The library's directives still exist as **internal mounting infrastructure**, bu
 
 ## Step 8: Configure registration options instead of in-component handling
 
-The v1 `visibilityHandling` registration option has been renamed to `keepValueWhenHidden`. The values (`'auto' | 'manual'`) and default (`'auto'`) are unchanged. Update any registrations that previously passed `{ visibilityHandling: 'manual' }` to `{ keepValueWhenHidden: 'manual' }`.
+The v1 `visibilityHandling` registration option has been renamed to `hiddenHandling`. The values (`'auto' | 'manual'`) and default (`'auto'`) are unchanged. Update any registrations that previously passed `{ visibilityHandling: 'manual' }` to `{ hiddenHandling: 'manual' }`.
 
 Two registration options replace any in-component lifecycle wiring you may have done in v1:
 
 | Option                | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
 |-----------------------|----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `keepValueWhenHidden` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
+| `hiddenHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
 | `disabledHandling`    | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
 
 Pass them as the second argument to `staticComponent()` / `loadComponent()`, or inline on the entry object.
@@ -393,12 +393,12 @@ import { provideFormbar } from '@ngx-formbar/reactive-forms';
 provideFormbar({
   componentRegistrations: {
     customDateRange: staticComponent(DateRangeComponent, {
-      keepValueWhenHidden: 'manual',
+      hiddenHandling: 'manual',
       disabledHandling: 'manual',
     }),
     lazyChart: loadComponent(
       () => import('./chart.component').then((m) => m.ChartComponent),
-      { keepValueWhenHidden: 'manual' },
+      { hiddenHandling: 'manual' },
     ),
   },
 });
@@ -408,7 +408,7 @@ The defaults match v1's behavior, so most registrations need no options at all.
 
 ## Step 9: Audit `hideStrategy` behavior
 
-The two `hideStrategy` values keep their meaning, but the way the library implements them in v2 is uniform. With `keepValueWhenHidden: 'auto'` (the default), the consumer component is destroyed when the resolved hidden state becomes true. It is recreated when the state becomes false again, regardless of `hideStrategy`. The strategies still differ in what happens to the form control:
+The two `hideStrategy` values keep their meaning, but the way the library implements them in v2 is uniform. With `hiddenHandling: 'auto'` (the default), the consumer component is destroyed when the resolved hidden state becomes true. It is recreated when the state becomes false again, regardless of `hideStrategy`. The strategies still differ in what happens to the form control:
 
 - `'keep'` (default): the form control stays attached to the parent group while the component is hidden. The configured `valueStrategy` is applied to the existing form control.
 - `'remove'`: the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).
@@ -448,7 +448,7 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 | Component registration shape                                     | `Type<unknown>`                                   | `ComponentRegistrationEntry`                                    |
 | Consumer component contract                                      | `hostDirectives` + `inject(...)`                  | `implements ReactiveFormbarControl` / `…Group` / `FormbarBlock` |
 | Group child template                                             | `ngxfbAbstractControl`                            | `<ngxfb-control-outlet />`                                      |
-| Registration visibility option                                   | `visibilityHandling`                              | `keepValueWhenHidden`                                           |
+| Registration visibility option                                   | `visibilityHandling`                              | `hiddenHandling`                                           |
 | Content union type                                               | `NgxFbContent`                                    | `NgxFbItem`                                                     |
 | Minimum Angular version                                          | 19.2.0                                            | 20.0.0                                                          |
 | Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core` only                                            |

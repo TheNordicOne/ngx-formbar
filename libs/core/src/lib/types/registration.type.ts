@@ -16,7 +16,7 @@ export interface LazyRegistration {
 /** Optional behavior flags for a component registration. */
 export interface ComponentRegistrationOptions {
   /**
-   * How visibility is managed for this component type.
+   * How the hidden state is managed for this component type.
    *
    * - `auto` (default): the library destroys the component when the resolved
    *   hidden state becomes true and recreates it when it becomes false. The
@@ -26,7 +26,7 @@ export interface ComponentRegistrationOptions {
    *   `isHidden` signal. The component handles its own hiding, value strategy,
    *   and form model attachment.
    */
-  keepValueWhenHidden?: StateHandling;
+  hiddenHandling?: StateHandling;
 
   /**
    * How the disabled state is applied to the underlying form control.

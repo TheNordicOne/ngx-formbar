@@ -82,7 +82,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     );
 
   private readonly handleVisibility = computed(
-    () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',
+    () => (this.registrationEntry()?.hiddenHandling ?? 'auto') === 'auto',
   );
 
   readonly isHidden = withHiddenState(this.controlConfig);

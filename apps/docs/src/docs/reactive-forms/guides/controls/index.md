@@ -163,12 +163,12 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 {% endraw %}
 
-To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but swap in a placeholder), set `keepValueWhenHidden: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
+To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but swap in a placeholder), set `hiddenHandling: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
 
 ```typescript name="app.config.ts"
 provideFormbar({
   componentRegistrations: {
-    text: staticComponent(TextControlComponent, { keepValueWhenHidden: 'manual' }),
+    text: staticComponent(TextControlComponent, { hiddenHandling: 'manual' }),
   },
 });
 ```

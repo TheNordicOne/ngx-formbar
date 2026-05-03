@@ -11,7 +11,7 @@ import {
  *
  * @param type Component class to instantiate when the matching content type is
  *   resolved.
- * @param options Optional behavior flags such as `keepValueWhenHidden` and
+ * @param options Optional behavior flags such as `hiddenHandling` and
  *   `disabledHandling`. Defaults apply when omitted.
  * @returns Registration object suitable for use in a
  *   {@link ComponentRegistrationConfig}.
@@ -23,7 +23,7 @@ import {
  *
  * const registrations = {
  *   text: staticComponent(TextComponent),
- *   custom: staticComponent(CustomComponent, { keepValueWhenHidden: 'manual' }),
+ *   custom: staticComponent(CustomComponent, { hiddenHandling: 'manual' }),
  * };
  * ```
  */
@@ -39,7 +39,7 @@ export function staticComponent(
  *
  * @param load Loader that returns a promise resolving to the component class.
  *   Typically a dynamic `import()` so the component lands in its own chunk.
- * @param options Optional behavior flags such as `keepValueWhenHidden` and
+ * @param options Optional behavior flags such as `hiddenHandling` and
  *   `disabledHandling`. Defaults apply when omitted.
  * @returns Registration object suitable for use in a
  *   {@link ComponentRegistrationConfig}.
@@ -52,7 +52,7 @@ export function staticComponent(
  *   text: loadComponent(() => import('./text.component').then(m => m.TextComponent)),
  *   custom: loadComponent(
  *     () => import('./custom.component').then(m => m.CustomComponent),
- *     { keepValueWhenHidden: 'manual' },
+ *     { hiddenHandling: 'manual' },
  *   ),
  * };
  * ```

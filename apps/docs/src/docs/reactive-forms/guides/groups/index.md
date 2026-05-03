@@ -126,7 +126,7 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 The `isHidden` input on the contract reflects the resolved hidden state for this group instance. Declare the input and use it in your template:
 
 > **Note**
-> `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `keepValueWhenHidden: 'auto'` (the default), the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `keepValueWhenHidden: 'manual'`, you stay mounted and decide what to render based on `isHidden()` yourself.
+> `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `hiddenHandling: 'auto'` (the default), the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `hiddenHandling: 'manual'`, you stay mounted and decide what to render based on `isHidden()` yourself.
 
 {% raw %}
 
@@ -158,12 +158,12 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% endraw %}
 
-To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but show a placeholder), set `keepValueWhenHidden: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
+To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but show a placeholder), set `hiddenHandling: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
 
 ```typescript name="app.config.ts"
 provideFormbar({
   componentRegistrations: {
-    group: staticComponent(GroupComponent, { keepValueWhenHidden: 'manual' }),
+    group: staticComponent(GroupComponent, { hiddenHandling: 'manual' }),
   },
 });
 ```

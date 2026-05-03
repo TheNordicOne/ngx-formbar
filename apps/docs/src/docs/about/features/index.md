@@ -16,7 +16,7 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 ## Component registration
 
 - Each entry is either eager (`staticComponent(MyComponent)`) or lazy (`loadComponent(() => import('...'))`). Both kinds can be mixed freely within the same registration.
-- The registration is the central place to configure per-component-type behavior. Options that should apply to every instance of a component (like `keepValueWhenHidden` or `disabledHandling`) live with the registration, not on each form's config.
+- The registration is the central place to configure per-component-type behavior. Options that should apply to every instance of a component (like `hiddenHandling` or `disabledHandling`) live with the registration, not on each form's config.
 - Registrations can be added, removed, or swapped at runtime. The registry is signal-backed, so already-mounted forms react to the change without remounting.
 
 ## Schematics

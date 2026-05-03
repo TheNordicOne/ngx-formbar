@@ -72,7 +72,7 @@ export class NgxFbControlDirective implements OnDestroy {
   );
 
   private readonly handleVisibility = computed(
-    () => (this.registrationEntry()?.keepValueWhenHidden ?? 'auto') === 'auto',
+    () => (this.registrationEntry()?.hiddenHandling ?? 'auto') === 'auto',
   );
 
   private readonly defaultValue = computed(

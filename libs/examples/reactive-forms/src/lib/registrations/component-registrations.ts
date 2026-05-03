@@ -45,6 +45,6 @@ export const componentRegistrations: ComponentRegistrations = {
       import('../components/manual-text/manual-text-control.component').then(
         (m) => m.ManualTextControlComponent,
       ),
-    { keepValueWhenHidden: 'manual' },
+    { hiddenHandling: 'manual' },
   ),
 };

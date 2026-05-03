@@ -103,7 +103,7 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 > **Note**
 > Blocks have no value, so the `valueStrategy` does not apply. Only the `hideStrategy` (`keep` vs. `remove`) and the visibility handling mode are relevant.
 
-To take over visibility yourself, register the block with `keepValueWhenHidden: 'manual'` and read the `isHidden` signal in your template.
+To take over visibility yourself, register the block with `hiddenHandling: 'manual'` and read the `isHidden` signal in your template.
 
 {% raw %}
 ```typescript group="hidden-block" name="info-block.component.ts" icon="angular"
@@ -134,7 +134,7 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 ```typescript name="app.config.ts"
 provideFormbar({
   componentRegistrations: {
-    info: staticComponent(InfoBlockComponent, { keepValueWhenHidden: 'manual' }),
+    info: staticComponent(InfoBlockComponent, { hiddenHandling: 'manual' }),
   },
 });
 ```
