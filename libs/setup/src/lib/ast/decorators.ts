@@ -163,6 +163,28 @@ export function decoratorArrayPropContainsProviderObject(
   });
 }
 
+export function decoratorHasProp(
+  sf: SourceFile,
+  decoratorName: string,
+  propName: string,
+) {
+  const obj = getDecoratorObject(sf, decoratorName);
+  if (!obj) {
+    return false;
+  }
+
+  return obj.properties.some((p) => {
+    if (!isPropertyAssignment(p)) {
+      return false;
+    }
+    const n = p.name;
+    return (
+      (isIdentifier(n) && n.text === propName) ||
+      (isStringLiteral(n) && n.text === propName)
+    );
+  });
+}
+
 export function decoratorHostDirectivesHasInlineDirectiveWithInputs(
   sf: SourceFile,
   directiveIdentifier = 'NgxfbControlDirective',

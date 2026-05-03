@@ -2,11 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
+  input,
 } from '@angular/core';
-import { NgxfbBlockDirective } from '@ngx-formbar/reactive-forms';
+import { FormbarBlock } from '@ngx-formbar/reactive-forms';
 import { NoteControl } from '@ngx-formbar/examples';
-import { ngxfbBlockHostDirective, viewProviders } from '../../helpers';
 
 @Component({
   selector: 'ngxfb-examples-note-control',
@@ -14,25 +13,19 @@ import { ngxfbBlockHostDirective, viewProviders } from '../../helpers';
   templateUrl: './note-control.component.html',
   styleUrl: './note-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  viewProviders: viewProviders,
   host: {
     '[style.--color]': 'color()',
     '[style.--background]': 'background()',
   },
-  hostDirectives: [ngxfbBlockHostDirective],
 })
-export class NoteControlComponent {
-  private readonly block = inject(NgxfbBlockDirective<NoteControl>);
-
-  protected readonly content = this.block.content;
-  protected readonly testId = this.block.testId;
-  protected readonly message = computed(() => this.content().message);
-  protected readonly severity = computed(
-    () => this.content().severity ?? 'info',
-  );
+export class NoteControlComponent implements FormbarBlock<NoteControl> {
+  readonly isHidden = input(false);
+  readonly testId = input('');
+  readonly message = input.required<string>();
+  readonly severity = input<'info' | 'warn' | 'danger'>();
 
   protected readonly color = computed(() => {
-    switch (this.severity()) {
+    switch (this.severity() ?? 'info') {
       case 'info':
         return 'hsl(221,83%,53%)';
       case 'warn':
@@ -43,7 +36,7 @@ export class NoteControlComponent {
   });
 
   protected readonly background = computed(() => {
-    switch (this.severity()) {
+    switch (this.severity() ?? 'info') {
       case 'info':
         return 'hsl(221,83%,73%)';
       case 'warn':

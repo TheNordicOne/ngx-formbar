@@ -1,4 +1,4 @@
-Creating and registering a new control, group or block and be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
+Creating and registering a new control, group or block can be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
 
 ## Options
 
@@ -6,26 +6,23 @@ All three schematics (`control`, `group`, `block`) support the same options:
 
 | Option                    | Type    | Required | Default (control/group/block) | Description                                                                                                                                                                                                                                                                                          |
 |---------------------------|---------|----------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --key                     | string  | Yes      | —                             | Registration key used in the Formbar configuration.                                                                                                                                                                                                                                                  |
+| --key                     | string  | Yes      | -                             | Registration key used in the Formbar configuration.                                                                                                                                                                                                                                                  |
 | --name                    | string  | No       | `key`                         | Base name for component and interface.                                                                                                                                                                                                                                                               |
 | --project                 | string  | No       | workspace default project     | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
 | --path                    | string  | No       | current working directory     | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
 | --interfaceSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the interface name.                                                                                                                                                                                                                                                               |
 | --componentSuffix         | string  | No       | `Control` / `Group` / `Block` | Suffix appended to the component class name.                                                                                                                                                                                                                                                         |
-| --hostDirectiveHelperPath | string  | No       | -                             | Path to the the hostDirective helper, relative to the project root. If the file cannot be found or the option was not provided, it will fallback to using the verbose syntax.                                                                                                                        |
-| --viewProviderHelperPath  | string  | No       | -                             | Path to the the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fallback to using the verbose syntax.                                                                                                                         |
+| --viewProviderHelperPath  | string  | No       | -                             | Path to the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fall back to using the verbose syntax.                                                                                                                            |
 | --schematicsConfig        | string  | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
 | --skipRegistration        | boolean | No       | `false`                       | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                                                                                                                                                                                          |
 
 
-### Notes for Path Options
+### Notes for the View Provider Path Option
 
-The paths for `hostDirectiveHelperPath` and `viewProviderHelperPath` can have three different shapes, that all resolve differently.
+The path for `viewProviderHelperPath` can have three different shapes, that all resolve differently.
 
 These are the relevant default values:
 
-- Host Directive Helper File Name: `(type).host-directive.ts`
-- Host Directive Identifier: `ngxfb(Type)HostDirective`
 - View Provider Helper File Name: `view-provider.ts`
 - View Provider Identifier: `viewProviders`
 
@@ -65,7 +62,7 @@ ng generate @ngx-formbar/schematics:control --key <control-key> [--name <Compone
 
 This will:
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbControl`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbControlDirective`.
+- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `ReactiveFormbarControl<...>` with signal `input()` fields.
 - Register the new control in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Controls](/reactive-forms/guides/controls) guide.
@@ -80,7 +77,7 @@ ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentNa
 
 This will:
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbFormGroup`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbGroupDirective`.
+- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `ReactiveFormbarGroup<...>` with signal `input()` fields, and a template that renders child controls via `<ngxfb-control-outlet />`.
 - Register the new group in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Groups](/reactive-forms/guides/groups) guide.
@@ -95,14 +92,14 @@ ng generate @ngx-formbar/schematics:block --key <block-key> [--name <ComponentNa
 
 This will:
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbBlock`.
-- Generate component files (`<name><componentSuffix>.component.ts`, `.html`, `.scss`, `.spec.ts`) wired with `NgxfbBlockDirective`.
+- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `FormbarBlock<...>` with signal `input()` fields.
 - Register the new block in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Blocks](/reactive-forms/guides/blocks) guide.
 
 ## Setting Options
 
-There are two ways to set custom default options. This helps repeating the same parameters on every CLI command.
+There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
 
 ### In formbar.config.json
 
@@ -115,19 +112,16 @@ All options are optional, but are listed here in full. You can put any combinati
   "control": {
     "interfaceSuffix":"Type",
     "componentSuffix": "Input",
-    "hostDirectiveHelperPath":"app/form/helper",
     "skipRegistration": true
   },
   "group": {
       "interfaceSuffix":"GroupType",
       "componentSuffix": "Group",
-      "hostDirectiveHelperPath":"app/form/helper",
       "skipRegistration": true
   },
   "block": {
       "interfaceSuffix":"BlockType",
       "componentSuffix": "Block",
-      "hostDirectiveHelperPath":"app/form/helper",
       "skipRegistration": true
   }
 }
@@ -150,7 +144,6 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"Type",
           "componentSuffix": "Input",
-          "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
         "@ngx-formbar/schematics:group": {
@@ -158,7 +151,6 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"GroupType",
           "componentSuffix": "Group",
-          "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         },
         "@ngx-formbar/schematics:block": {
@@ -166,7 +158,6 @@ Note, that compared to `formbar.config.json`, you have to repeat all values.
           "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix":"BlockType",
           "componentSuffix": "Block",
-          "hostDirectiveHelperPath":"app/form/helper",
           "skipRegistration": true
         }
       }

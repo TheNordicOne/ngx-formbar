@@ -1,16 +1,16 @@
 <div class="inline-input" [attr.data-testid]="testId()">
-  <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+  <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
   <input
     type="text"
     [id]="name()"
-    [placeholder]="placeholder() ?? ''"
+    [placeholder]="placeHolder() ?? ''"
     [title]="hint()"
     [formControlName]="name()"
-    [attr.readonly]="readonly() || null"
+    [attr.readonly]="isReadonly() || null"
     [attr.data-testid]="`${testId()}-input`"
   />
   @if (hint()) {
     <span [attr.data-testid]="`${testId()}-hint`">{{ hint() }}</span>
   }
-  <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
+  <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
 </div>

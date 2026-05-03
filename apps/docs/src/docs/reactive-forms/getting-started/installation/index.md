@@ -1,6 +1,6 @@
 ## Compatibility
 
-At this time this package is compatible with Angular 19.2.0 up to (but not including) Angular 22.
+At this time this package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
 
 ## Primary Installation via ng-add
 
@@ -10,19 +10,18 @@ Running the following command will install _ngx-formbar_.
 ng add @ngx-formbar/reactive-forms
 ```
 
-By default, the following things will be done
+By default, the following things will be done.
 
 - Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
 - Install `@ngx-formbar/schematics` as a dev dependency (for component generators)
 - Create a registration configuration file
-- Setup token based registration including
+- Setup token-based registration including
   - barrel export
   - component registration
   - validator registration
   - async validator registration
 - Setup helper files including
   - barrel export
-  - control host directives
   - control container view provider
 - Create a schematics configuration file
 - Provide formbar in your `app.config.ts`
@@ -32,7 +31,7 @@ By default, the following things will be done
 > The schematics configuration file will only contain values, that differ from the default.
 
 > **Note**
-> When setting the `helperPath` option only set it to a folder path. If you want to later adjust how the files or exports are named, update the configuration afterward. Take a look at Notes for Path Options in the [Generators page](/fundamentals/generators) to learn how this works.
+> When setting the `helperPath` option, only set it to a folder path. If you want to adjust how the files or exports are named later, update the configuration afterward. See Notes for Path Options in the [Generators page](/fundamentals/generators) to learn how this works.
 
 ## Options
 
@@ -45,7 +44,7 @@ By default, the following things will be done
 | --providerConfigFileName  | string              | No       | `formbar.config.ts`       | Name of the provider configuration file.                                                                                                                                                                                 |
 | --includeSyncValidators   | boolean             | No       | `true`                    | Whether to include the setup for validators.                                                                                                                                                                             |
 | --includeAsyncValidators  | boolean             | No       | `true`                    | Whether to include the setup for async validators.                                                                                                                                                                       |
-| --useHelper               | boolean             | No       | `true`                    | Include helper files for view providers and host directives.                                                                                                                                                             |
+| --useHelper               | boolean             | No       | `true`                    | Include helper files for the view provider used by control and group components.                                                                                                                                         |
 | --helperPath              | string              | No       | `app/shared/helper`       | Where helper files should be placed, relative to the project root.                                                                                                                                                       |
 | --splitRegistrations      | boolean             | No       | `true`                    | Whether to split the registrations into a separate file. If false, registrations will happen directly in the `formbar.config.ts` or `app.config.ts`, depending on the registration style and the `provideInline` option. |
 | --registrationsPath       | string              | No       | `app/registrations`       | Where registration files should be placed, relative to the project root.                                                                                                                                                 |

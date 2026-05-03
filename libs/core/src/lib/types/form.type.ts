@@ -1,7 +1,5 @@
-import { NgxFbBaseContent, NgxFbContent } from './content.type';
+import { NgxFbBaseContent, NgxFbItem } from './content.type';
 
-export interface NgxFbForm<
-  ContentType extends NgxFbBaseContent = NgxFbContent,
-> {
+export interface NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbItem> {
   content: Record<string, ContentType>;
 }

@@ -2,17 +2,18 @@ import { computed, Signal } from '@angular/core';
 import { UpdateStrategy } from '../types/content.type';
 
 /**
- * Resolves the update strategy for a form control or group
+ * Resolves the update strategy for a form control or group.
  *
- * The strategy is determined using the following priority:
- * 1. The control's own updateOn value if defined
- * 2. The parent group's strategy if defined
- * 3. The application-wide default strategy
+ * Falls back from the control's own `updateOn`, to the parent group's strategy,
+ * to the application-wide default.
  *
- * @param controlUpdateOn Signal containing the control's updateOn configuration
- * @param parentStrategy Signal providing the parent group's update strategy
- * @param defaultStrategy The application-wide default update strategy
- * @returns Computed signal providing the resolved update strategy
+ * @param controlUpdateOn Signal carrying the control's own `updateOn` value.
+ *   Wins when set.
+ * @param parentStrategy Signal exposing the resolved strategy of the enclosing
+ *   group. Used when the control has none of its own.
+ * @param defaultStrategy Final fallback supplied through library configuration.
+ * @returns Computed signal whose value can be passed to `FormControl`'s
+ *   `updateOn` option.
  */
 export function resolveUpdateStrategy(
   controlUpdateOn: Signal<UpdateStrategy | undefined>,

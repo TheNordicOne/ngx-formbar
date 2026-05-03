@@ -1,11 +1,11 @@
 ## Formbar Configuration vs. Schematics Configuration
 
-There are two configuration files used by _ngx-formbar_
+There are two configuration files used by _ngx-formbar_.
 
 - Formbar Configuration: `formbar.config.ts`
 - Schematics Configuration: `formbar.config.json`
 
-The schematics configuration is only used for the schematics and therefore only hold default values. This file is not relevant during runtime. All relevant options are shown on the schematics pages Generators and Register.
+The schematics configuration is only used by the schematics and only holds default values. This file is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
 
 ## Formbar Configuration Object
 
@@ -14,13 +14,17 @@ The configuration object that is used by the `provideFormbar` function has these
 | Property                    | Type                                           | Required | Description                                   |
 |-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
 | componentRegistrations      | Record<string, ComponentRegistrationEntry>     | No       | Mapping between keys and controls.            |
+| validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
+| asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
+| updateOn                    | 'change' \| 'blur' \| 'submit'                 | No       | Specifies when to update the control's value. |
+| globalConfig                | NgxFbGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
 
 ### ComponentRegistrationEntry
 
 Each component registration is either **static** or **lazy**:
 
-- **Static** `{ component: Type<unknown> }` — the component is eagerly imported and included in the main bundle
-- **Lazy** `{ loadComponent: LoadComponentFn }` — the component is loaded on demand via dynamic `import()`
+- **Static** `{ component: Type<unknown> }`: the component is eagerly imported and included in the main bundle
+- **Lazy** `{ loadComponent: LoadComponentFn }`: the component is loaded on demand via dynamic `import()`
 
 The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
 
@@ -35,10 +39,6 @@ select: { loadComponent: () => import('./select.component').then(m => m.SelectCo
 ```
 
 You can freely mix static and lazy registrations within the same configuration.
-| validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
-| asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
-| updateOn                    | 'change' \| 'blur' \| 'submit'                 | No       | Specifies when to update the control's value. |
-| globalConfig                | NgxFbGlobalConfiguration                       | No       | Configuration that is used for all controls.  |
 
 ### NgxFbGlobalConfiguration
 
@@ -51,12 +51,12 @@ This configuration provides a global runtime configuration that is used by all c
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in the _app.config.ts_ is not ideal. _ngx-formbar_ provides multiple approaches to organize your code better.
+Registering all controls, validators, etc. directly in _app.config.ts_ is not ideal. _ngx-formbar_ provides multiple ways to organize your code better.
 
-If you ran `ng add` with default parameters to install _ngx-formbar_ your setup already is using split configurations.
+If you ran `ng add` with default parameters to install _ngx-formbar_, your setup already uses split configurations.
 
 > **Note**
-> This section assumes that you have read and understood the Registration Concepts in the Core Concepts guide and know how you need to set the configuration.
+> This section assumes that you have read and understood the Registration Concepts in the Core Concepts guide and know how to set the configuration.
 
 ### Using defineFormbarConfig
 
@@ -68,9 +68,9 @@ import { staticComponent, loadComponent } from '@ngx-formbar/core';
 
 export const formbarConfig = defineFormbarConfig({
   componentRegistrations: {
-    // Static registration — component is eagerly imported
+    // Static registration: component is eagerly imported
     // e.g. text: staticComponent(TextControlComponent)
-    // Lazy registration — component is loaded on demand
+    // Lazy registration: component is loaded on demand
     // e.g. select: loadComponent(() => import('./select.component').then(m => m.SelectComponent))
   },
   // validatorRegistrations are optional
@@ -99,7 +99,7 @@ export const appConfig: ApplicationConfig = {
 
 ### Using Injection Tokens
 
-For more advanced code organization, you can leverage Angular's dependency injection system by providing the tokens directly.
+For more advanced code organization, you can use Angular's dependency injection system by providing the tokens directly.
 
 > **Note**
 > When using the DI tokens, be aware of how resolution works:
@@ -317,9 +317,9 @@ export const formbarConfig = defineFormbarConfig({
 ```
 
 > **Warning**
-> Extracting the validator registrations means losing some of the type safety features. Specifically it won't be possible to get warnings when you misspell the key in a reference. It is therefore recommended to keep the validators directly in `defineFormbarConfig` or `provideFormbar` function call.
+> Extracting the validator registrations means losing some of the type safety features. Specifically, you will not get warnings when you misspell a key in a reference. We recommend keeping the validators directly in the `defineFormbarConfig` or `provideFormbar` function call.
 >
-> The following example shows the case where the reference to the `letter` validator is misspelled.
+> The following example shows a case where the reference to the `letter` validator is misspelled.
 
 ```typescript name="misspelled.validators.registrations.ts"
 export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {

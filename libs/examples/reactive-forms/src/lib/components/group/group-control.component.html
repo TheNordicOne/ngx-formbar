@@ -1,9 +1,8 @@
 <ng-container [formGroupName]="name()">
   <fieldset class="demo-form-group" [attr.data-testid]="testId()">
-    <legend [attr.data-testid]="`${testId()}-title`">{{ legend() }}</legend>
-    @for (content of controls(); track content[0]) {
-      <ng-template *ngxfbAbstractControl="content" />
-    }
+    <legend [attr.data-testid]="`${testId()}-title`">{{ displayTitle() }}</legend>
+    <ngxfb-control-outlet />
+    <ng-content />
+    <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
   </fieldset>
 </ng-container>
-<ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />

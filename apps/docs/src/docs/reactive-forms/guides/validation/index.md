@@ -1,14 +1,14 @@
-**Formbar** supports native Angular validators and async validators. That means, that all custom validators are fully supported.
+**Formbar** supports native Angular validators and async validators. That means all custom validators are fully supported.
 
-To make the validators available to **formbar** they need to be registered. You can also combine multiple validators under one key, which is useful if you frequently use certain combinations of validators.
+To make validators available to **formbar**, you need to register them. You can also combine multiple validators under one key, which is useful when you frequently use certain combinations.
 
 > **Warning**
 > You can not combine synchronous validators with async ones!
-> Angular itself differentiates between those, so **formbar** does to.
+> Angular itself differentiates between those, so **formbar** does too.
 
 ## Registration
 
-You can register (async) validators under any name you want. Note, that you have to register async validators under a different property.
+You can register (async) validators under any name you want. Note that you have to register async validators under a different property.
 
 ```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
@@ -58,7 +58,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Using a validator
 
-When writing your form configuration, you can add multiple validators for your control. Remember that you need differentiate between `sync` and `async` validators.
+When writing your form configuration, you can add multiple validators for your control. Remember that you need to differentiate between `sync` and `async` validators.
 
 To use a validator for a control, you refer to it by its key.
 
@@ -90,12 +90,12 @@ The following validators are registered by default:
 
 ## Adding Custom Validators
 
-_ngx-formbar_ uses the standard Angular validator functions. That means that writing your own is exactly the same as in Angular itself. Checkout ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
+_ngx-formbar_ uses the standard Angular validator functions. Writing your own is exactly the same as in Angular itself. See ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
 
 
 ### Validator
 
-This example uses a forbidden letter validator, that ensure the letter "A" is not used.
+This example uses a forbidden letter validator that ensures the letter "A" is not used.
 
 ```typescript name="forbidden-letter.validator.ts"
 export function forbiddenLetterAValidator(
@@ -126,11 +126,11 @@ validatorRegistrations: {
 
 Async validators work pretty much the same as synchronous ones.
 
-This example uses a validator, that ensure the text contains the word "async".
+This example uses a validator that ensures the text contains the word "async".
 
 > **Note**
 > Async validators usually do some checks on the server.
-> For this example we only pretend to do so by creating a dummy observable
+> For this example, we only pretend to do so by creating a dummy observable.
 
 ```typescript name="async.validator.ts"
 export function asyncValidator(

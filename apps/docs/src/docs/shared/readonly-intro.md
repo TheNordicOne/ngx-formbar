@@ -1,4 +1,4 @@
-**formbar** does not mark a control as `readonly`, because there is no useful API for reactive forms to achieve this. But you can provide an expression, which will be evaluated, and then use that value in your template.
+**formbar** does not mark a control as `readonly`, since Angular's form API has no built-in concept for this. Provide an expression and use the resolved value in your template.
 
 The readonly state is determined using the following priority (`content` could be any of your controls or groups):
 1. If `content.readonly` is a **boolean**, that value is used directly
@@ -6,5 +6,4 @@ The readonly state is determined using the following priority (`content` could b
 3. If `content.readonly` is a **function expression**, the function's return value is used
 4. If no `readonly` property is defined, the control inherits the readonly state from its parent group
 
-This hierarchical inheritance ensures that child controls are automatically
-set to readonly when their parent group is readonly, unless explicitly overridden.
+Child controls inherit the readonly state from their parent group unless they set their own value.

@@ -2,9 +2,9 @@
   "name": "@ngx-formbar/examples",
   "version": "0.0.1",
   "peerDependencies": {
-    "@angular/common": ">=19.2.0 <22.0.0",
-    "@angular/core": ">=19.2.0 <22.0.0",
-    "@angular/forms": ">=19.2.0 <22.0.0",
+    "@angular/common": ">=20.0.0 <22.0.0",
+    "@angular/core": ">=20.0.0 <22.0.0",
+    "@angular/forms": ">=20.0.0 <22.0.0",
     "@ngx-formbar/core": "workspace:^",
     "@ngx-formbar/reactive-forms": "workspace:^",
     "rxjs": "^7.8.0"

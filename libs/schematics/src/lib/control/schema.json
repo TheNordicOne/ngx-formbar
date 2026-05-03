@@ -38,10 +38,6 @@
       "description": "The suffix of the component. Defaults to 'Control'",
       "default": "Control"
     },
-    "hostDirectiveHelperPath": {
-      "type": "string",
-      "description": "Path to the hostDirective helper"
-    },
     "skipRegistration": {
       "type": "boolean",
       "description": "Skip automatic registration"

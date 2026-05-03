@@ -1,4 +1,4 @@
-This page describes the different concepts and how everything works. It is not required to understand this for normal usage, but valuable in case you configure _ngx-formbar_ by yourself or just are curios.
+This page describes the different concepts and how everything works. You do not need to understand this for normal usage. It is useful if you configure _ngx-formbar_ yourself or are curious about the internals.
 
 ## Registration Types
 
@@ -10,7 +10,7 @@ A token based registration uses a custom injection token to provide the registra
 
 A config based registration uses an object for mapping the keys to the controls. This is then internally translated into the same injection token.
 
-In the end, all values are provided through Angulars dependency injection. The major difference comes from how the injection token is build.
+In the end, all values are provided through Angular's dependency injection. The major difference comes from how the injection token is built.
 
 ### Resolving registrations
 

@@ -61,9 +61,13 @@ function toComponentInfo(
         continue;
       }
 
+      const lowerContent = fileContent.toLowerCase();
       const hasNgxFbHints =
-        fileContent.includes('hostDirectives') ||
-        fileContent.toLowerCase().includes('ngxfb');
+        lowerContent.includes('ngxfb') ||
+        lowerContent.includes('formbarcontrol') ||
+        lowerContent.includes('formbargroup') ||
+        lowerContent.includes('formbarblock') ||
+        fileContent.includes('@ngx-formbar/');
 
       if (!hasNgxFbHints) {
         continue;

@@ -3,4 +3,3 @@ import { NgxFbBlock } from '@ngx-formbar/core';
 export interface <%= classify(interfaceName) %> extends NgxFbBlock {
   type: '<%= key %>';
 }
-

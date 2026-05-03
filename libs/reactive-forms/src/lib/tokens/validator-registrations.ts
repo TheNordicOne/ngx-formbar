@@ -53,7 +53,16 @@ export const NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS_RESOLVED = new InjectionToken<
   },
 });
 
-/** Utility: merge maps left->right, later maps override earlier keys */
+/**
+ * Merges any number of validator maps into a single map. Maps are folded
+ * left to right, so values from later maps replace values from earlier maps
+ * for the same key. Used to combine the built-in defaults with consumer
+ * registrations.
+ *
+ * @param maps Validator maps to merge, in priority order from lowest to
+ *   highest.
+ * @returns A new merged map. Inputs are not mutated.
+ */
 function mergeMapsLastWins<V>(
   ...maps: ReadonlyMap<string, V[]>[]
 ): ReadonlyMap<string, V[]> {

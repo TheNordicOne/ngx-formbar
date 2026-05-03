@@ -1,10 +1,8 @@
-# Custom Resolvers
-
-While ngx-formbar provides built-in resolvers for components and validators, you may want to implement custom resolvers for specialized use cases. This guide explains how to create and use custom component and validator resolvers in your application.
+ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own. This guide explains how to create and use custom component and validator resolvers in your application.
 
 ## Understanding Resolvers
 
-In ngx-formbar, resolvers are responsible for providing components and validators to the form system at runtime. The built-in resolvers use Angular's dependency injection to resolve these dependencies from the configured tokens.
+In ngx-formbar, resolvers provide components and validators to the form system at runtime. The built-in resolvers use Angular's dependency injection to resolve these dependencies from the configured tokens.
 
 There are two types of resolvers:
 

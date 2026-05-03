@@ -1,18 +1,18 @@
 A group is used to group controls together. It results in an Angular `FormGroup` instance.
 
-Most of the time you will only need one or two different group types. Where they really are handy though, is if you need different behaviors. For example one that does not do anything special visually and one that is collapsible.
+Most of the time you only need one or two different group types. They become really handy when you need different behaviors. For example, one group that does nothing special visually and one that is collapsible.
 
+Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, groups are plain Angular components that implement the `ReactiveFormbarGroup<T>` contract. The library writes its state into your component through signal inputs, so you only declare the inputs you actually care about. There is no host directive, no injection, and no manual signal forwarding.
 
 ## Scaffolding via Schematics
 
-Run the Angular schematic to scaffold a new group and register it:
+Run the Angular schematic to scaffold a new group and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarGroup<T>`:
 
 ```bash
 ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentName>]
 ```
 
 See the [Generators page](/fundamentals/generators) for more details.
-
 
 ## Manual Setup
 
@@ -27,7 +27,7 @@ First create an interface for your group.
 import { NgxFbFormGroup } from '@ngx-formbar/core';
 
 export interface Group extends NgxFbFormGroup {
-  // Unique Key of your group that is used for differentiating groups
+  // Unique key of your group that is used for differentiating groups
   type: 'group';
 
   // Additional options only applicable to this group if you want
@@ -37,71 +37,83 @@ export interface Group extends NgxFbFormGroup {
 Then implement the component.
 
 > **Warning**
-> Be sure to bind to `[formGroupName]` on an element (e.g. div, ng-container)
+> Be sure to bind to `[formGroupName]` on an element (e.g. `div`, `ng-container`) and place `<ngxfb-control-outlet />` where the child controls should appear.
+
+{% raw %}
 
 ```typescript group="group-component" name="group.component.ts" icon="angular"
-import { Component, Signal, inject } from '@angular/core';
-import { ReactiveFormsModule, ControlContainer } from '@angular/forms';
-import { NgxFbContent } from '@ngx-formbar/core';
-import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
+import { controlContainerViewProviders } from './control-container.view-provider';
 
 @Component({
-  selector: 'ngxfb-group',
-  imports: [NgxfbAbstractControlDirective, ReactiveFormsModule],
-  templateUrl: './group.component.html',
-  viewProviders: [
-    {
-      provide: ControlContainer,
-      useFactory: () => inject(ControlContainer, { skipSelf: true }),
-    },
-  ],
-  hostDirectives: [
-    {
-      directive: NgxfbGroupDirective,
-      inputs: ['content', 'name'],
-    }
-  ],
+    selector: 'app-group',
+    imports: [ReactiveFormsModule, NgxfbControlOutlet],
+    templateUrl: './group.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    viewProviders: controlContainerViewProviders,
 })
-export class GroupComponent {
-  // Inject the Directive to gain access to all public properties
-  // Make sure to pass the correct type parameter to get proper type information
-  private readonly control = inject(NgxfbGroupDirective<Group>);
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    // Required. The library always provides this
+    readonly name = input.required<string>();
 
-  // Explicitly setting a type definition is not required, but some IDEs work better if they are present
-  readonly content: Signal<Group> = this.control.content;  // The configuration object of the group instance
-  readonly name: Signal<string> = this.control.name;
-  readonly controls: Signal<[string, NgxFbContent][]> = this.control.controls;
+    // Optional contract inputs. Declare only the ones you use
+    readonly isDisabled = input(false);
+    readonly isReadonly = input(false);
+    readonly isHidden = input(false);
+    readonly titleText = input<string | undefined>('');
+    readonly dynamicTitle = input<string>();
+    readonly testId = input('');
+    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);
+
+    // Custom inputs from Group beyond NgxFbFormGroup go here
 }
 ```
 
 ```html group="group-component" name="group.component.html"
-<!-- Just an example -->
-<div [formGroupName]="name()">
-  @for (content of controls(); track content[0]) {
-    <ng-template *ngxfbAbstractControl="content" />
-  }
-</div>
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <ngxfb-control-outlet />
+    <ng-content />
+  </fieldset>
+</ng-container>
 ```
+
+{% endraw %}
+
+The `<ngxfb-control-outlet />` element marks the slot where the library projects the child controls registered for this group. You do not iterate the children yourself. The outlet picks them up automatically via injection. The optional `<ng-content />` lets consumers project additional template content alongside the children.
 
 Finally, register the group in _app.config.ts_
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
-import { loadComponent } from '@ngx-formbar/core';
+import { loadComponent, staticComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '@ngx-formbar/reactive-forms';
+import { GroupComponent } from './group.component';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // other providers
     provideFormbar({
       componentRegistrations: {
-        group: loadComponent(() => import('./group.component').then(m => m.GroupComponent))
-      }
-    })
+        // Eager registration
+        group: staticComponent(GroupComponent),
+
+        // Or lazy registration
+        // group: loadComponent(() =>
+        //   import('./group.component').then((m) => m.GroupComponent),
+        // ),
+      },
+    }),
   ],
 };
 ```
+
+> **Note**
+> `staticComponent` and `loadComponent` come from `@ngx-formbar/core`. `provideFormbar` comes from `@ngx-formbar/reactive-forms`.
 
 ## Configuration
 
@@ -111,35 +123,49 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 
 {% include "../../../shared/hidden-intro.md" %}
 
+The `isHidden` input on the contract reflects the resolved hidden state for this group instance. Declare the input and use it in your template:
+
+> **Note**
+> `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `hiddenHandling: 'auto'` (the default), the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `hiddenHandling: 'manual'`, you stay mounted and decide what to render based on `isHidden()` yourself.
+
+{% raw %}
+
 ```typescript group="hidden-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Component, input } from '@angular/core';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
-export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  // Really only should ever be a boolean return value, but an expression could also return a number, string or object
-  readonly isHidden: Signal<unknown> = this.control.isHidden;
-  readonly name: Signal<string> = this.control.name;
-
-  // Manual visibility handling is configured in the component registration
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly isHidden = input(false);
 }
 ```
 
 ```html group="hidden-group" name="group.component.html"
-@if(isHidden()){
+@if (isHidden()) {
   <span>Some placeholder you want to use</span>
+} @else {
+  <ng-container [formGroupName]="name()">
+    <fieldset>
+      <ngxfb-control-outlet />
+    </fieldset>
+  </ng-container>
 }
-@if(!isHidden()){
-  <div [formGroupName]="name()">
-    @for (content of controls(); track content[0]) {
-      <ng-template *ngxfbAbstractControl="content" />
-    }
-  </div>
-}
+```
+
+{% endraw %}
+
+To opt out of the library's automatic visibility behavior (for example, to keep the host mounted but show a placeholder), set `hiddenHandling: 'manual'` in the registration. The library still resolves and supplies the `isHidden` signal. It will not destroy the component or apply the value strategy. The component stays mounted at all times, and your template decides what to render.
+
+```typescript name="app.config.ts"
+provideFormbar({
+  componentRegistrations: {
+    group: staticComponent(GroupComponent, { hiddenHandling: 'manual' }),
+  },
+});
 ```
 
 {% include "../../../shared/hide-strategy.md" %}
@@ -150,186 +176,227 @@ export class GroupComponent {
 
 {% include "../../../shared/disabled-intro.md" %}
 
+Declare the `isDisabled` input and use it in your template:
+
+{% raw %}
+
 ```typescript group="disabled-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Component, input } from '@angular/core';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
-export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly disabled: Signal<boolean> = this.control.disabled;
-  readonly name: Signal<string> = this.control.name;
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly isDisabled = input(false);
 }
 ```
 
 ```html group="disabled-group" name="group.component.html"
-<div [formGroupName]="name()">
-  @for (content of controls(); track content[0]) {
-    <ng-template *ngxfbAbstractControl="content" />
-  }
-</div>
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
+
 <!-- Only show hint when group is disabled -->
-@if(disabled()){
+@if (isDisabled()) {
   <span>This is no longer relevant</span>
 }
+```
+
+{% endraw %}
+
+By default, the library calls `enable()`/`disable()` on the underlying `FormGroup` whenever the resolved disabled state changes. To manage disabled state yourself, set `disabledHandling: 'manual'` in the registration. The library then only forwards the `isDisabled` signal and leaves the `FormGroup` alone.
+
+```typescript name="app.config.ts"
+provideFormbar({
+  componentRegistrations: {
+    group: staticComponent(GroupComponent, { disabledHandling: 'manual' }),
+  },
+});
 ```
 
 ## Readonly
 
 {% include "../../../shared/readonly-intro.md" %}
 
+Declare the `isReadonly` input and use it in your template:
+
+{% raw %}
+
 ```typescript group="readonly-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Component, input } from '@angular/core';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
-export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly readonly: Signal<boolean> = this.control.readonly;
-  readonly name: Signal<string> = this.control.name;
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly isReadonly = input(false);
 }
 ```
 
 ```html group="readonly-group" name="group.component.html"
-<div [formGroupName]="name()">
-  @for (content of controls(); track content[0]) {
-    <ng-template *ngxfbAbstractControl="content" />
-  }
-</div>
-@if(readonly()){
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
+
+@if (isReadonly()) {
   <span>This cannot be edited</span>
 }
 ```
 
+{% endraw %}
+
 ## Dynamic Title
 
-A group's title can be made responsive to other form data by using the `dynamicTitle` configuration property. You provide an expression string to dynamicTitle (e.g., 'Hello, ' + user.name), and the control's title text will then be computed based on this expression.
+To make a group's title respond to other form data, use the `dynamicTitle` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`). The library evaluates it and forwards the result through the `dynamicTitle` signal input.
 
-Your component can access this computed dynamic title via a signal (e.g., this.control.dynamicTitle). Typically, you'd use this dynamic title if it's available and evaluates to a meaningful string; otherwise, you might fall back to a statically configured title (e.g., this.control.title).
+Declare both `titleText` (the static value from the configuration) and `dynamicTitle`, then derive a `displayTitle` that prefers the dynamic value when it resolves to something meaningful:
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
 {% raw %}
+
 ```typescript group="dynamic-title" name="group.component.ts" icon="angular"
-import { Signal, computed, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Component, computed, input } from '@angular/core';
+import { ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
-export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly titleText = input<string | undefined>('');
+    readonly dynamicTitle = input<string>();
 
-  // Access the computed dynamic title from the directive.
-  // It will be `undefined` if no 'dynamicTitle' expression is set or if it doesn't resolve to a string.
-  readonly dynamicTitle: Signal<string | undefined> = this.control.dynamicTitle;
-
-  readonly staticConfigTitle: Signal<string | undefined> = this.control.title;
-
-  readonly displayTitle = computed(() => {
-    const dynamic = this.dynamicTitle();
-    if (dynamic && dynamic.trim() !== '') {
-      return dynamic;
-    }
-
-    return this.staticConfigTitle() || '';
-  });
+    readonly displayTitle = computed(() => {
+        const dynamic = this.dynamicTitle();
+        if (dynamic && dynamic.trim() !== '') {
+            return dynamic;
+        }
+        return this.titleText() ?? '';
+    });
 }
 ```
 
 ```html group="dynamic-title" name="group.component.html"
-<span> {{ displayTitle() }} </span>
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <legend>{{ displayTitle() }}</legend>
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
 ```
+
 {% endraw %}
 
 ## Test ID
 
 {% include "../../../shared/test-id.md" %}
 
+{% raw %}
+
 ```typescript group="test-id-group" name="group.component.ts" icon="angular"
-import { Signal, inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+import { Component, input } from '@angular/core';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-  // ...
+    // ...
 })
-export class GroupComponent {
-  private readonly control = inject(NgxfbGroupDirective<Group>);
-  readonly testId: Signal<string> = this.control.testId;
-  readonly name: Signal<string> = this.control.name;
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly testId = input('');
 }
 ```
 
 ```html group="test-id-group" name="group.component.html"
-<div [formGroupName]="name()"  [attr.data-testId]="testId() + '-wrapper'">
-  @for (content of controls(); track content[0]) {
-    <ng-template *ngxfbAbstractControl="content" />
-  }
-</div>
+<ng-container [formGroupName]="name()">
+  <fieldset [attr.data-testid]="testId() + '-wrapper'">
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
 ```
+
+{% endraw %}
 
 ## Showing Errors
 
-Showing errors works pretty much the same as always. You get access to the form control and then access `hasError`.
+The contract exposes the resolved validation errors through the `errors` signal input and the touched/dirty status through `isDirty`. This is the recommended way to show errors. There is no need to reach into the underlying form group.
 
-In TypeScript set up a getter
+{% raw %}
 
-```typescript name="group.component.ts" icon="angular"
-import { inject } from '@angular/core';
-import { NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+```typescript group="errors-group" name="group.component.ts" icon="angular"
+import { Component, input } from '@angular/core';
+import { ValidationErrors } from '@angular/forms';
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
-// inject the instance of the directive
-private readonly groupDirective = inject(NgxfbGroupDirective<Group>);
-
-// Get access to the underlying form group
-get formGroup() {
-  return this.groupDirective.formGroup
+@Component({
+    // ...
+})
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);
 }
 ```
 
-Then, in your template you can do something like this
+```html group="errors-group" name="group.component.html"
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
 
-```html name="group.component.html"
-@if(formGroup?.hasError('required')) {
+@if (isDirty() && errors()?.['required']) {
   <span>Required</span>
 }
 ```
 
-## Directive Reference
+{% endraw %}
 
-The `NgxfbGroupDirective<T>` exposes the following public properties and methods:
+For advanced cases that genuinely need the underlying `FormGroup` (for example calling `markAsPristine()` or reading `pending`), you can declare the optional `groupInstance` input. The library writes the resolved `FormGroup` into it:
 
-| Property / Method                 | Type                                     | Description                                                               |
-|-----------------------------------|------------------------------------------|---------------------------------------------------------------------------|
-| `content`                         | `InputSignal<T>`                         | The configuration object of the group instance.                           |
-| `name`                            | `InputSignal<string>`                    | The group's name (the key used in the configuration).                     |
-| `controls`                        | `Signal<[string, NgxFbContent][]>`       | The child controls as key-value pairs from the group's `controls` config. |
-| `isHidden`                        | `Signal<boolean>`                        | Whether the group is currently hidden.                                    |
-| `hiddenAttribute`                 | `Signal<string \| null>`                 | The hidden attribute value for DOM binding. Returns `'hidden'` or `null`. |
-| `disabled`                        | `Signal<boolean>`                        | Whether the group is currently disabled.                                  |
-| `readonly`                        | `Signal<boolean>`                        | Whether the group is currently readonly.                                  |
-| `title`                           | `Signal<string \| undefined>`            | The static title from the group's configuration.                          |
-| `dynamicTitle`                    | `Signal<string \| undefined>`            | The computed dynamic title, if a `dynamicTitle` expression is configured. |
-| `testId`                          | `Signal<string \| undefined>`            | The computed test ID for the group.                                       |
-| `hideStrategy`                    | `Signal<string \| undefined>`            | The group's hide strategy (`'keep'` or `'remove'`).                       |
-| `valueStrategy`                   | `Signal<ValueStrategy \| undefined>`     | The group's value strategy (`'last'`, `'default'`, or `'reset'`).         |
-| `updateStrategy`                  | `Signal<'change' \| 'blur' \| 'submit'>` | The resolved update strategy for the group.                               |
-| `formGroup`                       | `FormGroup \| null`                      | Getter for the underlying `FormGroup` instance.                           |
+```typescript name="group.component.ts" icon="angular"
+import { Component, input } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
+import { Group } from './group.type';
 
-### Advanced
+@Component({
+    // ...
+})
+export class GroupComponent implements ReactiveFormbarGroup<Group> {
+    readonly name = input.required<string>();
+    readonly groupInstance = input<FormGroup>();
+}
+```
 
-| Property / Method               | Type                                     | Description                                                            |
-|---------------------------------|------------------------------------------|------------------------------------------------------------------------|
-| `parentFormGroup`               | `FormGroup \| null`                      | Getter for the parent `FormGroup` containing this group.               |
-| `parentValueStrategy`           | `Signal<ValueStrategy \| undefined>`     | The parent's value strategy, used for inheritance.                     |
-| `setDisabledHandling(handling)` | `(StateHandling) => void`                | Sets disabled handling to `'auto'` or `'manual'`. Default is `'auto'`. |
-| `setTestIdBuilderFn(fn)`        | `(TestIdBuilderFn \| undefined) => void` | Overrides the test ID builder function for this group only.            |
+## Component Contract Reference
+
+The `ReactiveFormbarGroup<T>` contract is implemented by your component. The library detects which inputs you declared (by name) and writes its resolved values into them, so every input below is optional except `name`. Any property you add to `T` beyond `NgxFbFormGroup` becomes an additional signal input on the component.
+
+| Input           | Type                                      | Description                                                                                      |
+|-----------------|-------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `name`          | `SignalInput<string>` (**required**)      | The group's name (the key used in the configuration).                                            |
+| `isDisabled`    | `SignalInput<boolean>`                    | Whether the group is currently disabled.                                                         |
+| `isReadonly`    | `SignalInput<boolean>`                    | Whether the group is currently readonly.                                                         |
+| `isHidden`      | `SignalInput<boolean>`                    | Whether the group is currently hidden (already accounts for parent inheritance).                 |
+| `testId`        | `SignalInput<string>`                     | The computed test ID for the group.                                                              |
+| `hideStrategy`  | `SignalInput<HideStrategy \| undefined>`  | The group's hide strategy (`'keep'` or `'remove'`).                                              |
+| `valueStrategy` | `SignalInput<ValueStrategy \| undefined>` | The group's value strategy (`'last'`, `'default'`, or `'reset'`).                                |
+| `errors`        | `SignalInput<ValidationErrors \| null>`   | Validation errors of the underlying form group.                                                  |
+| `isDirty`       | `SignalInput<boolean>`                    | Whether the underlying form group is dirty.                                                      |
+| `titleText`     | `SignalInput<string \| undefined>`        | The static `title` value from the group configuration.                                           |
+| `dynamicTitle`  | `SignalInput<string \| undefined>`        | The computed dynamic title, if a `dynamicTitle` expression is configured.                        |
+| `groupInstance` | `SignalInput<FormGroup>`                  | The underlying `FormGroup` instance. Only declare this when you need direct access to the group. |

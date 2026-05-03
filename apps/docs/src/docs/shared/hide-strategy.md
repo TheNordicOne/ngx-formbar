@@ -1,14 +1,14 @@
 ### Hide Strategy
 
-Besides visually hiding a control or group, the hidden state can have different effects depending on how this is handled in code.
+Besides visually hiding a control or group, the hidden state can have different effects depending on how the form control should be treated.
 
-This is relevant for when you have a hidden control, but still want to access its value through `this.form.value` or `this.form.getRawValue()`.
+This is relevant when you have a hidden control but still want to access its value through `this.form.value` or `this.form.getRawValue()`.
 
 The following strategies are available:
 
-| Strategy         | Effect                                                                    |
-|------------------|---------------------------------------------------------------------------|
-| `keep` (default) | The control remains in the form model even when hidden                    |
-| `remove`         | The control is removed from the form model and destroyed when hidden      |
+| Strategy         | Effect                                                                            |
+|------------------|-----------------------------------------------------------------------------------|
+| `keep` (default) | The form control stays attached to the parent group while the component is hidden |
+| `remove`         | The form control is removed from the parent group on hide and reattached on show  |
 
-When using the `remove` strategy, the component is structurally removed from the DOM when hidden and recreated when shown again. The value restoration behavior on re-show is determined by the `valueStrategy` option.
+With `hiddenHandling: 'auto'` (the default), the consumer component is destroyed and recreated by the library on every hide/show cycle, regardless of the `hideStrategy`. The strategy only changes whether the form control survives the cycle. With `hiddenHandling: 'manual'`, the component stays mounted at all times and the `hideStrategy` only governs the form control attachment.

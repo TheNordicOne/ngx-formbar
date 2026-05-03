@@ -109,9 +109,9 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-In addition to setting up the `app.config.ts`, you must also add a configuration to let formbar know, that you are using the config registration style.
+In addition to setting up the `app.config.ts`, you must add a configuration file so formbar knows you are using the config registration style.
 
-Add this file next to your `app.config.ts`
+Add this file next to your `app.config.ts`.
 ```json name="formbar.config.json"
 {
   "registrationType": "config"

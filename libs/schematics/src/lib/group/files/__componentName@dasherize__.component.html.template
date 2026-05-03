@@ -1,5 +1,4 @@
 <ng-container [formGroupName]="name()">
-  @for (content of controls(); track content[0]) {
-    <ng-template *ngxfbAbstractControl="content" />
-  }
+  <ngxfb-control-outlet />
+  <ng-content />
 </ng-container>

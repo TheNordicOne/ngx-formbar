@@ -49,11 +49,11 @@ The evaluator supports a range of node types:
   The evaluation runs only in the context of the form object, avoiding global access and potential security vulnerabilities.
 
 - **Cross-group `computedValue` references:**
-  String expressions in `computedValue` that reference fields inside sibling groups (e.g., `'groupA.fieldA + groupB.fieldB'`) do not resolve on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). This affects only `computedValue` — other expression properties (`hidden`, `disabled`, `readonly`, `dynamicLabel`, `dynamicTitle`) work correctly with cross-group references. Use optional chaining as a workaround: `'groupA?.fieldA + " " + groupB?.fieldB'`.
+  String expressions in `computedValue` that reference fields inside sibling groups (e.g., `'groupA.fieldA + groupB.fieldB'`) do not resolve on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). This affects only `computedValue`; other expression properties (`hidden`, `disabled`, `readonly`, `dynamicLabel`, `dynamicTitle`) work correctly with cross-group references. Use optional chaining as a workaround: `'groupA?.fieldA + " " + groupB?.fieldB'`.
 
 ## Function-based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more powerful and type-safe way to define dynamic behavior.
+In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more flexible and type-safe way to define dynamic behavior.
 
 ### Signature
 

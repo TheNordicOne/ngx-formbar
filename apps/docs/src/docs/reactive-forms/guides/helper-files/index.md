@@ -5,12 +5,12 @@ To reduce the amount of boilerplate needed with each component and to improve ma
 
 You can place the helper files in any folder in your project. If you put them in the default location (`app/shared/helper`), they can be discovered automatically.
 
-Otherwise, run schematics with the `--hostDirectiveHelperPath` and/or `--viewProviderHelperPath` flag to point to your files or configure them as defaults. The configuration for each schematic is described on the schematics pages Generators and Register.
+Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to your file or configure it as a default. The configuration for each schematic is described on the schematics pages Generators and Register.
 
 
 ### Control Container View Providers
 
-`ControlContainer` is required for all controls and groups that will be used within _ngx-formbar_. Injection of the control container allows the components to use reactive forms functionality, without needing to pass the form group through inputs and wrapping the template into additional tags. See this YouTube Video for more detailed explanation: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI)
+`ControlContainer` is required for all controls and groups used within _ngx-formbar_. Injecting the control container lets the components use reactive forms functionality without passing the form group through inputs or wrapping the template in extra tags. For a more detailed explanation, see this YouTube video: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI).
 
 ```typescript group="view-provider" name="control-container.view-provider.ts"
 export const controlContainerViewProviders = [
@@ -28,57 +28,14 @@ export const controlContainerViewProviders = [
 })
 ```
 
-### Control Host Directive
+> **Note:** Earlier versions of _ngx-formbar_ shipped additional helpers (`ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, `ngxfbBlockHostDirective`) for applying host directives to consumer components. As of v2.0.0, components implement the interface contract directly, so those host-directive helpers are no longer needed and have been removed.
 
-This is a convenience helper to apply the `NgxfbControlDirective`.
-
-```typescript name="control.host-directive.ts"
-export const ngxfbControlHostDirective = {
-  directive: NgxfbControlDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```typescript name="text-control.component.ts" icon="angular"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfbControlHostDirective
-  ],
-})
-```
-
-### Group Host Directive
-
-This is a convenience helper to apply the `NgxfbGroupDirective`.
-
-```typescript name="group.host-directive.ts"
-export const ngxfbGroupHostDirective = {
-  directive: NgxfbGroupDirective,
-  inputs: ['content', 'name'],
-};
-```
-
-Use it like this:
-
-```typescript name="group.component.ts" icon="angular"
-@Component({
-  // Other component decorator options
-  hostDirectives: [
-    // Apply here
-    ngxfbGroupHostDirective
-  ],
-})
-```
 
 ### Union Types
 
 For official documentation of Union Types checkout the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
 
-Setting up a union type for your own controls is highly recommended, as it gives you much better type safety, when writing your forms in TypeScript.
+Setting up a union type for your own controls is highly recommended. It gives you much better type safety when writing your forms in TypeScript.
 
 ```typescript name="app-controls.type.ts"
 export type MyAppControls = TestTextControl | TestGroup | InfoBlock;

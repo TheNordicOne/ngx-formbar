@@ -1,146 +1,128 @@
 import { Expression } from './expression.type';
 
 /**
- * The foundation for all form controls and groups. It defines the minimal set of
- * properties shared across all content types: type identification and visibility.
+ * Base shape shared by all form content. Carries the type identifier
+ * and the optional hidden expression.
  */
 export interface NgxFbBaseContent {
   /**
-   * Specifies the kind of form control. Determines what control is used and what
-   * additional properties are available.
+   * Identifier of the content type. Selects which component is used
+   * and which additional properties apply.
    */
   type: string;
   /**
-   * A string expression that determines when the control should be hidden.
-   * This condition is evaluated at runtime against the whole form object.
+   * Expression evaluated against the form value that controls visibility.
+   * Accepts a string expression or a predicate function.
    */
   hidden?: Expression<boolean>;
 }
 
 /**
- * Extends the base content with validation and control state management properties.
- * Used as a base for both form controls and groups.
+ * Adds validation and state options on top of {@link NgxFbBaseContent}.
+ * Shared by form controls and form groups.
  */
 export interface NgxFbAbstractControl extends NgxFbBaseContent {
   /**
-   * Array of strings representing names of synchronous validators that apply to the control.
-   * These can be registered globally with a validator registration object.
+   * Names of synchronous validators registered globally for this control.
    */
   validators?: string[];
   /**
-   * Similar to validators, but for asynchronous validation logic that may involve
-   * API calls or other deferred operations.
+   * Names of asynchronous validators registered globally for this control.
    */
   asyncValidators?: string[];
   /**
-   * Defines whether the control should be disabled. Can be a boolean value or a
-   * string expression that evaluates against the form object.
+   * Whether the control is disabled. Accepts a boolean, string expression,
+   * or predicate function evaluated against the form value.
    */
   disabled?: Expression<boolean> | boolean;
-  /**
-   * Specifies how to handle the control when hidden.
-   * @see {@link HideStrategy}
-   */
+  /** @see {@link HideStrategy} */
   hideStrategy?: HideStrategy;
-  /**
-   * Determines how the control's value is handled when visibility changes.
-   * @see {@link ValueStrategy}
-   */
+  /** @see {@link ValueStrategy} */
   valueStrategy?: ValueStrategy;
   /**
-   * Indicates if the control is read-only (displayed but not modifiable).
-   * Accepts either a boolean value or a string expression for dynamic evaluation.
+   * Whether the control is read-only. Accepts a boolean, string expression,
+   * or predicate function evaluated against the form value.
    */
   readonly?: Expression<boolean> | boolean;
-  /**
-   * Specifies when to update the control's value.
-   * @see {@link UpdateStrategy}
-   */
+  /** @see {@link UpdateStrategy} */
   updateOn?: UpdateStrategy;
   /**
-   * A value that is automatically derived and set for the control.
-   * It will overwrite user input if one of its dependencies changes.
+   * Value derived from the form. Overwrites user input whenever a dependency changes.
    */
   computedValue?: Expression<unknown>;
 }
 
 /**
- * Specifies when to update the control's value:
- * - 'change': as user types (default)
- * - 'blur': when control loses focus
- * - 'submit': when form is submitted
+ * When the control's value is written back to the form model.
+ * - `change`: as the user types (default).
+ * - `blur`: when the control loses focus.
+ * - `submit`: when the form is submitted.
  */
 export type UpdateStrategy = 'change' | 'blur' | 'submit' | undefined;
 
 /**
- * Represents a group of controls that can be nested within a form.
+ * A group of nested form controls.
  */
-export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbContent>
+export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem>
   extends NgxFbAbstractControl {
-  /**
-   * Specifies a title for the group
-   */
+  /** Static title for the group. */
   title?: string;
-  /**
-   * Dynamic title that can be evaluated from form data
-   */
+  /** Title evaluated from form data. */
   dynamicTitle?: Expression<string>;
-  /**
-   * Object mapping keys to NgxFbContent that configure the controls of the group
-   */
+  /** Child controls keyed by name. */
   controls: Record<string, T>;
 }
 
 /**
- * Represents an individual form control with label and value properties.
+ * An individual form control with label and value properties.
  */
 export interface NgxFbControl extends NgxFbAbstractControl {
-  /**
-   * Specifies the label for the control
-   */
+  /** Static label for the control. */
   label?: string;
-  /**
-   * Dynamic label that can be evaluated from form data
-   */
+  /** Label evaluated from form data. */
   dynamicLabel?: Expression<string>;
   /**
-   * Default value for the control. Override this type in extending interfaces to match the control's value type.
+   * Default value for the control. Narrow this in extending interfaces
+   * to match the control's value type.
    */
   defaultValue?: unknown;
   /**
-   * Whether this control can have a null value. Used to set the same property through the reactive forms API.
+   * Whether the control rejects null. Maps to the `nonNullable` option
+   * on reactive form controls.
    */
   nonNullable?: boolean;
 }
 
 /**
- * Represents a block element that doesn't behave like a form control.
- * Used for UI elements that aren't part of the form model.
+ * A non-control content element such as a heading or divider.
  */
 export interface NgxFbBlock extends NgxFbBaseContent {
-  /**
-   * Required property for TypeScript to properly do type narrowing
-   */
+  /** Discriminator that lets TypeScript narrow {@link NgxFbItem}. */
   isControl: false;
   [key: string]: unknown;
 }
 
-/**
- * Union type representing all possible content types that can be used in a form.
- */
-export type NgxFbContent = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
+/** Any content that can appear in a form. */
+export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
 
 /**
- * Specifies how to handle the control when hidden:
- * - 'keep': control remains in form model
- * - 'remove': control is removed from form model
+ * What happens to the form control when hidden.
+ * - `keep`: stays in the form model.
+ * - `remove`: detached from the form model.
  */
 export type HideStrategy = 'keep' | 'remove';
 
 /**
- * Determines how the control's value is handled when visibility changes:
- * - 'last': preserves last value
- * - 'default': reverts to default value
- * - 'reset': clears value
+ * What happens to the control's value when visibility changes.
+ * - `last`: preserves the last value.
+ * - `default`: reverts to the default value.
+ * - `reset`: clears the value.
  */
 export type ValueStrategy = 'last' | 'default' | 'reset';
+
+/**
+ * Pairs a content node with the name it is bound under in its parent group.
+ * Consumed by directives and outlets that render a single named entry from a
+ * configuration tree.
+ */
+export type FormConfigEntry<T> = { name: string; config: T };

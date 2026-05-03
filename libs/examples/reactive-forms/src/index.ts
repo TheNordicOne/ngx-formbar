@@ -52,11 +52,3 @@ export {
   asyncValidator,
   asyncGroupValidator,
 } from './lib/validation/async.validators';
-
-// Helpers (view providers, host directive configs)
-export {
-  viewProviders,
-  ngxfbControlHostDirective,
-  ngxfbGroupHostDirective,
-  ngxfbBlockHostDirective,
-} from './lib/helpers';

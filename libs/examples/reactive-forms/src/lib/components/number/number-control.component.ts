@@ -2,46 +2,39 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
+  input,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 import { NumberControl } from '@ngx-formbar/examples';
-import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
-import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
+import { viewProviders } from '../../helpers';
 
 @Component({
   selector: 'ngxfb-examples-number-control',
-  imports: [ReactiveFormsModule, ValidationErrorsComponent],
+  imports: [ReactiveFormsModule],
   templateUrl: './number-control.component.html',
   styleUrl: './number-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
-  hostDirectives: [ngxfbControlHostDirective],
 })
-export class NumberControlComponent {
-  private readonly control = inject(NgxfbControlDirective<NumberControl>);
+export class NumberControlComponent
+  implements ReactiveFormbarControl<NumberControl>
+{
+  readonly name = input.required<string>();
+  readonly isDisabled = input(false);
+  readonly isReadonly = input(false);
+  readonly isHidden = input(false);
+  readonly labelText = input<string | undefined>('');
+  readonly dynamicLabel = input<string>();
+  readonly testId = input('');
+  readonly min = input.required<number>();
+  readonly max = input<number>();
 
-  protected readonly content = this.control.content;
-  protected readonly name = this.control.name;
-  protected readonly isHidden = this.control.isHidden;
-  protected readonly testId = this.control.testId;
-  protected readonly disabled = this.control.disabled;
-  protected readonly readonly = this.control.readonly;
-  protected readonly dynamicLabel = this.control.dynamicLabel;
-  protected readonly label = computed(
-    () => this.dynamicLabel() ?? this.content().label,
-  );
-  protected readonly min = computed(() => this.content().min);
-  protected readonly max = computed(() => this.content().max ?? null);
-  protected get errors() {
-    return this.control.formControl?.errors ?? {};
-  }
-  protected get dirty() {
-    return this.control.formControl?.dirty ?? false;
-  }
-
-  protected get formControl() {
-    return this.control.formControl;
-  }
+  readonly displayLabel = computed(() => {
+    const dynamic = this.dynamicLabel();
+    if (dynamic && dynamic.trim() !== '') {
+      return dynamic;
+    }
+    return this.labelText();
+  });
 }

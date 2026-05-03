@@ -1,4 +1,4 @@
-**formbar** will use Angulars reactive forms API to disable and enable a control or group. You can get access to the disabled state and use it in your template for whatever makes sense.
+**formbar** disables and enables controls and groups through Angular's form API. You can also get access to the resolved disabled state and use it in your template for whatever makes sense.
 
 The disabled state is determined using the following priority (`content` could be any of your controls or groups):
 1. If `content.disabled` is a **boolean**, that value is used directly
@@ -6,5 +6,4 @@ The disabled state is determined using the following priority (`content` could b
 3. If `content.disabled` is a **function expression**, the function's return value is used
 4. If no `disabled` property is defined, the control inherits the disabled state from its parent group
 
-This hierarchical inheritance ensures that child controls are automatically
-disabled when their parent group is disabled, unless explicitly overridden.
+Child controls inherit the disabled state from their parent group unless they set their own value.

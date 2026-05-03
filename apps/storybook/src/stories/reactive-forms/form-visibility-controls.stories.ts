@@ -11,16 +11,12 @@ const meta: Meta<StoryFormHostComponent> = {
 export default meta;
 type Story = StoryObj<StoryFormHostComponent>;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function getFormValue(): Record<string, unknown> {
   return StoryFormHostComponent.lastInstance!.form.getRawValue();
 }
 
 // ---------------------------------------------------------------------------
-// Stories
+// Keep
 // ---------------------------------------------------------------------------
 
 export const ControlKeepLast: Story = {
@@ -29,7 +25,7 @@ export const ControlKeepLast: Story = {
     docs: {
       description: {
         story:
-          'Keep strategy with last value — control removed from view, value preserved in model.',
+          'Keep strategy with last value — control is removed from the DOM when hidden, but its value is preserved in the form model.',
       },
     },
   },
@@ -52,50 +48,152 @@ export const ControlKeepLast: Story = {
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom keep & last value';
 
-    // Fill the field with a custom value
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Keep and use last value',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide the field
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is hidden but still in the DOM (keep strategy)
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Keep and use last value',
-        hidden: true,
-      }),
-    ).toBeInTheDocument();
+    // DOM gone (auto visibility detaches/destroys the host view)
     await expect(
       canvas.queryByRole('textbox', { name: 'Keep and use last value' }),
     ).not.toBeInTheDocument();
 
-    // Value is preserved in the form model (keep strategy)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
+    // Form model still holds the last-typed value (keep + last)
     await expect(getFormValue()['keepLastField']).toBe(customValue);
 
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with the last value
+    // Re-show — input reappears with the same value
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Keep and use last value' }),
     ).toHaveValue(customValue);
   },
 };
+
+export const ControlKeepDefault: Story = {
+  name: 'Keep & Default',
+  parameters: {
+    docs: {
+      description: {
+        story: 'Keep strategy with default — reverts to default when hidden.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      keepDefaultField: {
+        type: 'text',
+        label: 'Keep but use default value',
+        defaultValue: 'default-keep-default',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'default',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom keep & default value';
+    const defaultValue = 'default-keep-default';
+
+    const targetInput = await canvas.findByRole('textbox', {
+      name: 'Keep but use default value',
+    });
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, customValue);
+
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // DOM gone
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Keep but use default value' }),
+    ).not.toBeInTheDocument();
+
+    // Form model holds the defaultValue (keep + default applies setValue(defaultValue) on hide)
+    await expect(getFormValue()['keepDefaultField']).toBe(defaultValue);
+
+    // Re-show — input shows the defaultValue
+    await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', {
+        name: 'Keep but use default value',
+      }),
+    ).toHaveValue(defaultValue);
+  },
+};
+
+export const ControlKeepReset: Story = {
+  name: 'Keep & Reset',
+  parameters: {
+    docs: {
+      description: {
+        story: 'Keep strategy with reset — clears to null when hidden.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      keepResetField: {
+        type: 'text',
+        label: 'Keep but reset value',
+        defaultValue: 'default-keep-reset',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'reset',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const customValue = 'Custom keep & reset value';
+
+    const targetInput = await canvas.findByRole('textbox', {
+      name: 'Keep but reset value',
+    });
+    await userEvent.clear(targetInput);
+    await userEvent.type(targetInput, customValue);
+
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+    await userEvent.clear(triggerInput);
+    await userEvent.type(triggerInput, 'hide');
+
+    // DOM gone
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Keep but reset value' }),
+    ).not.toBeInTheDocument();
+
+    // Form model holds null (keep + reset)
+    await expect(getFormValue()['keepResetField']).toBeNull();
+
+    // Re-show — input is empty
+    await userEvent.clear(triggerInput);
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Keep but reset value' }),
+    ).toHaveValue('');
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Remove
+// ---------------------------------------------------------------------------
 
 export const ControlRemoveLast: Story = {
   name: 'Remove & Last',
@@ -126,42 +224,30 @@ export const ControlRemoveLast: Story = {
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom remove & last value';
 
-    // Fill the field with a custom value
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Remove but remember last value',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide the field
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from the DOM entirely (remove strategy)
+    // DOM gone
     await expect(
       canvas.queryByRole('textbox', {
         name: 'Remove but remember last value',
-        hidden: true,
       }),
     ).not.toBeInTheDocument();
 
-    // Value is not in the form model when hidden (remove strategy)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
+    // Form model has the key removed (remove)
     await expect(getFormValue()['removeLastField']).toBeUndefined();
 
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with the last value
+    // Re-show — cached value restored (last)
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', {
         name: 'Remove but remember last value',
@@ -181,7 +267,6 @@ export const ControlRemoveDefault: Story = {
     },
   },
   args: {
-    autoUpdate: true,
     formConfig: formConfig({
       hideControl: {
         type: 'text',
@@ -201,42 +286,28 @@ export const ControlRemoveDefault: Story = {
     const customValue = 'Custom remove & default value';
     const defaultValue = 'default-remove-default';
 
-    // Fill the field with a custom value
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Remove but use default value',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide the field
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from the DOM entirely (remove strategy)
+    // DOM gone
     await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Remove but use default value',
-        hidden: true,
-      }),
+      canvas.queryByRole('textbox', { name: 'Remove but use default value' }),
     ).not.toBeInTheDocument();
 
-    // Value is not in the form model when hidden
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
+    // Form model has the key removed
     await expect(getFormValue()['removeDefaultField']).toBeUndefined();
 
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with the default value
+    // Re-show — input shows defaultValue
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', {
         name: 'Remove but use default value',
@@ -273,208 +344,33 @@ export const ControlRemoveReset: Story = {
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom remove & reset value';
 
-    // Fill the field with a custom value
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Remove and reset value',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide the field
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Verify field is removed from the DOM entirely (remove strategy)
+    // DOM gone
     await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Remove and reset value',
-        hidden: true,
-      }),
+      canvas.queryByRole('textbox', { name: 'Remove and reset value' }),
     ).not.toBeInTheDocument();
 
-    // Value is not in the form model when hidden
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
+    // Form model has the key removed
     await expect(getFormValue()['removeResetField']).toBeUndefined();
 
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with empty value (reset to null)
+    // Re-show — input is empty (reset)
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Remove and reset value' }),
     ).toHaveValue('');
   },
 };
-
-// ---------------------------------------------------------------------------
-//Keep & Default
-// ---------------------------------------------------------------------------
-
-export const ControlKeepDefault: Story = {
-  name: 'Keep & Default',
-  parameters: {
-    docs: {
-      description: {
-        story: 'Keep strategy with default — reverts to default when hidden.',
-      },
-    },
-  },
-  args: {
-    formConfig: formConfig({
-      hideControl: {
-        type: 'text',
-        label: 'Type "hide" to hide everything',
-      },
-      keepDefaultField: {
-        type: 'text',
-        label: 'Keep but use default value',
-        defaultValue: 'default-keep-default',
-        hidden: 'hideControl === "hide"',
-        hideStrategy: 'keep',
-        valueStrategy: 'default',
-      },
-    }),
-  },
-  play: async ({ canvas, userEvent }) => {
-    const customValue = 'Custom keep & default value';
-    const defaultValue = 'default-keep-default';
-
-    // Fill the field with a custom value
-    const targetInput = await canvas.findByRole('textbox', {
-      name: 'Keep but use default value',
-    });
-    await userEvent.clear(targetInput);
-    await userEvent.type(targetInput, customValue);
-
-    // Hide the field
-    const triggerInput = await canvas.findByRole('textbox', {
-      name: 'Type "hide" to hide everything',
-    });
-    await userEvent.clear(triggerInput);
-    await userEvent.type(triggerInput, 'hide');
-
-    // Verify field is hidden but still in the DOM (keep strategy)
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Keep but use default value',
-        hidden: true,
-      }),
-    ).toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('textbox', { name: 'Keep but use default value' }),
-    ).not.toBeInTheDocument();
-
-    // Value reverts to default in the form model (keep + default strategy)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(getFormValue()['keepDefaultField']).toBe(defaultValue);
-
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with the default value
-    await expect(
-      await canvas.findByRole('textbox', {
-        name: 'Keep but use default value',
-      }),
-    ).toHaveValue(defaultValue);
-  },
-};
-
-// ---------------------------------------------------------------------------
-//Keep & Reset
-// ---------------------------------------------------------------------------
-
-export const ControlKeepReset: Story = {
-  name: 'Keep & Reset',
-  parameters: {
-    docs: {
-      description: {
-        story: 'Keep strategy with reset — clears to null when hidden.',
-      },
-    },
-  },
-  args: {
-    formConfig: formConfig({
-      hideControl: {
-        type: 'text',
-        label: 'Type "hide" to hide everything',
-      },
-      keepResetField: {
-        type: 'text',
-        label: 'Keep but reset value',
-        defaultValue: 'default-keep-reset',
-        hidden: 'hideControl === "hide"',
-        hideStrategy: 'keep',
-        valueStrategy: 'reset',
-      },
-    }),
-  },
-  play: async ({ canvas, userEvent }) => {
-    const customValue = 'Custom keep & reset value';
-
-    // Fill the field with a custom value
-    const targetInput = await canvas.findByRole('textbox', {
-      name: 'Keep but reset value',
-    });
-    await userEvent.clear(targetInput);
-    await userEvent.type(targetInput, customValue);
-
-    // Hide the field
-    const triggerInput = await canvas.findByRole('textbox', {
-      name: 'Type "hide" to hide everything',
-    });
-    await userEvent.clear(triggerInput);
-    await userEvent.type(triggerInput, 'hide');
-
-    // Verify field is hidden but still in the DOM (keep strategy)
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'Keep but reset value',
-        hidden: true,
-      }),
-    ).toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('textbox', { name: 'Keep but reset value' }),
-    ).not.toBeInTheDocument();
-
-    // Value is reset to empty in the form model (keep + reset strategy)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(getFormValue()['keepResetField']).toBeNull();
-
-    // Show field again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Verify field appears with empty value (reset)
-    await expect(
-      await canvas.findByRole('textbox', { name: 'Keep but reset value' }),
-    ).toHaveValue('');
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Remove & Last — Reset clears cache
-// ---------------------------------------------------------------------------
 
 export const ControlRemoveLastResetClearsCache: Story = {
   name: 'Remove & Last — Reset clears cache',
@@ -505,32 +401,29 @@ export const ControlRemoveLastResetClearsCache: Story = {
   play: async ({ canvas, userEvent }) => {
     const defaultValue = 'default-cached';
 
-    for (const [, customValue] of ['First', 'Second', 'Third'].entries()) {
-      // Fill the field with a custom value
+    for (const customValue of ['First', 'Second', 'Third']) {
       const targetInput = await canvas.findByRole('textbox', {
         name: 'Cached field',
       });
       await userEvent.clear(targetInput);
       await userEvent.type(targetInput, customValue);
 
-      // Hide the field (value is cached in FormLifecycleState)
       const triggerInput = await canvas.findByRole('textbox', {
         name: 'Type "hide" to hide everything',
       });
       await userEvent.clear(triggerInput);
       await userEvent.type(triggerInput, 'hide');
 
-      // Verify field is removed from DOM
       await expect(
-        canvas.queryByRole('textbox', { name: 'Cached field', hidden: true }),
+        canvas.queryByRole('textbox', { name: 'Cached field' }),
       ).not.toBeInTheDocument();
 
-      // Reset the form while the control is hidden
+      // Reset while hidden — cache must be cleared
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Reset' }),
       );
 
-      // Verify field appears with default value, NOT the stale cached value
+      // Re-show — input reappears with defaultValue, NOT the stale cached value
       await expect(
         await canvas.findByRole('textbox', { name: 'Cached field' }),
       ).toHaveValue(defaultValue);
@@ -539,16 +432,16 @@ export const ControlRemoveLastResetClearsCache: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Manual Visibility Handling
+// Manual visibility handling
 // ---------------------------------------------------------------------------
 
 export const ManualKeep: Story = {
-  name: 'Manual — Keep',
+  name: 'Manual — Keep & Last',
   parameters: {
     docs: {
       description: {
         story:
-          'With manual visibility handling, the library does not set [attr.hidden] or manage the form model. The component handles visibility itself via @if.',
+          'Manual visibility = DOM-only opt-out. The component decides DOM presence via @if, but the library still applies hideStrategy and valueStrategy. With keep + last the form value stays as last typed and the input shows it again on re-show. The always-rendered marker proves the component instance survives the hide/show cycle.',
       },
     },
   },
@@ -571,39 +464,31 @@ export const ManualKeep: Story = {
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom manual value';
 
-    // Fill the field
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Manual keep field',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Component handles hiding via @if — field is not in DOM
+    // Input gone (component's @if), but the always-rendered marker proves the component is still alive
     await expect(
       canvas.queryByRole('textbox', { name: 'Manual keep field' }),
     ).not.toBeInTheDocument();
+    await expect(
+      canvas.getByTestId('manualKeepField-marker'),
+    ).toBeInTheDocument();
 
-    // Library should NOT have removed control from form model (keep strategy, manual handling)
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
+    // keep + last
     await expect(getFormValue()['manualKeepField']).toBe(customValue);
 
-    // Show again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Value preserved (last strategy, component handles it)
+    // Re-show
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Manual keep field' }),
     ).toHaveValue(customValue);
@@ -611,12 +496,12 @@ export const ManualKeep: Story = {
 };
 
 export const ManualKeepDefault: Story = {
-  name: 'Manual — Keep & Default (no library value handling)',
+  name: 'Manual — Keep & Default',
   parameters: {
     docs: {
       description: {
         story:
-          'With manual handling and default value strategy, the library should NOT reset the value to defaultValue when hidden. The component manages everything.',
+          'Manual visibility opts the component out of DOM management only. The library still applies valueStrategy: default on hide, so the form value becomes the defaultValue and the input shows it again on re-show. The marker proves the component survives the hide.',
       },
     },
   },
@@ -638,49 +523,44 @@ export const ManualKeepDefault: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom manual default value';
+    const defaultValue = 'default-manual';
 
-    // Fill the field
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Manual keep default field',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Library should NOT have applied value strategy (manual mode)
-    // The form model should still have the custom value, NOT defaultValue
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(getFormValue()['manualKeepDefaultField']).toBe(customValue);
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Manual keep default field' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.getByTestId('manualKeepDefaultField-marker'),
+    ).toBeInTheDocument();
 
-    // Show again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
+    // keep + default
+    await expect(getFormValue()['manualKeepDefaultField']).toBe(defaultValue);
 
-    // Value preserved (library didn't touch it)
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Manual keep default field' }),
-    ).toHaveValue(customValue);
+    ).toHaveValue(defaultValue);
   },
 };
 
 export const ManualRemove: Story = {
-  name: 'Manual — Remove',
+  name: 'Manual — Remove & Last',
   parameters: {
     docs: {
       description: {
         story:
-          'With manual visibility handling and remove strategy, the library should NOT destroy the component. The component handles visibility itself.',
+          'Manual visibility opts the component out of DOM management only. The library still applies hideStrategy: remove (form key is absent while hidden) and valueStrategy: last (cached value is restored on show). The marker proves the component survives the hide.',
       },
     },
   },
@@ -703,42 +583,122 @@ export const ManualRemove: Story = {
   play: async ({ canvas, userEvent }) => {
     const customValue = 'Custom manual remove value';
 
-    // Fill the field
     const targetInput = await canvas.findByRole('textbox', {
       name: 'Manual remove field',
     });
     await userEvent.clear(targetInput);
     await userEvent.type(targetInput, customValue);
 
-    // Hide
     const triggerInput = await canvas.findByRole('textbox', {
       name: 'Type "hide" to hide everything',
     });
     await userEvent.clear(triggerInput);
     await userEvent.type(triggerInput, 'hide');
 
-    // Component handles hiding via @if — input not visible
     await expect(
       canvas.queryByRole('textbox', { name: 'Manual remove field' }),
     ).not.toBeInTheDocument();
+    await expect(
+      canvas.getByTestId('manualRemoveField-marker'),
+    ).toBeInTheDocument();
 
-    // Library should NOT have destroyed the component (manual handling)
-    // The control should still be in the form model because the library didn't remove it
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Submit' }),
-    );
-    await expect(getFormValue()['manualRemoveField']).toBe(customValue);
+    // remove
+    await expect(getFormValue()['manualRemoveField']).toBeUndefined();
 
-    // Show again
-    await userEvent.clear(
-      await canvas.findByRole('textbox', {
-        name: 'Type "hide" to hide everything',
-      }),
-    );
-
-    // Value preserved
+    // Re-show — last cached value restored
+    await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Manual remove field' }),
     ).toHaveValue(customValue);
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Stress
+// ---------------------------------------------------------------------------
+
+export const ToggleStorm: Story = {
+  name: 'Toggle Storm',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Rapidly flip the trigger between hide and show several times. Only the final observable state is asserted — both controls must end in a state consistent with the final trigger value, regardless of intermediate flips. Catches race conditions in the hide/show pipeline.',
+      },
+    },
+  },
+  args: {
+    formConfig: formConfig({
+      hideControl: {
+        type: 'text',
+        label: 'Type "hide" to hide everything',
+      },
+      keepField: {
+        type: 'text',
+        label: 'Storm keep field',
+        defaultValue: 'default-storm-keep',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'keep',
+        valueStrategy: 'last',
+      },
+      removeField: {
+        type: 'text',
+        label: 'Storm remove field',
+        defaultValue: 'default-storm-remove',
+        hidden: 'hideControl === "hide"',
+        hideStrategy: 'remove',
+        valueStrategy: 'last',
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const keepInput = await canvas.findByRole('textbox', {
+      name: 'Storm keep field',
+    });
+    const removeInput = await canvas.findByRole('textbox', {
+      name: 'Storm remove field',
+    });
+    await userEvent.clear(keepInput);
+    await userEvent.type(keepInput, 'keep typed');
+    await userEvent.clear(removeInput);
+    await userEvent.type(removeInput, 'remove typed');
+
+    const triggerInput = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide everything',
+    });
+
+    // Storm: hide → show → hide → show → hide. Final state is hidden.
+    for (let i = 0; i < 3; i++) {
+      await userEvent.clear(triggerInput);
+      await userEvent.type(triggerInput, 'hide');
+      await userEvent.clear(triggerInput);
+    }
+    await userEvent.type(triggerInput, 'hide');
+
+    // Final state — both gone from DOM
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Storm keep field' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Storm remove field' }),
+    ).not.toBeInTheDocument();
+
+    // Form model reflects the final hideStrategy of each control
+    await expect(getFormValue()['keepField']).toBe('keep typed');
+    await expect(getFormValue()['removeField']).toBeUndefined();
+
+    // Storm back to visible: show → hide → show → hide → show. Final state is visible.
+    for (let i = 0; i < 3; i++) {
+      await userEvent.clear(triggerInput);
+      await userEvent.type(triggerInput, 'hide');
+    }
+    await userEvent.clear(triggerInput);
+
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Storm keep field' }),
+    ).toHaveValue('keep typed');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Storm remove field' }),
+    ).toHaveValue('remove typed');
   },
 };

@@ -1,13 +1,17 @@
-import { Component, Signal, inject } from '@angular/core';
-import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
-import { NgxfbAbstractControlDirective, NgxfbGroupDirective } from '@ngx-formbar/reactive-forms';
+<% if (!hasViewProviderHelper) { %>import { Component, inject, input } from '@angular/core';
+import { ControlContainer, ReactiveFormsModule } from '@angular/forms';
+<% } else { %>import { Component, input } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+<% } %>import {
+  NgxfbControlOutlet,
+  ReactiveFormbarGroup,
+} from '@ngx-formbar/reactive-forms';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
-import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
-import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
+import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
-  imports: [ReactiveFormsModule, NgxfbAbstractControlDirective],
+  imports: [ReactiveFormsModule, NgxfbControlOutlet],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
   viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
     {
@@ -15,15 +19,7 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
     }
   ]<% } %>,
-  hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
-    {
-      directive: NgxfbGroupDirective,
-      inputs: ['content', 'name'],
-    }
-  ]<% } %>,
 })
-export class <%= classify(componentClassName) %> {
-  private readonly group = inject(NgxfbGroupDirective<<%= classify(interfaceName) %>>);
-  readonly content: Signal<<%= classify(interfaceName) %>> = this.group.content;
-  readonly name: Signal<string> = this.group.name;
+export class <%= classify(componentClassName) %> implements ReactiveFormbarGroup<<%= classify(interfaceName) %>> {
+  readonly name = input.required<string>();
 }

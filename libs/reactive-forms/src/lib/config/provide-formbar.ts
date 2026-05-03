@@ -29,20 +29,23 @@ import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 import { FormbarConfig } from '../types/provide.type';
 
 /**
- * Configures and provides ngx-formbar to your application.
+ * Provides ngx-formbar to an Angular application. Use in `app.config.ts` to
+ * register components, validators, and global configuration. Angular's
+ * `required`, `requiredTrue`, `email`, and `nullValidator` are registered by
+ * default.
  *
- * This function is used in app.config.ts to register form components, validators,
- * and set global configuration for the formbar library.
- *
- * @param config Configuration object for ngx-formbar:
- *   - componentRegistrations: Optional mapping of control types to component implementations
- *   - validatorRegistrations: Optional mapping of validator names to validator functions
- *     (Angular's required, requiredTrue, email, and nullValidator are registered by default)
- *   - asyncValidatorRegistrations: Optional mapping of async validator names to async validator functions
- *   - updateOn: Optional default update strategy for all form controls
- *   - globalConfig: Optional global configuration settings
- *
- * @returns Angular environment providers to be included in application configuration
+ * @param config Optional {@link FormbarConfig}. Each field is independent:
+ *   - `componentRegistrations`: maps control `type` strings to component
+ *     registration entries (static or lazy).
+ *   - `validatorRegistrations`: registers sync validator keys; merged with
+ *     the built-in defaults so user keys can shadow them.
+ *   - `asyncValidatorRegistrations`: registers async validator keys.
+ *   - `updateOn`: default `UpdateStrategy` applied to every control unless
+ *     the control or its parent group sets its own.
+ *   - `globalConfig`: arbitrary global configuration consumed via
+ *     `NGX_FW_CONFIG` (multi).
+ * @returns Angular `EnvironmentProviders` to include in the application
+ *   provider list.
  *
  * @example
  * ```ts
@@ -129,12 +132,6 @@ export function provideFormbar<
   return makeEnvironmentProviders(providers);
 }
 
-/**
- * Converts component registration array to a lookup map
- *
- * @param componentRegistrations Array of component registration configurations
- * @returns Map of component types to component implementations
- */
 function toComponentRegistrationMap(
   componentRegistrations: ComponentRegistrationConfig,
 ) {
@@ -143,25 +140,12 @@ function toComponentRegistrationMap(
   );
 }
 
-/**
- * Converts validator configuration to a map of validator functions
- * Resolves validator keys to actual validator functions
- *
- * @param config Configuration object for validators
- * @returns Map of validator keys to validator function arrays
- */
 function toValidatorRegistrationMap<S extends RegistrationRecord>(
   config: ValidatorConfig<S>,
 ): ReadonlyMap<string, ValidatorFn[]> {
   return toValidatorMap<S, ValidatorFn>(config);
 }
 
-/**
- * Converts async validator configuration to a map of async validator functions
- *
- * @param config Configuration object for async validators
- * @returns Map of validator keys to async validator function arrays
- */
 function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
   config: AsyncValidatorConfig<A>,
 ): ReadonlyMap<string, AsyncValidatorFn[]> {
@@ -169,14 +153,20 @@ function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
 }
 
 /**
- * Resolves validator references to actual validator functions
- * Supports recursive validator references and memoization
+ * Flattens an array of validator functions and string keys into validator
+ * functions. Resolves keys via `registrations`, follows nested references
+ * recursively, memoizes results, and throws on cyclic references or unknown
+ * keys.
  *
- * @param validators Array of validator functions or validator keys
- * @param registrations Map of all registered validators
- * @param memo Memoization cache to avoid circular references
- * @param visiting Set tracking visited validator keys to detect circular references
- * @returns Flattened array of validator functions
+ * @param validators Mixed array of validator functions and registration keys
+ *   to flatten.
+ * @param registrations Source map of all registered validators, keyed by
+ *   validator name.
+ * @param memo Memoization cache shared across recursive calls so repeated
+ *   keys resolve only once.
+ * @param visiting Set of keys on the active resolution path. Used to detect
+ *   cycles; throws when a key is revisited before its resolution completes.
+ * @returns A flattened array of validator functions of type `V`.
  */
 function toValidatorFn<T extends RegistrationRecord, V>(
   validators: (V | ValidatorKey<T>)[],

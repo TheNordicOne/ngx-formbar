@@ -2,17 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
+  input,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { TextControl } from '@ngx-formbar/examples';
-import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { ManualTextControl } from '@ngx-formbar/examples';
+import { viewProviders } from '../../helpers';
 
 /**
  * A text control that handles its own visibility.
  *
- * Registered with `visibilityHandling: 'manual'` — the library does not
+ * Registered with `hiddenHandling: 'manual'`. The library does not
  * manage hiding, form model removal, or value strategy for this component.
  * The component reads `isHidden` and decides what to render.
  */
@@ -22,18 +22,23 @@ import { ngxfbControlHostDirective, viewProviders } from '../../helpers';
   templateUrl: './manual-text-control.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
-  hostDirectives: [ngxfbControlHostDirective],
 })
-export class ManualTextControlComponent {
-  private readonly control = inject(NgxfbControlDirective<TextControl>);
+export class ManualTextControlComponent
+  implements ReactiveFormbarControl<ManualTextControl>
+{
+  readonly name = input.required<string>();
+  readonly isDisabled = input(false);
+  readonly isReadonly = input(false);
+  readonly isHidden = input(false);
+  readonly labelText = input<string | undefined>('');
+  readonly dynamicLabel = input<string>();
+  readonly testId = input('');
 
-  protected readonly content = this.control.content;
-  protected readonly name = this.control.name;
-  protected readonly isHidden = this.control.isHidden;
-  protected readonly testId = this.control.testId;
-  protected readonly label = computed(() => this.content().label);
-
-  protected get formControl() {
-    return this.control.formControl;
-  }
+  readonly displayLabel = computed(() => {
+    const dynamic = this.dynamicLabel();
+    if (dynamic && dynamic.trim() !== '') {
+      return dynamic;
+    }
+    return this.labelText();
+  });
 }

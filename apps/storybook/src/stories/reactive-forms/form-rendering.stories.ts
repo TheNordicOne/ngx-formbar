@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect } from 'storybook/test';
 import { applicationConfig } from '@storybook/angular';
+import { expect } from 'storybook/test';
 import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { NgxFbBaseContent } from '@ngx-formbar/core';
 import { StoryFormHostComponent } from './story-form-host.component';
@@ -19,7 +19,12 @@ type Story = StoryObj<StoryFormHostComponent>;
 
 export const FormContent: Story = {
   parameters: {
-    docs: { description: { story: 'Renders all content types with default values, including nested groups.' } },
+    docs: {
+      description: {
+        story:
+          'Renders all content types with default values, including nested groups.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -83,20 +88,34 @@ export const FormContent: Story = {
   },
   play: async ({ canvas }) => {
     // Top-level text controls render with default values
-    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveValue('default-first');
-    await expect(await canvas.findByRole('textbox', { name: 'Second' })).toHaveValue('default-second');
-    await expect(await canvas.findByRole('textbox', { name: 'Third' })).toHaveValue('default-third');
-    await expect(await canvas.findByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
-    await expect(await canvas.findByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First' }),
+    ).toHaveValue('default-first');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second' }),
+    ).toHaveValue('default-second');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Third' }),
+    ).toHaveValue('default-third');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fourth' }),
+    ).toHaveValue('default-fourth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fifth' }),
+    ).toHaveValue('default-fifth');
 
     // Note block renders its message
-    await expect(await canvas.findByText('This is an information')).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('This is an information'),
+    ).toBeInTheDocument();
 
     // First group with legend
-    await expect(await canvas.findByRole('group', { name: 'First Group' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Grouped First label' })).toHaveValue(
-      'default-grouped-first',
-    );
+    await expect(
+      await canvas.findByRole('group', { name: 'First Group' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Grouped First label' }),
+    ).toHaveValue('default-grouped-first');
 
     // Nested group with legend
     await expect(
@@ -114,7 +133,11 @@ export const FormContent: Story = {
 
 export const GroupContent: Story = {
   parameters: {
-    docs: { description: { story: 'Renders a group with nested groups and controls.' } },
+    docs: {
+      description: {
+        story: 'Renders a group with nested groups and controls.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -143,11 +166,17 @@ export const GroupContent: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('group', { name: 'First Group' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('group', { name: 'First Group' }),
+    ).toBeInTheDocument();
 
-    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First label' }),
+    ).toBeInTheDocument();
 
-    await expect(await canvas.findByRole('group', { name: 'Nested Group' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('group', { name: 'Nested Group' }),
+    ).toBeInTheDocument();
 
     await expect(
       await canvas.findByRole('textbox', { name: 'Second label' }),
@@ -161,7 +190,12 @@ export const GroupContent: Story = {
 
 export const PatchAndReset: Story = {
   parameters: {
-    docs: { description: { story: 'Patches form values and resets, verifying nullable vs nonNullable behavior.' } },
+    docs: {
+      description: {
+        story:
+          'Patches form values and resets, verifying nullable vs nonNullable behavior.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -205,29 +239,59 @@ export const PatchAndReset: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Verify default values are rendered
-    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveValue('default-first');
-    await expect(await canvas.findByRole('textbox', { name: 'Second' })).toHaveValue('default-second');
-    await expect(await canvas.findByRole('textbox', { name: 'Third' })).toHaveValue('default-third');
-    await expect(await canvas.findByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
-    await expect(await canvas.findByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First' }),
+    ).toHaveValue('default-first');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second' }),
+    ).toHaveValue('default-second');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Third' }),
+    ).toHaveValue('default-third');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fourth' }),
+    ).toHaveValue('default-fourth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fifth' }),
+    ).toHaveValue('default-fifth');
 
     // Patch values
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveValue('patched-first');
-    await expect(await canvas.findByRole('textbox', { name: 'Second' })).toHaveValue('patched-second');
-    await expect(await canvas.findByRole('textbox', { name: 'Third' })).toHaveValue('patched-third');
-    await expect(await canvas.findByRole('textbox', { name: 'Fourth' })).toHaveValue('patched-fourth');
-    await expect(await canvas.findByRole('textbox', { name: 'Fifth' })).toHaveValue('patched-fifth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First' }),
+    ).toHaveValue('patched-first');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second' }),
+    ).toHaveValue('patched-second');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Third' }),
+    ).toHaveValue('patched-third');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fourth' }),
+    ).toHaveValue('patched-fourth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fifth' }),
+    ).toHaveValue('patched-fifth');
 
     // Reset — nullable controls clear, nonNullable controls revert to defaults
     await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'First' })).toHaveValue('');
-    await expect(await canvas.findByRole('textbox', { name: 'Second' })).toHaveValue('');
-    await expect(await canvas.findByRole('textbox', { name: 'Third' })).toHaveValue('');
-    await expect(await canvas.findByRole('textbox', { name: 'Fourth' })).toHaveValue('default-fourth');
-    await expect(await canvas.findByRole('textbox', { name: 'Fifth' })).toHaveValue('default-fifth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First' }),
+    ).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Second' }),
+    ).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Third' }),
+    ).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fourth' }),
+    ).toHaveValue('default-fourth');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Fifth' }),
+    ).toHaveValue('default-fifth');
   },
 };
 
@@ -237,7 +301,11 @@ export const PatchAndReset: Story = {
 
 export const ContentRegistration: Story = {
   parameters: {
-    docs: { description: { story: 'Verifies that registered content renders in the form.' } },
+    docs: {
+      description: {
+        story: 'Verifies that registered content renders in the form.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -250,7 +318,9 @@ export const ContentRegistration: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('textbox', { name: 'Test' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Test' }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -260,7 +330,12 @@ export const ContentRegistration: Story = {
 
 export const DefaultTestId: Story = {
   parameters: {
-    docs: { description: { story: 'Verifies the default testId naming convention across nesting levels.' } },
+    docs: {
+      description: {
+        story:
+          'Verifies the default testId naming convention across nesting levels.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -330,7 +405,12 @@ export const DefaultTestId: Story = {
 
 export const CustomTestIdBuilder: Story = {
   parameters: {
-    docs: { description: { story: 'Verifies a custom testIdBuilderFn overrides the default naming.' } },
+    docs: {
+      description: {
+        story:
+          'Verifies a custom testIdBuilderFn overrides the default naming.',
+      },
+    },
   },
   decorators: [
     applicationConfig({
@@ -389,7 +469,9 @@ export const CustomTestIdBuilder: Story = {
     ).toBeInTheDocument();
 
     // Top-level note block: root-note-block
-    await expect(await canvas.findByTestId('root-note-block')).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('root-note-block'),
+    ).toBeInTheDocument();
 
     // Group: root-group-first-group
     await expect(
@@ -421,7 +503,11 @@ export const CustomTestIdBuilder: Story = {
 
 export const ControlProperties: Story = {
   parameters: {
-    docs: { description: { story: 'Renders a control with label, hint, and default value.' } },
+    docs: {
+      description: {
+        story: 'Renders a control with label, hint, and default value.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -436,12 +522,14 @@ export const ControlProperties: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First label' }),
+    ).toBeInTheDocument();
     await expect(await canvas.findByText('First label')).toBeInTheDocument();
     await expect(await canvas.findByText('This is a hint')).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toHaveValue(
-      'First Default',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First label' }),
+    ).toHaveValue('First Default');
   },
 };
 
@@ -451,7 +539,9 @@ export const ControlProperties: Story = {
 
 export const NoDefaultValue: Story = {
   parameters: {
-    docs: { description: { story: 'Renders a control without a default value.' } },
+    docs: {
+      description: { story: 'Renders a control without a default value.' },
+    },
   },
   args: {
     formConfig: {
@@ -465,10 +555,14 @@ export const NoDefaultValue: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First label' }),
+    ).toBeInTheDocument();
     await expect(await canvas.findByText('First label')).toBeInTheDocument();
     await expect(await canvas.findByText('This is a hint')).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'First label' })).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'First label' }),
+    ).toHaveValue('');
   },
 };
 
@@ -478,7 +572,12 @@ export const NoDefaultValue: Story = {
 
 export const SubmitFormValues: Story = {
   parameters: {
-    docs: { description: { story: 'Fills all fields and submits, verifying the rendered form values.' } },
+    docs: {
+      description: {
+        story:
+          'Fills all fields and submits, verifying the rendered form values.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -562,16 +661,22 @@ export const SubmitFormValues: Story = {
     await userEvent.clear(fifthInput);
     await userEvent.type(fifthInput, 'Something');
 
-    const groupedFirstInput = await canvas.findByRole('textbox', { name: 'Grouped First label' });
+    const groupedFirstInput = await canvas.findByRole('textbox', {
+      name: 'Grouped First label',
+    });
     await userEvent.clear(groupedFirstInput);
     await userEvent.type(groupedFirstInput, 'Grouped Input');
 
-    const nestedSecondInput = await canvas.findByRole('textbox', { name: 'Nested Second label' });
+    const nestedSecondInput = await canvas.findByRole('textbox', {
+      name: 'Nested Second label',
+    });
     await userEvent.clear(nestedSecondInput);
     await userEvent.type(nestedSecondInput, 'Nested Grouped Input');
 
     // Click submit button
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
 
     // Verify rendered form values
     await expect(await canvas.findByTestId('first-value')).toHaveTextContent(

@@ -7,11 +7,14 @@ import {
 } from '../types/registration.type';
 
 /**
- * Creates a static component registration entry.
- * Use for eagerly imported components that don't need lazy loading.
+ * Creates a static component registration entry for an eagerly imported component.
  *
- * @param type The component class to register
- * @param options Optional configuration for this component type
+ * @param type Component class to instantiate when the matching content type is
+ *   resolved.
+ * @param options Optional behavior flags such as `hiddenHandling` and
+ *   `disabledHandling`. Defaults apply when omitted.
+ * @returns Registration object suitable for use in a
+ *   {@link ComponentRegistrationConfig}.
  *
  * @example
  * ```ts
@@ -19,11 +22,8 @@ import {
  * import { TextComponent } from './text.component';
  *
  * const registrations = {
- *   // Default: library manages visibility automatically
  *   text: staticComponent(TextComponent),
- *
- *   // Manual: component handles its own visibility
- *   custom: staticComponent(CustomComponent, { visibilityHandling: 'manual' }),
+ *   custom: staticComponent(CustomComponent, { hiddenHandling: 'manual' }),
  * };
  * ```
  */
@@ -35,24 +35,24 @@ export function staticComponent(
 }
 
 /**
- * Creates a lazy component registration entry.
- * Use for components that should be loaded on demand.
+ * Creates a lazy component registration entry that is loaded on demand.
  *
- * @param load Function that returns a Promise resolving to the component class
- * @param options Optional configuration for this component type
+ * @param load Loader that returns a promise resolving to the component class.
+ *   Typically a dynamic `import()` so the component lands in its own chunk.
+ * @param options Optional behavior flags such as `hiddenHandling` and
+ *   `disabledHandling`. Defaults apply when omitted.
+ * @returns Registration object suitable for use in a
+ *   {@link ComponentRegistrationConfig}.
  *
  * @example
  * ```ts
  * import { loadComponent } from '@ngx-formbar/core';
  *
  * const registrations = {
- *   // Default: library manages visibility automatically
  *   text: loadComponent(() => import('./text.component').then(m => m.TextComponent)),
- *
- *   // Manual: component handles its own visibility
  *   custom: loadComponent(
  *     () => import('./custom.component').then(m => m.CustomComponent),
- *     { visibilityHandling: 'manual' },
+ *     { hiddenHandling: 'manual' },
  *   ),
  * };
  * ```

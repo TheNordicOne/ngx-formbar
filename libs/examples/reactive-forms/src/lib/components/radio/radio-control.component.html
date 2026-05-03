@@ -1,6 +1,6 @@
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
-    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ label() }}</label>
+    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <div class="radio-group">
       @for (option of options(); track option) {
         <div class="radio-option">
@@ -15,6 +15,5 @@
         </div>
       }
     </div>
-    <ngxfb-examples-validation-errors [errors]="errors" [testId]="testId()" [dirty]="dirty" />
   </div>
 }

@@ -9,9 +9,9 @@
     "@ngx-formbar/setup": "workspace:^"
   },
   "peerDependencies": {
-    "@angular-devkit/core": ">=19.2.0 <22.0.0",
-    "@angular-devkit/schematics": ">=19.2.0 <22.0.0",
-    "@schematics/angular": ">=19.2.0 <22.0.0",
+    "@angular-devkit/core": ">=20.0.0 <22.0.0",
+    "@angular-devkit/schematics": ">=20.0.0 <22.0.0",
+    "@schematics/angular": ">=20.0.0 <22.0.0",
     "typescript": ">=5.4.0"
   },
   "publishConfig": {

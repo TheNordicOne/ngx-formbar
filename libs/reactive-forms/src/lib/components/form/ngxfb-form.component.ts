@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
 } from '@angular/core';
 import { FormService } from '../../services/form.service';
@@ -11,49 +12,49 @@ import {
   formLifecycleStateFactory,
 } from '../../services/form-lifecycle-state';
 import {
+  NGX_FW_FORM_VALUE,
   NgxFbBaseContent,
-  NgxFbContent,
   NgxFbForm,
+  NgxFbItem,
 } from '@ngx-formbar/core';
-import { NgxfbAbstractControlDirective } from '../../directives/ngxfb-abstract-control.directive';
+import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
+import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 /**
- * Ngx Formbar Form Component
- *
- * This component serves as the main container for Ngx Formbar forms:
- * - Takes a form configuration
- * - Establishes the form context through FormService provider
- * - Renders each content item using NgxfbAbstractControlDirective
- * - Handles component registration and dependency injection
- *
- * The component acts as the root element for declarative form creation,
- * processing the form content configuration and rendering the appropriate
- * components for each control defined in the configuration.
+ * Root component for an Ngx Formbar form. Takes a form configuration and
+ * mounts each entry through the control outlet.
  */
 @Component({
   selector: 'ngxfb-form',
-  imports: [NgxfbAbstractControlDirective],
-  templateUrl: './ngxfb-form.component.html',
+  imports: [NgxfbControlOutlet],
+  template: `<ngxfb-control-outlet />`,
   providers: [
     FormService,
     {
       provide: FORM_LIFECYCLE_STATE,
       useFactory: formLifecycleStateFactory,
     },
+    {
+      provide: NGX_FW_FORM_VALUE,
+      useFactory: () => inject(FormService).formValue,
+    },
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  viewProviders: [controlContainerViewProviders],
+  viewProviders: [
+    controlContainerViewProviders,
+    {
+      provide: NGXFB_CONTROL_ENTRIES,
+      useFactory: () => inject(NgxfbFormComponent).formContent,
+    },
+  ],
 })
-export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbContent> {
-  /**
-   * Required input containing form configuration
-   */
+export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
   readonly formConfig = input.required<NgxFbForm<T>>();
 
-  /**
-   * Computed value containing form content
-   */
   readonly formContent = computed(() =>
-    Object.entries(this.formConfig().content),
+    Object.entries(this.formConfig().content).map(([name, config]) => ({
+      name,
+      config,
+    })),
   );
 }
