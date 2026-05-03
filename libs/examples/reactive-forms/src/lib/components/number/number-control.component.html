@@ -4,7 +4,7 @@
     <input
       type="number"
       [id]="name()"
-      [attr.min]="min() ?? null"
+      [attr.min]="min()"
       [attr.max]="max() ?? null"
       [formControlName]="name()"
       [attr.readonly]="isReadonly() || null"

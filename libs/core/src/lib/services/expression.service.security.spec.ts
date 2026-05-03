@@ -69,27 +69,27 @@ describe('ExpressionService — sandbox boundary', () => {
     });
 
     it('rejects invoking the Function constructor reached via .constructor.constructor', () => {
-      expect(() => evaluate('arr.constructor.constructor("return 1")', { arr: [] })).toThrow(
+      expect(() =>
+        evaluate('arr.constructor.constructor("return 1")', { arr: [] }),
+      ).toThrow(/not supported on type function/);
+    });
+
+    it('rejects .call() on a function reference', () => {
+      expect(() => evaluate('s.toUpperCase.call("hi")', { s: 'foo' })).toThrow(
         /not supported on type function/,
       );
     });
 
-    it('rejects .call() on a function reference', () => {
-      expect(() =>
-        evaluate('s.toUpperCase.call("hi")', { s: 'foo' }),
-      ).toThrow(/not supported on type function/);
-    });
-
     it('rejects .apply() on a function reference', () => {
-      expect(() =>
-        evaluate('s.toUpperCase.apply("hi")', { s: 'foo' }),
-      ).toThrow(/not supported on type function/);
+      expect(() => evaluate('s.toUpperCase.apply("hi")', { s: 'foo' })).toThrow(
+        /not supported on type function/,
+      );
     });
 
     it('rejects .bind() on a function reference', () => {
-      expect(() =>
-        evaluate('s.toUpperCase.bind("hi")', { s: 'foo' }),
-      ).toThrow(/not supported on type function/);
+      expect(() => evaluate('s.toUpperCase.bind("hi")', { s: 'foo' })).toThrow(
+        /not supported on type function/,
+      );
     });
   });
 
@@ -159,6 +159,7 @@ describe('ExpressionService — sandbox boundary', () => {
 
     it('does not mutate the context', () => {
       const ctx: FormContext = { items: [1, 2, 3], person: { age: 30 } };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const snapshot = JSON.parse(JSON.stringify(ctx));
       evaluate('items.map(x => x + 1).filter(x => x > 1)', ctx);
       evaluate('person.age > 18 ? "adult" : "minor"', ctx);

@@ -165,7 +165,7 @@ const isReadonly = withReadonlyState(content);
 
 ### withTestId
 
-Builds a hierarchical test id using `NgxFbConfigurationService.testIdBuilder`, scoped under the parent group's resolved test id when present.
+Builds a hierarchical test id using the `testIdBuilder` accessor on `NgxFbConfigurationService`, scoped under the parent group's resolved test id when present.
 
 ```typescript
 const testId = withTestId(content, name); // Signal<string>

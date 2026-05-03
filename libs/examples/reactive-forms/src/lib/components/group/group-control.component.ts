@@ -40,6 +40,6 @@ export class GroupControlComponent
     if (dynamic && dynamic.trim() !== '') {
       return dynamic;
     }
-    return this.titleText() || (this.legend() ?? '');
+    return this.titleText() ?? this.legend() ?? '';
   });
 }
