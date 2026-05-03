@@ -28,6 +28,7 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 
 - Hide, disable, or mark a control as readonly through an expression that evaluates against the form's current value.
 - Each can also be set statically or inherited from a parent group.
+- Per-control hide strategy: `keep` leaves the form control attached to the parent group while hidden, `remove` detaches it on hide and reattaches it on show.
 - Three value strategies for hidden controls: keep the last value, reset, or apply a configured default.
 
 ## Dynamic values and labels
@@ -48,11 +49,14 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 - Bundle commonly-used validator combinations behind a single key.
 - Custom validator resolvers for cross-cutting validation logic.
 
-## Forms and testing
+## Forms
 
 - The form remains a standard Angular form. Read and write values through Angular's own form API; nothing library-specific to learn.
 - Configurable update strategy (`change`, `blur`, `submit`) at the form level, with per-control overrides and parent-group inheritance.
 - Resetting the form re-evaluates all conditional state, computed values, and dynamic labels in one pass.
+
+## Testing
+
 - Automatic test-id generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
 
 ## Planned features
@@ -67,6 +71,5 @@ Committed for future versions, in no particular order.
 
 Ideas under consideration with no commitment to ship. Feedback is welcome if any of them would unblock work for you.
 
-- A built-in editor UI for authoring valid configurations.
 - An optional self-contained form mode that bundles state management.
 - Defining expression functions in TypeScript and referencing them by name from a JSON configuration.
