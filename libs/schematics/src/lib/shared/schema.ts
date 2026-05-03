@@ -24,9 +24,6 @@ export interface ScaffoldContext extends Schema {
   hasViewProviderHelper: boolean;
   viewProviderHelperPath?: string;
   viewProviderIdentifier?: string;
-  hasHostDirectiveHelper: boolean;
-  hostDirectiveHelperPath?: string;
-  hostDirectiveIdentifier?: string;
   controlRegistrationsPath?: string | null;
 }
 

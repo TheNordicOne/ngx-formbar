@@ -23,7 +23,7 @@ import {
  *   text: staticComponent(TextComponent),
  *
  *   // Manual: component handles its own visibility
- *   custom: staticComponent(CustomComponent, { visibilityHandling: 'manual' }),
+ *   custom: staticComponent(CustomComponent, { keepValueWhenHidden: 'manual' }),
  * };
  * ```
  */
@@ -52,7 +52,7 @@ export function staticComponent(
  *   // Manual: component handles its own visibility
  *   custom: loadComponent(
  *     () => import('./custom.component').then(m => m.CustomComponent),
- *     { visibilityHandling: 'manual' },
+ *     { keepValueWhenHidden: 'manual' },
  *   ),
  * };
  * ```

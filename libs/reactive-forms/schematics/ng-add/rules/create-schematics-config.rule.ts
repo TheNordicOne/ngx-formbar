@@ -45,15 +45,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
 
     if (useHelper) {
       schematicConfig.viewProviderHelperPath = helperPath;
-      schematicConfig.control = {
-        hostDirectiveHelperPath: helperPath,
-      };
-      schematicConfig.group = {
-        hostDirectiveHelperPath: helperPath,
-      };
-      schematicConfig.block = {
-        hostDirectiveHelperPath: helperPath,
-      };
     }
 
     return mergeWith(

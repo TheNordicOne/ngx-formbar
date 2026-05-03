@@ -15,12 +15,7 @@ import {
   DEFAULT_REGISTRATION_TYPE,
   NgxFormbarAutomationConfig,
 } from '@ngx-formbar/setup';
-import {
-  DEFAULT_BLOCK_HOST_PROVIDER_HELPER,
-  DEFAULT_CONTROL_HOST_PROVIDER_HELPER,
-  DEFAULT_GROUP_HOST_PROVIDER_HELPER,
-  DEFAULT_VIEW_PROVIDER_HELPER,
-} from '../constants';
+import { DEFAULT_VIEW_PROVIDER_HELPER } from '../constants';
 const { classify } = strings;
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
@@ -92,23 +87,6 @@ function mergeOptions(
 
   const hasViewProviderHelper = !!viewProviderHelperPath;
 
-  const hostDirectiveHelperPathOptions =
-    controlTypeConfig?.hostDirectiveHelperPath ??
-    mergedConfig.hostDirectiveHelperPath;
-
-  const defaultHostDirective = getDefaultHostDirective(type);
-
-  const [hostDirectiveHelperPath, hostDirectiveIdentifier] =
-    resolveImportPathAndIdentifier(
-      tree,
-      projectRoot,
-      componentFilePath,
-      hostDirectiveHelperPathOptions,
-      defaultHostDirective,
-    );
-
-  const hasHostDirectiveHelper = !!hostDirectiveHelperPath;
-
   const controlRegistrationsPath = automationConfig?.controlRegistrationsPath
     ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
     : findConfigPath(tree, projectRoot);
@@ -134,26 +112,11 @@ function mergeOptions(
     projectRoot,
     viewProviderHelperPath,
     viewProviderIdentifier,
-    hostDirectiveHelperPath,
-    hostDirectiveIdentifier,
     controlRegistrationsPath,
     hasViewProviderHelper,
-    hasHostDirectiveHelper,
   };
 
   return ruleContext;
-}
-
-function getDefaultHostDirective(type: 'control' | 'group' | 'block') {
-  switch (type) {
-    case 'group':
-      return DEFAULT_GROUP_HOST_PROVIDER_HELPER;
-    case 'block':
-      return DEFAULT_BLOCK_HOST_PROVIDER_HELPER;
-    case 'control':
-    default:
-      return DEFAULT_CONTROL_HOST_PROVIDER_HELPER;
-  }
 }
 
 function resolveImportPathAndIdentifier(

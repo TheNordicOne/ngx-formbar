@@ -1,9 +1,10 @@
-import { Component, Signal, inject } from '@angular/core';
-import { ReactiveFormsModule<% if (!hasViewProviderHelper) { %>, ControlContainer<% } %> } from '@angular/forms';
-import { NgxfbControlDirective } from '@ngx-formbar/reactive-forms';
-import { <%= interfaceName %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
-import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %><% if (hasHostDirectiveHelper) { %>
-import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';<% } %>
+<% if (!hasViewProviderHelper) { %>import { Component, inject, input } from '@angular/core';
+import { ControlContainer, ReactiveFormsModule } from '@angular/forms';
+<% } else { %>import { Component, input } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+<% } %>import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
+import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
@@ -15,15 +16,7 @@ import { <%= hostDirectiveIdentifier %> } from '<%= hostDirectiveHelperPath %>';
       useFactory: () => inject(ControlContainer, { skipSelf: true }),
     }
   ]<% } %>,
-  hostDirectives: <% if (hasHostDirectiveHelper) { %>[<%= hostDirectiveIdentifier %>]<% } else { %>[
-    {
-      directive: NgxfbControlDirective,
-      inputs: ['content', 'name'],
-    }
-  ]<% } %>,
 })
-export class <%= classify(componentClassName) %> {
-  private readonly control = inject(NgxfbControlDirective<<%= interfaceName %>>);
-  readonly content: Signal<<%= interfaceName %>> = this.control.content;
-  readonly name: Signal<string> = this.control.name;
+export class <%= classify(componentClassName) %> implements ReactiveFormbarControl<<%= classify(interfaceName) %>> {
+  readonly name = input.required<string>();
 }

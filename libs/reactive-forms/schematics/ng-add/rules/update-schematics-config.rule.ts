@@ -21,7 +21,6 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
     const config: JsonObject = {};
 
     if (useHelper && helperPath) {
-      config.hostDirectiveHelperPath = helperPath;
       config.viewProviderHelperPath = helperPath;
     }
 
