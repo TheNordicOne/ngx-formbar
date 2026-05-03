@@ -1,5 +1,5 @@
 import { Signal } from '@angular/core';
-import { SignalInput } from '@ngx-formbar/core';
+import { SignalInput } from '../types/component-contract.type';
 
 type UnwrapSignalInput<T> = T extends SignalInput<infer V> ? V : never;
 

@@ -11,7 +11,6 @@ import {
   ComponentHost,
   NgxFbBaseContent,
   NgxFbFormGroup,
-  resolveHiddenAttribute,
   resolveHiddenState,
 } from '@ngx-formbar/core';
 import { FormService } from '../services/form.service';
@@ -39,26 +38,6 @@ export function withHiddenState(content: Signal<NgxFbBaseContent>) {
   });
 
   return resolveHiddenState(option, formService.formValue, parentGroupIsHidden);
-}
-
-/**
- * Computes the value of the host `hidden` attribute by delegating to
- * `resolveHiddenAttribute`. Returns `true` (attribute present) when the
- * library handles visibility and the element is hidden, otherwise `null`
- * (attribute absent).
- *
- * @param options.hiddenSignal Signal of the resolved hidden state.
- * @param options.handleVisibility Signal indicating whether the library
- *   manages visibility. When `false`, the attribute is always omitted so the
- *   component controls its own DOM presence.
- * @returns A signal that produces `true` or `null`, suitable for binding to
- *   the `hidden` host attribute.
- */
-export function withHiddenAttribute(options: {
-  hiddenSignal: Signal<boolean>;
-  handleVisibility: Signal<boolean>;
-}) {
-  return resolveHiddenAttribute(options);
 }
 
 /**

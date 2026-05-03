@@ -15,5 +15,6 @@ export * from './services/component-registration.service';
 export * from './services/configuration.service';
 export * from './helper/registration';
 export * from './helper/string';
+export * from './helper/signal-map';
 export * from './composables';
 export * from './helper/type-guards';

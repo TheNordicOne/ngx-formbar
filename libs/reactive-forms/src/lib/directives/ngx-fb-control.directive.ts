@@ -10,6 +10,7 @@ import {
   FormConfigEntry,
   NgxFbControl,
   NgxFbFormGroup,
+  toSignalMap,
   withBase,
   withComponentHost,
   withInheritedValue,
@@ -31,7 +32,6 @@ import {
 import { withUpdateStrategy } from '../composables/update-strategy';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { withFormParent } from '../composables/form-parent';
-import { toSignalMap } from '../setup/signal-map';
 import { FormService } from '../services/form.service';
 
 @Directive({
@@ -62,7 +62,7 @@ export class NgxFbControlDirective implements OnDestroy {
     this.parentGroupDirective?.hideStrategy,
   );
 
-  private readonly keepValueWhenHidden = computed(
+  private readonly keepFormValue = computed(
     () => this.hideStrategy() === 'keep',
   );
 
@@ -164,7 +164,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
   private applyHiddenState() {
     const handleVisibility = this.handleVisibility();
-    const keepValueWhenHidden = this.keepValueWhenHidden();
+    const keepFormValue = this.keepFormValue();
 
     if (handleVisibility) {
       this.host.clear();
@@ -172,7 +172,7 @@ export class NgxFbControlDirective implements OnDestroy {
 
     this.setValueByStrategy();
 
-    if (keepValueWhenHidden) {
+    if (keepFormValue) {
       return;
     }
 
@@ -261,7 +261,7 @@ export class NgxFbControlDirective implements OnDestroy {
     this.saveLastValue();
     this.setValueByStrategy();
 
-    if (this.keepValueWhenHidden()) {
+    if (this.keepFormValue()) {
       return;
     }
     this.removeControl();

@@ -13,6 +13,7 @@ import {
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
+  toSignalMap,
   ValueStrategy,
   withBase,
   withComponentHost,
@@ -20,7 +21,6 @@ import {
 } from '@ngx-formbar/core';
 import { ReactiveFormbarGroup } from '../types/control-component.type';
 import { withFormParent } from '../composables/form-parent';
-import { toSignalMap } from '../setup/signal-map';
 import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
@@ -68,7 +68,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     this.parentGroupDirective?.hideStrategy,
   );
 
-  private readonly keepValueWhenHidden = computed(
+  private readonly keepFormValue = computed(
     () => this.hideStrategy() === 'keep',
   );
 
@@ -156,7 +156,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   private applyHiddenState() {
     const handleVisibility = this.handleVisibility();
-    const keepValueWhenHidden = this.keepValueWhenHidden();
+    const keepFormValue = this.keepFormValue();
 
     if (handleVisibility) {
       this.host.clear();
@@ -164,7 +164,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
     this.setValueByStrategy();
 
-    if (keepValueWhenHidden) {
+    if (keepFormValue) {
       return;
     }
 
@@ -233,8 +233,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   ngOnDestroy() {
-    const keepValueWhenHidden = this.keepValueWhenHidden();
-    if (keepValueWhenHidden) {
+    const keepFormValue = this.keepFormValue();
+    if (keepFormValue) {
       return;
     }
     this.removeGroup();
