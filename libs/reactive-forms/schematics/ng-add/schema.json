@@ -74,8 +74,8 @@
     },
     "schematicConfigFileName": {
       "type": "string",
-      "description": "Name of the schematic config file. Defaults to 'formbar.config.json'",
-      "default": "formbar.config.json"
+      "description": "Name of the schematic config file. Defaults to 'formbar-schematic.config.json'",
+      "default": "formbar-schematic.config.json"
     },
     "installSchematics": {
       "type": "boolean",

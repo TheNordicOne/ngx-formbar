@@ -19,11 +19,11 @@ This schematic tries to find all relevant controls and registers them at the app
 
 There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
 
-### In formbar.config.json
+### In formbar-schematic.config.json
 
 All options are optional, but are listed here in full. You can put any combination of them.
 
-```json name="formbar.config.json"
+```json name="formbar-schematic.config.json"
 {
   "registrationType": "token",
   "controlRegistrationsPath": "app/form/registrations.ts",
@@ -39,7 +39,7 @@ All options are optional, but are listed here in full. You can put any combinati
 You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
 All options are optional, but are listed here in full. You can put any combination of them.
-Note, that compared to `formbar.config.json`, you have to repeat all values.
+Note, that compared to `formbar-schematic.config.json`, you have to repeat all values.
 
 ```json name="angular.json"
 {

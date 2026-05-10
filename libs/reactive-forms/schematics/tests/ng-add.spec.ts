@@ -45,7 +45,7 @@ describe('ng-add schematic', () => {
   const appConfigPath = app('app.config.ts');
   const formbarConfigPath = app('formbar.config.ts');
   const formbarConfigImportPath = formbarConfigPath.split('.ts')[0];
-  const schematicsConfigPath = app('formbar.config.json');
+  const schematicsConfigPath = app('formbar-schematic.config.json');
 
   async function runAdd(options: Schema = {}) {
     return runner.runSchematic(

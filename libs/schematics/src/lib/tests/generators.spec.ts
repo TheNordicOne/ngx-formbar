@@ -42,7 +42,7 @@ import {
 const appConfigPathRaw = 'app.config.ts';
 const formbarConfigPath = 'app/formbar.config.ts';
 const registrationsPath = 'app/registrations/component-registrations.ts';
-const schematicsConfigPath = 'app/formbar.config.json';
+const schematicsConfigPath = 'app/formbar-schematic.config.json';
 
 describe('control schematic', () => {
   let appTree: UnitTestTree;

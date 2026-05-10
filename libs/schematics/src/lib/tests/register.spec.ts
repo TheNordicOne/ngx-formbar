@@ -44,7 +44,7 @@ describe('register schematic', () => {
 
   const appConfigPathRaw = 'app.config.ts';
   const formbarConfigPath = 'app/formbar.config.ts';
-  const schematicsConfigPath = 'app/formbar.config.json';
+  const schematicsConfigPath = 'app/formbar-schematic.config.json';
   const registrationsPath = 'app/registrations/component-registrations.ts';
 
   async function runSchematic(options: Partial<DiscoverOptions> = {}) {
@@ -501,7 +501,7 @@ describe('register schematic', () => {
 
     addComponentFiles(appTree, files);
 
-    const schematicsConfig = 'configurations/formbar.config.json';
+    const schematicsConfig = 'configurations/formbar-schematic.config.json';
     const nonDefaultRegistrationsPath =
       'app/feature/survey/form/component-registrations.ts';
 

@@ -3,7 +3,7 @@ export const DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME =
   'component-registrations.ts';
 
 export const DEFAULT_SCHEMATICS_CONFIG_PATH = 'app';
-export const DEFAULT_SCHEMATIC_CONFIG_FILE_NAME = 'formbar.config.json';
+export const DEFAULT_SCHEMATIC_CONFIG_FILE_NAME = 'formbar-schematic.config.json';
 
 export const NGX_FW_COMPONENT_REGISTRATIONS = 'NGX_FW_COMPONENT_REGISTRATIONS';
 export const NGX_FW_VALIDATOR_REGISTRATIONS = 'NGX_FW_VALIDATOR_REGISTRATIONS';

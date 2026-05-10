@@ -3,7 +3,7 @@
 There are two configuration files used by _ngx-formbar_.
 
 - Formbar Configuration: `formbar.config.ts`
-- Schematics Configuration: `formbar.config.json`
+- Schematics Configuration: `formbar-schematic.config.json`
 
 The schematics configuration is only used by the schematics and only holds default values. This file is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
 
