@@ -1,11 +1,11 @@
 import { NgDocPage } from '@ng-doc/core';
 import FundamentalsCategory from '../ng-doc.category';
 
-const CoreConceptsPage: NgDocPage = {
-  title: 'Core Concepts',
+const ConfiguringFormbarPage: NgDocPage = {
+  title: 'Configuring Formbar',
   mdFile: './index.md',
   category: FundamentalsCategory,
-  order: 5,
+  order: 2,
 };
 
-export default CoreConceptsPage;
+export default ConfiguringFormbarPage;

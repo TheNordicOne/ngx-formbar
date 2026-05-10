@@ -5,7 +5,7 @@ const ExpressionsPage: NgDocPage = {
   title: 'Expressions',
   mdFile: './index.md',
   category: FundamentalsCategory,
-  order: 2,
+  order: 3,
 };
 
 export default ExpressionsPage;

@@ -5,7 +5,7 @@ const GeneratorsPage: NgDocPage = {
   title: 'Generators',
   mdFile: './index.md',
   category: FundamentalsCategory,
-  order: 3,
+  order: 4,
 };
 
 export default GeneratorsPage;

@@ -5,7 +5,7 @@ const RegisterPage: NgDocPage = {
   title: 'Register',
   mdFile: './index.md',
   category: FundamentalsCategory,
-  order: 4,
+  order: 5,
 };
 
 export default RegisterPage;

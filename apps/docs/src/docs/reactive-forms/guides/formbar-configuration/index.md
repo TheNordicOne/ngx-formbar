@@ -56,7 +56,7 @@ Registering all controls, validators, etc. directly in _app.config.ts_ is not id
 If you ran `ng add` with default parameters to install _ngx-formbar_, your setup already uses split configurations.
 
 > **Note**
-> This section assumes that you have read and understood the Registration Concepts in the Core Concepts guide and know how to set the configuration.
+> This section assumes that you have read and understood the [Configuring Formbar](/fundamentals/configuring-formbar) guide and know how to set the configuration.
 
 ### Using defineFormbarConfig
 
