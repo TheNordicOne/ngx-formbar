@@ -1,6 +1,7 @@
-import { NgxFbFormGroup } from '@ngx-formbar/core';
+import { NgxFbBaseContent, NgxFbFormGroup, NgxFbItem } from '@ngx-formbar/core';
 
-export interface GroupControl extends NgxFbFormGroup {
+export interface GroupControl<T extends NgxFbBaseContent = NgxFbItem>
+  extends NgxFbFormGroup<T> {
   type: 'group';
   legend?: string;
 }

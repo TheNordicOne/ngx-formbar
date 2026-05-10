@@ -16,7 +16,7 @@ export type ExampleControls =
   | CheckboxControl
   | RadioControl
   | DropdownControl
-  | GroupControl
+  | GroupControl<ExampleControls>
   | NoteControl
   | TextareaControl
   | DateControl

@@ -27,7 +27,7 @@ export class NumberControlComponent
   readonly labelText = input<string | undefined>('');
   readonly dynamicLabel = input<string>();
   readonly testId = input('');
-  readonly min = input.required<number>();
+  readonly min = input<number | undefined>();
   readonly max = input<number>();
 
   readonly displayLabel = computed(() => {

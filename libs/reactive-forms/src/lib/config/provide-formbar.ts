@@ -140,13 +140,13 @@ function toComponentRegistrationMap(
   );
 }
 
-function toValidatorRegistrationMap<S extends RegistrationRecord>(
+export function toValidatorRegistrationMap<S extends RegistrationRecord>(
   config: ValidatorConfig<S>,
 ): ReadonlyMap<string, ValidatorFn[]> {
   return toValidatorMap<S, ValidatorFn>(config);
 }
 
-function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
+export function toAsyncValidatorRegistrationMap<A extends RegistrationRecord>(
   config: AsyncValidatorConfig<A>,
 ): ReadonlyMap<string, AsyncValidatorFn[]> {
   return toValidatorMap<A, AsyncValidatorFn>(config);

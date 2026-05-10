@@ -1,4 +1,8 @@
-import { RegistrationRecord } from '../types/validation.type';
+import {
+  AsyncValidatorConfig,
+  RegistrationRecord,
+  ValidatorConfig,
+} from '../types/validation.type';
 import { FormbarConfig } from '../types/provide.type';
 
 /**
@@ -15,5 +19,39 @@ export function defineFormbarConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
 >(config: FormbarConfig<S, A>) {
+  return config;
+}
+
+/**
+ * Identity helper for typing a synchronous validator registration map.
+ * Returns the supplied {@link ValidatorConfig} unchanged so the inferred
+ * key types stay intact for cross-referencing and downstream consumption
+ * (e.g. {@link toValidatorRegistrationMap} or the
+ * `NGX_FW_VALIDATOR_REGISTRATIONS` token).
+ *
+ * @param config The {@link ValidatorConfig} object to type-check.
+ * @returns The same `config` value, with its `S` registration type
+ *   preserved for downstream inference.
+ */
+export function defineValidatorRegistrations<S extends RegistrationRecord>(
+  config: ValidatorConfig<S>,
+) {
+  return config;
+}
+
+/**
+ * Identity helper for typing an asynchronous validator registration map.
+ * Returns the supplied {@link AsyncValidatorConfig} unchanged so the
+ * inferred key types stay intact for cross-referencing and downstream
+ * consumption (e.g. {@link toAsyncValidatorRegistrationMap} or the
+ * `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS` token).
+ *
+ * @param config The {@link AsyncValidatorConfig} object to type-check.
+ * @returns The same `config` value, with its `A` registration type
+ *   preserved for downstream inference.
+ */
+export function defineAsyncValidatorRegistrations<
+  A extends RegistrationRecord,
+>(config: AsyncValidatorConfig<A>) {
   return config;
 }
