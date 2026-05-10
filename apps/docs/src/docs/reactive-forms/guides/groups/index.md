@@ -384,7 +384,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 ## Component Contract Reference
 
-The `ReactiveFormbarGroup<T>` contract is implemented by your component. The library detects which inputs you declared (by name) and writes its resolved values into them, so every input below is optional except `name`. Any property you add to `T` beyond `NgxFbFormGroup` becomes an additional signal input on the component.
+The `ReactiveFormbarGroup<T>` contract is implemented by your component. The library detects which inputs you declared (by name) and writes its resolved values into them, so every input below is optional except `name`. Any property you add to `T` beyond `NgxFbFormGroup` becomes an additional signal input on the contract. Required properties on `T` must be declared on the component; optional properties (`?`) can be omitted.
 
 | Input           | Type                                      | Description                                                                                      |
 |-----------------|-------------------------------------------|--------------------------------------------------------------------------------------------------|

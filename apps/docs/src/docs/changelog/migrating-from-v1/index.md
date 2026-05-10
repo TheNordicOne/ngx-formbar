@@ -162,7 +162,7 @@ The three contracts live in `@ngx-formbar/reactive-forms`:
 | `ReactiveFormbarGroup<T>`     | Container nodes that hold children     | `NgxFbFormGroup`   |
 | `FormbarBlock<T>`             | Non-control content (notes, dividers)  | `NgxFbBlock`       |
 
-Custom properties on `T` beyond the base interface automatically become required signal inputs on the component contract.
+Custom properties on `T` beyond the base interface automatically become signal inputs on the component contract. Required properties must be declared; optional ones (`?`) can be omitted.
 
 {% raw %}
 

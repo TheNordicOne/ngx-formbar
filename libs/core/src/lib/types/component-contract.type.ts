@@ -6,7 +6,7 @@ export type SignalInput<T> =
   | InputSignalWithTransform<T, unknown>;
 
 export type ToSignalInputs<T> = {
-  [K in keyof T]-?: SignalInput<T[K]>;
+  [K in keyof T]: SignalInput<T[K]>;
 };
 
 export type RemoveIndexSignature<T> = {

@@ -9,7 +9,7 @@ type UnwrapSignalInput<T> = T extends SignalInput<infer V> ? V : never;
  * value type of the interface's `SignalInput<V>` for that key.
  */
 export type SignalMapFor<T> = {
-  [K in keyof T]?: Signal<UnwrapSignalInput<NonNullable<T[K]>>>;
+  [K in keyof T]?: Signal<UnwrapSignalInput<T[K]>>;
 };
 
 /**

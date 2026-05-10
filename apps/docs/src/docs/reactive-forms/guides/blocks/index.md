@@ -176,7 +176,7 @@ The `FormbarBlock<T>` contract type accepts your block interface as its type par
 | `isHidden` | `SignalInput<boolean>` | The resolved hidden state for the block. Optional on the contract; declare when you need it. |
 | `testId`   | `SignalInput<string>`  | The computed test ID for the block. Optional on the contract; declare when you need it.      |
 
-In addition to these base inputs, every custom property declared on your block interface (anything beyond the keys of `NgxFbBlock`) becomes an additional signal input on the component. The contract uses `ToSignalInputs<ExtendedBlockInputs<T>>` to derive those input declarations from `T`, so adding a new property to your interface is enough to make TypeScript require the matching `input()` on the component.
+In addition to these base inputs, every custom property declared on your block interface (anything beyond the keys of `NgxFbBlock`) becomes an additional signal input on the contract. The contract uses `ToSignalInputs<ExtendedBlockInputs<T>>` to derive those input declarations from `T`. Required properties on the interface must have a matching `input()` on the component; optional properties (`?`) can be omitted.
 
 > **Note**
 > Blocks intentionally have no `name`, `isDisabled`, `isReadonly`, `errors`, `isDirty`, `hideStrategy`, or `valueStrategy` inputs. Those belong to controls and groups, which participate in the reactive forms tree.
