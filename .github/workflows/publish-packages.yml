@@ -98,35 +98,7 @@ jobs:
 
       # --- Shared: resolve workspace protocols, tags, GitHub releases, npm publish ---
       - name: Resolve workspace protocols in dist
-        run: |
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const distDirs = ['dist/libs/core', 'dist/libs/reactive-forms', 'dist/libs/schematics', 'dist/libs/setup'];
-            const versions = new Map();
-            for (const dir of distDirs) {
-              const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-              versions.set(pkg.name, pkg.version);
-            }
-            for (const dir of distDirs) {
-              const pkgPath = path.join(dir, 'package.json');
-              const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-              let changed = false;
-              for (const section of ['dependencies', 'peerDependencies']) {
-                if (!pkg[section]) continue;
-                for (const [dep, range] of Object.entries(pkg[section])) {
-                  if (typeof range === 'string' && range.startsWith('workspace:') && versions.has(dep)) {
-                    pkg[section][dep] = '^' + versions.get(dep);
-                    changed = true;
-                  }
-                }
-              }
-              if (changed) {
-                fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-                console.log('Resolved workspace protocols in ' + pkgPath);
-              }
-            }
-          "
+        run: node scripts/resolve-workspace-protocols.mjs
 
       - name: Should publish
         id: should-publish
