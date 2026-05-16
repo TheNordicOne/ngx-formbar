@@ -18,7 +18,12 @@ type Story = StoryObj<StoryFormHostComponent>;
 
 export const ComputedValue: Story = {
   parameters: {
-    docs: { description: { story: 'String concatenation, numeric computation, and fallback expressions.' } },
+    docs: {
+      description: {
+        story:
+          'String concatenation, numeric computation, and fallback expressions.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -46,7 +51,7 @@ export const ComputedValue: Story = {
         type: 'text',
         label: 'Square',
         computedValue: (ctx: FormContext): number => {
-      const b = Number(ctx['base']);
+          const b = Number(ctx['base']);
           return b * b;
         },
       },
@@ -91,14 +96,19 @@ export const ComputedValue: Story = {
     // Fallback when empty
     await expect(fallback).toHaveValue('DEFAULT');
 
-    await userEvent.type(await canvas.findByRole('textbox', { name: 'Maybe Empty' }), 'Foo');
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Maybe Empty' }),
+      'Foo',
+    );
     await expect(fallback).toHaveValue('Foo');
   },
 };
 
 export const CascadingComputed: Story = {
   parameters: {
-    docs: { description: { story: 'Computed values cascade through five levels.' } },
+    docs: {
+      description: { story: 'Computed values cascade through five levels.' },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -135,24 +145,32 @@ export const CascadingComputed: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const level0 = await canvas.findByRole('textbox', { name: 'Level 0 Input' });
-    const level1 = await canvas.findByRole('textbox', { name: 'Level 1 Computed' });
-    const level2 = await canvas.findByRole('textbox', { name: 'Level 2 Computed' });
-    const level3 = await canvas.findByRole('textbox', { name: 'Level 3 Computed' });
-    const level4 = await canvas.findByRole('textbox', { name: 'Level 4 Computed' });
-    const level5 = await canvas.findByRole('textbox', { name: 'Level 5 Computed' });
+    const level0 = await canvas.findByRole('textbox', {
+      name: 'Level 0 Input',
+    });
+    const level1 = await canvas.findByRole('textbox', {
+      name: 'Level 1 Computed',
+    });
+    const level2 = await canvas.findByRole('textbox', {
+      name: 'Level 2 Computed',
+    });
+    const level3 = await canvas.findByRole('textbox', {
+      name: 'Level 3 Computed',
+    });
+    const level4 = await canvas.findByRole('textbox', {
+      name: 'Level 4 Computed',
+    });
+    const level5 = await canvas.findByRole('textbox', {
+      name: 'Level 5 Computed',
+    });
 
     // Verify initial cascaded values
     await expect(level0).toHaveValue('Start');
     await expect(level1).toHaveValue('Start-L1');
     await expect(level2).toHaveValue('Start-L1-L2');
     await expect(level3).toHaveValue('Start-L1-L2-L3');
-    await expect(level4).toHaveValue(
-      'Start-L1-L2-L3-L4',
-    );
-    await expect(level5).toHaveValue(
-      'Start-L1-L2-L3-L4-L5',
-    );
+    await expect(level4).toHaveValue('Start-L1-L2-L3-L4');
+    await expect(level5).toHaveValue('Start-L1-L2-L3-L4-L5');
 
     // Update the base value
     await userEvent.clear(level0);
@@ -161,21 +179,20 @@ export const CascadingComputed: Story = {
     // Verify all dependent values are updated
     await expect(level1).toHaveValue('Updated-L1');
     await expect(level2).toHaveValue('Updated-L1-L2');
-    await expect(level3).toHaveValue(
-      'Updated-L1-L2-L3',
-    );
-    await expect(level4).toHaveValue(
-      'Updated-L1-L2-L3-L4',
-    );
-    await expect(level5).toHaveValue(
-      'Updated-L1-L2-L3-L4-L5',
-    );
+    await expect(level3).toHaveValue('Updated-L1-L2-L3');
+    await expect(level4).toHaveValue('Updated-L1-L2-L3-L4');
+    await expect(level5).toHaveValue('Updated-L1-L2-L3-L4-L5');
   },
 };
 
 export const ComputedWithValueStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Computed values interact with keep + last/default/reset strategies.' } },
+    docs: {
+      description: {
+        story:
+          'Computed values interact with keep + last/default/reset strategies.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -213,9 +230,15 @@ export const ComputedWithValueStrategy: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const compLast = await canvas.findByRole('textbox', { name: 'Computed (keep + last)' });
-    const compDefault = await canvas.findByRole('textbox', { name: 'Computed (keep + default)' });
-    const compReset = await canvas.findByRole('textbox', { name: 'Computed (keep + reset)' });
+    const compLast = await canvas.findByRole('textbox', {
+      name: 'Computed (keep + last)',
+    });
+    const compDefault = await canvas.findByRole('textbox', {
+      name: 'Computed (keep + default)',
+    });
+    const compReset = await canvas.findByRole('textbox', {
+      name: 'Computed (keep + reset)',
+    });
 
     // Initial computed values
     await expect(compLast).toHaveValue('DZ');
@@ -231,7 +254,9 @@ export const ComputedWithValueStrategy: Story = {
     await expect(compReset).toHaveValue('XZ');
 
     // Hide all computed controls
-    const toggle = await canvas.findByRole('textbox', { name: 'Toggle (type "hide")' });
+    const toggle = await canvas.findByRole('textbox', {
+      name: 'Toggle (type "hide")',
+    });
     await userEvent.clear(toggle);
     await userEvent.type(toggle, 'hide');
     await expect(
@@ -247,11 +272,17 @@ export const ComputedWithValueStrategy: Story = {
     // Show again: each strategy produces a different result
     await userEvent.clear(toggle);
     // "last" preserves the last computed value
-    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + last)' })).toHaveValue('XZ');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed (keep + last)' }),
+    ).toHaveValue('XZ');
     // "default" reverts to defaultValue
-    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + default)' })).toHaveValue('DEFAULT');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed (keep + default)' }),
+    ).toHaveValue('DEFAULT');
     // "reset" clears the value
-    await expect(await canvas.findByRole('textbox', { name: 'Computed (keep + reset)' })).toHaveValue('');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed (keep + reset)' }),
+    ).toHaveValue('');
   },
 };
 
@@ -261,36 +292,60 @@ export const ComputedWithValueStrategy: Story = {
 
 export const BuiltInFunctionCalls: Story = {
   parameters: {
-    docs: { description: { story: 'Computed expression calls .toUpperCase() on a field value.' } },
+    docs: {
+      description: {
+        story: 'Computed expression calls .toUpperCase() on a field value.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
       raw: { type: 'text', label: 'Raw', defaultValue: 'mixedCase' },
-      upper: { type: 'text', label: 'Uppercase', computedValue: 'raw.toUpperCase()' },
+      upper: {
+        type: 'text',
+        label: 'Uppercase',
+        computedValue: 'raw.toUpperCase()',
+      },
     }),
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('MIXEDCASE');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Uppercase' }),
+    ).toHaveValue('MIXEDCASE');
   },
 };
 
 export const ComputedPriority: Story = {
   parameters: {
-    docs: { description: { story: 'computedValue takes priority over defaultValue.' } },
+    docs: {
+      description: { story: 'computedValue takes priority over defaultValue.' },
+    },
   },
   args: {
     formConfig: formConfig({
-      mix: { type: 'text', label: 'Mix', defaultValue: 'INIT', computedValue: '"SHUTDOWN"' },
+      mix: {
+        type: 'text',
+        label: 'Mix',
+        defaultValue: 'INIT',
+        computedValue: '"SHUTDOWN"',
+      },
     }),
   },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('textbox', { name: 'Mix' })).toHaveValue('SHUTDOWN');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Mix' }),
+    ).toHaveValue('SHUTDOWN');
   },
 };
 
 export const ManualOverride: Story = {
   parameters: {
-    docs: { description: { story: 'User can override a computed value; changing a dependency resets it.' } },
+    docs: {
+      description: {
+        story:
+          'User can override a computed value; changing a dependency resets it.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -313,7 +368,10 @@ export const ManualOverride: Story = {
     await expect(combo).toHaveValue('CUSTOM');
 
     // Change a dependency – combo should revert to computed
-    await userEvent.type(await canvas.findByRole('textbox', { name: 'Part 1' }), 'X');
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Part 1' }),
+      'X',
+    );
 
     await expect(combo).toHaveValue('AXB');
   },
@@ -321,7 +379,11 @@ export const ManualOverride: Story = {
 
 export const ManualOverridePersistence: Story = {
   parameters: {
-    docs: { description: { story: 'Manual override persists when changing unrelated fields.' } },
+    docs: {
+      description: {
+        story: 'Manual override persists when changing unrelated fields.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -362,16 +424,45 @@ export const ManualOverridePersistence: Story = {
 
 export const CascadingManualOverride: Story = {
   parameters: {
-    docs: { description: { story: 'Manual override on the deepest cascading level resets on base change.' } },
+    docs: {
+      description: {
+        story:
+          'Manual override on the deepest cascading level resets on base change.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
-      level0_override: { type: 'text', label: 'Level 0', defaultValue: 'Initial' },
-      level1_override: { type: 'text', label: 'Level 1', computedValue: 'level0_override + "-L1"' },
-      level2_override: { type: 'text', label: 'Level 2', computedValue: 'level1_override + "-L2"' },
-      level3_override: { type: 'text', label: 'Level 3', computedValue: 'level2_override + "-L3"' },
-      level4_override: { type: 'text', label: 'Level 4', computedValue: 'level3_override + "-L4"' },
-      level5_override: { type: 'text', label: 'Level 5', computedValue: 'level4_override + "-L5"' },
+      level0_override: {
+        type: 'text',
+        label: 'Level 0',
+        defaultValue: 'Initial',
+      },
+      level1_override: {
+        type: 'text',
+        label: 'Level 1',
+        computedValue: 'level0_override + "-L1"',
+      },
+      level2_override: {
+        type: 'text',
+        label: 'Level 2',
+        computedValue: 'level1_override + "-L2"',
+      },
+      level3_override: {
+        type: 'text',
+        label: 'Level 3',
+        computedValue: 'level2_override + "-L3"',
+      },
+      level4_override: {
+        type: 'text',
+        label: 'Level 4',
+        computedValue: 'level3_override + "-L4"',
+      },
+      level5_override: {
+        type: 'text',
+        label: 'Level 5',
+        computedValue: 'level4_override + "-L5"',
+      },
     }),
   },
   play: async ({ canvas, userEvent }) => {
@@ -383,9 +474,7 @@ export const CascadingManualOverride: Story = {
     const level5 = await canvas.findByRole('textbox', { name: 'Level 5' });
 
     // Verify initial cascaded values
-    await expect(level5).toHaveValue(
-      'Initial-L1-L2-L3-L4-L5',
-    );
+    await expect(level5).toHaveValue('Initial-L1-L2-L3-L4-L5');
 
     // Manually override level5
     await userEvent.clear(level5);
@@ -398,16 +487,12 @@ export const CascadingManualOverride: Story = {
     await userEvent.clear(level0);
     await userEvent.type(level0, 'ChangedBase');
 
-    await expect(level5).toHaveValue(
-      'ChangedBase-L1-L2-L3-L4-L5',
-    );
+    await expect(level5).toHaveValue('ChangedBase-L1-L2-L3-L4-L5');
     // Verify all intermediate levels updated too
     await expect(level1).toHaveValue('ChangedBase-L1');
     await expect(level2).toHaveValue('ChangedBase-L1-L2');
     await expect(level3).toHaveValue('ChangedBase-L1-L2-L3');
-    await expect(level4).toHaveValue(
-      'ChangedBase-L1-L2-L3-L4',
-    );
+    await expect(level4).toHaveValue('ChangedBase-L1-L2-L3-L4');
   },
 };
 
@@ -417,7 +502,12 @@ export const CascadingManualOverride: Story = {
 
 export const ComputedWithRemoveStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Computed value is re-applied after remove/re-create, reflecting dependency changes made while hidden.' } },
+    docs: {
+      description: {
+        story:
+          'Computed value is re-applied after remove/re-create, reflecting dependency changes made while hidden.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -433,13 +523,17 @@ export const ComputedWithRemoveStrategy: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const compRemove = await canvas.findByRole('textbox', { name: 'Computed (remove)' });
+    const compRemove = await canvas.findByRole('textbox', {
+      name: 'Computed (remove)',
+    });
 
     // Verify initial computed value
     await expect(compRemove).toHaveValue('DZ');
 
     // Hide → control is destroyed
-    const toggle = await canvas.findByRole('textbox', { name: 'Toggle (type "hide")' });
+    const toggle = await canvas.findByRole('textbox', {
+      name: 'Toggle (type "hide")',
+    });
     await userEvent.clear(toggle);
     await userEvent.type(toggle, 'hide');
     await expect(
@@ -461,7 +555,12 @@ export const ComputedWithRemoveStrategy: Story = {
 
 export const ReadonlyComputedValue: Story = {
   parameters: {
-    docs: { description: { story: 'Readonly computed field displays and updates reactively but cannot be edited.' } },
+    docs: {
+      description: {
+        story:
+          'Readonly computed field displays and updates reactively but cannot be edited.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -475,7 +574,9 @@ export const ReadonlyComputedValue: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const derived = await canvas.findByRole('textbox', { name: 'Derived (readonly)' });
+    const derived = await canvas.findByRole('textbox', {
+      name: 'Derived (readonly)',
+    });
 
     // Computed value displayed and control is readonly
     await expect(derived).toHaveValue('Hello World');
@@ -490,21 +591,19 @@ export const ReadonlyComputedValue: Story = {
 };
 
 /**
- * Cross-group computed values require optional chaining (`?.`) in string
- * expressions because the effect fires before sibling groups register
- * their children (#83). Without `?.`, the expression throws on initial
- * render. With `?.`, it safely returns `undefined` for missing groups.
+ * Cross-group computed values should resolve on initial render without
+ * optional chaining.
  *
- * When #83 is fixed, replace with non-optional access:
- *   computedValue: 'groupA.fieldA + " " + groupB.fieldB'
- * and add an initial assertion:
- *   await expect(result).toHaveValue('Hello World');
- *
- * @see https://github.com/TheNordicOne/ngx-formbar/issues/83
+ * Assert fix for https://github.com/TheNordicOne/ngx-formbar/issues/83
  */
 export const CrossGroupComputedValue: Story = {
   parameters: {
-    docs: { description: { story: 'Computed expression references fields in sibling groups via dot notation (uses ?. workaround, see #83).' } },
+    docs: {
+      description: {
+        story:
+          'Computed expression references fields in sibling groups via dot notation.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -525,15 +624,16 @@ export const CrossGroupComputedValue: Story = {
       crossGroupResult: {
         type: 'text',
         label: 'Cross-Group Result',
-        // #83: requires ?. — without it the expression throws on initial render
-        computedValue: 'groupA?.fieldA + " " + groupB?.fieldB',
+        computedValue: 'groupA.fieldA + " " + groupB.fieldB',
       },
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const result = await canvas.findByRole('textbox', { name: 'Cross-Group Result' });
+    // Wait for the form to assemble: poll until the cross-group result settles.
+    const result = await canvas.findByDisplayValue('Hello World');
+    await expect(result).toHaveAccessibleName('Cross-Group Result');
 
-    // Change field in Group A → triggers valueChanges with full form context
+    // Change field in Group A
     const fieldA = await canvas.findByRole('textbox', { name: 'Field A' });
     await userEvent.clear(fieldA);
     await userEvent.type(fieldA, 'Goodbye');
@@ -549,7 +649,12 @@ export const CrossGroupComputedValue: Story = {
 
 export const IntermediateCascadeOverride: Story = {
   parameters: {
-    docs: { description: { story: 'Manual override at an intermediate cascade level affects downstream and resets when the base changes.' } },
+    docs: {
+      description: {
+        story:
+          'Manual override at an intermediate cascade level affects downstream and resets when the base changes.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -592,7 +697,11 @@ export const IntermediateCascadeOverride: Story = {
 
 export const ComputedWithDisabled: Story = {
   parameters: {
-    docs: { description: { story: 'Disabled computed field still receives computed value updates.' } },
+    docs: {
+      description: {
+        story: 'Disabled computed field still receives computed value updates.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -606,7 +715,9 @@ export const ComputedWithDisabled: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const disabledComputed = await canvas.findByRole('textbox', { name: 'Disabled Computed' });
+    const disabledComputed = await canvas.findByRole('textbox', {
+      name: 'Disabled Computed',
+    });
 
     // Control is disabled but has computed value
     await expect(disabledComputed).toBeDisabled();
@@ -622,13 +733,26 @@ export const ComputedWithDisabled: Story = {
 
 export const ComputedFanOut: Story = {
   parameters: {
-    docs: { description: { story: 'Multiple computed fields derive from the same source independently.' } },
+    docs: {
+      description: {
+        story:
+          'Multiple computed fields derive from the same source independently.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
       source: { type: 'text', label: 'Source', defaultValue: 'Hello' },
-      upper: { type: 'text', label: 'Uppercase', computedValue: 'source.toUpperCase()' },
-      prefixed: { type: 'text', label: 'Prefixed', computedValue: '">> " + source' },
+      upper: {
+        type: 'text',
+        label: 'Uppercase',
+        computedValue: 'source.toUpperCase()',
+      },
+      prefixed: {
+        type: 'text',
+        label: 'Prefixed',
+        computedValue: '">> " + source',
+      },
       reversed: {
         type: 'text',
         label: 'Reversed',
@@ -641,23 +765,39 @@ export const ComputedFanOut: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // All three have initial computed values
-    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('HELLO');
-    await expect(await canvas.findByRole('textbox', { name: 'Prefixed' })).toHaveValue('>> Hello');
-    await expect(await canvas.findByRole('textbox', { name: 'Reversed' })).toHaveValue('olleH');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Uppercase' }),
+    ).toHaveValue('HELLO');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Prefixed' }),
+    ).toHaveValue('>> Hello');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Reversed' }),
+    ).toHaveValue('olleH');
 
     // Change source → all three update
     const source = await canvas.findByRole('textbox', { name: 'Source' });
     await userEvent.clear(source);
     await userEvent.type(source, 'World');
-    await expect(await canvas.findByRole('textbox', { name: 'Uppercase' })).toHaveValue('WORLD');
-    await expect(await canvas.findByRole('textbox', { name: 'Prefixed' })).toHaveValue('>> World');
-    await expect(await canvas.findByRole('textbox', { name: 'Reversed' })).toHaveValue('dlroW');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Uppercase' }),
+    ).toHaveValue('WORLD');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Prefixed' }),
+    ).toHaveValue('>> World');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Reversed' }),
+    ).toHaveValue('dlroW');
   },
 };
 
 export const ComputedNullishResult: Story = {
   parameters: {
-    docs: { description: { story: 'Computed expression evaluating to null clears the field value.' } },
+    docs: {
+      description: {
+        story: 'Computed expression evaluating to null clears the field value.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -673,7 +813,9 @@ export const ComputedNullishResult: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const nullish = await canvas.findByRole('textbox', { name: 'Nullish Result' });
+    const nullish = await canvas.findByRole('textbox', {
+      name: 'Nullish Result',
+    });
 
     // Initial: non-null computed value
     await expect(nullish).toHaveValue('Hello!');
@@ -693,7 +835,12 @@ export const ComputedNullishResult: Story = {
 
 export const ComputedTernaryExpression: Story = {
   parameters: {
-    docs: { description: { story: 'Ternary expression in computedValue toggles between two results.' } },
+    docs: {
+      description: {
+        story:
+          'Ternary expression in computedValue toggles between two results.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -726,7 +873,12 @@ export const ComputedTernaryExpression: Story = {
 
 export const FunctionComputedManualOverride: Story = {
   parameters: {
-    docs: { description: { story: 'Manual override on a function-based computed value persists until a dependency changes.' } },
+    docs: {
+      description: {
+        story:
+          'Manual override on a function-based computed value persists until a dependency changes.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -744,7 +896,9 @@ export const FunctionComputedManualOverride: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const funcComputed = await canvas.findByRole('textbox', { name: 'Function Computed' });
+    const funcComputed = await canvas.findByRole('textbox', {
+      name: 'Function Computed',
+    });
 
     // Initial function-computed value
     await expect(funcComputed).toHaveValue('A-B');
@@ -767,7 +921,12 @@ export const FunctionComputedManualOverride: Story = {
 
 export const ComputedWithBlurUpdateStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Programmatic computed value updates bypass the blur update strategy.' } },
+    docs: {
+      description: {
+        story:
+          'Programmatic computed value updates bypass the blur update strategy.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -781,7 +940,9 @@ export const ComputedWithBlurUpdateStrategy: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const blurComputed = await canvas.findByRole('textbox', { name: 'Blur Computed' });
+    const blurComputed = await canvas.findByRole('textbox', {
+      name: 'Blur Computed',
+    });
 
     // Initial computed value applied despite blur strategy
     await expect(blurComputed).toHaveValue('A!');
@@ -796,7 +957,12 @@ export const ComputedWithBlurUpdateStrategy: Story = {
 
 export const SelfReferencingComputed: Story = {
   parameters: {
-    docs: { description: { story: 'Idempotent self-referencing expression stabilizes without infinite loop.' } },
+    docs: {
+      description: {
+        story:
+          'Idempotent self-referencing expression stabilizes without infinite loop.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -822,7 +988,12 @@ export const SelfReferencingComputed: Story = {
 
 export const ComplexArithmeticExpressions: Story = {
   parameters: {
-    docs: { description: { story: 'Arithmetic operators in hidden expressions (+, *, comparisons).' } },
+    docs: {
+      description: {
+        story:
+          'Arithmetic operators in hidden expressions (+, *, comparisons).',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -846,10 +1017,14 @@ export const ComplexArithmeticExpressions: Story = {
   play: async ({ canvas, userEvent }) => {
     // Initial: 10+20>30 is false → visible. 10*20<30 is false → visible.
     await expect(
-      await canvas.findByRole('textbox', { name: 'Hidden by complex expression' }),
+      await canvas.findByRole('textbox', {
+        name: 'Hidden by complex expression',
+      }),
     ).toBeInTheDocument();
     await expect(
-      await canvas.findByRole('textbox', { name: 'Visible by complex expression' }),
+      await canvas.findByRole('textbox', {
+        name: 'Visible by complex expression',
+      }),
     ).toBeInTheDocument();
 
     // Set valueA to 20: 20+20>30=true → hidden. 20*20<30=false → visible.
@@ -861,7 +1036,9 @@ export const ComplexArithmeticExpressions: Story = {
       canvas.queryByRole('textbox', { name: 'Hidden by complex expression' }),
     ).not.toBeInTheDocument();
     await expect(
-      await canvas.findByRole('textbox', { name: 'Visible by complex expression' }),
+      await canvas.findByRole('textbox', {
+        name: 'Visible by complex expression',
+      }),
     ).toBeInTheDocument();
 
     // Set valueC to 500: 20*20<500=true → hidden.
@@ -877,12 +1054,24 @@ export const ComplexArithmeticExpressions: Story = {
 
 export const MultipleDependencies: Story = {
   parameters: {
-    docs: { description: { story: 'Multiple conditions with logical OR in a hidden expression.' } },
+    docs: {
+      description: {
+        story: 'Multiple conditions with logical OR in a hidden expression.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
-      showCondition: { type: 'text', label: 'Show Condition', defaultValue: 'no' },
-      secondCondition: { type: 'text', label: 'Second Condition', defaultValue: 'no' },
+      showCondition: {
+        type: 'text',
+        label: 'Show Condition',
+        defaultValue: 'no',
+      },
+      secondCondition: {
+        type: 'text',
+        label: 'Second Condition',
+        defaultValue: 'no',
+      },
       conditionalField: {
         type: 'text',
         label: 'Conditional Field',
@@ -898,7 +1087,9 @@ export const MultipleDependencies: Story = {
     ).not.toBeInTheDocument();
 
     // Set showCondition to 'yes' → still hidden (secondCondition is 'no')
-    const showCondition = await canvas.findByRole('textbox', { name: 'Show Condition' });
+    const showCondition = await canvas.findByRole('textbox', {
+      name: 'Show Condition',
+    });
     await userEvent.clear(showCondition);
     await userEvent.type(showCondition, 'yes');
 
@@ -907,7 +1098,9 @@ export const MultipleDependencies: Story = {
     ).not.toBeInTheDocument();
 
     // Set secondCondition to 'yes' → now visible
-    const secondCondition = await canvas.findByRole('textbox', { name: 'Second Condition' });
+    const secondCondition = await canvas.findByRole('textbox', {
+      name: 'Second Condition',
+    });
     await userEvent.clear(secondCondition);
     await userEvent.type(secondCondition, 'yes');
 
@@ -931,7 +1124,11 @@ export const MultipleDependencies: Story = {
 
 export const FunctionComputed: Story = {
   parameters: {
-    docs: { description: { story: 'Function-based computed value reacts to source field changes.' } },
+    docs: {
+      description: {
+        story: 'Function-based computed value reacts to source field changes.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -958,18 +1155,24 @@ export const FunctionComputed: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Initial computed value
-    await expect(await canvas.findByRole('textbox', { name: 'Computed' })).toHaveValue('Hello World!');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed' }),
+    ).toHaveValue('Hello World!');
 
     // Update source A
     const sourceA = await canvas.findByRole('textbox', { name: 'Source A' });
     await userEvent.clear(sourceA);
     await userEvent.type(sourceA, 'Goodbye');
-    await expect(await canvas.findByRole('textbox', { name: 'Computed' })).toHaveValue('Goodbye World!');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed' }),
+    ).toHaveValue('Goodbye World!');
 
     // Update source B
     const sourceB = await canvas.findByRole('textbox', { name: 'Source B' });
     await userEvent.clear(sourceB);
     await userEvent.type(sourceB, 'Moon');
-    await expect(await canvas.findByRole('textbox', { name: 'Computed' })).toHaveValue('Goodbye Moon!');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Computed' }),
+    ).toHaveValue('Goodbye Moon!');
   },
 };
