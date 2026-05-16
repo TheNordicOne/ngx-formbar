@@ -198,11 +198,11 @@ describe('Expression<T> type safety', () => {
     expect(form).toBeTruthy();
   });
 
-  it('rejects a bare value of the expected type', () => {
+  it('only accepts a string expression or a function', () => {
     const form: NgxFbForm<TestContent> = {
       content: {
-        // @ts-expect-error - Expression<boolean> does not accept a literal boolean
-        a: { type: 'test-text-control', hidden: true },
+        // @ts-expect-error - 42 is neither a string expression nor a function
+        a: { type: 'test-text-control', dynamicLabel: 42 },
       },
     };
     expect(form).toBeTruthy();
