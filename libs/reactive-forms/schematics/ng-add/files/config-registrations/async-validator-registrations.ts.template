@@ -1,4 +1,5 @@
-import { AsyncValidatorConfig, RegistrationRecord } from '@ngx-formbar/reactive-forms';
+import { defineAsyncValidatorRegistrations } from '@ngx-formbar/reactive-forms';
 
-export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
-};
+export const asyncValidatorRegistrations = defineAsyncValidatorRegistrations(
+  {},
+);

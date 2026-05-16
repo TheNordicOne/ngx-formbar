@@ -1,4 +1,3 @@
-import { ValidatorConfig, RegistrationRecord } from '@ngx-formbar/reactive-forms';
+import { defineValidatorRegistrations } from '@ngx-formbar/reactive-forms';
 
-export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
-};
+export const validatorRegistrations = defineValidatorRegistrations({});
