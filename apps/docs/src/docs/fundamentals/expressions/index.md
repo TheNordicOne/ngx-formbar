@@ -100,3 +100,7 @@ Where:
   defaultValue: ''
 }
 ```
+
+## Type-Safe formValue
+
+{% include "../../shared/typed-form-value.md" %}

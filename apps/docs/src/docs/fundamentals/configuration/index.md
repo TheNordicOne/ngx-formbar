@@ -252,6 +252,10 @@ export const exampleForm: NgxFbForm = {
 };
 ``` 
 
+## Typing the Form Value
+
+{% include "../../shared/typed-form-value.md" %}
+
 ## Next steps
 
 Once you have a configuration, see your integration package's guide on how to render it:
