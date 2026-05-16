@@ -218,27 +218,114 @@ describe('Expression<T> type safety', () => {
   });
 });
 
-describe('FormContext type safety', () => {
-  it('requires bracket access on formValue properties', () => {
+describe('Typing formValue with an explicit form-value interface', () => {
+  interface UserInfo {
+    name?: string;
+    age?: number;
+    details?: {
+      age?: number;
+      nickname?: string;
+      address?: {
+        street?: string;
+        city?: string;
+        coordinates?: {
+          lat?: number;
+          lng?: number;
+        };
+      };
+    };
+  }
+
+  it('accepts an expression function with a narrowed parameter type', () => {
     const form: NgxFbForm<TestContent> = {
       content: {
+        name: { type: 'test-text-control', defaultValue: 'hello' },
+        details: {
+          type: 'test-group',
+          controls: {
+            age: { type: 'test-text-control' },
+            nickname: { type: 'test-text-control' },
+            address: {
+              type: 'test-group',
+              controls: {
+                street: { type: 'test-text-control' },
+                city: { type: 'test-text-control' },
+                coordinates: {
+                  type: 'test-group',
+                  controls: {
+                    lat: { type: 'test-text-control' },
+                    lng: { type: 'test-text-control' },
+                  },
+                },
+              },
+            },
+          },
+        },
         a: {
           type: 'test-text-control',
-          // @ts-expect-error - FormContext is Record<string, unknown>, dot access is disallowed
-          hidden: (formValue) => !!formValue.flag,
+          hidden: (formValue: UserInfo) => formValue.name === 'hello',
+          dynamicLabel: (formValue: UserInfo) =>
+            formValue.details?.address?.coordinates?.lat?.toFixed(2) ?? '',
         },
       },
     };
     expect(form).toBeTruthy();
   });
 
-  it('exposes formValue properties as unknown, requiring a cast or narrowing', () => {
+  it('rejects wrong-type usage on the typed parameter', () => {
     const form: NgxFbForm<TestContent> = {
       content: {
+        name: { type: 'test-text-control', defaultValue: 'hello' },
+        details: {
+          type: 'test-group',
+          controls: { age: { type: 'test-text-control' } },
+        },
         a: {
           type: 'test-text-control',
-          // @ts-expect-error - formValue['name'] is unknown, not assignable to string
-          dynamicLabel: (formValue): string => formValue['name'],
+          // @ts-expect-error - formValue.name is string | undefined, not a number
+          hidden: (formValue: UserInfo) => formValue.name > 5,
+        },
+        b: {
+          type: 'test-text-control',
+          hidden: (formValue: UserInfo) =>
+            // @ts-expect-error - details.age is number | undefined, not a string
+            formValue.details?.age === 'thirty',
+        },
+        c: {
+          type: 'test-text-control',
+          hidden: (formValue: UserInfo) =>
+            // @ts-expect-error - coordinates.lat is number | undefined, not a string
+            formValue.details?.address?.coordinates?.lat === '0',
+        },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('rejects unknown fields on the typed parameter', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        name: { type: 'test-text-control', defaultValue: 'hello' },
+        details: {
+          type: 'test-group',
+          controls: { age: { type: 'test-text-control' } },
+        },
+        a: {
+          type: 'test-text-control',
+          // @ts-expect-error - 'doesNotExist' is not part of UserInfo
+          hidden: (formValue: UserInfo) => !!formValue.doesNotExist,
+        },
+        b: {
+          type: 'test-text-control',
+          hidden: (formValue: UserInfo) =>
+            // @ts-expect-error - 'unknownNested' is not part of UserInfo['details']
+            !!formValue.details?.unknownNested,
+        },
+        c: {
+          type: 'test-text-control',
+          hidden: (formValue: UserInfo) =>
+            // @ts-expect-error - 'altitude' is not part of coordinates
+            !!formValue.details?.address?.coordinates?.altitude,
         },
       },
     };
