@@ -219,12 +219,12 @@ describe('Expression<T> type safety', () => {
 });
 
 describe('FormContext type safety', () => {
-  it('rejects dot access on formValue (noPropertyAccessFromIndexSignature)', () => {
+  it('requires bracket access on formValue properties', () => {
     const form: NgxFbForm<TestContent> = {
       content: {
         a: {
           type: 'test-text-control',
-          // @ts-expect-error - FormContext is Record<string, unknown>, requires bracket access
+          // @ts-expect-error - FormContext is Record<string, unknown>, dot access is disallowed
           hidden: (formValue) => !!formValue.flag,
         },
       },
@@ -232,7 +232,7 @@ describe('FormContext type safety', () => {
     expect(form).toBeTruthy();
   });
 
-  it('rejects formValue properties being used as a specific type without narrowing', () => {
+  it('exposes formValue properties as unknown, requiring a cast or narrowing', () => {
     const form: NgxFbForm<TestContent> = {
       content: {
         a: {
