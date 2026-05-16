@@ -1,8 +1,4 @@
-import {
-  NgxFbBlock,
-  NgxFbControl,
-  NgxFbFormGroup,
-} from './content.type';
+import { NgxFbBlock, NgxFbControl, NgxFbFormGroup } from './content.type';
 import { NgxFbForm } from './form.type';
 
 interface TestTextControl extends NgxFbControl {
@@ -160,6 +156,89 @@ describe('NgxFbForm type safety', () => {
             // @ts-expect-error - nested group is missing 'controls'
             nestedGroup: { type: 'test-group' },
           },
+        },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+});
+
+describe('Expression<T> type safety', () => {
+  it('accepts a string expression', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        a: {
+          type: 'test-text-control',
+          hidden: "formValue['flag'] === true",
+        },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('accepts a function returning the expected type', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        a: {
+          type: 'test-text-control',
+          hidden: (formValue) => formValue['flag'] === true,
+        },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('rejects a function returning the wrong type', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        // @ts-expect-error - function must return boolean, not string
+        a: { type: 'test-text-control', hidden: () => 'not a boolean' },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('rejects a bare value of the expected type', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        // @ts-expect-error - Expression<boolean> does not accept a literal boolean
+        a: { type: 'test-text-control', hidden: true },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('accepts a bare value when the property is Expression<T> | T', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        a: { type: 'test-text-control', disabled: true },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+});
+
+describe('FormContext type safety', () => {
+  it('rejects dot access on formValue (noPropertyAccessFromIndexSignature)', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        a: {
+          type: 'test-text-control',
+          // @ts-expect-error - FormContext is Record<string, unknown>, requires bracket access
+          hidden: (formValue) => !!formValue.flag,
+        },
+      },
+    };
+    expect(form).toBeTruthy();
+  });
+
+  it('rejects formValue properties being used as a specific type without narrowing', () => {
+    const form: NgxFbForm<TestContent> = {
+      content: {
+        a: {
+          type: 'test-text-control',
+          // @ts-expect-error - formValue['name'] is unknown, not assignable to string
+          dynamicLabel: (formValue): string => formValue['name'],
         },
       },
     };
