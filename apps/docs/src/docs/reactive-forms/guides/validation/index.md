@@ -38,7 +38,7 @@ export const appConfig: ApplicationConfig = {
 Combining validators is as easy as adding them in the same array. This is also possible for async validators.
 
 > **Note**
-> You can use an existing validator registration by referring to it via its key.
+> You can use an existing validator registration by referring to it via its key. Sibling key references are type-checked against the keys you have declared, so misspellings raise a TS error and your IDE auto-completes valid references.
 
 ```typescript name="app.config.ts"
 export const appConfig: ApplicationConfig = {
@@ -51,6 +51,40 @@ export const appConfig: ApplicationConfig = {
         letter: [letterValidator],
         combined: ['min-chars', Validators.required, 'letter'],
       }
+    })
+  ],
+};
+```
+
+### Splitting Registrations into Their Own Files
+
+When you move your validator registrations into a separate file, wrap them with `defineValidatorRegistrations` (sync) or `defineAsyncValidatorRegistrations` (async). The helpers are identity functions that preserve the inferred key types so cross-references stay type-checked and auto-completed.
+
+```typescript name="validator.registrations.ts"
+import { defineValidatorRegistrations, defineAsyncValidatorRegistrations } from '@ngx-formbar/reactive-forms';
+
+export const validatorRegistrations = defineValidatorRegistrations({
+  'min-chars': [Validators.minLength(3)],
+  letter: [letterValidator],
+  combined: ['min-chars', Validators.required, 'letter'],
+});
+
+export const asyncValidatorRegistrations = defineAsyncValidatorRegistrations({
+  someAsync: [asyncValidator],
+});
+```
+
+Then pass them into `provideFormbar` (or `defineFormbarConfig`) by reference.
+
+```typescript name="app.config.ts"
+import { validatorRegistrations, asyncValidatorRegistrations } from './validator.registrations';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // other providers
+    provideFormbar({
+      validatorRegistrations,
+      asyncValidatorRegistrations,
     })
   ],
 };

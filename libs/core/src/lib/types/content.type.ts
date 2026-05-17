@@ -14,7 +14,7 @@ export interface NgxFbBaseContent {
    * Expression evaluated against the form value that controls visibility.
    * Accepts a string expression or a predicate function.
    */
-  hidden?: Expression<boolean>;
+  hidden?: Expression<boolean> | boolean;
 }
 
 /**

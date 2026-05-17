@@ -1,9 +1,10 @@
-import { ValidatorFn } from '@angular/forms';
-import { NGX_FW_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
+import {
+  NGX_FW_VALIDATOR_REGISTRATIONS,
+  toValidatorRegistrationMap,
+} from '@ngx-formbar/reactive-forms';
 
 export const validatorRegistrationsProvider = {
   provide: NGX_FW_VALIDATOR_REGISTRATIONS,
-  useValue: new Map<string, ValidatorFn[]>([
-  ]),
+  useValue: toValidatorRegistrationMap({}),
   multi: true,
 };

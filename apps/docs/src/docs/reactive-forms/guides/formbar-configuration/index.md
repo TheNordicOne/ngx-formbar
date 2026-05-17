@@ -127,9 +127,15 @@ export const componentRegistrationsProvider = {
 
 #### Validator Registration with Tokens
 
+Use `toValidatorRegistrationMap` and `toAsyncValidatorRegistrationMap` to build the token value from a config object. The helpers accept the same `{ key: [...] }` shape you use elsewhere, so sibling key references (such as `'min-chars'` inside `combined`) stay type-checked and resolvable. Without them you have to build the `Map` by hand, which loses cross-referencing.
+
 ```typescript name="validator-registrations.provider.ts"
-import { ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS } from '@ngx-formbar/reactive-forms';
+import {
+  NGX_FW_VALIDATOR_REGISTRATIONS,
+  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
+  toValidatorRegistrationMap,
+  toAsyncValidatorRegistrationMap,
+} from '@ngx-formbar/reactive-forms';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
 import { asyncValidator, asyncGroupValidator } from './async-validators';
@@ -137,25 +143,26 @@ import { asyncValidator, asyncGroupValidator } from './async-validators';
 // Synchronous validators
 export const validatorRegistrationsProvider = {
   provide: NGX_FW_VALIDATOR_REGISTRATIONS,
-  useValue: new Map<string, ValidatorFn[]>([
-    ['min-chars', [Validators.minLength(3)]],
-    ['letter', [letterValidator]],
-    ['combined', [Validators.minLength(3), Validators.required, letterValidator]],
-    ['no-duplicates', [noDuplicateValuesValidator]],
-    ['forbidden-letter-a', [forbiddenLetterAValidator]],
+  useValue: toValidatorRegistrationMap({
+    'min-chars': [Validators.minLength(3)],
+    letter: [letterValidator],
+    // 'min-chars' and 'letter' below are typed key references, not strings
+    combined: ['min-chars', Validators.required, 'letter'],
+    'no-duplicates': [noDuplicateValuesValidator],
+    'forbidden-letter-a': [forbiddenLetterAValidator],
     // more registrations...
-  ]),
+  }),
   multi: true,
 };
 
 // Asynchronous validators
 export const asyncValidatorRegistrationsProvider = {
   provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  useValue: new Map<string, AsyncValidatorFn[]>([
-    ['async', [asyncValidator]],
-    ['async-group', [asyncGroupValidator]],
+  useValue: toAsyncValidatorRegistrationMap({
+    async: [asyncValidator],
+    'async-group': [asyncGroupValidator],
     // more registrations...
-  ]),
+  }),
   multi: true,
 };
 ```
@@ -270,21 +277,23 @@ export const formbarConfig = defineFormbarConfig({
 
 #### Validators Registration
 
-Create a file with the following content, at whatever location makes sense. You can also further split the files between sync and async validators
+Create a file with the following content, at whatever location makes sense. You can also further split the files between sync and async validators. Wrap the literal in `defineValidatorRegistrations` / `defineAsyncValidatorRegistrations` so the inferred key types carry over and sibling key references stay type-checked even when the registrations live in a separate file.
 
 ```typescript name="validators.registrations.ts"
-export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
+import { defineValidatorRegistrations, defineAsyncValidatorRegistrations } from '@ngx-formbar/reactive-forms';
+
+export const validatorRegistrations = defineValidatorRegistrations({
   'min-chars': [Validators.minLength(3)],
   letter: [letterValidator],
   combined: ['min-chars', Validators.required, 'letter'],
   'no-duplicates': [noDuplicateValuesValidator],
   'forbidden-letter-a': [forbiddenLetterAValidator],
-};
+});
 
-export const asyncValidatorRegistrations: AsyncValidatorConfig<RegistrationRecord> = {
+export const asyncValidatorRegistrations = defineAsyncValidatorRegistrations({
   async: [asyncValidator],
   'async-group': [asyncGroupValidator],
-};
+});
 ```
 
 In _app.config.ts_ use it like this
@@ -316,19 +325,8 @@ export const formbarConfig = defineFormbarConfig({
 });
 ```
 
-> **Warning**
-> Extracting the validator registrations means losing some of the type safety features. Specifically, you will not get warnings when you misspell a key in a reference. We recommend keeping the validators directly in the `defineFormbarConfig` or `provideFormbar` function call.
->
-> The following example shows a case where the reference to the `letter` validator is misspelled.
-
-```typescript name="misspelled.validators.registrations.ts"
-export const validatorRegistrations: ValidatorConfig<RegistrationRecord> = {
-  letter: [letterValidator],
-  // ⚠️ letter only spelled with one T.
-  // This will give an TS error in the provideFormbar function, but not in this case
-  combined: [Validators.required, 'leter'],
-};
-```
+> **Note**
+> Without the `define...Registrations` helpers, the inferred key types collapse to `string` and misspelled cross-references are silently accepted. The helpers are identity functions; they only exist to preserve typing, so wrapping is essentially free.
 
 ### Global Configuration with Injection Tokens
 

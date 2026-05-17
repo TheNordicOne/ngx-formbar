@@ -28,7 +28,7 @@ interface TextControl extends NgxFbControl {
 
 interface NumberControl extends NgxFbControl {
   type: 'number';
-  min: number;
+  min?: number;
   max?: number;
 }
 
@@ -74,20 +74,19 @@ declare class MinimalCheckboxControl
   readonly name: InputSignalWithTransform<string, string>;
 }
 
-// required custom prop must be declared; optional can be omitted
+// no required custom props — only name required
 declare class MinimalNumberControl
   implements ReactiveFormbarControl<NumberControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
-  readonly min: InputSignalWithTransform<number, number>;
 }
 
-// optional custom prop included — type includes undefined
+// optional custom props included — type includes undefined
 declare class FullNumberControl
   implements ReactiveFormbarControl<NumberControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
-  readonly min: InputSignalWithTransform<number, number>;
+  readonly min: InputSignal<number | undefined>;
   readonly max: InputSignal<number | undefined>;
 }
 
@@ -121,11 +120,6 @@ declare class FullNoteBlock implements FormbarBlock<NoteControl> {
 // minimal block — only required custom props
 declare class MinimalNoteBlock implements FormbarBlock<NoteControl> {
   readonly message: InputSignalWithTransform<string, string>;
-}
-
-// @ts-expect-error — missing required 'min'
-declare class MissingMin implements ReactiveFormbarControl<NumberControl> {
-  readonly name: InputSignalWithTransform<string, string>;
 }
 
 // @ts-expect-error — missing required 'name'

@@ -45,24 +45,26 @@ export const appConfig: ApplicationConfig = {
             // Lazy: ['text', loadComponent(() => import('./text-control.component').then(m => m.TextControlComponent))]
           ])
         },
-        // All tokens below are optional
+        // All tokens below are optional. Use toValidatorRegistrationMap /
+        // toAsyncValidatorRegistrationMap so sibling key references stay
+        // type-checked and provide code completion/suggestions.
         {
           provide: NGX_FW_VALIDATOR_REGISTRATIONS,
-          useValue: new Map([
+          useValue: toValidatorRegistrationMap({
             // Validator registrations go here
             // Following Angular validators are registered by default
             // Validators.required
             // Validators.requiredTrue
             // Validators.email
             // Validators.nullValidator
-          ]),
+          }),
           multi: true,
         },
         {
           provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-          useValue: new Map([
+          useValue: toAsyncValidatorRegistrationMap({
             // Async Validator registrations go here
-          ]),
+          }),
           multi: true,
         }
   ]

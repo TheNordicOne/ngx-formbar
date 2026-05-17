@@ -73,6 +73,7 @@
       }
     },
     "test-schematics": {
+      "dependsOn": ["build-schematics"],
       "executor": "@nx/vite:test",
       "options": {
         "config": "libs/reactive-forms/vitest.config.schematics.mts"
