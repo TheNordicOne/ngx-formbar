@@ -32,7 +32,7 @@ jobs:
           playwright: 'true'
 
       - name: Lint, test, and build
-        run: npx nx run-many -t lint test build
+        run: npx nx run-many -t lint test test-schematics build
 
       - name: Build Storybook
         run: npx nx run storybook:build-storybook:ci
