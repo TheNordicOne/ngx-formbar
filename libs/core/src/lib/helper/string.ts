@@ -1,4 +1,4 @@
-export function toSafeString(value: unknown): string {
+export function toSafeString(value: unknown) {
   if (value === null) {
     return 'null';
   }

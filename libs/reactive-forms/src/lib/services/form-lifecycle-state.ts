@@ -20,16 +20,16 @@ export function formLifecycleStateFactory(): FormLifecycleState {
   const entries = signal<Record<string, unknown>>({});
 
   return {
-    hasSavedValue(path: string): Signal<boolean> {
+    hasSavedValue(path: string) {
       return computed(() => path in entries());
     },
-    getSavedValue(path: string): Signal<unknown> {
+    getSavedValue(path: string) {
       return computed(() => entries()[path]);
     },
-    saveValue(path: string, value: unknown): void {
+    saveValue(path: string, value: unknown) {
       entries.update((e) => ({ ...e, [path]: value }));
     },
-    clear(): void {
+    clear() {
       entries.set({});
     },
   };

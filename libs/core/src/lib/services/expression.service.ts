@@ -199,14 +199,14 @@ export class ExpressionService {
     }
   }
 
-  private evaluateLiteral(node: Literal): unknown {
+  private evaluateLiteral(node: Literal) {
     return node.value;
   }
 
   private evaluateBinaryExpression(
     node: BinaryExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     const leftValue = this.evaluateAstNode(node.left, context);
     const rightValue = this.evaluateAstNode(node.right, context);
     return this.executeBinaryOperation(leftValue, node.operator, rightValue);
@@ -216,7 +216,7 @@ export class ExpressionService {
     leftValue: unknown,
     operator: BinaryOperator,
     rightValue: unknown,
-  ): unknown {
+  ) {
     const isNumber = (value: unknown): value is number =>
       typeof value === 'number';
     const isString = (value: unknown): value is string =>
@@ -398,7 +398,7 @@ export class ExpressionService {
   private evaluateMemberExpression(
     node: MemberExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     const propertyValue = node.computed
       ? this.evaluateAstNode(node.property, context)
       : (node.property as Identifier).name;
@@ -475,13 +475,13 @@ export class ExpressionService {
   private getPropertyFromObject(
     object: Record<string, unknown> | null | undefined,
     propertyKey: string | number,
-  ): unknown {
+  ) {
     return object !== null && object !== undefined
       ? object[propertyKey]
       : undefined;
   }
 
-  private evaluateIdentifier(node: Identifier, context: FormContext): unknown {
+  private evaluateIdentifier(node: Identifier, context: FormContext) {
     if (typeof context === 'object' && node.name in context) {
       return context[node.name];
     }
@@ -491,7 +491,7 @@ export class ExpressionService {
   private evaluateArrayExpression(
     node: ArrayExpression,
     context: FormContext,
-  ): unknown[] {
+  ) {
     const resultArray: unknown[] = [];
 
     for (const element of node.elements) {
@@ -520,7 +520,7 @@ export class ExpressionService {
   private evaluateUnaryExpression(
     node: UnaryExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     const argumentValue = this.evaluateAstNode(node.argument, context);
 
     switch (node.operator) {
@@ -567,7 +567,7 @@ export class ExpressionService {
   private evaluateLogicalExpression(
     node: LogicalExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     const leftValue = this.evaluateAstNode(node.left, context);
 
     switch (node.operator) {
@@ -594,7 +594,7 @@ export class ExpressionService {
   private evaluateConditionalExpression(
     node: ConditionalExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     const condition = this.evaluateAstNode(node.test, context);
     const isConditionTrue = Boolean(condition);
 
@@ -608,7 +608,7 @@ export class ExpressionService {
   private evaluateObjectExpression(
     node: ObjectExpression,
     context: FormContext,
-  ): object {
+  ) {
     const result: Record<string, unknown> = {};
 
     for (const property of node.properties) {
@@ -635,7 +635,7 @@ export class ExpressionService {
   private evaluateSequenceExpression(
     node: SequenceExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     let result: unknown;
 
     for (const expression of node.expressions) {
@@ -648,7 +648,7 @@ export class ExpressionService {
   private evaluateTemplateLiteral(
     node: TemplateLiteral,
     context: FormContext,
-  ): string {
+  ) {
     let result = '';
 
     for (let i = 0; i < node.quasis.length; i++) {
@@ -678,7 +678,7 @@ export class ExpressionService {
   private evaluateCallExpression(
     node: CallExpression,
     context: FormContext,
-  ): unknown {
+  ) {
     if (node.callee.type !== 'MemberExpression') {
       throw new TypeError('Only method calls are supported');
     }
@@ -777,8 +777,7 @@ export class ExpressionService {
   private evaluateArrowFunctionExpression(
     node: ArrowFunctionExpression,
     context: FormContext,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  ): Function {
+  ) {
     // We only support simple arrow functions with expression bodies
     if (
       node.body.type !== 'BlockStatement' &&

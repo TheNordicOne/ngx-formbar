@@ -14,10 +14,10 @@ export function withFormParent() {
   const parentContainer = inject(ControlContainer);
 
   return {
-    get formGroup(): FormGroup | null {
+    get formGroup() {
       return parentContainer.control as FormGroup | null;
     },
-    pathTo(name: string): string {
+    pathTo(name: string) {
       return [...(parentContainer.path ?? []), name].join('.');
     },
   };

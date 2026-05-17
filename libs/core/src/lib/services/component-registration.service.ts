@@ -1,6 +1,7 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal, Signal } from '@angular/core';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../tokens/component-registrations';
 import { ComponentResolver } from '../types/component-resolver.type';
+import { ComponentRegistrationEntry } from '../types/registration.type';
 
 @Injectable({
   providedIn: 'root',
@@ -10,5 +11,6 @@ export class ComponentRegistrationService implements ComponentResolver {
     inject(NGX_FW_COMPONENT_REGISTRATIONS),
   );
 
-  readonly registrations = this._registrations.asReadonly();
+  readonly registrations: Signal<ReadonlyMap<string, ComponentRegistrationEntry>> =
+    this._registrations.asReadonly();
 }

@@ -3,11 +3,14 @@ import {
   Component,
   computed,
   inject,
+  Signal,
 } from '@angular/core';
 import {
+  FormConfigEntry,
   isFormbarBlock,
   isFormbarControl,
   isFormbarGroup,
+  NgxFbItem,
 } from '@ngx-formbar/core';
 import { NgxFbControlDirective } from '../../directives/ngx-fb-control.directive';
 import { NgxFbGroupDirective } from '../../directives/ngx-fb-group.directive';
@@ -22,7 +25,9 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 })
 export class NgxfbControlOutlet {
   private readonly token = inject(NGXFB_CONTROL_ENTRIES, { optional: true });
-  readonly controls = computed(() => this.token?.() ?? []);
+  readonly controls: Signal<FormConfigEntry<NgxFbItem>[]> = computed(
+    () => this.token?.() ?? [],
+  );
 
   protected readonly isFormbarGroup = isFormbarGroup;
   protected readonly isFormbarBlock = isFormbarBlock;

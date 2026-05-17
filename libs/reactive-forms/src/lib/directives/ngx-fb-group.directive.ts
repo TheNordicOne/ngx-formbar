@@ -4,18 +4,15 @@ import {
   inject,
   input,
   OnDestroy,
-  Signal,
 } from '@angular/core';
 import {
   FormConfigEntry,
-  HideStrategy,
   NGX_FW_PARENT_CONTEXT,
   NgxFbBaseContent,
   NgxFbFormGroup,
   NgxFbItem,
   NgxFwParentContext,
   toSignalMap,
-  ValueStrategy,
   withBase,
   withComponentHost,
   withDynamicTitle,
@@ -62,14 +59,14 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly controlName = this.base.controlName;
   private readonly registrationEntry = this.base.registrationEntry;
 
-  private readonly groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
+  private readonly groupControls = computed(() =>
     Object.entries(this.controlConfig().controls).map(([name, config]) => ({
       name,
       config,
     })),
   );
 
-  readonly hideStrategy: Signal<HideStrategy | undefined> = withInheritedValue(
+  readonly hideStrategy = withInheritedValue(
     this.controlConfig,
     'hideStrategy',
     this.parentContext?.hideStrategy,
@@ -79,12 +76,11 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     () => this.hideStrategy() === 'keep',
   );
 
-  readonly valueStrategy: Signal<ValueStrategy | undefined> =
-    withInheritedValue(
-      this.controlConfig,
-      'valueStrategy',
-      this.parentContext?.valueStrategy,
-    );
+  readonly valueStrategy = withInheritedValue(
+    this.controlConfig,
+    'valueStrategy',
+    this.parentContext?.valueStrategy,
+  );
 
   private readonly handleVisibility = computed(
     () => (this.registrationEntry()?.hiddenHandling ?? 'auto') === 'auto',
