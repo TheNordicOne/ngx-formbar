@@ -36,6 +36,8 @@ New package containing all reactive forms functionality previously bundled in `@
 - `setComputedValueEffect` no longer overwrites control values with `undefined` on dirty forms when no `computedValue` is configured.
 - `valueStrategy: 'last'` now survives `hideStrategy: 'remove'` cycles. The saved value is preserved across destroy/create via the form-level lifecycle cache and reapplied when the control is recreated.
 - Form reset clears the lifecycle cache, preventing stale values from being restored after a reset.
+- Cross-group `computedValue` string expressions like `'groupA.fieldA + " " + groupB.fieldB'` now resolve on initial render. Previously, `setComputedValueEffect` could fire before sibling groups had registered their children, leaving the computed control empty until the next change ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)).
+- Validator registrations provided via the `NGX_FW_VALIDATOR_REGISTRATIONS` / `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS` tokens can now reference sibling validators by key with full type-checking and auto-complete. Use `toValidatorRegistrationMap` / `toAsyncValidatorRegistrationMap` (or the `defineValidatorRegistrations` / `defineAsyncValidatorRegistrations` helpers) so cross-references resolve at runtime instead of returning the whole map ([#65](https://github.com/TheNordicOne/ngx-formbar/issues/65)).
 
 ### Removed
 
