@@ -39,7 +39,7 @@ export function resolveExpression<T>(
     return expressionService.parseExpressionToAst(expression);
   });
 
-  return computed<T | undefined>(() => {
+  return computed(() => {
     const value = option();
 
     if (value === undefined) {
@@ -59,6 +59,6 @@ export function resolveExpression<T>(
     if (!parsedAst) {
       return undefined;
     }
-    return expressionService.evaluateExpression(parsedAst, formContext()) as T;
+    return expressionService.evaluateExpression<T>(parsedAst, formContext());
   });
 }

@@ -96,12 +96,16 @@ export class ExpressionService {
    *   to identifier lookups inside the expression.
    * @returns The evaluated value, or `null` when either argument is missing.
    *   Throws on unsupported syntax or runtime type errors.
+   * @typeParam T Expected result type. Defaults to `unknown`.
    */
-  evaluateExpression(ast?: Program | null, context?: FormContext): unknown {
+  evaluateExpression<T = unknown>(
+    ast?: Program | null,
+    context?: FormContext,
+  ): T | null {
     if (!context || !ast) {
       return null;
     }
-    return this.evaluateAstNode(ast.body, [context]);
+    return this.evaluateAstNode(ast.body, [context]) as T;
   }
 
   private evaluateAstNode(

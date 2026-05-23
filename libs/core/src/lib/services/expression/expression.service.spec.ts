@@ -1104,11 +1104,10 @@ describe('ExpressionService', () => {
           poisoned: JSON.parse('{"__proto__":{"polluted":1}}'),
         };
         const ast = service.parseExpressionToAst('({...poisoned})');
-        const result = service.evaluateExpression(ast, ctx) as Record<
-          string,
-          unknown
-        > & { polluted?: number };
-        expect(result.polluted).toBeUndefined();
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, ctx);
+        expect(result?.polluted).toBeUndefined();
         expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
       });
 
@@ -1116,12 +1115,11 @@ describe('ExpressionService', () => {
         const ast = service.parseExpressionToAst(
           '({__proto__: { polluted: 1 }, a: 2})',
         );
-        const result = service.evaluateExpression(ast, {}) as Record<
-          string,
-          unknown
-        > & { polluted?: number };
-        expect(result['a']).toBe(2);
-        expect(result.polluted).toBeUndefined();
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, {});
+        expect(result?.['a']).toBe(2);
+        expect(result?.polluted).toBeUndefined();
         expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
       });
 
@@ -1129,12 +1127,11 @@ describe('ExpressionService', () => {
         const ast = service.parseExpressionToAst(
           '({["__proto__"]: { polluted: 1 }, a: 2})',
         );
-        const result = service.evaluateExpression(ast, {}) as Record<
-          string,
-          unknown
-        > & { polluted?: number };
-        expect(result['a']).toBe(2);
-        expect(result.polluted).toBeUndefined();
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, {});
+        expect(result?.['a']).toBe(2);
+        expect(result?.polluted).toBeUndefined();
         expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
       });
     });
