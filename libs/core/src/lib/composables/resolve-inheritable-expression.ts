@@ -1,6 +1,6 @@
 import { computed, Signal } from '@angular/core';
 import { Expression, FormContext } from '../types/expression.type';
-import { ExpressionService } from '../services/expression.service';
+import { ExpressionService } from '../services/expression';
 import { resolveExpression } from './resolve-expression';
 
 /**

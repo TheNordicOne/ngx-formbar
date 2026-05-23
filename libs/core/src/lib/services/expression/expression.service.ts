@@ -16,132 +16,16 @@ import {
   type SpreadElement,
   type TemplateLiteral,
   type UnaryExpression,
-} from '../parser';
-import type { FormContext } from '../types/expression.type';
-
-type SafeMethods = {
-  string: string[];
-  number: string[];
-  boolean: string[];
-  array: string[];
-};
-
-const SAFE_METHODS: SafeMethods = {
-  string: [
-    'charAt',
-    'concat',
-    'includes',
-    'endsWith',
-    'indexOf',
-    'lastIndexOf',
-    'padEnd',
-    'padStart',
-    'repeat',
-    'replace',
-    'slice',
-    'split',
-    'startsWith',
-    'substring',
-    'toLowerCase',
-    'toUpperCase',
-    'trim',
-    'trimEnd',
-    'trimStart',
-    'toString',
-  ],
-  number: ['toFixed', 'toPrecision', 'toString'],
-  boolean: ['toString'],
-  array: [
-    'concat',
-    'every',
-    'filter',
-    'find',
-    'findIndex',
-    'includes',
-    'indexOf',
-    'join',
-    'lastIndexOf',
-    'map',
-    'reduce',
-    'reduceRight',
-    'slice',
-    'some',
-    'toString',
-  ],
-} as const;
-
-type Frame = Record<string, unknown>;
-
-const CANONICAL_INTEGER_STRING = /^(0|[1-9]\d*)$/;
-
-function isNumber(value: unknown): value is number {
-  return typeof value === 'number';
-}
-
-function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
-function isObjectLike(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object';
-}
-
-type Callable = (...args: unknown[]) => unknown;
-
-function readMethod(object: unknown, name: string) {
-  const value = (object as Record<string, unknown>)[name];
-  return typeof value === 'function' ? (value as Callable) : undefined;
-}
-
-function requireNumbers(
-  operator: string,
-  left: unknown,
-  right: unknown,
-): [number, number] {
-  if (!isNumber(left) || !isNumber(right)) {
-    throw new TypeError(`${operator} operator requires numbers`);
-  }
-  return [left, right];
-}
-
-function requireSameOrderedType(
-  operator: string,
-  left: unknown,
-  right: unknown,
-): [number, number] | [string, string] {
-  if (isNumber(left) && isNumber(right)) {
-    return [left, right];
-  }
-  if (isString(left) && isString(right)) {
-    return [left, right];
-  }
-  throw new TypeError(
-    `${operator} operator requires operands of the same type (numbers or strings)`,
-  );
-}
-
-function isAllowedMethod(object: unknown, methodName: string) {
-  if (Array.isArray(object)) {
-    return SAFE_METHODS.array.includes(methodName);
-  }
-  const type = typeof object;
-  if (type === 'string' || type === 'number' || type === 'boolean') {
-    return SAFE_METHODS[type].includes(methodName);
-  }
-  return false;
-}
-
-// Canonical non-negative integer indices only. Mirrors JS string/array
-// indexing: `"0"` and `0` work; `" 0 "`, `"0x1"`, `"1e0"`, `""` do not.
-function isCanonicalIndex(value: unknown): value is number | string {
-  if (typeof value === 'number') {
-    return Number.isInteger(value) && value >= 0;
-  }
-  if (typeof value === 'string') {
-    return CANONICAL_INTEGER_STRING.test(value);
-  }
-  return false;
-}
+} from '../../parser';
+import type { FormContext } from '../../types/expression.type';
+import {
+  requireNumbers,
+  requireSameOrderedType,
+} from './binary-operand-guards';
+import { readIndexable } from './canonical-index';
+import type { Frame } from './frame';
+import { isAllowedMethod, readMethod } from './safe-methods';
+import { isNumber, isObjectLike, isString } from './value-guards';
 
 /**
  * Parses and evaluates a constrained pure-expression DSL against a form
@@ -418,11 +302,11 @@ export class ExpressionService {
     }
 
     if (Array.isArray(objectValue)) {
-      return this.readIndexable('array', objectValue, propertyValue);
+      return readIndexable('array', objectValue, propertyValue);
     }
 
     if (typeof objectValue === 'string') {
-      return this.readIndexable('string', objectValue, propertyValue);
+      return readIndexable('string', objectValue, propertyValue);
     }
 
     if (typeof objectValue === 'object') {
@@ -447,22 +331,6 @@ export class ExpressionService {
     }
     throw new Error(
       `Cannot access properties on a ${typeof objectValue} value: .${String(propertyValue)}`,
-    );
-  }
-
-  private readIndexable(
-    kind: 'array' | 'string',
-    value: readonly unknown[] | string,
-    property: string | number,
-  ) {
-    if (property === 'length') {
-      return value.length;
-    }
-    if (isCanonicalIndex(property)) {
-      return value[Number(property)];
-    }
-    throw new Error(
-      `Invalid property access on ${kind}: ${String(property)}`,
     );
   }
 

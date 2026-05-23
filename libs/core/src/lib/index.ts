@@ -13,7 +13,7 @@ export * from './tokens/global-config';
 export * from './tokens/default-update-strategy';
 export * from './tokens/form-value';
 export * from './tokens/parent-context';
-export * from './services/expression.service';
+export * from './services/expression';
 export * from './services/component-registration.service';
 export * from './services/configuration.service';
 export * from './helper/registration';

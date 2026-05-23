@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ExpressionService } from './expression.service';
-import { FormContext } from '../types/expression.type';
-import { toSafeString } from '../helper/string';
+import { FormContext } from '../../types/expression.type';
+import { toSafeString } from '../../helper/string';
 
 describe('ExpressionService', () => {
   let service: ExpressionService;
