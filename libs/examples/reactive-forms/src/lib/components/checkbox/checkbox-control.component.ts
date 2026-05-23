@@ -25,7 +25,7 @@ export class CheckboxControlComponent
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
   readonly labelText = input<string | undefined>('');
-  readonly dynamicLabel = input<string>();
+  readonly dynamicLabel = input<string | null>();
   readonly testId = input('');
 
   readonly displayLabel = computed(() => {
