@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-  parse,
   type ArrayExpression,
   type ArrowFunctionExpression,
   type BinaryExpression,
@@ -12,6 +11,7 @@ import {
   type LogicalExpression,
   type MemberExpression,
   type ObjectExpression,
+  parse,
   type Program,
   type SpreadElement,
   type TemplateLiteral,
@@ -19,13 +19,18 @@ import {
 } from '../../parser';
 import type { FormContext } from '../../types/expression.type';
 import {
-  requireNumbers,
-  requireSameOrderedType,
-} from './binary-operand-guards';
+  executeAddition,
+  executeEquality,
+  executeIn,
+  executeNumericBinaryOp,
+  executeOrderedComparison,
+  isEqualityOperator,
+  isOrderedComparisonOperator,
+} from './binary-operators';
 import { readIndexable } from './canonical-index';
 import type { Frame } from './frame';
 import { isAllowedMethod, readMethod } from './safe-methods';
-import { isNumber, isObjectLike, isString } from './value-guards';
+import { isObjectLike } from './value-guards';
 
 /**
  * Parses and evaluates a constrained pure-expression DSL against a form
@@ -149,126 +154,19 @@ export class ExpressionService {
     operator: BinaryOperator,
     rightValue: unknown,
   ) {
-    switch (operator) {
-      case '+': {
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue + rightValue;
-        }
-        if (isString(leftValue) || isString(rightValue)) {
-          return String(leftValue) + String(rightValue);
-        }
-        throw new TypeError('+ operator requires numbers or strings');
-      }
-
-      case '-': {
-        const [l, r] = requireNumbers('-', leftValue, rightValue);
-        return l - r;
-      }
-
-      case '*': {
-        const [l, r] = requireNumbers('*', leftValue, rightValue);
-        return l * r;
-      }
-
-      case '/': {
-        const [l, r] = requireNumbers('/', leftValue, rightValue);
-        if (r === 0) {
-          throw new Error('Division by zero');
-        }
-        return l / r;
-      }
-
-      case '%': {
-        const [l, r] = requireNumbers('%', leftValue, rightValue);
-        if (r === 0) {
-          throw new Error('Modulo by zero');
-        }
-        return l % r;
-      }
-
-      case '**': {
-        const [l, r] = requireNumbers('**', leftValue, rightValue);
-        return l ** r;
-      }
-
-      case '<': {
-        const [l, r] = requireSameOrderedType('<', leftValue, rightValue);
-        return l < r;
-      }
-
-      case '>': {
-        const [l, r] = requireSameOrderedType('>', leftValue, rightValue);
-        return l > r;
-      }
-
-      case '<=': {
-        const [l, r] = requireSameOrderedType('<=', leftValue, rightValue);
-        return l <= r;
-      }
-
-      case '>=': {
-        const [l, r] = requireSameOrderedType('>=', leftValue, rightValue);
-        return l >= r;
-      }
-
-      // `==`/`!=` are intentionally strict here. Loose equality coercion is
-      // the most common JS footgun and this DSL rejects it.
-      case '==':
-      case '===':
-        return leftValue === rightValue;
-      case '!=':
-      case '!==':
-        return leftValue !== rightValue;
-
-      case '|': {
-        const [l, r] = requireNumbers('|', leftValue, rightValue);
-        return l | r;
-      }
-
-      case '&': {
-        const [l, r] = requireNumbers('&', leftValue, rightValue);
-        return l & r;
-      }
-
-      case '^': {
-        const [l, r] = requireNumbers('^', leftValue, rightValue);
-        return l ^ r;
-      }
-
-      case '<<': {
-        const [l, r] = requireNumbers('<<', leftValue, rightValue);
-        return l << r;
-      }
-
-      case '>>': {
-        const [l, r] = requireNumbers('>>', leftValue, rightValue);
-        return l >> r;
-      }
-
-      case '>>>': {
-        const [l, r] = requireNumbers('>>>', leftValue, rightValue);
-        return l >>> r;
-      }
-
-      case 'in':
-        if (!isObjectLike(rightValue)) {
-          throw new TypeError(
-            'Right operand must be an object for "in" operator',
-          );
-        }
-        if (!isString(leftValue)) {
-          throw new TypeError(
-            'Left operand must be of type string for "in" operator',
-          );
-        }
-        // Use hasOwn semantics so the `in` operator does not walk the
-        // prototype chain. This matches identifier and member-access
-        // scoping across the rest of the language.
-        return Object.prototype.hasOwnProperty.call(rightValue, leftValue);
-
-      default:
-        throw new Error(`Unsupported binary operator: ${String(operator)}`);
+    if (operator === '+') {
+      return executeAddition(leftValue, rightValue);
     }
+    if (operator === 'in') {
+      return executeIn(leftValue, rightValue);
+    }
+    if (isEqualityOperator(operator)) {
+      return executeEquality(operator, leftValue, rightValue);
+    }
+    if (isOrderedComparisonOperator(operator)) {
+      return executeOrderedComparison(operator, leftValue, rightValue);
+    }
+    return executeNumericBinaryOp(operator, leftValue, rightValue);
   }
 
   private evaluateMemberExpression(
@@ -558,7 +456,10 @@ export class ExpressionService {
       return (memberExpr.property as Identifier).name;
     }
     const propertyValue = this.evaluateAstNode(memberExpr.property, frames);
-    if (typeof propertyValue !== 'string' && typeof propertyValue !== 'number') {
+    if (
+      typeof propertyValue !== 'string' &&
+      typeof propertyValue !== 'number'
+    ) {
       throw new TypeError('Method name must be a string or number');
     }
     return String(propertyValue);
@@ -576,9 +477,7 @@ export class ExpressionService {
       }
       const spreadValue = this.evaluateAstNode(arg.argument, frames);
       if (!Array.isArray(spreadValue)) {
-        throw new TypeError(
-          'Cannot spread non-array value in call arguments',
-        );
+        throw new TypeError('Cannot spread non-array value in call arguments');
       }
       for (const item of spreadValue) {
         args.push(item);
@@ -587,11 +486,7 @@ export class ExpressionService {
     return args;
   }
 
-  private callSafeMethod(
-    object: unknown,
-    methodName: string,
-    args: unknown[],
-  ) {
+  private callSafeMethod(object: unknown, methodName: string, args: unknown[]) {
     if (!isAllowedMethod(object, methodName)) {
       throw new TypeError(
         `Method ${methodName} is not supported on type ${typeof object}`,
