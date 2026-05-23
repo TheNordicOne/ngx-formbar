@@ -415,6 +415,60 @@ The two `hideStrategy` values keep their meaning, but the way the library implem
 
 If your v1 code relied on the keep strategy keeping the component itself mounted (for example, to preserve an internal component-only state across hide/show cycles), move that state into the form model. Alternatively, wrap the relevant subtree in your own `@if`.
 
+## Step 10: Audit string-based expressions
+
+The expression language has been hardened. `Expression<T>` strings still parse roughly the same syntax, but several behaviors have changed in ways that can affect existing schemas. Function-form expressions (`(formValue) => ...`) are not affected.
+
+The parser has also been switched from `acorn` to an in-tree allow-list parser adapted from [jsep](https://github.com/EricSmekens/jsep). The change is transparent at the source level. The `acorn` runtime dependency is gone, so projects that only pulled it in transitively through `@ngx-formbar/core` will see it drop out of their dependency tree.
+
+### `==` and `!=` are now strict
+
+Loose equality coercion is no longer applied. `==` behaves identically to `===` and `!=` identically to `!==`. The following return `false` in v2.0.0:
+
+| Expression | v1 | v2.0.0 |
+|---|---|---|
+| `age == "18"` (when `age` is a number) | `true` | `false` |
+| `value != null` (when `value` is `undefined`) | `false` | `true` |
+| `"" == 0` | `true` | `false` |
+| `null == undefined` | `true` | `false` |
+
+If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `String(age) == "18"`).
+
+### Array mutators throw
+
+The safe-methods allow-list no longer contains mutating methods. The following all throw at evaluation:
+
+- `sort`, `reverse`
+- `push`, `pop`, `shift`, `unshift`
+- `splice`, `fill`, `copyWithin`
+
+Replace with immutable equivalents in the expression (`[...arr, x]` instead of `arr.push(x)`), or precompute the derived value in the form model.
+
+### Plain-object method calls throw
+
+Method calls on plain objects, `Date`, `Map`, `Set`, and `RegExp` instances now throw. Only strings, numbers, booleans, and arrays have callable methods. If an expression called `obj.toString()` or `date.getHours()`, reshape the data so the value is available as a primitive on the form model.
+
+### Raw method extraction on strings throws
+
+`"x".toUpperCase` as a value throws. The call form `"x".toUpperCase()` continues to work. Likewise `arr.map` as a value throws; `arr.map(fn)` still works.
+
+### Multi-statement and comma sequences are parse errors
+
+`1; 2`, `(a, b)`, and `1, 2, 3` no longer parse. Each expression must produce a single value. The comma form is still valid only as the parameter list of a multi-param arrow (`(a, b) => a + b`).
+
+### Object spread is now supported
+
+`({...other, override: 1})` correctly merges the spread source's own enumerable properties. In v1 this parsed but silently dropped the spread. If v1 code worked around the silent drop by listing properties explicitly, the spread form is now available.
+
+### Other behavior changes
+
+- Division and modulo by zero throw instead of returning `Infinity` or `NaN`. Add a guard: `total === 0 ? 0 : value / total`.
+- Identifier and member-access lookups use own-property semantics. Expressions reading inherited `Object.prototype` members (`obj.constructor`, `obj.toString`, etc.) now return `undefined`.
+- The `in` operator uses hasOwn. `'toString' in obj` returns `false` even when `obj` inherits `toString`.
+- Member access on arrays is restricted to `.length` and canonical integer indices.
+- `this`, `delete`, update operators (`++`/`--`), and rest parameters in arrows (`(...x) => x`) are parse errors.
+- Multi-expression template placeholders (`` `${a; b}` ``) are parse errors. Each placeholder must contain exactly one expression.
+
 ## What stays in `@ngx-formbar/core`
 
 The following remain in `@ngx-formbar/core` and need no path change:
@@ -454,3 +508,9 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 | Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core` only                                            |
 | `ng add`                                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | Code generators                                                  | `@ngx-formbar/core:*`                             | `@ngx-formbar/schematics:*`                                     |
+| Expression parser                                                | `acorn` (runtime dep)                             | in-tree adaptation of `jsep`, no runtime dep                    |
+| `==` / `!=` semantics                                            | loose (JS coercion)                               | strict (equivalent to `===` / `!==`)                            |
+| Array mutator methods in expressions                             | reachable (`arr.push(x)`, `arr.sort()`, etc.)     | throw                                                           |
+| Plain-object / `Date` / `Map` / `Set` method calls               | reachable                                         | throw                                                           |
+| Division / modulo by zero                                        | `Infinity` / `NaN`                                | throws                                                          |
+| Multi-statement and top-level comma sequences                    | silently dropped trailing input                   | parse error                                                     |
