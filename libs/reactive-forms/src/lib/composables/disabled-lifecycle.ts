@@ -27,7 +27,7 @@ export function withDisabledLifecycle(options: {
   controlConfig: Signal<NgxFbAbstractControl>;
   registrationEntry: Signal<ComponentRegistrationEntry | null>;
   instance: Signal<AbstractControl>;
-}) {
+}): Signal<boolean> {
   const isDisabled = withDisabledState(options.controlConfig);
   const handleDisable = computed(
     () => (options.registrationEntry()?.disabledHandling ?? 'auto') === 'auto',

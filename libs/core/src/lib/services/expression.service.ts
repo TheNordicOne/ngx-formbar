@@ -1,46 +1,23 @@
 import { Injectable } from '@angular/core';
-import type {
-  ArrayExpression,
-  ArrowFunctionExpression,
-  BinaryExpression,
-  BinaryOperator,
-  CallExpression,
-  ConditionalExpression,
-  Expression,
-  Identifier,
-  Literal,
-  LogicalExpression,
-  MemberExpression,
-  ObjectExpression,
-  PrivateIdentifier,
-  Program,
-  SequenceExpression,
-  SpreadElement,
-  Super,
-  TemplateLiteral,
-  UnaryExpression,
-} from 'acorn';
-import * as acorn from 'acorn';
+import {
+  parse,
+  type ArrayExpression,
+  type ArrowFunctionExpression,
+  type BinaryExpression,
+  type BinaryOperator,
+  type CallExpression,
+  type ConditionalExpression,
+  type Expression,
+  type Identifier,
+  type LogicalExpression,
+  type MemberExpression,
+  type ObjectExpression,
+  type Program,
+  type SpreadElement,
+  type TemplateLiteral,
+  type UnaryExpression,
+} from '../parser';
 import type { FormContext } from '../types/expression.type';
-
-/**
- * Node types blocked in expressions for security or complexity reasons.
- */
-const UNSUPPORTED_NODE_TYPES = new Set([
-  'ThisExpression',
-  'Super',
-  'PrivateIdentifier',
-  'FunctionExpression',
-  'UpdateExpression',
-  'AssignmentExpression',
-  'NewExpression',
-  'YieldExpression',
-  'TaggedTemplateExpression',
-  'ClassExpression',
-  'MetaProperty',
-  'AwaitExpression',
-  'ImportExpression',
-]);
 
 type SafeMethods = {
   string: string[];
@@ -48,9 +25,7 @@ type SafeMethods = {
   boolean: string[];
   array: string[];
 };
-/**
- * Methods allowed to be called on each primitive type during evaluation.
- */
+
 const SAFE_METHODS: SafeMethods = {
   string: [
     'charAt',
@@ -95,26 +70,109 @@ const SAFE_METHODS: SafeMethods = {
   ],
 } as const;
 
-type ObjectWithMethod = Record<string, unknown>;
+type Frame = Record<string, unknown>;
+
+const CANONICAL_INTEGER_STRING = /^(0|[1-9]\d*)$/;
+
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number';
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isObjectLike(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
+}
+
+type Callable = (...args: unknown[]) => unknown;
+
+function readMethod(object: unknown, name: string) {
+  const value = (object as Record<string, unknown>)[name];
+  return typeof value === 'function' ? (value as Callable) : undefined;
+}
+
+function requireNumbers(
+  operator: string,
+  left: unknown,
+  right: unknown,
+): [number, number] {
+  if (!isNumber(left) || !isNumber(right)) {
+    throw new TypeError(`${operator} operator requires numbers`);
+  }
+  return [left, right];
+}
+
+function requireSameOrderedType(
+  operator: string,
+  left: unknown,
+  right: unknown,
+): [number, number] | [string, string] {
+  if (isNumber(left) && isNumber(right)) {
+    return [left, right];
+  }
+  if (isString(left) && isString(right)) {
+    return [left, right];
+  }
+  throw new TypeError(
+    `${operator} operator requires operands of the same type (numbers or strings)`,
+  );
+}
+
+function isAllowedMethod(object: unknown, methodName: string) {
+  if (Array.isArray(object)) {
+    return SAFE_METHODS.array.includes(methodName);
+  }
+  const type = typeof object;
+  if (type === 'string' || type === 'number' || type === 'boolean') {
+    return SAFE_METHODS[type].includes(methodName);
+  }
+  return false;
+}
+
+// Canonical non-negative integer indices only. Mirrors JS string/array
+// indexing: `"0"` and `0` work; `" 0 "`, `"0x1"`, `"1e0"`, `""` do not.
+function isCanonicalIndex(value: unknown): value is number | string {
+  if (typeof value === 'number') {
+    return Number.isInteger(value) && value >= 0;
+  }
+  if (typeof value === 'string') {
+    return CANONICAL_INTEGER_STRING.test(value);
+  }
+  return false;
+}
 
 /**
- * Parses and evaluates a restricted subset of JavaScript expressions
- * against a form context object.
+ * Parses and evaluates a constrained pure-expression DSL against a form
+ * context object. The grammar is an allow-list subset of JS expressions
+ * with deliberate divergences (strict `==`, throw on div-by-zero,
+ * own-property-only identifier and member scope, per-type method
+ * allow-list, no mutation reachable).
+ *
+ * The sandbox protects access and integrity. It does not protect
+ * availability: a pathological expression can still hang the host.
+ *
+ * See `apps/docs/src/docs/fundamentals/expressions/index.md` for the
+ * full language reference.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ExpressionService {
+  private static readonly AST_CACHE_LIMIT = 256;
+
   private readonly astCache = new Map<string, Program>();
 
   /**
    * Parses an expression string into an AST. Returns null for empty input.
-   * Results are cached per source string.
+   * Results are cached per source string in a bounded LRU.
    *
    * @param expressionString Source text to parse. Empty or `undefined` input
    *   short-circuits to `null` so callers do not need a separate guard.
-   * @returns The parsed acorn `Program`, or `null` when there is nothing to
-   *   parse. Throws when the input is not valid ECMAScript 2022.
+   * @returns The parsed {@link Program}, or `null` when there is nothing to
+   *   parse. Throws on syntactically invalid or grammatically rejected
+   *   input (`a = b`, `this`, multi-statement, etc.).
    */
   parseExpressionToAst(expressionString?: string): Program | null {
     if (!expressionString) {
@@ -122,10 +180,20 @@ export class ExpressionService {
     }
     const cachedAst = this.astCache.get(expressionString);
     if (cachedAst) {
+      // Move to tail: most recently used.
+      this.astCache.delete(expressionString);
+      this.astCache.set(expressionString, cachedAst);
       return cachedAst;
     }
 
-    const ast = acorn.parse(expressionString, { ecmaVersion: 2022 });
+    const ast = parse(expressionString);
+    if (this.astCache.size >= ExpressionService.AST_CACHE_LIMIT) {
+      // Evict least recently used (head of insertion order).
+      const oldestKey = this.astCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.astCache.delete(oldestKey);
+      }
+    }
     this.astCache.set(expressionString, ast);
     return ast;
   }
@@ -135,8 +203,6 @@ export class ExpressionService {
    * Returns null when the AST or context is missing.
    *
    * @param ast Program produced by {@link ExpressionService.parseExpressionToAst}.
-   *   Must wrap a single `ExpressionStatement`; other top-level statements
-   *   throw.
    * @param context Object whose own properties act as the variables visible
    *   to identifier lookups inside the expression.
    * @returns The evaluated value, or `null` when either argument is missing.
@@ -146,69 +212,51 @@ export class ExpressionService {
     if (!context || !ast) {
       return null;
     }
-
-    const node = ast.body[0];
-    if (node.type !== 'ExpressionStatement') {
-      throw new TypeError(`Unsupported statement type: ${node.type}`);
-    }
-
-    return this.evaluateAstNode(node.expression, context);
+    return this.evaluateAstNode(ast.body, [context]);
   }
 
   private evaluateAstNode(
-    node: Expression | PrivateIdentifier | Super | SpreadElement,
-    context: FormContext,
+    node: Expression | SpreadElement,
+    frames: readonly Frame[],
   ): unknown {
-    if (UNSUPPORTED_NODE_TYPES.has(node.type)) {
-      throw new TypeError(`${node.type} is not supported in expressions`);
-    }
-
     switch (node.type) {
       case 'Identifier':
-        return this.evaluateIdentifier(node, context);
+        return this.evaluateIdentifier(node, frames);
       case 'Literal':
-        return this.evaluateLiteral(node);
+        return node.value;
       case 'ArrayExpression':
-        return this.evaluateArrayExpression(node, context);
+        return this.evaluateArrayExpression(node, frames);
       case 'UnaryExpression':
-        return this.evaluateUnaryExpression(node, context);
+        return this.evaluateUnaryExpression(node, frames);
       case 'BinaryExpression':
-        return this.evaluateBinaryExpression(node, context);
+        return this.evaluateBinaryExpression(node, frames);
       case 'LogicalExpression':
-        return this.evaluateLogicalExpression(node, context);
+        return this.evaluateLogicalExpression(node, frames);
       case 'MemberExpression':
-        return this.evaluateMemberExpression(node, context);
+        return this.evaluateMemberExpression(node, frames);
       case 'ConditionalExpression':
-        return this.evaluateConditionalExpression(node, context);
-      case 'ParenthesizedExpression':
-        return this.evaluateAstNode(node.expression, context);
+        return this.evaluateConditionalExpression(node, frames);
       case 'ObjectExpression':
-        return this.evaluateObjectExpression(node, context);
-      case 'SequenceExpression':
-        return this.evaluateSequenceExpression(node, context);
+        return this.evaluateObjectExpression(node, frames);
       case 'TemplateLiteral':
-        return this.evaluateTemplateLiteral(node, context);
+        return this.evaluateTemplateLiteral(node, frames);
       case 'CallExpression':
-        return this.evaluateCallExpression(node, context);
+        return this.evaluateCallExpression(node, frames);
       case 'ArrowFunctionExpression':
-        return this.evaluateArrowFunctionExpression(node, context);
-      case 'ChainExpression':
-        return this.evaluateAstNode(node.expression, context);
+        return this.evaluateArrowFunctionExpression(node, frames);
       default:
-        throw new TypeError(`Unsupported node type: ${node.type}`);
+        throw new TypeError(
+          `Unsupported node type: ${(node as { type: string }).type}`,
+        );
     }
-  }
-
-  private evaluateLiteral(node: Literal) {
-    return node.value;
   }
 
   private evaluateBinaryExpression(
     node: BinaryExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
-    const leftValue = this.evaluateAstNode(node.left, context);
-    const rightValue = this.evaluateAstNode(node.right, context);
+    const leftValue = this.evaluateAstNode(node.left, frames);
+    const rightValue = this.evaluateAstNode(node.right, frames);
     return this.executeBinaryOperation(leftValue, node.operator, rightValue);
   }
 
@@ -217,156 +265,109 @@ export class ExpressionService {
     operator: BinaryOperator,
     rightValue: unknown,
   ) {
-    const isNumber = (value: unknown): value is number =>
-      typeof value === 'number';
-    const isString = (value: unknown): value is string =>
-      typeof value === 'string';
-    const isObject = (value: unknown): value is object =>
-      value !== null && typeof value === 'object';
-
     switch (operator) {
-      // Arithmetic operators
-      case '+':
+      case '+': {
         if (isNumber(leftValue) && isNumber(rightValue)) {
           return leftValue + rightValue;
         }
-
         if (isString(leftValue) || isString(rightValue)) {
           return String(leftValue) + String(rightValue);
         }
-
         throw new TypeError('+ operator requires numbers or strings');
+      }
 
-      case '-':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue - rightValue;
+      case '-': {
+        const [l, r] = requireNumbers('-', leftValue, rightValue);
+        return l - r;
+      }
+
+      case '*': {
+        const [l, r] = requireNumbers('*', leftValue, rightValue);
+        return l * r;
+      }
+
+      case '/': {
+        const [l, r] = requireNumbers('/', leftValue, rightValue);
+        if (r === 0) {
+          throw new Error('Division by zero');
         }
-        throw new TypeError('- operator requires numbers');
+        return l / r;
+      }
 
-      case '*':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue * rightValue;
+      case '%': {
+        const [l, r] = requireNumbers('%', leftValue, rightValue);
+        if (r === 0) {
+          throw new Error('Modulo by zero');
         }
-        throw new TypeError('* operator requires numbers');
+        return l % r;
+      }
 
-      case '/':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          if (rightValue === 0) {
-            throw new Error('Division by zero');
-          }
-          return leftValue / rightValue;
-        }
-        throw new TypeError('/ operator requires numbers');
+      case '**': {
+        const [l, r] = requireNumbers('**', leftValue, rightValue);
+        return l ** r;
+      }
 
-      case '%':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          if (rightValue === 0) {
-            throw new Error('Modulo by zero');
-          }
-          return leftValue % rightValue;
-        }
-        throw new TypeError('% operator requires numbers');
+      case '<': {
+        const [l, r] = requireSameOrderedType('<', leftValue, rightValue);
+        return l < r;
+      }
 
-      case '**':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue ** rightValue;
-        }
-        throw new TypeError('** operator requires numbers');
+      case '>': {
+        const [l, r] = requireSameOrderedType('>', leftValue, rightValue);
+        return l > r;
+      }
 
-      // Comparison operators
-      case '<':
-        if (
-          (isNumber(leftValue) && isNumber(rightValue)) ||
-          (isString(leftValue) && isString(rightValue))
-        ) {
-          return leftValue < rightValue;
-        }
-        throw new TypeError(
-          '< operator requires operands of the same type (numbers or strings)',
-        );
+      case '<=': {
+        const [l, r] = requireSameOrderedType('<=', leftValue, rightValue);
+        return l <= r;
+      }
 
-      case '>':
-        if (
-          (isNumber(leftValue) && isNumber(rightValue)) ||
-          (isString(leftValue) && isString(rightValue))
-        ) {
-          return leftValue > rightValue;
-        }
-        throw new TypeError(
-          '> operator requires operands of the same type (numbers or strings)',
-        );
+      case '>=': {
+        const [l, r] = requireSameOrderedType('>=', leftValue, rightValue);
+        return l >= r;
+      }
 
-      case '<=':
-        if (
-          (isNumber(leftValue) && isNumber(rightValue)) ||
-          (isString(leftValue) && isString(rightValue))
-        ) {
-          return leftValue <= rightValue;
-        }
-        throw new TypeError(
-          '<= operator requires operands of the same type (numbers or strings)',
-        );
-
-      case '>=':
-        if (
-          (isNumber(leftValue) && isNumber(rightValue)) ||
-          (isString(leftValue) && isString(rightValue))
-        ) {
-          return leftValue >= rightValue;
-        }
-        throw new TypeError(
-          '>= operator requires operands of the same type (numbers or strings)',
-        );
-
-      // Equality operators - maintain loose behavior as per specs
+      // `==`/`!=` are intentionally strict here. Loose equality coercion is
+      // the most common JS footgun and this DSL rejects it.
       case '==':
-        return leftValue == rightValue;
-      case '!=':
-        return leftValue != rightValue;
       case '===':
         return leftValue === rightValue;
+      case '!=':
       case '!==':
         return leftValue !== rightValue;
 
-      // Bitwise operators
-      case '|':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue | rightValue;
-        }
-        throw new TypeError('| operator requires numbers');
+      case '|': {
+        const [l, r] = requireNumbers('|', leftValue, rightValue);
+        return l | r;
+      }
 
-      case '&':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue & rightValue;
-        }
-        throw new TypeError('& operator requires numbers');
+      case '&': {
+        const [l, r] = requireNumbers('&', leftValue, rightValue);
+        return l & r;
+      }
 
-      case '^':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue ^ rightValue;
-        }
-        throw new TypeError('^ operator requires numbers');
+      case '^': {
+        const [l, r] = requireNumbers('^', leftValue, rightValue);
+        return l ^ r;
+      }
 
-      case '<<':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue << rightValue;
-        }
-        throw new TypeError('<< operator requires numbers');
+      case '<<': {
+        const [l, r] = requireNumbers('<<', leftValue, rightValue);
+        return l << r;
+      }
 
-      case '>>':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue >> rightValue;
-        }
-        throw new TypeError('>> operator requires numbers');
+      case '>>': {
+        const [l, r] = requireNumbers('>>', leftValue, rightValue);
+        return l >> r;
+      }
 
-      case '>>>':
-        if (isNumber(leftValue) && isNumber(rightValue)) {
-          return leftValue >>> rightValue;
-        }
-        throw new TypeError('>>> operator requires numbers');
+      case '>>>': {
+        const [l, r] = requireNumbers('>>>', leftValue, rightValue);
+        return l >>> r;
+      }
 
       case 'in':
-        if (!isObject(rightValue)) {
+        if (!isObjectLike(rightValue)) {
           throw new TypeError(
             'Right operand must be an object for "in" operator',
           );
@@ -376,31 +377,22 @@ export class ExpressionService {
             'Left operand must be of type string for "in" operator',
           );
         }
-        return leftValue in rightValue;
+        // Use hasOwn semantics so the `in` operator does not walk the
+        // prototype chain. This matches identifier and member-access
+        // scoping across the rest of the language.
+        return Object.prototype.hasOwnProperty.call(rightValue, leftValue);
 
       default:
-        throw new Error(`Unsupported binary operator: ${operator}`);
+        throw new Error(`Unsupported binary operator: ${String(operator)}`);
     }
   }
 
-  /**
-   * Evaluates a member expression like `obj.prop` or `arr[0]`,
-   * including optional chaining and primitive prototype access.
-   *
-   * @param node Member expression node from acorn. Both static (`a.b`) and
-   *   computed (`a[b]`) forms are accepted, with or without `?.`.
-   * @param context Form context forwarded when resolving the receiver and any
-   *   computed property key.
-   * @returns The looked-up property value. `undefined` when optional chaining
-   *   short-circuits; throws for null or undefined receivers without `?.` and
-   *   for invalid property accesses on numbers or booleans.
-   */
   private evaluateMemberExpression(
     node: MemberExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
     const propertyValue = node.computed
-      ? this.evaluateAstNode(node.property, context)
+      ? this.evaluateAstNode(node.property, frames)
       : (node.property as Identifier).name;
 
     if (
@@ -412,85 +404,83 @@ export class ExpressionService {
       );
     }
 
-    const objectValue = this.evaluateAstNode(node.object, context);
+    const objectValue = this.evaluateAstNode(node.object, frames);
 
-    const isOptional = node.optional;
     if (objectValue === null || objectValue === undefined) {
-      if (isOptional) {
+      if (node.optional) {
         return undefined;
       }
-      const readObject = node.object;
       const readingFrom =
-        readObject.type === 'Identifier' ? ` from ${readObject.name}` : '';
+        node.object.type === 'Identifier' ? ` from ${node.object.name}` : '';
       throw new Error(
-        `Cannot access properties of null or undefined (Reading: ${propertyValue.toString()}${readingFrom})`,
+        `Cannot access properties of null or undefined (Reading: ${String(propertyValue)}${readingFrom})`,
       );
     }
 
-    if (typeof objectValue === 'object') {
-      return this.getPropertyFromObject(
-        objectValue as Record<string, unknown>,
-        propertyValue,
-      );
+    if (Array.isArray(objectValue)) {
+      return this.readIndexable('array', objectValue, propertyValue);
     }
 
     if (typeof objectValue === 'string') {
-      if (
-        propertyValue === 'length' ||
-        typeof String.prototype[
-          propertyValue as keyof typeof String.prototype
-        ] === 'function'
-      ) {
-        return objectValue[propertyValue as keyof string];
-      }
-
-      if (
-        typeof propertyValue === 'number' ||
-        !Number.isNaN(Number(propertyValue))
-      ) {
-        return objectValue[propertyValue as keyof typeof objectValue];
-      }
-
-      throw new Error(`Invalid property access on string: ${propertyValue}`);
+      return this.readIndexable('string', objectValue, propertyValue);
     }
 
-    if (typeof objectValue === 'number') {
+    if (typeof objectValue === 'object') {
+      // Restrict to own properties so prototype members (`constructor`,
+      // `toString`, `hasOwnProperty`, ...) are not reachable through member
+      // access. Returning a function reference would expose a callable that
+      // bypasses the call gate.
+      return Object.prototype.hasOwnProperty.call(objectValue, propertyValue)
+        ? (objectValue as Record<string, unknown>)[propertyValue]
+        : undefined;
+    }
+
+    if (typeof objectValue === 'function') {
       throw new Error(
-        `Cannot access properties on a number value: ${String(objectValue)}.${String(propertyValue)}`,
+        `Cannot access properties on a function value: .${String(propertyValue)}`,
       );
     }
-
-    if (typeof objectValue === 'boolean') {
+    if (typeof objectValue === 'number' || typeof objectValue === 'boolean') {
       throw new Error(
-        `Cannot access properties on a boolean value: ${String(objectValue)}.${String(propertyValue)}`,
+        `Cannot access properties on a ${typeof objectValue} value: ${String(objectValue)}.${String(propertyValue)}`,
       );
     }
-
-    return this.getPropertyFromObject(
-      objectValue as Record<string, unknown>,
-      propertyValue,
+    throw new Error(
+      `Cannot access properties on a ${typeof objectValue} value: .${String(propertyValue)}`,
     );
   }
 
-  private getPropertyFromObject(
-    object: Record<string, unknown> | null | undefined,
-    propertyKey: string | number,
+  private readIndexable(
+    kind: 'array' | 'string',
+    value: readonly unknown[] | string,
+    property: string | number,
   ) {
-    return object !== null && object !== undefined
-      ? object[propertyKey]
-      : undefined;
+    if (property === 'length') {
+      return value.length;
+    }
+    if (isCanonicalIndex(property)) {
+      return value[Number(property)];
+    }
+    throw new Error(
+      `Invalid property access on ${kind}: ${String(property)}`,
+    );
   }
 
-  private evaluateIdentifier(node: Identifier, context: FormContext) {
-    if (typeof context === 'object' && node.name in context) {
-      return context[node.name];
+  private evaluateIdentifier(node: Identifier, frames: readonly Frame[]) {
+    // Walk frames from innermost (last pushed) to outermost so arrow
+    // parameters shadow outer-context names.
+    for (let i = frames.length - 1; i >= 0; i--) {
+      const frame = frames[i];
+      if (Object.prototype.hasOwnProperty.call(frame, node.name)) {
+        return frame[node.name];
+      }
     }
     return undefined;
   }
 
   private evaluateArrayExpression(
     node: ArrayExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
     const resultArray: unknown[] = [];
 
@@ -501,17 +491,15 @@ export class ExpressionService {
       }
 
       if (element.type !== 'SpreadElement') {
-        resultArray.push(this.evaluateAstNode(element, context));
+        resultArray.push(this.evaluateAstNode(element, frames));
         continue;
       }
 
-      const spreadValue = this.evaluateAstNode(element.argument, context);
-
-      if (Array.isArray(spreadValue)) {
-        resultArray.push(...(spreadValue as unknown[]));
-        continue;
+      const spreadValue = this.evaluateAstNode(element.argument, frames);
+      if (!Array.isArray(spreadValue)) {
+        throw new TypeError(`Cannot spread non-array value in array literal`);
       }
-      throw new TypeError(`Cannot spread non-array value in array literal`);
+      resultArray.push(...(spreadValue as unknown[]));
     }
 
     return resultArray;
@@ -519,9 +507,9 @@ export class ExpressionService {
 
   private evaluateUnaryExpression(
     node: UnaryExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
-    const argumentValue = this.evaluateAstNode(node.argument, context);
+    const argumentValue = this.evaluateAstNode(node.argument, frames);
 
     switch (node.operator) {
       case '-':
@@ -530,19 +518,21 @@ export class ExpressionService {
         }
         return -argumentValue;
 
-      case '+':
-        if (typeof argumentValue === 'string') {
-          const numberValue = Number(argumentValue);
-          if (Number.isNaN(numberValue)) {
-            throw new TypeError(
-              `Cannot convert string "${argumentValue}" to number`,
-            );
-          }
-          return numberValue;
-        } else if (typeof argumentValue !== 'number') {
+      case '+': {
+        if (typeof argumentValue === 'number') {
+          return argumentValue;
+        }
+        if (typeof argumentValue !== 'string') {
           throw new TypeError('Unary + operator requires a number or string');
         }
-        return argumentValue;
+        const numberValue = Number(argumentValue);
+        if (Number.isNaN(numberValue)) {
+          throw new TypeError(
+            `Cannot convert string "${argumentValue}" to number`,
+          );
+        }
+        return numberValue;
+      }
 
       case '!':
         return !argumentValue;
@@ -559,260 +549,207 @@ export class ExpressionService {
       case 'void':
         return undefined;
 
-      case 'delete':
-        throw new Error('Delete operator is not supported in expressions');
+      default:
+        throw new TypeError(
+          `Unsupported unary operator: ${(node as { operator: string }).operator}`,
+        );
     }
   }
 
   private evaluateLogicalExpression(
     node: LogicalExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
-    const leftValue = this.evaluateAstNode(node.left, context);
+    const leftValue = this.evaluateAstNode(node.left, frames);
 
     switch (node.operator) {
       case '&&':
-        if (!leftValue) {
-          return leftValue;
-        }
-        return this.evaluateAstNode(node.right, context);
+        return leftValue ? this.evaluateAstNode(node.right, frames) : leftValue;
 
       case '||':
-        if (leftValue) {
-          return leftValue;
-        }
-        return this.evaluateAstNode(node.right, context);
+        // Implements JS `||`: return left when truthy, else right.
+        // `??` would diverge for falsy-but-non-nullish values like 0 or "".
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        return leftValue || this.evaluateAstNode(node.right, frames);
 
       case '??':
-        if (leftValue === null || leftValue === undefined) {
-          return this.evaluateAstNode(node.right, context);
-        }
-        return leftValue;
+        return leftValue ?? this.evaluateAstNode(node.right, frames);
+
+      default:
+        throw new TypeError(
+          `Unsupported logical operator: ${(node as { operator: string }).operator}`,
+        );
     }
   }
 
   private evaluateConditionalExpression(
     node: ConditionalExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
-    const condition = this.evaluateAstNode(node.test, context);
-    const isConditionTrue = Boolean(condition);
-
-    if (isConditionTrue) {
-      return this.evaluateAstNode(node.consequent, context);
-    }
-
-    return this.evaluateAstNode(node.alternate, context);
+    return this.evaluateAstNode(node.test, frames)
+      ? this.evaluateAstNode(node.consequent, frames)
+      : this.evaluateAstNode(node.alternate, frames);
   }
 
   private evaluateObjectExpression(
     node: ObjectExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
     const result: Record<string, unknown> = {};
 
     for (const property of node.properties) {
-      if (property.type !== 'Property') {
+      if (property.type === 'SpreadElement') {
+        this.applySpreadIntoObject(result, property, frames);
         continue;
       }
 
-      const prop = property;
+      const key =
+        property.key.type === 'Identifier' && !property.computed
+          ? property.key.name
+          : String(this.evaluateAstNode(property.key, frames));
 
-      let key: string;
-      if (prop.key.type === 'Identifier' && !prop.computed) {
-        key = prop.key.name;
-      } else {
-        const evaluatedKey = this.evaluateAstNode(prop.key, context);
-        key = String(evaluatedKey);
+      // Skip __proto__ so the literal `{__proto__: x}` (or `{["__proto__"]: x}`)
+      // does not trigger JavaScript's prototype-setter semantics on the
+      // returned object. The spread branch applies the same defense.
+      if (key === '__proto__') {
+        continue;
       }
 
-      result[key] = this.evaluateAstNode(prop.value, context);
+      result[key] = this.evaluateAstNode(property.value, frames);
     }
 
     return result;
   }
 
-  private evaluateSequenceExpression(
-    node: SequenceExpression,
-    context: FormContext,
+  private applySpreadIntoObject(
+    result: Record<string, unknown>,
+    spread: SpreadElement,
+    frames: readonly Frame[],
   ) {
-    let result: unknown;
-
-    for (const expression of node.expressions) {
-      result = this.evaluateAstNode(expression, context);
+    const spreadValue = this.evaluateAstNode(spread.argument, frames);
+    if (!isObjectLike(spreadValue)) {
+      throw new TypeError(`Cannot spread non-object value in object literal`);
     }
-
-    return result;
+    for (const spreadKey of Object.keys(spreadValue)) {
+      // Defensively skip __proto__ so spreading an object with an own
+      // "__proto__" property (e.g. from JSON.parse) does not reset the
+      // prototype of the returned object.
+      if (spreadKey === '__proto__') {
+        continue;
+      }
+      result[spreadKey] = spreadValue[spreadKey];
+    }
   }
 
   private evaluateTemplateLiteral(
     node: TemplateLiteral,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
     let result = '';
-
     for (let i = 0; i < node.quasis.length; i++) {
-      const cookedValue = node.quasis[i].value.cooked;
-      result = result.concat(cookedValue ?? '');
+      result += node.quasis[i].value.cooked;
       if (i < node.expressions.length) {
-        const exprValue = this.evaluateAstNode(node.expressions[i], context);
-        result = result.concat(String(exprValue));
+        result += String(this.evaluateAstNode(node.expressions[i], frames));
       }
     }
-
     return result;
   }
 
-  /**
-   * Evaluates a method call. Only `object.method(...)` form is supported,
-   * and the method must be in the safe list for the receiver type.
-   *
-   * @param node Call expression node from acorn. Bare function calls and
-   *   constructor calls are rejected; the callee must be a member expression.
-   * @param context Form context forwarded when resolving the receiver, the
-   *   computed method name (when present), and each argument.
-   * @returns The result of invoking the resolved method. Throws when the
-   *   receiver is null or undefined without optional chaining, or when the
-   *   method is not in {@link SAFE_METHODS} for the receiver's type.
-   */
   private evaluateCallExpression(
     node: CallExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
     if (node.callee.type !== 'MemberExpression') {
       throw new TypeError('Only method calls are supported');
     }
 
     const memberExpr = node.callee;
-    const object = this.evaluateAstNode(memberExpr.object, context);
+    const object = this.evaluateAstNode(memberExpr.object, frames);
 
-    const isOptionalCall = node.optional || memberExpr.optional;
     if (object === null || object === undefined) {
-      if (isOptionalCall) {
+      if (node.optional ?? memberExpr.optional) {
         return undefined;
       }
-      throw new Error('Cannot call methods on null || undefined');
+      throw new Error('Cannot call methods on null or undefined');
     }
 
-    let methodName: string;
-    if (!memberExpr.computed && memberExpr.property.type === 'Identifier') {
-      methodName = memberExpr.property.name;
-    } else if (memberExpr.computed) {
-      const propertyValue = this.evaluateAstNode(memberExpr.property, context);
-      if (
-        typeof propertyValue !== 'string' &&
-        typeof propertyValue !== 'number'
-      ) {
-        throw new TypeError('Method name must be a string || number');
-      }
-      methodName = String(propertyValue);
-    } else {
-      throw new TypeError('Unexpected property type in method call');
-    }
-
-    const args: unknown[] = [];
-    for (const arg of node.arguments) {
-      args.push(this.evaluateAstNode(arg, context));
-    }
+    const methodName = this.resolveMethodName(memberExpr, frames);
+    const args = this.evaluateCallArguments(node.arguments, frames);
 
     return this.callSafeMethod(object, methodName, args);
+  }
+
+  private resolveMethodName(
+    memberExpr: MemberExpression,
+    frames: readonly Frame[],
+  ) {
+    // Static member access (`o.f`) always carries an Identifier property; the
+    // parser's gobbleTokenProperty enforces this. Only the computed form can
+    // produce other shapes.
+    if (!memberExpr.computed) {
+      return (memberExpr.property as Identifier).name;
+    }
+    const propertyValue = this.evaluateAstNode(memberExpr.property, frames);
+    if (typeof propertyValue !== 'string' && typeof propertyValue !== 'number') {
+      throw new TypeError('Method name must be a string or number');
+    }
+    return String(propertyValue);
+  }
+
+  private evaluateCallArguments(
+    rawArgs: CallExpression['arguments'],
+    frames: readonly Frame[],
+  ) {
+    const args: unknown[] = [];
+    for (const arg of rawArgs) {
+      if (arg.type !== 'SpreadElement') {
+        args.push(this.evaluateAstNode(arg, frames));
+        continue;
+      }
+      const spreadValue = this.evaluateAstNode(arg.argument, frames);
+      if (!Array.isArray(spreadValue)) {
+        throw new TypeError(
+          'Cannot spread non-array value in call arguments',
+        );
+      }
+      for (const item of spreadValue) {
+        args.push(item);
+      }
+    }
+    return args;
   }
 
   private callSafeMethod(
     object: unknown,
     methodName: string,
     args: unknown[],
-  ): unknown {
-    const objType: string = typeof object;
-    const isAllowed = this.isAllowedMethod(objType, methodName, object);
-
-    if (!isAllowed) {
+  ) {
+    if (!isAllowedMethod(object, methodName)) {
       throw new TypeError(
-        `Method ${methodName} is not supported on type ${objType}`,
+        `Method ${methodName} is not supported on type ${typeof object}`,
       );
     }
-
-    const objectWithMethod = object as ObjectWithMethod;
-    const method = objectWithMethod[methodName];
-
-    if (typeof method !== 'function') {
-      throw new TypeError(`${methodName} is not a function`);
-    }
-
+    // SAFE_METHODS only lists names that exist as functions on the relevant
+    // built-in prototype, so readMethod cannot return undefined here.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const method = readMethod(object, methodName)!;
     return method.apply(object, args);
   }
 
-  private isAllowedMethod(
-    objectType: string,
-    methodName: string,
-    object: unknown,
-  ) {
-    if (objectType === 'object' && object !== null) {
-      const objectWithMethods = object as ObjectWithMethod;
-      return (
-        methodName in objectWithMethods &&
-        typeof objectWithMethods[methodName] === 'function'
-      );
-    }
-
-    if (!(objectType in SAFE_METHODS)) {
-      return false;
-    }
-    return SAFE_METHODS[objectType as keyof SafeMethods].includes(methodName);
-  }
-
-  /**
-   * Builds a callable from an arrow function expression.
-   * Only expression bodies with simple identifier parameters are supported.
-   *
-   * @param node Arrow function node from acorn. Block bodies and destructured
-   *   or rest parameters are rejected.
-   * @param context Outer form context. The returned function shallow-copies it
-   *   on each call and binds the arrow's parameters on top so the original
-   *   context is never mutated.
-   * @returns A function whose call evaluates the arrow body against the
-   *   extended context. Useful for higher-order array methods such as
-   *   `arr.map(x => x * 2)`.
-   */
   private evaluateArrowFunctionExpression(
     node: ArrowFunctionExpression,
-    context: FormContext,
+    frames: readonly Frame[],
   ) {
-    // We only support simple arrow functions with expression bodies
-    if (
-      node.body.type !== 'BlockStatement' &&
-      node.body.type !== 'Identifier' &&
-      node.body.type !== 'MemberExpression' &&
-      node.body.type !== 'CallExpression' &&
-      node.body.type !== 'BinaryExpression' &&
-      node.body.type !== 'LogicalExpression' &&
-      node.body.type !== 'TemplateLiteral'
-    ) {
-      throw new TypeError(
-        `Unsupported arrow function body type: ${node.body.type}`,
-      );
-    }
-
-    return (...args: unknown[]): unknown => {
-      const arrowContext = { ...context };
-
+    const body = node.body;
+    return (...args: unknown[]) => {
+      // Null-prototype frame so a parameter named `__proto__` is stored as an
+      // own property rather than triggering the Object.prototype setter
+      // (which would silently lose the binding).
+      const paramFrame = Object.create(null) as Frame;
       for (let i = 0; i < node.params.length && i < args.length; i++) {
-        const param = node.params[i];
-        if (param.type !== 'Identifier') {
-          throw new TypeError(
-            'Only simple identifier parameters are supported in arrow functions',
-          );
-        }
-
-        const paramName = param.name;
-        arrowContext[paramName] = args[i];
+        paramFrame[node.params[i].name] = args[i];
       }
-
-      if (node.body.type !== 'BlockStatement') {
-        return this.evaluateAstNode(node.body, arrowContext);
-      }
-
-      throw new TypeError('Block-bodied arrow functions are not supported');
+      return this.evaluateAstNode(body, [...frames, paramFrame]);
     };
   }
 }

@@ -138,7 +138,7 @@ export class NgxFbControlDirective implements OnDestroy {
     return this.parent.formGroup;
   }
 
-  private get controlPath() {
+  private get controlPath(): string {
     return this.parent.pathTo(this.controlName());
   }
 
@@ -211,7 +211,7 @@ export class NgxFbControlDirective implements OnDestroy {
     );
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.saveLastValue();
     this.setValueByStrategy();
 

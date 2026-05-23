@@ -183,14 +183,16 @@ const updateOn = withUpdateStrategy(content); // Signal<UpdateStrategy>
 
 ### ExpressionService
 
-Parses and evaluates JavaScript expressions within a form context. Uses the acorn parser and supports a safe subset of JavaScript:
+Parses and evaluates a constrained pure-expression DSL within a form context. The parser is in-tree (adapted from [jsep](https://github.com/EricSmekens/jsep) under MIT license); the library has no runtime parsing dependency. The grammar is allow-list by construction:
 
 - Member access, optional chaining, binary/logical/unary operators
-- Ternary expressions, template literals, array/object literals
-- Arrow functions (expression bodies only)
-- Safe method calls on strings, numbers, and arrays
+- Ternary expressions, template literals, array/object literals (with spread)
+- Arrow functions (expression bodies only) for higher-order array methods
+- Safe method calls on strings, numbers, booleans, and arrays (non-mutating only)
 
-Assignments, `new`, `this`, `super`, and `import` are intentionally unsupported for security.
+Assignments, `this`, `new`, `super`, `import`, `delete`, `await`, `yield`, classes, function expressions, tagged templates, multi-statement input, and comma sequences are all parse errors. `==` and `!=` behave strictly (no JS coercion). Plain objects, `Date`, `Map`, `Set`, and `RegExp` instances expose no callable methods. Division by zero throws.
+
+See [Expressions](../fundamentals/expressions) for the full language reference and threat-boundary documentation.
 
 ```typescript
 const expressionService = inject(ExpressionService);

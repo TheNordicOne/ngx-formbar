@@ -18,7 +18,7 @@ import { FormbarConfig } from '../types/provide.type';
 export function defineFormbarConfig<
   S extends RegistrationRecord,
   A extends RegistrationRecord,
->(config: FormbarConfig<S, A>): FormbarConfig<S, A> {
+>(config: FormbarConfig<S, A>) {
   return config;
 }
 
@@ -35,7 +35,7 @@ export function defineFormbarConfig<
  */
 export function defineValidatorRegistrations<S extends RegistrationRecord>(
   config: ValidatorConfig<S>,
-): ValidatorConfig<S> {
+) {
   return config;
 }
 
@@ -52,6 +52,6 @@ export function defineValidatorRegistrations<S extends RegistrationRecord>(
  */
 export function defineAsyncValidatorRegistrations<
   A extends RegistrationRecord,
->(config: AsyncValidatorConfig<A>): AsyncValidatorConfig<A> {
+>(config: AsyncValidatorConfig<A>) {
   return config;
 }

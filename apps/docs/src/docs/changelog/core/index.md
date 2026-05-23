@@ -18,6 +18,7 @@ If you want, you can also use the core package on its own to build your own impl
 - Type guards for narrowing content entries: `isFormbarControl`, `isFormbarGroup`, `isFormbarBlock`. Each accepts either a value or a `Signal` and narrows to the corresponding `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock` shape
 - Utility types for building consumer-facing component contracts on top of Angular signal inputs: `SignalInput<T>`, `ToSignalInputs<T>`, `RemoveIndexSignature<T>`, `BlockManagedKeys`, `ExtendedBlockInputs<T>`. Used by `@ngx-formbar/reactive-forms` to derive the public input surface for blocks
 - New `disabledHandling?: StateHandling` option on component registrations, mirroring the existing visibility option. When set to `'manual'`, the library leaves the underlying form control's disabled state alone and the component receives the resolved `isDisabled` signal to apply itself. Defaults to `'auto'`
+- String helper utilities via `toSafeString`
 
 ### Changed
 

@@ -1,5 +1,5 @@
 import { computed, Signal } from '@angular/core';
-import { Program } from 'acorn';
+import { Program } from '../parser';
 import { Expression, FormContext } from '../types/expression.type';
 import { ExpressionService } from '../services/expression.service';
 
