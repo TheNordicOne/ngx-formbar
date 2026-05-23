@@ -7,12 +7,12 @@ const api: NgDocApi = {
     {
       name: '@ngx-formbar/core',
       route: 'core',
-      include: 'libs/core/src/lib/**/*.ts',
+      include: 'libs/core/src/index.ts',
     },
     {
       name: '@ngx-formbar/reactive-forms',
       route: 'reactive-forms',
-      include: 'libs/reactive-forms/src/lib/**/*.ts',
+      include: 'libs/reactive-forms/src/index.ts',
     },
   ],
 };
