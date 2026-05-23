@@ -8,12 +8,14 @@ New package containing all reactive forms functionality previously bundled in `@
 
 - **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `FormbarBlock<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock`) become additional signal inputs the consumer declares.
 - **Components:** `NgxfbFormComponent` (root, takes `formConfig`) and `NgxfbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children).
+- **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxfbBlockDirective`.
 - **Provider setup:** `provideFormbar`, `defineFormbarConfig`, `defineValidatorRegistrations`, `defineAsyncValidatorRegistrations`.
 - **Validator map helpers:** `toValidatorRegistrationMap`, `toAsyncValidatorRegistrationMap`. Use them in token-based providers (`NGX_FW_VALIDATOR_REGISTRATIONS` / `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`) so that cross-references between sibling validators stay type-checked, resolved at runtime, and discoverable through auto-complete ([#65](https://github.com/TheNordicOne/ngx-formbar/issues/65)).
 - **Services:** `FormService`, `ValidatorRegistrationService`.
 - **Tokens:** `NGXFB_CONTROL_ENTRIES`, `NGX_FW_VALIDATOR_REGISTRATIONS`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_FW_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS_RESOLVED`, `NGX_FW_DEFAULT_VALIDATOR_REGISTRATIONS`, `NGX_FW_DEFAULT_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_VALIDATOR_RESOLVER`.
 - **Types:** `FormbarConfig`, `ValidatorConfig`, `AsyncValidatorConfig`, `RegistrationRecord`, `ValidatorKey`, `ValidatorResolver`.
 - **Composables:** `setComputedValueEffect`, `disabledEffect`, `hiddenEffects`, `withValidators`, `withAsyncValidators`. (Resolution-only composables such as `withDynamicLabel`, `withHiddenState`, `withDisabledState`, `withReadonlyState`, `withTestId`, `withUpdateStrategy`, `withComputedValue`, `withDynamicTitle` live in `@ngx-formbar/core`.)
+- **Helpers:** `controlContainerViewProviders`.
 - **Form-level lifecycle cache.** Values from destroyed controls are stored against their dotted form path and restored when the control is recreated, so `valueStrategy: 'last'` survives both hide/show cycles and `hideStrategy: 'remove'` cycles. The cache is cleared on form reset.
 - **Schematics:** `ng-add` schematic for automated project setup.
 
@@ -34,8 +36,6 @@ New package containing all reactive forms functionality previously bundled in `@
 - `setComputedValueEffect` no longer overwrites control values with `undefined` on dirty forms when no `computedValue` is configured.
 - `valueStrategy: 'last'` now survives `hideStrategy: 'remove'` cycles. The saved value is preserved across destroy/create via the form-level lifecycle cache and reapplied when the control is recreated.
 - Form reset clears the lifecycle cache, preventing stale values from being restored after a reset.
-- Cross-group `computedValue` string expressions like `'groupA.fieldA + " " + groupB.fieldB'` now resolve on initial render. Previously, `setComputedValueEffect` could fire before sibling groups had registered their children, leaving the computed control empty until the next change ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)).
-- Validator registrations provided via the `NGX_FW_VALIDATOR_REGISTRATIONS` / `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS` tokens can now reference sibling validators by key with full type-checking and auto-complete. Use `toValidatorRegistrationMap` / `toAsyncValidatorRegistrationMap` (or the `defineValidatorRegistrations` / `defineAsyncValidatorRegistrations` helpers) so cross-references resolve at runtime instead of returning the whole map ([#65](https://github.com/TheNordicOne/ngx-formbar/issues/65)).
 
 ### Removed
 

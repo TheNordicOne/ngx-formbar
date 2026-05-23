@@ -4,7 +4,6 @@ import {
   computed,
   inject,
   input,
-  Signal,
 } from '@angular/core';
 import { FormService } from '../../services/form.service';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
@@ -13,7 +12,6 @@ import {
   formLifecycleStateFactory,
 } from '../../services/form-lifecycle-state';
 import {
-  FormConfigEntry,
   NGX_FW_FORM_VALUE,
   NgxFbBaseContent,
   NgxFbForm,
@@ -53,7 +51,7 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
   readonly formConfig = input.required<NgxFbForm<T>>();
 
-  readonly formContent: Signal<FormConfigEntry<T>[]> = computed(() =>
+  readonly formContent = computed(() =>
     Object.entries(this.formConfig().content).map(([name, config]) => ({
       name,
       config,

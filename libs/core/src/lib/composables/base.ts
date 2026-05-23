@@ -1,7 +1,6 @@
-import { computed, inject, Signal, Type } from '@angular/core';
+import { computed, inject, Signal } from '@angular/core';
 import { NGX_FW_COMPONENT_RESOLVER } from '../tokens/component-resolver';
 import { FormConfigEntry, NgxFbBaseContent } from '../types/content.type';
-import { ComponentRegistrationEntry } from '../types/registration.type';
 import { withLoadedComponent } from './loaded-component';
 
 /**
@@ -18,12 +17,7 @@ import { withLoadedComponent } from './loaded-component';
  */
 export function withBase<T extends NgxFbBaseContent>(
   config: Signal<FormConfigEntry<T>>,
-): {
-  controlConfig: Signal<T>;
-  controlName: Signal<string>;
-  registrationEntry: Signal<ComponentRegistrationEntry | null>;
-  component: Signal<Type<unknown> | null>;
-} {
+) {
   const registrations = inject(NGX_FW_COMPONENT_RESOLVER).registrations;
 
   const controlConfig = computed(() => config().config);

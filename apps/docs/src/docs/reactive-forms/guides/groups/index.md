@@ -64,7 +64,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
     readonly isReadonly = input(false);
     readonly isHidden = input(false);
     readonly titleText = input<string | undefined>('');
-    readonly dynamicTitle = input<string>();
+    readonly dynamicTitle = input<string | null>();
     readonly testId = input('');
     readonly errors = input<ValidationErrors | null>(null);
     readonly isDirty = input(false);
@@ -276,7 +276,7 @@ import { Group } from './group.type';
 export class GroupComponent implements ReactiveFormbarGroup<Group> {
     readonly name = input.required<string>();
     readonly titleText = input<string | undefined>('');
-    readonly dynamicTitle = input<string>();
+    readonly dynamicTitle = input<string | null>();
 
     readonly displayTitle = computed(() => {
         const dynamic = this.dynamicTitle();
@@ -398,5 +398,5 @@ The `ReactiveFormbarGroup<T>` contract is implemented by your component. The lib
 | `errors`        | `SignalInput<ValidationErrors \| null>`   | Validation errors of the underlying form group.                                                  |
 | `isDirty`       | `SignalInput<boolean>`                    | Whether the underlying form group is dirty.                                                      |
 | `titleText`     | `SignalInput<string \| undefined>`        | The static `title` value from the group configuration.                                           |
-| `dynamicTitle`  | `SignalInput<string \| undefined>`        | The computed dynamic title, if a `dynamicTitle` expression is configured.                        |
+| `dynamicTitle`  | `SignalInput<string \| null \| undefined>` | The computed dynamic title, if a `dynamicTitle` expression is configured. The expression engine can yield `null` (for example from `'maybeProp ?? null'`), so the type widens accordingly. Treat `null` and `undefined` the same way in your template. |
 | `groupInstance` | `SignalInput<FormGroup>`                  | The underlying `FormGroup` instance. Only declare this when you need direct access to the group. |

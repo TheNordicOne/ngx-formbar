@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ExpressionService } from './expression.service';
-import { FormContext } from '../types/expression.type';
-import { toSafeString } from '../helper/string';
+import { FormContext } from '../../types/expression.type';
+import { toSafeString } from '../../helper/string';
 
 describe('ExpressionService', () => {
   let service: ExpressionService;
@@ -76,10 +76,12 @@ describe('ExpressionService', () => {
       : `should throw an error when evaluating ${input}`;
 
     it(testTitle, function () {
-      const ast = service.parseExpressionToAst(input);
-      expect(() =>
-        service.evaluateExpression(ast, overrideContext ?? context),
-      ).toThrow();
+      // Errors can be raised at parse time (grammar rejection) or at
+      // evaluation time (sandbox gate), so the expectation wraps both.
+      expect(() => {
+        const ast = service.parseExpressionToAst(input);
+        service.evaluateExpression(ast, overrideContext ?? context);
+      }).toThrow();
     });
   }
 
@@ -124,9 +126,33 @@ describe('ExpressionService', () => {
 
     evaluateExpression(
       'address.floor == "2"',
-      true,
-      'Abstract equality operator with type coercion (==)',
+      false,
+      '== is strict: no coercion between number and string',
     );
+
+    evaluateExpression(
+      '0 == false',
+      false,
+      '== is strict: 0 and false are not equal',
+    );
+
+    evaluateExpression(
+      'nullValue == undefinedValue',
+      false,
+      '== is strict: null and undefined are not equal',
+    );
+
+    it('uses === semantics: NaN is not equal to itself', () => {
+      const nanContext: FormContext = { x: Number.NaN };
+      const ast = service.parseExpressionToAst('x === x');
+      expect(service.evaluateExpression(ast, nanContext)).toBe(false);
+    });
+
+    it('uses === semantics: -0 and +0 compare equal', () => {
+      const zeroContext: FormContext = { neg: -0, pos: 0 };
+      const ast = service.parseExpressionToAst('neg === pos');
+      expect(service.evaluateExpression(ast, zeroContext)).toBe(true);
+    });
 
     evaluateExpression(
       'address.floor != 3',
@@ -675,6 +701,18 @@ describe('ExpressionService', () => {
       '"property" in person.age',
       'In operator with non-object right operand should throw',
     );
+
+    evaluateExpression(
+      '"toString" in person',
+      false,
+      'In operator uses hasOwn: prototype methods are not visible',
+    );
+
+    evaluateExpression(
+      '"constructor" in address',
+      false,
+      'In operator uses hasOwn: constructor is not visible',
+    );
   });
 
   describe('Parenthesized Expressions', () => {
@@ -891,14 +929,14 @@ describe('ExpressionService', () => {
   describe('Complex Type Coercion Cases', () => {
     evaluateExpression(
       'address.zipCode == "12345"',
-      true,
-      'Number to string comparison with ==',
+      false,
+      '== is strict: number-to-string no longer coerces',
     );
 
     evaluateExpression(
       '"" == 0',
-      true,
-      'Empty string equals zero with abstract equality',
+      false,
+      '== is strict: empty string and zero are not equal',
     );
 
     evaluateExpression(
@@ -1011,49 +1049,116 @@ describe('ExpressionService', () => {
     );
 
     evaluateExpression('({})', {}, 'Empty object literal');
+
+    describe('spread', () => {
+      const spreadContext: FormContext = {
+        a: { x: 10, y: 20 },
+        b: { p: 1, q: 2 },
+      };
+
+      evaluateExpression(
+        '({...a, c: 3})',
+        { x: 10, y: 20, c: 3 },
+        'Object spread followed by own property',
+        spreadContext,
+      );
+
+      evaluateExpression(
+        '({c: 3, ...a})',
+        { c: 3, x: 10, y: 20 },
+        'Object spread overrides earlier properties',
+        spreadContext,
+      );
+
+      evaluateExpression(
+        '({x: 99, ...a})',
+        { x: 10, y: 20 },
+        'Object spread overrides own property with same key',
+        spreadContext,
+      );
+
+      evaluateExpression(
+        '({...a, ...b})',
+        { x: 10, y: 20, p: 1, q: 2 },
+        'Multiple spreads merge in order',
+        spreadContext,
+      );
+
+      evaluateExpressionExpectingError(
+        '({...nullValue})',
+        'Spread of null throws',
+      );
+
+      evaluateExpressionExpectingError(
+        '({...undefinedValue})',
+        'Spread of undefined throws',
+      );
+
+      evaluateExpressionExpectingError(
+        '({...person.age})',
+        'Spread of a number throws',
+      );
+
+      it('does not reset the result prototype when spreading an own __proto__ key', () => {
+        const ctx: FormContext = {
+          poisoned: JSON.parse('{"__proto__":{"polluted":1}}'),
+        };
+        const ast = service.parseExpressionToAst('({...poisoned})');
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, ctx);
+        expect(result?.polluted).toBeUndefined();
+        expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+      });
+
+      it('does not set the result prototype for a literal __proto__ key', () => {
+        const ast = service.parseExpressionToAst(
+          '({__proto__: { polluted: 1 }, a: 2})',
+        );
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, {});
+        expect(result?.['a']).toBe(2);
+        expect(result?.polluted).toBeUndefined();
+        expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+      });
+
+      it('does not set the result prototype for a computed __proto__ key', () => {
+        const ast = service.parseExpressionToAst(
+          '({["__proto__"]: { polluted: 1 }, a: 2})',
+        );
+        const result = service.evaluateExpression<
+          Record<string, unknown> & { polluted?: number }
+        >(ast, {});
+        expect(result?.['a']).toBe(2);
+        expect(result?.polluted).toBeUndefined();
+        expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+      });
+    });
   });
 
-  describe('Sequence Expression', () => {
-    evaluateExpression(
+  describe('Comma sequences (rejected)', () => {
+    // The language is a pure expression DSL. Comma-separated grouping
+    // (`(a, b)`) is rejected at parse time; expressions must produce a
+    // single value.
+    evaluateExpressionExpectingError(
       '(1, 2, 3)',
-      3,
-      'Basic sequence expression (returns the last value)',
+      'Comma sequence is rejected at parse time',
     );
 
-    evaluateExpression(
+    evaluateExpressionExpectingError(
       '(person.age, address.floor, subscription.monthlyFee)',
-      29.99,
-      'Sequence expression with property references',
+      'Comma sequence with property references is rejected',
     );
 
-    evaluateExpression(
-      '((person.age + 5), (address.floor * 2))',
-      4,
-      'Sequence expression with arithmetic expressions',
-    );
-
-    evaluateExpression(
+    evaluateExpressionExpectingError(
       '(undefinedValue, nullValue, 42)',
-      42,
-      'Sequence expression with null and undefined values',
+      'Comma sequence with null and undefined is rejected',
     );
 
-    evaluateExpression(
-      '(person.age > 30, person.age < 50, "Result")',
-      'Result',
-      'Sequence expression with comparison operations',
-    );
-
-    evaluateExpression(
-      '((person.age, person.firstName), (address.city, address.country))',
-      'Germany',
-      'Nested sequence expressions',
-    );
-
-    evaluateExpression(
+    evaluateExpressionExpectingError(
       '((void 0), (42))',
-      42,
-      'Sequence expression with void operator',
+      'Comma sequence with void operator is rejected',
     );
   });
 
@@ -1104,10 +1209,9 @@ describe('ExpressionService', () => {
   });
 
   describe('Combined Expression Types', () => {
-    evaluateExpression(
+    evaluateExpressionExpectingError(
       '({ template: `Hello, ${person.firstName}`, sequence: (1, 2, 3) })',
-      { template: 'Hello, Hans', sequence: 3 },
-      'Object with template and sequence expressions',
+      'Comma sequence inside an object literal is rejected',
     );
 
     evaluateExpression(
@@ -1242,6 +1346,34 @@ describe('ExpressionService', () => {
     evaluateExpressionExpectingError(
       'const x = 10; x => x * 2',
       'Invalid arrow function syntax - not in method call context',
+    );
+
+    evaluateExpression(
+      '[-1, 2, -3].map(n => n > 0 ? n : -n)',
+      [1, 2, 3],
+      'Arrow body with ConditionalExpression (was rejected by previous allow-list)',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3].map(n => -n)',
+      [-1, -2, -3],
+      'Arrow body with UnaryExpression',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3].map(n => [n, n * 2])',
+      [
+        [1, 2],
+        [2, 4],
+        [3, 6],
+      ],
+      'Arrow body with ArrayExpression',
+    );
+
+    evaluateExpression(
+      '[1, 2, 3].map(n => ({ value: n }))',
+      [{ value: 1 }, { value: 2 }, { value: 3 }],
+      'Arrow body with ObjectExpression',
     );
   });
 
@@ -1428,7 +1560,9 @@ describe('ExpressionService', () => {
     });
 
     it('should handle multiple errors in sequence without breaking', () => {
-      // Series of expressions that cause errors
+      // Series of expressions that cause errors. Errors may be raised at
+      // parse time (grammar rejection) or at evaluation time (sandbox
+      // gate); the service should keep working across both.
       const errorExprs = [
         'person.firstName - 10',
         'nullValue.property',
@@ -1436,10 +1570,11 @@ describe('ExpressionService', () => {
         'this.context',
       ];
 
-      // All should throw but not break the service
       for (const expr of errorExprs) {
-        const ast = service.parseExpressionToAst(expr);
-        expect(() => service.evaluateExpression(ast, context)).toThrow();
+        expect(() => {
+          const ast = service.parseExpressionToAst(expr);
+          service.evaluateExpression(ast, context);
+        }).toThrow();
       }
 
       // Service should still work after all errors
@@ -1517,5 +1652,69 @@ describe('ExpressionService', () => {
       'Nullish coalescing with undefined value in chain',
       nullishContext,
     );
+  });
+
+  describe('AST cache', () => {
+    it('returns the same parsed AST for repeated calls with the same source', () => {
+      const first = service.parseExpressionToAst('1 + 1');
+      const second = service.parseExpressionToAst('1 + 1');
+      expect(first).toBe(second);
+    });
+
+    it('evicts the least-recently-used entry past the cap', () => {
+      const cap = 256;
+      const original = service.parseExpressionToAst('"first"');
+      // Fill the cache past the cap with fresh expressions.
+      for (let i = 0; i < cap; i++) {
+        service.parseExpressionToAst(`"filler${String(i)}"`);
+      }
+      // "first" was the head; it should have been evicted, so re-parsing
+      // returns a fresh AST instance.
+      const reparsed = service.parseExpressionToAst('"first"');
+      expect(reparsed).not.toBe(original);
+    });
+
+    it('touching an entry moves it to the most-recently-used end', () => {
+      const cap = 256;
+      const original = service.parseExpressionToAst('"first"');
+      // Fill the cache to the cap with fresh entries (one for "first",
+      // cap-1 fillers).
+      for (let i = 0; i < cap - 1; i++) {
+        service.parseExpressionToAst(`"filler${String(i)}"`);
+      }
+      // Touch "first" so it is no longer the LRU candidate.
+      service.parseExpressionToAst('"first"');
+      // Add one more, which should evict the now-oldest filler instead of
+      // "first".
+      service.parseExpressionToAst('"trigger"');
+      // "first" survives.
+      expect(service.parseExpressionToAst('"first"')).toBe(original);
+    });
+  });
+
+  describe('Synthesized AST safety nets', () => {
+    it('throws on an unsupported unary operator', () => {
+      const ast = service.parseExpressionToAst('-1');
+      if (!ast) {
+        throw new Error('parse failed');
+      }
+      const unary = ast.body as { operator: string };
+      unary.operator = '@@';
+      expect(() => service.evaluateExpression(ast, context)).toThrow(
+        /Unsupported unary operator: @@/,
+      );
+    });
+
+    it('throws on an unsupported logical operator', () => {
+      const ast = service.parseExpressionToAst('true && false');
+      if (!ast) {
+        throw new Error('parse failed');
+      }
+      const logical = ast.body as { operator: string };
+      logical.operator = '@@';
+      expect(() => service.evaluateExpression(ast, context)).toThrow(
+        /Unsupported logical operator: @@/,
+      );
+    });
   });
 });

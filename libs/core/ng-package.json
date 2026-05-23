@@ -4,6 +4,6 @@
   "lib": {
     "entryFile": "src/index.ts"
   },
-  "allowedNonPeerDependencies": ["acorn", "eval-estree-expression"],
-  "assets": ["LICENSE"]
+  "allowedNonPeerDependencies": [],
+  "assets": ["LICENSE", "LICENSE-jsep"]
 }

@@ -141,9 +141,9 @@ const component = withLoadedComponent(registrationEntry);
 Each wraps `resolveExpression` and reads the form value from `NGX_FW_FORM_VALUE`. Returns a signal of the evaluated result, or `undefined` when the corresponding field is not configured.
 
 ```typescript
-const dynamicLabel = withDynamicLabel(content);   // Signal<NgxFbControl>
-const dynamicTitle = withDynamicTitle(content);   // Signal<NgxFbFormGroup>
-const computedValue = withComputedValue<number>(content); // Signal<NgxFbAbstractControl>
+const dynamicLabel = withDynamicLabel(content);            // Signal<string | null | undefined>
+const dynamicTitle = withDynamicTitle(content);            // Signal<string | null | undefined>
+const computedValue = withComputedValue<number>(content);  // Signal<number | null | undefined>
 ```
 
 ### withHiddenState
@@ -183,21 +183,25 @@ const updateOn = withUpdateStrategy(content); // Signal<UpdateStrategy>
 
 ### ExpressionService
 
-Parses and evaluates JavaScript expressions within a form context. Uses the acorn parser and supports a safe subset of JavaScript:
+Parses and evaluates a constrained pure-expression DSL within a form context. The parser is in-tree (adapted from [jsep](https://github.com/EricSmekens/jsep) under MIT license); the library has no runtime parsing dependency. The grammar is allow-list by construction:
 
 - Member access, optional chaining, binary/logical/unary operators
-- Ternary expressions, template literals, array/object literals
-- Arrow functions (expression bodies only)
-- Safe method calls on strings, numbers, and arrays
+- Ternary expressions, template literals, array/object literals (with spread)
+- Arrow functions (expression bodies only) for higher-order array methods
+- Safe method calls on strings, numbers, booleans, and arrays (non-mutating only)
 
-Assignments, `new`, `this`, `super`, and `import` are intentionally unsupported for security.
+Assignments, `this`, `new`, `super`, `import`, `delete`, `await`, `yield`, classes, function expressions, tagged templates, multi-statement input, and comma sequences are all parse errors. `==` and `!=` behave strictly (no JS coercion). Plain objects, `Date`, `Map`, `Set`, and `RegExp` instances expose no callable methods. Division by zero throws.
+
+See [Expressions](../fundamentals/expressions) for the full language reference and threat-boundary documentation.
 
 ```typescript
 const expressionService = inject(ExpressionService);
 const ast = expressionService.parseExpressionToAst('user.age > 18');
-const result = expressionService.evaluateExpression(ast, { user: { age: 25 } });
-// result === true
+const result = expressionService.evaluateExpression<boolean>(ast, { user: { age: 25 } });
+// result === true (typed as boolean | null)
 ```
+
+`evaluateExpression` accepts an optional type parameter `T` (defaults to `unknown`). Use it to declare the expected result type at the call site, avoiding a manual cast. The return is `T | null`: `null` only when `ast` or `context` are nullish.
 
 ### ComponentRegistrationService
 
@@ -228,7 +232,7 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 
 ## Building an integration
 
-`@ngx-formbar/core` is form-agnostic. It owns the configuration model, the expression engine, the registration system, dynamic component mounting, and all state-resolution logic — but it has no opinion about where form values live or how the form model gets updated. An integration package wires those two ends together.
+`@ngx-formbar/core` is form-agnostic. It owns the configuration model, the expression engine, the registration system, dynamic component mounting, and all state-resolution logic. It has no opinion about where form values live or how the form model gets updated. An integration package wires those two ends together.
 
 `@ngx-formbar/reactive-forms` is one such integration, built on top of `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
 
@@ -238,15 +242,15 @@ Think of a complete formbar setup as three layers stacked vertically:
 
 1. **Core (provided).** Configuration types, expression evaluation, component registrations, dynamic mounting, and state resolution (`with*` and `resolve*`).
 2. **Integration tokens (you provide).** Two DI tokens that bridge core to your form-state source.
-3. **Form-model glue (you build).** Effects and lifecycles that mutate your form model — applying disabled state, writing computed values, attaching/removing controls on hide, validation, and so on.
+3. **Form-model glue (you build).** Effects and lifecycles that mutate your form model. This includes applying disabled state, writing computed values, attaching/removing controls on hide, validation, and so on.
 
 Core only requires the middle layer to function. Once those tokens are provided, every `with*` composable in core works inside any directive or component that runs in an injection context with access to them.
 
 ### The two tokens you must provide
 
-**`NGX_FW_FORM_VALUE: InjectionToken<Signal<FormContext>>`** — the current form value as a signal. Composables that evaluate expressions (`withDynamicLabel`, `withHiddenState`, `withComputedValue`, etc.) read from this token. Provide it once per form, sourced from wherever your integration holds form state.
+**`NGX_FW_FORM_VALUE: InjectionToken<Signal<FormContext>>`** holds the current form value as a signal. Composables that evaluate expressions (`withDynamicLabel`, `withHiddenState`, `withComputedValue`, etc.) read from this token. Provide it once per form, sourced from wherever your integration holds form state.
 
-**`NGX_FW_PARENT_CONTEXT: InjectionToken<NgxFwParentContext>`** — the enclosing group's state and inheritable directive options. Whatever construct represents a group in your integration (a directive, a component, a service) implements `NgxFwParentContext` and provides itself as this token.
+**`NGX_FW_PARENT_CONTEXT: InjectionToken<NgxFwParentContext>`** holds the enclosing group's state and inheritable directive options. Whatever construct represents a group in your integration (a directive, a component, a service) implements `NgxFwParentContext` and provides itself as this token.
 
 The interface specifies seven signals that a parent must expose:
 
@@ -322,10 +326,10 @@ export class MyFormComponent { /* ... */ }
 
 Core does not own the form-model side. Your integration is responsible for:
 
-- **Where form values actually live** and how user input writes back to that store. Core only reads — it never writes form values.
+- **Where form values actually live** and how user input writes back to that store. Core only reads. It never writes form values.
 - **Applying state.** When the resolved `isDisabled` flips to `true`, *something* in your integration has to disable the underlying input. Same for readonly, hidden DOM presence, value strategy on hide/show.
 - **Validation.** Core evaluates `validators: string[]` keys from the configuration into your validator type, but you decide how to register and run validators.
-- **Form lifecycle.** Reset behaviour, dirty tracking, error surfacing — all integration-specific.
+- **Form lifecycle.** Reset behaviour, dirty tracking, and error surfacing are all integration-specific.
 
 `@ngx-formbar/reactive-forms` handles these via a thin layer of effects (`disabledEffect`, `setComputedValueEffect`, `hiddenEffects`) wrapped around the core composables, plus its own `withControlState`/`withFormParent` helpers. The pattern is reusable as a template.
 

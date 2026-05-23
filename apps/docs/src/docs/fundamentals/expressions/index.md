@@ -1,55 +1,60 @@
-Expressions are JavaScript snippets provided as strings. They are parsed into an Abstract Syntax Tree (AST) using [Acorn](https://www.npmjs.com/package/acorn). The AST is then evaluated in a controlled environment against the forms value. The expressions have no access to any custom function from your codebase. 
+Expressions are JavaScript-like snippets provided as strings. They are parsed by an in-tree allow-list parser (adapted from [jsep](https://github.com/EricSmekens/jsep) under MIT license) and evaluated in a controlled environment against the form's value. Expressions have no access to globals, host code, or any function outside the supplied form context.
 
 ## Parsing and Caching
 
 - **Parsing:**
-  An expression string is parsed to generate an AST.
+  An expression string is parsed into an AST by an in-tree parser. The grammar is restricted to a small subset of JavaScript expressions; statements, declarations, control flow, classes, assignments, `this`, dynamic `import`, `await`, `yield`, `new`, tagged templates, and update operators (`++`/`--`) are all parse errors. Each evaluation must produce exactly one expression. Multi-statement and comma-sequence inputs are rejected.
 
 - **Caching:**
-  Parsed ASTs are cached to avoid reparsing the same expression multiple times. This improves performance when evaluating expressions repeatedly.
+  Parsed ASTs are cached in a bounded LRU. Repeated evaluations of the same expression source reuse the parsed AST. The cache evicts the least-recently-used entry when full, so unbounded dynamic expression strings cannot grow it without limit.
 
 ## Supported Node Types
 
-The evaluator supports a range of node types:
+The parser produces only the following AST node types:
 
 - `Identifier`
-- `Literal`
-- `ArrayExpression`
-- `UnaryExpression`
+- `Literal` (strings, numbers, booleans, `null`, regex literals)
+- `ArrayExpression` (with optional spread elements)
+- `UnaryExpression` (`-`, `+`, `!`, `~`, `typeof`, `void`)
 - `BinaryExpression`
-- `LogicalExpression` (supports `&&`, `||`, and nullish coalescing `??`)
-- `MemberExpression` (property access with safety checks for null or undefined objects)
-- `ConditionalExpression` (ternary operator)
-- `ObjectExpression`
-- `SequenceExpression`
-- `TemplateLiteral`
-- `CallExpression` for invoking safe methods
-- `ArrowFunctionExpression` for simple arrow functions with expression bodies
-- `ChainExpression` for using optional chaining operator
+- `LogicalExpression` (`&&`, `||`, `??`)
+- `MemberExpression` (static `a.b` and computed `a[b]`, both with optional chaining `?.`)
+- `ConditionalExpression` (ternary)
+- `ObjectExpression` (with optional spread)
+- `TemplateLiteral` with `${expr}` placeholders (one expression per placeholder)
+- `CallExpression` for safe method calls only
+- `ArrowFunctionExpression` for higher-order array methods (e.g. `items.map(x => x * 2)`)
+
+`SequenceExpression`, `SpreadElement` (outside of containers), `ThisExpression`, `BlockStatement`, `AssignmentExpression`, `UpdateExpression`, `NewExpression`, `YieldExpression`, `AwaitExpression`, `ImportExpression`, `ClassExpression`, `FunctionExpression`, `TaggedTemplateExpression`, `PrivateIdentifier`, and `Super` are all rejected at parse time.
 
 ## Supported Operators
-- **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `\*\*` (exponentiation)
-- **Comparison Operators:** `<`, `>`, `<=`, `>=`
-- **Equality Operators:** `==`, `!=`, `===`, `!==` (follow JavaScript behavior)
+- **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `\*\*` (exponentiation, right-associative). Division and modulo by zero throw, diverging from JS which returns `Infinity`/`NaN`.
+- **Comparison Operators:** `<`, `>`, `<=`, `>=` (both operands must be same primitive type, number or string).
+- **Equality Operators:** `==`, `!=`, `===`, `!==`. **In this DSL, `==` is equivalent to `===` and `!=` to `!==`.** Loose-equality coercion (`0 == ""`, `null == undefined`, etc.) is intentionally rejected.
 - **Bitwise Operators:** `|`, `&`, `^`, `<<`, `>>`, `>>>`
-- **Logical Operations:** `&&`, `||`, `??`
-- **Membership:** `in` (checks if a property exists in an object)
+- **Logical Operations:** `&&`, `||`, `??` (short-circuit evaluation)
+- **Membership:** `in` (left operand must be a string, right operand an object)
 - **Unary Operators:** `-`, `+`, `!`, `~`, `typeof`, `void`
-- **Safe Method Calls:** When calling methods on objects, the evaluator checks against a whitelist of safe methods (provided for strings, numbers, booleans, and arrays). This ensures that only approved operations are executed.
+- **Safe Method Calls:** Method calls are gated by a per-type allow-list. Arrays admit only non-mutating methods (`map`, `filter`, `reduce`, `slice`, `concat`, `find`, `includes`, etc.). Strings, numbers, and booleans have a curated allow-list. Plain objects, `Date`, `Map`, `Set`, and `RegExp` instances expose **no** callable methods.
 
 ## Limitations
 
-- **Restricted Syntax:**
-  Arrow functions only support a limited set of body types: `Identifier`, `MemberExpression`, `CallExpression`, `BinaryExpression`, `LogicalExpression`, `TemplateLiteral`, and simple `BlockStatement`. Complex function bodies are not supported.
+- **Pure expression language.** One expression per evaluation. `1; 2`, `1\n2`, and `(a, b)` are all parse errors. Multi-statement input is not supported.
 
-- **Restricted Node Types:**
-  Some JavaScript features are not supported to maintain security and simplicity, such as update expressions, assignments, and using `this` or `super`.
+- **No mutating operations.** Assignments and update operators are parse errors. Mutating method calls (e.g. `arr.sort()`, `arr.push(x)`, `date.setHours(12)`) are all rejected at runtime: the call gate's allow-list contains only non-mutating methods. The form context is never mutated through expressions.
 
-- **Controlled Context:**
-  The evaluation runs only in the context of the form object, avoiding global access and potential security vulnerabilities.
+- **Strict identifier scope.** Identifiers resolve from own properties of the form context (or arrow function parameters in arrow bodies). Prototype-chain members like `constructor`, `toString`, `hasOwnProperty` are not visible. Globals (`window`, `globalThis`, `Function`, `eval`) are not visible.
+
+- **String member access is tight.** Only `.length` and canonical non-negative integer indices (`"abc"[0]`, `"abc"["1"]`) are readable. Non-canonical indices (`"abc"["  1  "]`, `"abc"["0x1"]`) and raw method extraction (`"abc".toUpperCase` as a value) throw. Method calls via the call form (`"abc".toUpperCase()`) still work.
+
+- **Plain-object and function member access is hasOwn-only.** Reading a prototype-inherited property on a plain object returns `undefined`. Reading any property on a function value throws.
 
 - **Cross-group `computedValue` references:**
   String expressions in `computedValue` that reference fields inside sibling groups (e.g., `'groupA.fieldA + groupB.fieldB'`) do not resolve on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). This affects only `computedValue`; other expression properties (`hidden`, `disabled`, `readonly`, `dynamicLabel`, `dynamicTitle`) work correctly with cross-group references. Use optional chaining as a workaround: `'groupA?.fieldA + " " + groupB?.fieldB'`.
+
+## Threat boundary
+
+The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
 
 ## Function-based Expressions
 
@@ -72,8 +77,8 @@ Where:
   - disabled: `boolean`
   - readonly: `boolean`
   - computedValue: `unknown` (it should return the same type of value as your control uses)
-  - dynamicLabel: `string`
-  - dynamicTitle: `string`
+  - dynamicLabel: `string | null`
+  - dynamicTitle: `string | null`
 
 
 ### Advantages

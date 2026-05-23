@@ -1,6 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import { NgxFbControl } from '../types/content.type';
-import { ExpressionService } from '../services/expression.service';
+import { ExpressionService } from '../services/expression';
 import { NGX_FW_FORM_VALUE } from '../tokens/form-value';
 import { resolveExpression } from './resolve-expression';
 

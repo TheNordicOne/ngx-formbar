@@ -1,6 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import { NgxFbAbstractControl } from '../types/content.type';
-import { ExpressionService } from '../services/expression.service';
+import { ExpressionService } from '../services/expression';
 import { NGX_FW_FORM_VALUE } from '../tokens/form-value';
 import { NGX_FW_PARENT_CONTEXT } from '../tokens/parent-context';
 import { resolveInheritableExpression } from './resolve-inheritable-expression';

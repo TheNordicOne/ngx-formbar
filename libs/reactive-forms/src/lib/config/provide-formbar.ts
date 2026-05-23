@@ -203,7 +203,7 @@ function toValidatorFn<T extends RegistrationRecord, V>(
 
 function toValidatorMap<T extends RegistrationRecord, V>(
   source: Record<string, (V | ValidatorKey<T>)[]>,
-) {
+): ReadonlyMap<string, V[]> {
   const out = new Map<string, V[]>();
   const memo = new Map<string, V[]>();
 

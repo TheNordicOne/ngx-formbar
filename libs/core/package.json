@@ -5,9 +5,7 @@
     "@angular/core": ">=20.0.0 <22.0.0",
     "rxjs": ">=7.0.0"
   },
-  "dependencies": {
-    "acorn": "^8.14.1"
-  },
+  "dependencies": {},
   "private": false,
   "publishConfig": {
     "access": "public"

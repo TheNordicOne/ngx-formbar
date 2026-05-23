@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ExpressionService } from '../services/expression.service';
+import { ExpressionService } from '../services/expression';
 import { FormContext } from '../types/expression.type';
 import { resolveExpression } from './resolve-expression';
 
