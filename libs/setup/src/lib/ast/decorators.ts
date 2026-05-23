@@ -1,4 +1,5 @@
 import {
+  ArrayLiteralExpression,
   Expression,
   isArrayLiteralExpression,
   isCallExpression,
@@ -12,7 +13,7 @@ import {
   SourceFile,
 } from 'typescript';
 
-export function isCallee(expr: Expression, callee: string) {
+export function isCallee(expr: Expression, callee: string): boolean {
   if (isIdentifier(expr)) {
     return expr.text === callee;
   }
@@ -22,7 +23,10 @@ export function isCallee(expr: Expression, callee: string) {
   return false;
 }
 
-export function getDecoratorObject(sf: SourceFile, decoratorName: string) {
+export function getDecoratorObject(
+  sf: SourceFile,
+  decoratorName: string,
+): ObjectLiteralExpression | undefined {
   let found: ObjectLiteralExpression | undefined;
 
   const visit = (node: Node): void => {
@@ -54,7 +58,7 @@ export function decoratorPropInitializerIsIdentifier(
   decoratorName: string,
   propName: string,
   identifierName: string,
-) {
+): boolean {
   const obj = getDecoratorObject(sf, decoratorName);
   if (!obj) {
     return false;
@@ -83,7 +87,7 @@ export function getDecoratorArrayProp(
   sf: SourceFile,
   decoratorName: string,
   propName: string,
-) {
+): ArrayLiteralExpression | undefined {
   const obj = getDecoratorObject(sf, decoratorName);
   if (!obj) {
     return undefined;
@@ -114,7 +118,7 @@ export function decoratorArrayPropContainsIdentifier(
   decoratorName: string,
   propName: string,
   identifierName: string,
-) {
+): boolean {
   const arr = getDecoratorArrayProp(sf, decoratorName, propName);
   if (!arr) {
     return false;
@@ -134,7 +138,7 @@ export function decoratorArrayPropContainsProviderObject(
   decoratorName: string,
   propName: string,
   tokenName: string,
-) {
+): boolean {
   const arr = getDecoratorArrayProp(sf, decoratorName, propName);
   if (!arr) {
     return false;
@@ -167,7 +171,7 @@ export function decoratorHasProp(
   sf: SourceFile,
   decoratorName: string,
   propName: string,
-) {
+): boolean {
   const obj = getDecoratorObject(sf, decoratorName);
   if (!obj) {
     return false;
@@ -189,7 +193,7 @@ export function decoratorHostDirectivesHasInlineDirectiveWithInputs(
   sf: SourceFile,
   directiveIdentifier = 'NgxfbControlDirective',
   expectedInputs: string[] = ['content', 'name'],
-) {
+): boolean {
   const arr = getDecoratorArrayProp(sf, 'Component', 'hostDirectives');
   if (!arr) {
     return false;
@@ -244,7 +248,10 @@ export function decoratorHostDirectivesHasInlineDirectiveWithInputs(
   });
 }
 
-export function componentSelectorEquals(sf: SourceFile, expected: string) {
+export function componentSelectorEquals(
+  sf: SourceFile,
+  expected: string,
+): boolean {
   const obj = getDecoratorObject(sf, 'Component');
   if (!obj) {
     return false;

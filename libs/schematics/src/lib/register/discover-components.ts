@@ -26,7 +26,7 @@ export function discoverComponents(
   tree: Tree,
   registerContext: RegisterContext,
   context: SchematicContext,
-) {
+): RegisterContext {
   const { exclude = [], include = [...defaultIncludes] } = registerContext;
   const resolvedExcludes = [...exclude, ...alwaysExclude];
 
@@ -114,7 +114,7 @@ export function findPotentialControlComponents(
   tree: Tree,
   include: readonly string[],
   exclude: readonly string[] = [],
-) {
+): string[] {
   if (include.length === 0) {
     return [];
   }

@@ -193,7 +193,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.keepFormValue()) {
       return;
     }

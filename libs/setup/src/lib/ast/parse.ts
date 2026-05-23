@@ -1,7 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createSourceFile, ScriptTarget } from 'typescript';
+import { createSourceFile, ScriptTarget, SourceFile } from 'typescript';
 
-export function loadSourceFile(tree: Tree, path: string) {
+export function loadSourceFile(
+  tree: Tree,
+  path: string,
+): SourceFile | undefined {
   const buffer = tree.read(path);
   if (!buffer) {
     return undefined;
@@ -11,6 +14,6 @@ export function loadSourceFile(tree: Tree, path: string) {
   return createSourceFile(path, content, ScriptTarget.Latest, true);
 }
 
-export function parseTS(code: string) {
+export function parseTS(code: string): SourceFile {
   return createSourceFile('temp.ts', code, ScriptTarget.Latest, true);
 }

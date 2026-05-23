@@ -85,7 +85,7 @@ export class DirectFormHostComponent {
 
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
 
-  onSubmit() {
+  onSubmit(): void {
     const formValue = this.form.getRawValue() as Record<string, unknown>;
     this.formValues.set(flattenFormValue(formValue));
   }

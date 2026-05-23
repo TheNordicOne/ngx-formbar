@@ -14,7 +14,9 @@ import { resolveExpression } from './resolve-expression';
  * @returns A signal that resolves to the evaluated value, or `undefined` when
  *   the control declares no `computedValue`.
  */
-export function withComputedValue<T>(content: Signal<NgxFbAbstractControl>) {
+export function withComputedValue<T>(
+  content: Signal<NgxFbAbstractControl>,
+): Signal<T | null | undefined> {
   const formValue = inject(NGX_FW_FORM_VALUE);
   const expressionService = inject(ExpressionService);
 

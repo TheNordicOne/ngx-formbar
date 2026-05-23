@@ -1,4 +1,5 @@
 import { computed, inject, Signal } from '@angular/core';
+import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 import { NgxFbAbstractControl } from '@ngx-formbar/core';
 
@@ -12,7 +13,9 @@ import { NgxFbAbstractControl } from '@ngx-formbar/core';
  * @returns A signal of the flattened `ValidatorFn[]` to attach to the
  *   `FormControl`/`FormGroup`.
  */
-export function withValidators(content: Signal<NgxFbAbstractControl>) {
+export function withValidators(
+  content: Signal<NgxFbAbstractControl>,
+): Signal<ValidatorFn[]> {
   const validatorRegistrations = inject(NGX_VALIDATOR_RESOLVER).registrations;
 
   return computed(() => {
@@ -34,7 +37,9 @@ export function withValidators(content: Signal<NgxFbAbstractControl>) {
  * @returns A signal of the flattened `AsyncValidatorFn[]` to attach to the
  *   `FormControl`/`FormGroup`.
  */
-export function withAsyncValidators(content: Signal<NgxFbAbstractControl>) {
+export function withAsyncValidators(
+  content: Signal<NgxFbAbstractControl>,
+): Signal<AsyncValidatorFn[]> {
   const asyncValidatorRegistrations = inject(
     NGX_VALIDATOR_RESOLVER,
   ).asyncRegistrations;

@@ -26,7 +26,7 @@ export function resolveInheritableExpression(
   formContext: Signal<FormContext>,
   expressionService: ExpressionService,
   parentState: Signal<boolean>,
-) {
+): Signal<boolean> {
   const resolved = resolveExpression<boolean>(
     option,
     formContext,

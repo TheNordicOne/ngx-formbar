@@ -16,7 +16,7 @@ export function readIndexable(
   kind: 'array' | 'string',
   value: readonly unknown[] | string,
   property: string | number,
-) {
+): unknown {
   if (property === 'length') {
     return value.length;
   }

@@ -1,11 +1,11 @@
-import { Signal } from '@angular/core';
+import { Signal, Type } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { from, of, switchMap } from 'rxjs';
 import { ComponentRegistrationEntry } from '../types/registration.type';
 
 export function withLoadedComponent(
   registrationEntry: Signal<ComponentRegistrationEntry | null>,
-) {
+): Signal<Type<unknown> | null> {
   const $registrationEntry = toObservable(registrationEntry);
   const $component = $registrationEntry.pipe(
     switchMap((entry) => {

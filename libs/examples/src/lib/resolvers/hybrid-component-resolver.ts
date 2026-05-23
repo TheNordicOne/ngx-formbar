@@ -26,7 +26,7 @@ export class HybridComponentResolver implements ComponentResolver {
     return result;
   });
 
-  updateDynamicComponent(key: string, entry: ComponentRegistrationEntry) {
+  updateDynamicComponent(key: string, entry: ComponentRegistrationEntry): void {
     const current = new Map(this.dynamicRegistrations());
     current.set(key, entry);
     this.dynamicRegistrations.set(current);

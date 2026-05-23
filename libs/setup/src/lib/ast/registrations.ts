@@ -52,7 +52,9 @@ export function findComponentRegistrationsNode(
   return result;
 }
 
-export function findMapArrayLiteral(mapExpression: Node) {
+export function findMapArrayLiteral(
+  mapExpression: Node,
+): ArrayLiteralExpression | null {
   if (!isNewExpression(mapExpression)) {
     return null;
   }
@@ -78,7 +80,7 @@ export function updateMapEntries(
   key: string,
   componentClassName: string,
   importPath: string,
-) {
+): ReplaceChange[] {
   const printer = createPrinter({});
 
   const buffer = tree.read(filePath);
@@ -134,7 +136,7 @@ export function addComponentRegistration(
   key: string,
   componentClassName: string,
   importPath: string,
-) {
+): ReplaceChange[] {
   const printer = createPrinter({});
 
   const buffer = tree.read(filePath);
@@ -160,7 +162,9 @@ export function addComponentRegistration(
   );
 }
 
-export function getProvideFormbarArg(sf: SourceFile) {
+export function getProvideFormbarArg(
+  sf: SourceFile,
+): ObjectLiteralExpression | undefined {
   let result: ObjectLiteralExpression | undefined;
 
   const visit = (node: Node): void => {
@@ -189,7 +193,7 @@ export function matchesIdentifierName(
   p: ObjectLiteralElementLike,
   key: string,
   identifierName: string,
-) {
+): boolean {
   if (!isPropertyAssignment(p)) {
     return false;
   }
@@ -207,7 +211,7 @@ export function matchesIdentifierName(
   );
 }
 
-export function registrationNodeHasKey(node: Node, key: string) {
+export function registrationNodeHasKey(node: Node, key: string): boolean {
   if (isNewExpression(node)) {
     const arr = findMapArrayLiteral(node);
     if (!arr) {
@@ -226,7 +230,7 @@ export function registrationNodeHasKey(node: Node, key: string) {
 export function registrationNodeUsesIdentifier(
   node: Node,
   identifierName: string,
-) {
+): boolean {
   if (isNewExpression(node)) {
     const arr = findMapArrayLiteral(node);
     if (!arr) {
@@ -245,7 +249,7 @@ export function registrationNodeUsesIdentifier(
 export function registrationsObjectHasKey(
   obj: ObjectLiteralExpression,
   key: string,
-) {
+): boolean {
   for (const p of obj.properties) {
     if (!isPropertyAssignment(p)) {
       continue;
@@ -266,7 +270,7 @@ export function registrationsObjectHasKey(
 export function registrationsObjectUsesIdentifier(
   obj: ObjectLiteralExpression,
   identifierName: string,
-) {
+): boolean {
   for (const p of obj.properties) {
     if (!isPropertyAssignment(p)) {
       continue;
@@ -285,7 +289,7 @@ export function registrationsObjectUsesIdentifier(
 export function componentRegistrationsObjectHasKey(
   node: Node | null,
   key: string,
-) {
+): boolean {
   if (!node) {
     return false;
   }
@@ -300,7 +304,7 @@ export function componentRegistrationsObjectHasKey(
 export function componentRegistrationsObjectUsesIdentifier(
   node: Node | null,
   identifierName: string,
-) {
+): boolean {
   if (!node) {
     return false;
   }
@@ -316,7 +320,7 @@ export function provideFormbarComponentRegistrationsHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
-) {
+): boolean {
   const arg = getProvideFormbarArg(sf);
   if (!arg) {
     return false;
@@ -366,7 +370,7 @@ export function defineFormbarConfigComponentRegistrationsHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -416,7 +420,7 @@ export function componentRegistrationsMapProviderHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -448,7 +452,7 @@ export function directComponentRegistrationsHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -488,7 +492,7 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
   sf: SourceFile,
   key: string,
   identifierName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -585,7 +589,9 @@ export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
   return found;
 }
 
-export function getMapArguments(decl: VariableDeclaration) {
+export function getMapArguments(
+  decl: VariableDeclaration,
+): ArrayLiteralExpression | null {
   if (
     !isIdentifier(decl.name) ||
     decl.name.text !== 'componentRegistrationsProvider'

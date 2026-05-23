@@ -19,7 +19,7 @@ export function resolveUpdateStrategy(
   controlUpdateOn: Signal<UpdateStrategy | undefined>,
   parentStrategy: Signal<UpdateStrategy | undefined>,
   defaultStrategy: UpdateStrategy,
-) {
+): Signal<UpdateStrategy> {
   return computed<UpdateStrategy>(() => {
     return controlUpdateOn() ?? parentStrategy() ?? defaultStrategy;
   });

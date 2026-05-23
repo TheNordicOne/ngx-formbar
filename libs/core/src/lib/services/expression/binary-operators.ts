@@ -44,7 +44,7 @@ export function executeNumericBinaryOp(
   operator: NumericBinaryOperator,
   left: unknown,
   right: unknown,
-) {
+): number {
   if (!isNumber(left) || !isNumber(right)) {
     throw new TypeError(`${operator} operator requires numbers`);
   }
@@ -84,7 +84,7 @@ export function executeOrderedComparison(
   operator: OrderedComparisonOperator,
   left: unknown,
   right: unknown,
-) {
+): boolean {
   if (isNumber(left) && isNumber(right)) {
     return compareOrdered(operator, left, right);
   }
@@ -119,13 +119,16 @@ export function executeEquality(
   operator: EqualityOperator,
   left: unknown,
   right: unknown,
-) {
+): boolean {
   return operator === '==' || operator === '==='
     ? left === right
     : left !== right;
 }
 
-export function executeAddition(left: unknown, right: unknown) {
+export function executeAddition(
+  left: unknown,
+  right: unknown,
+): number | string {
   if (isNumber(left) && isNumber(right)) {
     return left + right;
   }
@@ -135,7 +138,7 @@ export function executeAddition(left: unknown, right: unknown) {
   throw new TypeError('+ operator requires numbers or strings');
 }
 
-export function executeIn(left: unknown, right: unknown) {
+export function executeIn(left: unknown, right: unknown): boolean {
   if (!isObjectLike(right)) {
     throw new TypeError('Right operand must be an object for "in" operator');
   }

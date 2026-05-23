@@ -3,6 +3,11 @@ import { AbstractControl, FormGroup } from '@angular/forms';
 import { ComponentHost } from '@ngx-formbar/core';
 import { hiddenEffects } from './hidden-effects';
 
+export interface HiddenLifecycle {
+  setControl: () => void;
+  removeControl: () => void;
+}
+
 /**
  * Wraps {@link hiddenEffects} with the standard onHidden/onVisible flow used
  * by formbar's reactive-forms directives:
@@ -45,7 +50,7 @@ export function withHiddenLifecycle(options: {
   keepFormValue: Signal<boolean>;
   applyValueStrategy: () => void;
   beforeDetach?: () => void;
-}) {
+}): HiddenLifecycle {
   const setControl = () => {
     const name = options.controlName();
     const instance = options.instance();

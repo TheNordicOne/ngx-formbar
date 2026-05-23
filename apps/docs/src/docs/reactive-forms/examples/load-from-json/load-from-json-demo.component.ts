@@ -24,12 +24,12 @@ export class LoadFromJsonDemoComponent {
     ),
   );
 
-  protected onSubmit(event: Event) {
+  protected onSubmit(event: Event): void {
     event.preventDefault();
     console.log('form.value', this.form.value);
   }
 
-  protected reset() {
+  protected reset(): void {
     this.form.reset();
   }
 }

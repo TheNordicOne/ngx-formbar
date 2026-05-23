@@ -23,7 +23,7 @@ export function setComputedValueEffect(options: {
   computeValueSignal: Signal<unknown>;
   isComputedValueDefined: Signal<boolean>;
   formResetSignal: Signal<unknown>;
-}) {
+}): void {
   effect(() => {
     const control = options.controlInstance();
     const value = options.computeValueSignal();

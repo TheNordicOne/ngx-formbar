@@ -14,7 +14,7 @@ export function hasNamedImport(
   sf: SourceFile,
   moduleName: string,
   imported: string,
-) {
+): boolean {
   let found = false;
   if (moduleName.endsWith('.ts')) {
     moduleName = moduleName.split('.ts')[0];
@@ -44,7 +44,7 @@ export function importForSymbolUsesCorrectRelativePath(
   fromFilePath: string,
   symbolName: string,
   targetFilePath: string,
-) {
+): boolean {
   const fromPath = fromFilePath.startsWith('/')
     ? fromFilePath
     : `/${fromFilePath}`;

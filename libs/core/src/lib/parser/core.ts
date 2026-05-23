@@ -98,11 +98,11 @@ export class Parser {
 
   // `char`/`code` are methods (not getters) so TS does not narrow their
   // return type across calls.
-  char() {
+  char(): string {
     return this.expr.charAt(this.index);
   }
 
-  code() {
+  code(): number {
     return this.expr.charCodeAt(this.index);
   }
 
@@ -113,7 +113,10 @@ export class Parser {
     throw error;
   }
 
-  runHook(name: string, node: ParseResult | false | undefined) {
+  runHook(
+    name: string,
+    node: ParseResult | false | undefined,
+  ): ParseResult | false | undefined {
     if (Parser.hooks.has(name)) {
       const env: HookEnv = { context: this, node };
       Parser.hooks.run(name, env);
@@ -122,7 +125,7 @@ export class Parser {
     return node;
   }
 
-  searchHook(name: string) {
+  searchHook(name: string): ParseResult | false | undefined {
     if (Parser.hooks.has(name)) {
       const env: HookEnv = { context: this };
       Parser.hooks.search(name, env);
@@ -131,7 +134,7 @@ export class Parser {
     return undefined;
   }
 
-  gobbleSpaces() {
+  gobbleSpaces(): void {
     let ch = this.code();
     while (
       ch === Parser.SPACE_CODE ||
@@ -215,7 +218,7 @@ export class Parser {
     return after ?? node;
   }
 
-  gobbleBinaryOp() {
+  gobbleBinaryOp(): string | false {
     this.gobbleSpaces();
     let toCheck = this.expr.substring(
       this.index,
@@ -699,7 +702,7 @@ export class Parser {
 
   static hooks = new Hooks();
 
-  static register(...plugins: Plugin[]) {
+  static register(...plugins: Plugin[]): void {
     for (const plugin of plugins) {
       plugin.init(Parser as unknown as ParserStatic);
     }

@@ -14,7 +14,9 @@ export const COLLECTION_PATH = join(
   '../../../../dist/libs/reactive-forms/schematics/collection.json',
 );
 
-export async function setupWorkspace(runner: SchematicTestRunner) {
+export async function setupWorkspace(
+  runner: SchematicTestRunner,
+): Promise<UnitTestTree> {
   const workspaceOptions: WorkspaceOptions = {
     name: 'workspace',
     version: '19.0.0',
@@ -46,7 +48,7 @@ export function provideToken(
   registrationsPath: string,
   initialRegistrations = '',
   initialImports = '',
-) {
+): void {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
     "import { provideRouter } from '@angular/router';",
@@ -88,7 +90,7 @@ export function provideTokenNoSplit(
   appConfigPathRaw: string,
   initialRegistrations = '',
   initialImports = '',
-) {
+): void {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
     "import { provideRouter } from '@angular/router';",
@@ -121,7 +123,7 @@ export function provideMapInlineNoSplit(
   appConfigPathRaw: string,
   initialRegistrations = '',
   initialImports = '',
-) {
+): void {
   const content = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
     "import { provideRouter } from '@angular/router';",
@@ -153,7 +155,7 @@ export function provideMap(
   formbarConfigPath: string,
   initialRegistrations = '',
   initialImports = '',
-) {
+): void {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
     "import { provideRouter } from '@angular/router';",
@@ -202,7 +204,7 @@ export function provideMapNoSplit(
   formbarConfigPath: string,
   initialRegistrations = '',
   initialImports = '',
-) {
+): void {
   const appConfigContent = [
     "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';",
     "import { provideRouter } from '@angular/router';",
@@ -240,7 +242,10 @@ export function provideMapNoSplit(
   writeTs(appTree, src(formbarConfigPath), formbarConfigContent);
 }
 
-export function addHelperIndexFile(appTree: UnitTestTree, helperPath: string) {
+export function addHelperIndexFile(
+  appTree: UnitTestTree,
+  helperPath: string,
+): void {
   const index = [
     "export { ngxfbBlockHostDirective } from './block.host-directive';",
     "export { ngxfbControlHostDirective } from './control.host-directive';",
@@ -254,7 +259,7 @@ export function addHelperIndexFile(appTree: UnitTestTree, helperPath: string) {
 export function addComponentFiles(
   appTree: UnitTestTree,
   files: TestComponentDetails[],
-) {
+): void {
   for (const { path, content } of files) {
     writeTs(appTree, path, content);
   }
@@ -264,7 +269,7 @@ export function createControlComponent(
   name: string,
   providersAndImports: [string, string],
   className: string,
-) {
+): string {
   const classifiedName = classify(name);
 
   const [providers, imports] = providersAndImports;
@@ -319,7 +324,10 @@ export const helperProviders: [string, string] = [
     import { ngxfbControlHostDirective } from '../shared/helper';`,
 ];
 
-export function createUnrelatedComponent(name: string, className: string) {
+export function createUnrelatedComponent(
+  name: string,
+  className: string,
+): string {
   return `import { Component } from '@angular/core';
         @Component({ selector: 'app-${name}', template: '' })
         export class ${className} {}`;

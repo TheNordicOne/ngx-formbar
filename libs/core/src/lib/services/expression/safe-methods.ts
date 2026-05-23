@@ -51,7 +51,7 @@ const SAFE_METHODS: SafeMethods = {
 
 export type Callable = (...args: unknown[]) => unknown;
 
-export function isAllowedMethod(object: unknown, methodName: string) {
+export function isAllowedMethod(object: unknown, methodName: string): boolean {
   if (Array.isArray(object)) {
     return SAFE_METHODS.array.includes(methodName);
   }
@@ -62,7 +62,10 @@ export function isAllowedMethod(object: unknown, methodName: string) {
   return false;
 }
 
-export function readMethod(object: unknown, name: string) {
+export function readMethod(
+  object: unknown,
+  name: string,
+): Callable | undefined {
   const value = (object as Record<string, unknown>)[name];
   return typeof value === 'function' ? (value as Callable) : undefined;
 }

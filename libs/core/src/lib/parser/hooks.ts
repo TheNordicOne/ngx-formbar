@@ -25,7 +25,7 @@ export type HookCallback = (this: Parser, env: HookEnv) => void;
 export class Hooks {
   private readonly registry: Record<string, HookCallback[] | undefined> = {};
 
-  add(name: string, callback: HookCallback, first = false) {
+  add(name: string, callback: HookCallback, first = false): void {
     const list = (this.registry[name] ??= []);
     if (first) {
       list.unshift(callback);
@@ -34,7 +34,7 @@ export class Hooks {
     list.push(callback);
   }
 
-  run(name: string, env: HookEnv) {
+  run(name: string, env: HookEnv): void {
     const callbacks = this.registry[name];
     if (!callbacks) {
       return;
@@ -46,7 +46,7 @@ export class Hooks {
 
   // Stops at the first callback that assigns `env.node`, so plugins can
   // replace the next token entirely.
-  search(name: string, env: HookEnv) {
+  search(name: string, env: HookEnv): void {
     const callbacks = this.registry[name];
     if (!callbacks) {
       return;
@@ -59,7 +59,7 @@ export class Hooks {
     }
   }
 
-  has(name: string) {
+  has(name: string): boolean {
     const list = this.registry[name];
     return list !== undefined && list.length > 0;
   }

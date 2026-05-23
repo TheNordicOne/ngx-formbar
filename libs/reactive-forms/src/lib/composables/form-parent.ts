@@ -1,6 +1,11 @@
 import { inject } from '@angular/core';
 import { ControlContainer, FormGroup } from '@angular/forms';
 
+export interface FormParent {
+  readonly formGroup: FormGroup | null;
+  pathTo(name: string): string;
+}
+
 /**
  * Provides access to the enclosing reactive form group via the injected
  * `ControlContainer`. Exposes the parent `FormGroup` as a live getter and a
@@ -10,7 +15,7 @@ import { ControlContainer, FormGroup } from '@angular/forms';
  *   `FormGroup`, or `null` when no group is available yet) and `pathTo(name)`
  *   (joins the container path with the given child name into a dotted path).
  */
-export function withFormParent() {
+export function withFormParent(): FormParent {
   const parentContainer = inject(ControlContainer);
 
   return {

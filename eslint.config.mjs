@@ -100,6 +100,7 @@ export default defineConfig(
         'error',
         { ignoreRestSiblings: true },
       ],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@angular-eslint/use-injectable-provided-in': 'off',
     },
   },

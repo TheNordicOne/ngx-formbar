@@ -22,7 +22,7 @@ import {
   withUpdateStrategy,
 } from '@ngx-formbar/core';
 import { ReactiveFormbarControl } from '../types/control-component.type';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
@@ -134,7 +134,7 @@ export class NgxFbControlDirective implements OnDestroy {
     controlConfig: this.controlConfig,
   });
 
-  get parentFormGroup() {
+  get parentFormGroup(): FormGroup | null {
     return this.parent.formGroup;
   }
 

@@ -55,15 +55,15 @@ export class StoryFormHostComponent {
       });
   }
 
-  reset() {
+  reset(): void {
     this.form.reset();
   }
 
-  patchValue() {
+  patchValue(): void {
     this.form.patchValue(this.patchData());
   }
 
-  onSubmit() {
+  onSubmit(): void {
     const formValue = this.form.getRawValue() as Record<string, unknown>;
     this.formValues.set(this.flattenFormValues(formValue));
   }

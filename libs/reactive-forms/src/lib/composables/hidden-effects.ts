@@ -34,7 +34,7 @@ export function hiddenEffects(options: {
   host: ComponentHost;
   onHidden: () => void;
   onVisible: () => void;
-}) {
+}): void {
   afterRenderEffect(() => {
     const component = options.component();
 

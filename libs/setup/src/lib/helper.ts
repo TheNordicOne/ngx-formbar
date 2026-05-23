@@ -1,7 +1,13 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
-import { getWorkspace } from '@schematics/angular/utility/workspace';
+import {
+  getWorkspace,
+  ProjectDefinition,
+} from '@schematics/angular/utility/workspace';
 
-export async function getProject(tree: Tree, projectName?: string) {
+export async function getProject(
+  tree: Tree,
+  projectName?: string,
+): Promise<ProjectDefinition> {
   const workspace = await getWorkspace(tree);
   projectName ??= workspace.extensions['defaultProject'] as string;
 

@@ -23,7 +23,7 @@ import {
 export function findVariableWithObjectLiteral(
   sf: SourceFile,
   expression: (d: VariableDeclaration) => boolean,
-) {
+): ObjectLiteralExpression | null {
   for (const stmt of sf.statements) {
     if (!isVariableStatement(stmt)) {
       continue;
@@ -49,7 +49,9 @@ export function findVariableWithObjectLiteral(
  * Recursively unwrap common wrappers until we hit an ObjectLiteralExpression.
  * Returns null when the expression never resolves to an object literal.
  */
-export function unwrapToObjectLiteral(expr: Expression) {
+export function unwrapToObjectLiteral(
+  expr: Expression,
+): ObjectLiteralExpression | null {
   let current: Expression | undefined = expr;
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -98,7 +100,9 @@ export function isObjectLiteral(node: Node): node is ObjectLiteralExpression {
   return isObjectLiteralExpression(node);
 }
 
-export function nameOfProperty(propertyName: PropertyName | undefined) {
+export function nameOfProperty(
+  propertyName: PropertyName | undefined,
+): string | null {
   if (!propertyName) {
     return null;
   }
@@ -114,7 +118,7 @@ export function nameOfProperty(propertyName: PropertyName | undefined) {
 export function isObjectLiteralWithProperty(
   variable: VariableDeclaration,
   propertyName: string,
-) {
+): boolean {
   const initializer = variable.initializer;
   if (!initializer) {
     return false;

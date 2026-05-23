@@ -15,7 +15,7 @@ export function classImplementsInterface(
   sf: SourceFile,
   className: string,
   interfaceName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -53,7 +53,10 @@ export function classImplementsInterface(
   return found;
 }
 
-export function classDeclarationExists(sf: SourceFile, className: string) {
+export function classDeclarationExists(
+  sf: SourceFile,
+  className: string,
+): boolean {
   let found = false;
 
   const visit = (node: Node): void => {
@@ -77,7 +80,7 @@ export function interfaceHasTypeLiteral(
   sf: SourceFile,
   interfaceName: string,
   typeLiteral: string,
-) {
+): boolean {
   let ok = false;
 
   const visit = (node: Node): void => {

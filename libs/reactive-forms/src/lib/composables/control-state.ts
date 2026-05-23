@@ -4,8 +4,14 @@ import {
   AbstractControl,
   PristineChangeEvent,
   StatusChangeEvent,
+  ValidationErrors,
 } from '@angular/forms';
 import { filter, map, startWith, switchMap } from 'rxjs';
+
+export interface ControlState {
+  errors: Signal<ValidationErrors | null>;
+  isDirty: Signal<boolean>;
+}
 
 /**
  * Exposes validation errors and dirty state of an AbstractControl as separate
@@ -20,7 +26,9 @@ import { filter, map, startWith, switchMap } from 'rxjs';
  * @returns An object with `errors` (signal of `ValidationErrors | null`) and
  *   `isDirty` (signal of `boolean`). Both share one underlying subscription.
  */
-export function withControlState(controlInstance: Signal<AbstractControl>) {
+export function withControlState(
+  controlInstance: Signal<AbstractControl>,
+): ControlState {
   const snapshot = (control: AbstractControl) => ({
     errors: control.errors,
     isDirty: control.dirty,

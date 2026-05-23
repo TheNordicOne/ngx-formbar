@@ -24,22 +24,22 @@ import {
 import { normalize } from '@angular-devkit/core';
 
 // Path helpers
-export function appRoot(p = '') {
+export function appRoot(p = ''): string {
   return `/projects/test-app${p ? `/${p}` : ''}`;
 }
-export function src(p = '') {
+export function src(p = ''): string {
   return appRoot(`src/${p}`);
 }
-export function app(p = '') {
+export function app(p = ''): string {
   return src(`app/${p}`);
 }
 
 // FS helpers
-export function read(tree: UnitTestTree, path: string) {
+export function read(tree: UnitTestTree, path: string): string {
   return tree.readText(normalize(path)).replace(/\r\n/g, '\n');
 }
 
-export function exists(tree: UnitTestTree, path: string) {
+export function exists(tree: UnitTestTree, path: string): boolean {
   console.log();
   return tree.exists(normalize(path));
 }
@@ -48,7 +48,7 @@ export function writeJson(
   tree: UnitTestTree,
   filePath: string,
   value: unknown,
-) {
+): void {
   const content = JSON.stringify(value);
   if (tree.exists(filePath)) {
     tree.overwrite(normalize(filePath), content);
@@ -57,7 +57,11 @@ export function writeJson(
   tree.create(normalize(filePath), content);
 }
 
-export function writeTs(tree: UnitTestTree, filePath: string, content: string) {
+export function writeTs(
+  tree: UnitTestTree,
+  filePath: string,
+  content: string,
+): void {
   if (tree.exists(normalize(filePath))) {
     tree.overwrite(normalize(filePath), content);
     return;
@@ -65,7 +69,10 @@ export function writeTs(tree: UnitTestTree, filePath: string, content: string) {
   tree.create(normalize(filePath), content);
 }
 
-export function providersArrayContainsCall(sf: SourceFile, callee: string) {
+export function providersArrayContainsCall(
+  sf: SourceFile,
+  callee: string,
+): boolean {
   let found = false;
 
   const visit = (node: Node) => {
@@ -96,7 +103,10 @@ export function providersArrayContainsCall(sf: SourceFile, callee: string) {
   return found;
 }
 
-export function providersArrayContainsIdentifier(sf: SourceFile, name: string) {
+export function providersArrayContainsIdentifier(
+  sf: SourceFile,
+  name: string,
+): boolean {
   let found = false;
 
   const visit = (node: Node) => {
@@ -127,7 +137,7 @@ export function providersArrayContainsIdentifier(sf: SourceFile, name: string) {
 export function providersArrayContainsProviderObject(
   sf: SourceFile,
   tokenName: string,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node) => {
@@ -187,7 +197,7 @@ export function countNamedImport(
   sf: SourceFile,
   moduleName: string,
   imported: string,
-) {
+): number {
   let count = 0;
   sf.forEachChild((n) => {
     if (!isImportDeclaration(n)) {
@@ -211,7 +221,7 @@ export function countNamedImport(
   return count;
 }
 
-export function countCall(sf: SourceFile, callee: string) {
+export function countCall(sf: SourceFile, callee: string): number {
   let count = 0;
   const visit = (node: Node) => {
     if (
@@ -233,7 +243,7 @@ export function objectHasPropOfKind(
   obj: ObjectLiteralExpression,
   propName: string,
   kind?: PropShape,
-) {
+): boolean {
   return obj.properties.some((p) => {
     switch (p.kind) {
       case SyntaxKind.ShorthandPropertyAssignment: {
@@ -275,7 +285,7 @@ export function callObjectArgHasProp(
   calleeName: string,
   propName: string,
   kind: PropShape,
-) {
+): boolean {
   let found = false;
 
   const visit = (node: Node) => {
@@ -333,7 +343,7 @@ export function hasDynamicImportOf(
 export function forEachAtLeastOnce<T>(
   array: readonly T[],
   callback: Parameters<(readonly T[])['forEach']>[0],
-) {
+): void {
   if (array.length === 0) {
     throw new Error('Array.forEach did not iterate at least once.');
   }

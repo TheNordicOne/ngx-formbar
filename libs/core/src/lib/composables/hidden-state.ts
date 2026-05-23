@@ -13,7 +13,9 @@ import { resolveHiddenState } from './resolve-hidden-state';
  *   may be a boolean, expression string, or predicate function.
  * @returns A signal of the resolved boolean hidden state.
  */
-export function withHiddenState(content: Signal<NgxFbBaseContent>) {
+export function withHiddenState(
+  content: Signal<NgxFbBaseContent>,
+): Signal<boolean> {
   const formValue = inject(NGX_FW_FORM_VALUE);
   const parent = inject(NGX_FW_PARENT_CONTEXT, {
     optional: true,

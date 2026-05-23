@@ -1,4 +1,5 @@
 import {
+  Binding,
   inputBinding,
   isSignal,
   reflectComponentType,
@@ -11,7 +12,7 @@ export function createBindings(
   component: Type<unknown>,
   signalMap: Map<string, Signal<unknown>>,
   config: Signal<object>,
-) {
+): Binding[] {
   const inputNames = getInputNames(component);
 
   return inputNames.map((templateName) => {
@@ -25,7 +26,10 @@ export function createBindings(
   });
 }
 
-export function createBinding<T extends object>(key: string, config: T) {
+export function createBinding<T extends object>(
+  key: string,
+  config: T,
+): Binding {
   const source: unknown = config[key as keyof T];
 
   if (isSignal(source)) {
@@ -35,7 +39,7 @@ export function createBinding<T extends object>(key: string, config: T) {
   return inputBinding(key, signal(source));
 }
 
-export function getInputNames(component: Type<unknown>) {
+export function getInputNames(component: Type<unknown>): string[] {
   const mirror = reflectComponentType(component);
   return mirror?.inputs.map((i) => i.templateName) ?? [];
 }

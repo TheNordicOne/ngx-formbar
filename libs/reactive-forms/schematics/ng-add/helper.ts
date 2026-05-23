@@ -32,13 +32,13 @@ import {
   updateWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
-import { SchematicsException } from '@angular-devkit/schematics';
+import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
 export function updateSchematicConfig(
   schematicName: string,
   options: JsonObject,
   projectName?: string,
-) {
+): Rule {
   return updateWorkspace((workspace: WorkspaceDefinition) => {
     const targetProject =
       projectName ?? (workspace.extensions.defaultProject as string);
@@ -68,11 +68,17 @@ export function updateSchematicConfig(
   });
 }
 
+export interface ProvidersUpdateResult {
+  updatedProvidersArray: ArrayLiteralExpression;
+  extraChanges: Change[];
+  didChange: boolean;
+}
+
 export function buildProvidersUpdate(
   sourceFile: SourceFile,
   ruleContext: RuleContext,
   providersArray: ArrayLiteralExpression,
-) {
+): ProvidersUpdateResult {
   const {
     projectRoot,
     appConfigPath,
@@ -170,7 +176,7 @@ export function replaceNodeWithPrinted(
   fileText: string,
   original: Node,
   replacement: Node,
-) {
+): ReplaceChange[] {
   const printer = createPrinter({});
   const printed = printer.printNode(EmitHint.Unspecified, replacement, sf);
   const start = original.getStart(sf);

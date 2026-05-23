@@ -18,7 +18,7 @@ import { computed, Signal } from '@angular/core';
 export function resolveHiddenAttribute(options: {
   hiddenSignal: Signal<boolean>;
   handleVisibility: Signal<boolean>;
-}) {
+}): Signal<true | null> {
   return computed(() => {
     if (!options.handleVisibility()) {
       return null;

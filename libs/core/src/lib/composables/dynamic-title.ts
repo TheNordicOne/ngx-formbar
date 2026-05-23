@@ -14,7 +14,9 @@ import { resolveExpression } from './resolve-expression';
  *   `dynamicTitle` is configured. Bind alongside the static `title` and let
  *   the consuming component prefer the dynamic value when present.
  */
-export function withDynamicTitle(content: Signal<NgxFbFormGroup>) {
+export function withDynamicTitle(
+  content: Signal<NgxFbFormGroup>,
+): Signal<string | null | undefined> {
   const formValue = inject(NGX_FW_FORM_VALUE);
   const expressionService = inject(ExpressionService);
 

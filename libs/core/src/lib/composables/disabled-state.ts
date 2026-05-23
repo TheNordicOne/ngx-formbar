@@ -19,7 +19,9 @@ import { resolveInheritableExpression } from './resolve-inheritable-expression';
  *   field may be a boolean, expression string, or expression function.
  * @returns A signal of the resolved boolean disabled state.
  */
-export function withDisabledState(content: Signal<NgxFbAbstractControl>) {
+export function withDisabledState(
+  content: Signal<NgxFbAbstractControl>,
+): Signal<boolean> {
   const formValue = inject(NGX_FW_FORM_VALUE);
   const expressionService = inject(ExpressionService);
   const parent = inject(NGX_FW_PARENT_CONTEXT, {

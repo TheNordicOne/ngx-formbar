@@ -22,7 +22,7 @@ export function resolveHiddenState(
   option: Signal<Expression<boolean> | boolean | undefined>,
   formContext: Signal<FormContext>,
   parentGroupIsHidden: Signal<boolean>,
-) {
+): Signal<boolean> {
   const expressionService = inject(ExpressionService);
 
   const expressionResult = resolveExpression<boolean>(

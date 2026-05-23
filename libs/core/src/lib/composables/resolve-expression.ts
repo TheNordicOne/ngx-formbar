@@ -30,7 +30,7 @@ export function resolveExpression<T>(
   option: Signal<Expression<T> | T | undefined>,
   formContext: Signal<FormContext>,
   expressionService: ExpressionService,
-) {
+): Signal<T | null | undefined> {
   const ast = computed<Program | null>(() => {
     const expression = option();
     if (typeof expression !== 'string') {

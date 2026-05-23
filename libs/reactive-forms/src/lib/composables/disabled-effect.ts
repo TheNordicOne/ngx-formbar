@@ -18,7 +18,7 @@ export function disabledEffect(options: {
   disabledSignal: Signal<boolean>;
   handleDisableSignal: Signal<boolean>;
   instance: Signal<AbstractControl>;
-}) {
+}): void {
   effect(() => {
     const disabled = options.disabledSignal();
     const handleDisable = options.handleDisableSignal();

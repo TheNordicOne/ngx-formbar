@@ -31,7 +31,7 @@ export class CustomResolverDemoComponent {
   protected readonly formContent = maintenanceForm;
   protected readonly form = this.formBuilder.group({});
 
-  protected setChoiceMode(mode: 'radio' | 'dropdown') {
+  protected setChoiceMode(mode: 'radio' | 'dropdown'): void {
     switch (mode) {
       case 'radio':
         this.componentResolver.updateDynamicComponent(
@@ -56,12 +56,12 @@ export class CustomResolverDemoComponent {
     }
   }
 
-  protected onSubmit(event: Event) {
+  protected onSubmit(event: Event): void {
     event.preventDefault();
     console.log('form.value', this.form.value);
   }
 
-  protected reset() {
+  protected reset(): void {
     this.form.reset();
   }
 }

@@ -21,17 +21,17 @@ export class VeryLargeFormDemoComponent {
   protected formContent: NgxFbForm<ExampleControls> = maintenanceFormLarge;
   protected readonly form = this.formBuilder.group({});
 
-  protected useForm(key: 'maintenance' | 'computed') {
+  protected useForm(key: 'maintenance' | 'computed'): void {
     this.formContent =
       key === 'computed' ? highlyComputedForm : maintenanceFormLarge;
   }
 
-  protected onSubmit(event: Event) {
+  protected onSubmit(event: Event): void {
     event.preventDefault();
     console.log('form.value', this.form.value);
   }
 
-  protected reset() {
+  protected reset(): void {
     this.form.reset();
   }
 }

@@ -23,7 +23,7 @@ export function resolveTestId(
   name: Signal<string>,
   globalTestIdBuilder: TestIdBuilderFn | undefined,
   parentTestId: Signal<string | undefined>,
-) {
+): Signal<string> {
   return computed(() => {
     const contentValue = content();
     const id = name();

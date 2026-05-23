@@ -5,7 +5,9 @@ import { map, Observable, of, timer } from 'rxjs';
 // ---------------------------------------------------------------------------
 // Docs async validators
 // ---------------------------------------------------------------------------
-export function emailDomainAllowed(c: AbstractControl) {
+export function emailDomainAllowed(
+  c: AbstractControl,
+): Observable<ValidationErrors | null> {
   const v = c.value as unknown;
   if (isEmpty(v)) {
     return of(null);
@@ -27,7 +29,9 @@ export function emailDomainAllowed(c: AbstractControl) {
   );
 }
 
-export function roomExists(c: AbstractControl) {
+export function roomExists(
+  c: AbstractControl,
+): Observable<ValidationErrors | null> {
   const buildingCtrl = getByPath(c, 'location.building');
   const floorCtrl = getByPath(c, 'location.floor');
   const roomCtrl = getByPath(c, 'location.room');
@@ -62,7 +66,9 @@ export function roomExists(c: AbstractControl) {
   );
 }
 
-export function unitKnownAtLocation(c: AbstractControl) {
+export function unitKnownAtLocation(
+  c: AbstractControl,
+): Observable<ValidationErrors | null> {
   const v = c.value as unknown;
   if (isEmpty(v)) {
     return of(null);
@@ -93,7 +99,9 @@ export function unitKnownAtLocation(c: AbstractControl) {
   );
 }
 
-export function approverActive(c: AbstractControl) {
+export function approverActive(
+  c: AbstractControl,
+): Observable<ValidationErrors | null> {
   const v = c.value as unknown;
   if (isEmpty(v)) {
     return of(null);

@@ -13,7 +13,7 @@ export function registerComponents(
   tree: Tree,
   registerContext: RegisterContext | undefined,
   context: SchematicContext,
-) {
+): Rule | Tree | undefined {
   if (!registerContext) {
     context.logger.error(
       'Component registration failed, because no proper context was generated!',

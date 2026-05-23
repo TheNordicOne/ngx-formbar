@@ -14,7 +14,9 @@ import { resolveExpression } from './resolve-expression';
  *   `dynamicLabel` is configured. Bind alongside the static `label` and let
  *   the consuming component prefer the dynamic value when present.
  */
-export function withDynamicLabel(content: Signal<NgxFbControl>) {
+export function withDynamicLabel(
+  content: Signal<NgxFbControl>,
+): Signal<string | null | undefined> {
   const formValue = inject(NGX_FW_FORM_VALUE);
   const expressionService = inject(ExpressionService);
 

@@ -36,7 +36,9 @@ export interface ComponentHost {
  *   as `NGXFB_CONTROL_ENTRIES` to the mounted component tree.
  * @returns A `ComponentHost` handle exposing `mount` and `clear`.
  */
-export function withComponentHost(options: ComponentHostOptions) {
+export function withComponentHost(
+  options: ComponentHostOptions,
+): ComponentHost {
   const viewContainerRef = inject(ViewContainerRef);
   const destroyRef = inject(DestroyRef);
   let componentRef: ComponentRef<unknown> | undefined;

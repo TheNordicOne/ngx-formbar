@@ -16,12 +16,12 @@ export class ConfigBasedDemoComponent {
   protected readonly formContent = maintenanceForm;
   protected readonly form = this.formBuilder.group({});
 
-  protected onSubmit(event: Event) {
+  protected onSubmit(event: Event): void {
     event.preventDefault();
     console.log('form.value', this.form.value);
   }
 
-  protected reset() {
+  protected reset(): void {
     this.form.reset();
   }
 }
