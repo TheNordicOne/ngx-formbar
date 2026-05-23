@@ -8,12 +8,21 @@
  */
 
 import type { Plugin } from '../plugins';
+import type { ParserStatic } from '../core';
 import type {
   BinaryExpression,
   ConditionalExpression,
   Expression,
   LogicalExpression,
 } from '../ast';
+
+function getOpPrecedence(jsep: ParserStatic, node: Expression) {
+  const operator = (node as { operator?: string }).operator;
+  if (operator === undefined) {
+    return undefined;
+  }
+  return jsep.binary_ops[operator];
+}
 
 export const ternaryPlugin: Plugin = {
   name: 'ternary',
@@ -24,10 +33,8 @@ export const ternaryPlugin: Plugin = {
         return;
       }
       this.index++;
-      if (
-        (env.node as { type: string }).type === 'SequenceExpression' ||
-        (env.node as { type: string }).type === 'SpreadElement'
-      ) {
+      const nodeType = (env.node as { type: string }).type;
+      if (nodeType === 'SequenceExpression' || nodeType === 'SpreadElement') {
         this.throwError(
           'Ternary test must be a single expression, not a sequence or spread',
         );
@@ -55,31 +62,15 @@ export const ternaryPlugin: Plugin = {
         alternate: alternate as Expression,
       };
 
-      // Re-parent the ternary if the test is a low-precedence binary the
-      // ternary should bind tighter than. Mirrors the upstream behaviour for
-      // operators below the conditional's precedence.
-      const testNode = test as
-        | BinaryExpression
-        | LogicalExpression
-        | Expression;
-      if (
-        'operator' in testNode &&
-        typeof testNode.operator === 'string' &&
-        jsep.binary_ops[testNode.operator] !== undefined &&
-        jsep.binary_ops[testNode.operator] <= 0.9
-      ) {
-        let walk = testNode as BinaryExpression | LogicalExpression;
-        while (
-          'right' in walk &&
-          (walk.right as BinaryExpression | LogicalExpression).operator &&
-          jsep.binary_ops[
-            (walk.right as BinaryExpression | LogicalExpression).operator
-          ] !== undefined &&
-          jsep.binary_ops[
-            (walk.right as BinaryExpression | LogicalExpression).operator
-          ] <= 0.9
-        ) {
+      // Re-parent when the test is a low-precedence binary the ternary
+      // should bind tighter than (mirrors upstream jsep).
+      const testPrecedence = getOpPrecedence(jsep, test);
+      if (testPrecedence !== undefined && testPrecedence <= 0.9) {
+        let walk = test as BinaryExpression | LogicalExpression;
+        let rightPrecedence = getOpPrecedence(jsep, walk.right);
+        while (rightPrecedence !== undefined && rightPrecedence <= 0.9) {
           walk = walk.right as BinaryExpression | LogicalExpression;
+          rightPrecedence = getOpPrecedence(jsep, walk.right);
         }
         conditional = { ...conditional, test: walk.right };
         walk.right = conditional as unknown as Expression;

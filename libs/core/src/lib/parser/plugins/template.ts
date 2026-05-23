@@ -33,7 +33,7 @@ export const templatePlugin: Plugin = {
       let closed = false;
       const length = this.expr.length;
 
-      const pushQuasi = (): void => {
+      const pushQuasi = () => {
         const element: TemplateElement = {
           type: 'TemplateElement',
           value: { raw, cooked },

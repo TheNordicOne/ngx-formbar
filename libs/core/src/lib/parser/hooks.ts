@@ -23,20 +23,18 @@ export interface HookEnv {
 export type HookCallback = (this: Parser, env: HookEnv) => void;
 
 export class Hooks {
-  private readonly registry: Record<string, HookCallback[]> = {};
+  private readonly registry: Record<string, HookCallback[] | undefined> = {};
 
-  add(name: string, callback: HookCallback, first = false): void {
-    if (!this.registry[name]) {
-      this.registry[name] = [];
-    }
+  add(name: string, callback: HookCallback, first = false) {
+    const list = (this.registry[name] ??= []);
     if (first) {
-      this.registry[name].unshift(callback);
-    } else {
-      this.registry[name].push(callback);
+      list.unshift(callback);
+      return;
     }
+    list.push(callback);
   }
 
-  run(name: string, env: HookEnv): void {
+  run(name: string, env: HookEnv) {
     const callbacks = this.registry[name];
     if (!callbacks) {
       return;
@@ -46,11 +44,9 @@ export class Hooks {
     }
   }
 
-  /**
-   * Invoke registered callbacks one at a time until one assigns `env.node`.
-   * Used by the parser to let plugins replace the next token entirely.
-   */
-  search(name: string, env: HookEnv): void {
+  // Stops at the first callback that assigns `env.node`, so plugins can
+  // replace the next token entirely.
+  search(name: string, env: HookEnv) {
     const callbacks = this.registry[name];
     if (!callbacks) {
       return;
@@ -63,11 +59,8 @@ export class Hooks {
     }
   }
 
-  /**
-   * Whether any callbacks are registered for this hook. Cheap pre-check
-   * so the parser can skip the env-allocation fast path.
-   */
-  has(name: string): boolean {
-    return Array.isArray(this.registry[name]) && this.registry[name].length > 0;
+  has(name: string) {
+    const list = this.registry[name];
+    return list !== undefined && list.length > 0;
   }
 }

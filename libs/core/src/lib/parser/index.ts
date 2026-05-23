@@ -16,7 +16,7 @@ import { spreadPlugin } from './plugins/spread';
 import { templatePlugin } from './plugins/template';
 import { ternaryPlugin } from './plugins/ternary';
 
-import type { Expression, Program } from './ast';
+import type { Program } from './ast';
 
 // Plugin registration order matters: the ternary plugin's after-expression
 // hook needs to run before the arrow plugin's transform so it can do the
@@ -39,7 +39,7 @@ Parser.register(
  * evaluator.
  */
 export function parse(source: string): Program {
-  const body = Parser.parse(source) as Expression;
+  const body = Parser.parse(source);
   return { type: 'Program', body };
 }
 

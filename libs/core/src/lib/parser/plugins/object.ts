@@ -47,7 +47,7 @@ export const objectPlugin: Plugin = {
 
         this.gobbleSpaces();
         if (
-          (key as Expression).type === jsep.IDENTIFIER &&
+          key.type === jsep.IDENTIFIER &&
           (this.code() === jsep.COMMA_CODE || this.code() === CCURLY_CODE)
         ) {
           // shorthand: `{foo}` becomes `{foo: foo}`
@@ -65,20 +65,19 @@ export const objectPlugin: Plugin = {
             this.throwError('unexpected object property');
           }
           // jsep encodes computed keys as a single-element ArrayExpression.
-          const isArrayKey =
-            (key as Expression).type === jsep.ARRAY_EXP;
+          const isArrayKey = key.type === jsep.ARRAY_EXP;
           properties.push({
             type: 'Property',
             computed: isArrayKey,
             key: isArrayKey
-              ? ((key as { elements: Expression[] }).elements[0] as Expression)
+              ? (key as { elements: Expression[] }).elements[0]
               : (key as Expression),
             value: value as Expression,
             shorthand: false,
           });
           this.gobbleSpaces();
-        } else if (key) {
-          // Spread or anything else the spread plugin produced.
+        } else {
+          // Anything the spread plugin produced (SpreadElement).
           properties.push(key as unknown as SpreadElement);
         }
 

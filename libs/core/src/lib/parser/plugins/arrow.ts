@@ -26,17 +26,18 @@ interface BinaryNode {
 
 interface SequenceLike {
   type: string;
-  expressions?: Identifier[];
+  expressions: Identifier[];
 }
 
 export const arrowPlugin: Plugin = {
   name: 'arrow',
 
   init(jsep) {
-    // Right-associative low-precedence operator so `=>` binds last.
+    // Right-associative low-precedence so `=>` binds last.
     jsep.addBinaryOp('=>', 0.1, true);
 
-    // Special-case `()` followed by `=>` so empty-parameter arrows parse.
+    // Empty-parameter arrows (`() => x`) need a special case: `()` would
+    // otherwise parse as an empty group and short-circuit before `=>`.
     jsep.hooks.add('gobble-expression', function gobbleEmptyArrowArg(env) {
       this.gobbleSpaces();
       if (this.code() === jsep.OPAREN_CODE) {
@@ -63,14 +64,11 @@ export const arrowPlugin: Plugin = {
       }
     });
 
-    // Walk the parsed tree and convert any `=>` BinaryExpression into an
-    // ArrowFunctionExpression. This is needed because `=>` was registered
-    // as a binary operator and shows up that way in the AST.
+    // `=>` is parsed as a binary operator (see addBinaryOp above), so the
+    // resulting BinaryExpression nodes have to be rewritten into
+    // ArrowFunctionExpression nodes after the fact.
     jsep.hooks.add('after-expression', function fixBinaryArrow(env) {
-      updateBinariesToArrows(env.node, () => {
-        // No-op: throwError is on `this`, but we only throw on bad shapes
-        // that can't actually be produced by the grammar.
-      });
+      updateBinariesToArrows(env.node);
     });
 
     function updateBinariesToArrows(
@@ -80,76 +78,68 @@ export const arrowPlugin: Plugin = {
         | SequenceExpression
         | false
         | undefined,
-      _throw: (msg: string) => void,
-    ): void {
+    ) {
       if (!node) {
         return;
       }
 
-      // Traverse the whole subtree first.
       for (const key of Object.keys(node)) {
         const value = (node as unknown as Record<string, unknown>)[key];
         if (value && typeof value === 'object') {
           if (Array.isArray(value)) {
             for (const item of value) {
-              updateBinariesToArrows(item as Expression, _throw);
+              updateBinariesToArrows(item as Expression);
             }
           } else {
-            updateBinariesToArrows(value as Expression, _throw);
+            updateBinariesToArrows(value as Expression);
           }
         }
       }
 
       const binary = node as unknown as BinaryNode;
-      if (binary.operator === '=>') {
-        const arrow = node as unknown as ArrowFunctionExpression & {
-          left?: Expression;
-          right?: Expression;
-          operator?: string;
-        };
-        const left = binary.left;
-        let params: Identifier[] = [];
-        if (left) {
-          const seq = left as unknown as SequenceLike;
-          if (seq.type === 'SequenceExpression' && seq.expressions) {
-            params = seq.expressions as Identifier[];
-          } else {
-            params = [left as Identifier];
-          }
-        }
-        // Reject rest parameters (`(...x) => x`) and any other non-Identifier
-        // shape with a clear error. Without this guard, a SpreadElement
-        // would survive into the evaluator and fail with a generic
-        // "Unsupported node type" message.
-        for (const param of params) {
-          if ((param as { type: string }).type !== 'Identifier') {
-            throw new Error(
-              `Arrow function parameters must be plain identifiers, got ${
-                (param as { type: string }).type
-              }`,
-            );
-          }
-        }
-        // The body must be a regular Expression (no SpreadElement or
-        // transient SequenceExpression). Reject here so the evaluator
-        // never receives an arrow whose body would crash it.
-        const body = binary.right as { type?: string } | undefined;
-        if (
-          body &&
-          (body.type === 'SpreadElement' ||
-            body.type === 'SequenceExpression')
-        ) {
+      if (binary.operator !== '=>') {
+        return;
+      }
+      const arrow = node as unknown as ArrowFunctionExpression & {
+        left?: Expression;
+        right?: Expression;
+        operator?: string;
+      };
+      const left = binary.left;
+      const seq = left as unknown as SequenceLike;
+      const params: Identifier[] =
+        seq.type === 'SequenceExpression'
+          ? seq.expressions
+          : [left as Identifier];
+      // Reject `(...x) => x` and any other non-Identifier param shape so
+      // a SpreadElement never reaches the evaluator (which would emit a
+      // generic "Unsupported node type" error).
+      for (const param of params) {
+        if ((param as { type: string }).type !== 'Identifier') {
           throw new Error(
-            `Arrow function body must be an expression, got ${body.type}`,
+            `Arrow function parameters must be plain identifiers, got ${
+              (param as { type: string }).type
+            }`,
           );
         }
-        arrow.type = 'ArrowFunctionExpression';
-        arrow.params = params;
-        arrow.body = binary.right;
-        delete arrow.left;
-        delete arrow.right;
-        delete arrow.operator;
       }
+      // Reject SpreadElement / SequenceExpression as the body so the
+      // evaluator never receives an arrow with a transient body shape.
+      const body = binary.right as { type?: string } | undefined;
+      if (
+        body &&
+        (body.type === 'SpreadElement' || body.type === 'SequenceExpression')
+      ) {
+        throw new Error(
+          `Arrow function body must be an expression, got ${body.type}`,
+        );
+      }
+      arrow.type = 'ArrowFunctionExpression';
+      arrow.params = params;
+      arrow.body = binary.right;
+      delete arrow.left;
+      delete arrow.right;
+      delete arrow.operator;
     }
   },
 };

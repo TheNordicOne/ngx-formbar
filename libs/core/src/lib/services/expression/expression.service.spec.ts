@@ -1666,7 +1666,7 @@ describe('ExpressionService', () => {
       const original = service.parseExpressionToAst('"first"');
       // Fill the cache past the cap with fresh expressions.
       for (let i = 0; i < cap; i++) {
-        service.parseExpressionToAst(`"filler${i}"`);
+        service.parseExpressionToAst(`"filler${String(i)}"`);
       }
       // "first" was the head; it should have been evicted, so re-parsing
       // returns a fresh AST instance.
@@ -1680,7 +1680,7 @@ describe('ExpressionService', () => {
       // Fill the cache to the cap with fresh entries (one for "first",
       // cap-1 fillers).
       for (let i = 0; i < cap - 1; i++) {
-        service.parseExpressionToAst(`"filler${i}"`);
+        service.parseExpressionToAst(`"filler${String(i)}"`);
       }
       // Touch "first" so it is no longer the LRU candidate.
       service.parseExpressionToAst('"first"');
@@ -1695,7 +1695,10 @@ describe('ExpressionService', () => {
   describe('Synthesized AST safety nets', () => {
     it('throws on an unsupported unary operator', () => {
       const ast = service.parseExpressionToAst('-1');
-      const unary = ast!.body as { operator: string };
+      if (!ast) {
+        throw new Error('parse failed');
+      }
+      const unary = ast.body as { operator: string };
       unary.operator = '@@';
       expect(() => service.evaluateExpression(ast, context)).toThrow(
         /Unsupported unary operator: @@/,
@@ -1704,7 +1707,10 @@ describe('ExpressionService', () => {
 
     it('throws on an unsupported logical operator', () => {
       const ast = service.parseExpressionToAst('true && false');
-      const logical = ast!.body as { operator: string };
+      if (!ast) {
+        throw new Error('parse failed');
+      }
+      const logical = ast.body as { operator: string };
       logical.operator = '@@';
       expect(() => service.evaluateExpression(ast, context)).toThrow(
         /Unsupported logical operator: @@/,

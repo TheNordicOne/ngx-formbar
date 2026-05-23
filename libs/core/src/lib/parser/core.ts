@@ -19,18 +19,16 @@ import { Hooks, type HookEnv } from './hooks';
 import type { Plugin } from './plugins';
 import type {
   Expression,
+  Identifier,
+  Literal,
   LogicalOperator,
   SequenceExpression,
   SpreadElement,
 } from './ast';
 
-/**
- * What the parser's internal helpers can return. The spread plugin
- * produces SpreadElement, which is not part of the public
- * {@link Expression} surface but flows through the parser's machinery on
- * the way to its container (array literal, object literal, call
- * arguments). SequenceExpression is similarly internal.
- */
+// SpreadElement and SequenceExpression are parser-internal transients that
+// flow through the machinery to their containers (array/object literal, call
+// args, arrow head) but never reach the public Expression surface.
 type ParseResult = Expression | SpreadElement | SequenceExpression;
 
 const LOGICAL_OPERATORS: ReadonlySet<string> = new Set(['&&', '||', '??']);
@@ -45,7 +43,6 @@ export interface ParserStatic {
   hooks: Hooks;
   register(...plugins: Plugin[]): void;
 
-  // Character codes
   readonly TAB_CODE: number;
   readonly LF_CODE: number;
   readonly CR_CODE: number;
@@ -62,7 +59,6 @@ export interface ParserStatic {
   readonly SEMCOL_CODE: number;
   readonly COLON_CODE: number;
 
-  // Node type tags exposed for plugin convenience
   readonly IDENTIFIER: 'Identifier';
   readonly LITERAL: 'Literal';
   readonly MEMBER_EXP: 'MemberExpression';
@@ -71,8 +67,8 @@ export interface ParserStatic {
   readonly BINARY_EXP: 'BinaryExpression';
   readonly ARRAY_EXP: 'ArrayExpression';
 
-  unary_ops: Record<string, number>;
-  binary_ops: Record<string, number>;
+  unary_ops: Record<string, number | undefined>;
+  binary_ops: Record<string, number | undefined>;
   right_associative: Set<string>;
   additional_identifier_chars: Set<string>;
   literals: Record<string, unknown>;
@@ -100,34 +96,24 @@ export class Parser {
     this.expr = expr;
   }
 
-  /**
-   * Current character at `index`. Implemented as a method rather than a
-   * getter so TypeScript does not narrow the return type to a specific
-   * literal across calls.
-   */
-  char(): string {
+  // `char`/`code` are methods (not getters) so TS does not narrow their
+  // return type across calls.
+  char() {
     return this.expr.charAt(this.index);
   }
 
-  /**
-   * Current character code at `index`. See {@link char} for why this is a
-   * method instead of a getter.
-   */
-  code(): number {
+  code() {
     return this.expr.charCodeAt(this.index);
   }
 
   throwError(message: string): never {
-    const error = new Error(message + ' at character ' + this.index);
+    const error = new Error(`${message} at character ${String(this.index)}`);
     (error as Error & { index: number }).index = this.index;
     (error as Error & { description: string }).description = message;
     throw error;
   }
 
-  runHook(
-    name: string,
-    node: ParseResult | false | undefined,
-  ): ParseResult | false | undefined {
+  runHook(name: string, node: ParseResult | false | undefined) {
     if (Parser.hooks.has(name)) {
       const env: HookEnv = { context: this, node };
       Parser.hooks.run(name, env);
@@ -136,7 +122,7 @@ export class Parser {
     return node;
   }
 
-  searchHook(name: string): ParseResult | false | undefined {
+  searchHook(name: string) {
     if (Parser.hooks.has(name)) {
       const env: HookEnv = { context: this };
       Parser.hooks.search(name, env);
@@ -145,7 +131,7 @@ export class Parser {
     return undefined;
   }
 
-  gobbleSpaces(): void {
+  gobbleSpaces() {
     let ch = this.code();
     while (
       ch === Parser.SPACE_CODE ||
@@ -179,11 +165,8 @@ export class Parser {
     if (hooked) {
       node = hooked;
     }
-    // SpreadElement at the top level is structurally impossible: the only
-    // hook that produces one is `gobble-token` inside a containing
-    // ArrayExpression / ObjectExpression / CallExpression. SequenceExpression
-    // is a transient the arrow plugin expands; if either survives to the
-    // public surface, the grammar refuses.
+    // SpreadElement and SequenceExpression are parser-internal transients
+    // (see ParseResult). If one survives to the public surface, refuse.
     if (node.type === 'SpreadElement') {
       this.throwError(
         'Spread is only valid inside arrays, objects, or call arguments',
@@ -212,12 +195,13 @@ export class Parser {
         continue;
       }
 
-      if (this.index < this.expr.length) {
-        if (chI === untilICode) {
-          break;
-        }
-        this.throwError('Unexpected "' + this.char() + '"');
+      if (this.index >= this.expr.length) {
+        break;
       }
+      if (chI === untilICode) {
+        break;
+      }
+      this.throwError('Unexpected "' + this.char() + '"');
     }
 
     return nodes;
@@ -228,12 +212,15 @@ export class Parser {
     const node: ParseResult | false = hooked ?? this.gobbleBinaryExpression();
     this.gobbleSpaces();
     const after = this.runHook('after-expression', node);
-    return (after ?? node) as ParseResult | false;
+    return after ?? node;
   }
 
-  gobbleBinaryOp(): string | false {
+  gobbleBinaryOp() {
     this.gobbleSpaces();
-    let toCheck = this.expr.substr(this.index, Parser.max_binop_len);
+    let toCheck = this.expr.substring(
+      this.index,
+      this.index + Parser.max_binop_len,
+    );
     let tcLen = toCheck.length;
 
     while (tcLen > 0) {
@@ -248,7 +235,7 @@ export class Parser {
         this.index += tcLen;
         return toCheck;
       }
-      toCheck = toCheck.substr(0, --tcLen);
+      toCheck = toCheck.substring(0, --tcLen);
     }
     return false;
   }
@@ -298,11 +285,9 @@ export class Parser {
         const op = (stack.pop() as BinopInfo).value;
         const left = stack.pop() as ParseResult;
         // SequenceExpression can legitimately appear as a binary operand
-        // here: `(a, b) => x` parses with the SequenceExpression as the
-        // left of a `=>` binary node, which the arrow plugin's
-        // after-expression hook expands. The asExpression narrowing must
-        // not run before that hook, so we cast here and let the public
-        // parse() entry point reject any SequenceExpression that survives.
+        // (the `=>` operand for `(a, b) => x`). The arrow plugin's
+        // after-expression hook expands it; if we narrowed here we'd
+        // reject before the hook runs. Survivors are rejected at parse().
         stack.push(
           makeBinaryNode(op, left as Expression, right as Expression),
         );
@@ -351,7 +336,10 @@ export class Parser {
     } else if (ch === Parser.OBRACK_CODE) {
       node = this.gobbleArray();
     } else {
-      toCheck = this.expr.substr(this.index, Parser.max_unop_len);
+      toCheck = this.expr.substring(
+        this.index,
+        this.index + Parser.max_unop_len,
+      );
       tcLen = toCheck.length;
 
       while (tcLen > 0) {
@@ -377,7 +365,7 @@ export class Parser {
           const after = this.runHook('after-token', unary);
           return (after ?? unary) as Expression;
         }
-        toCheck = toCheck.substr(0, --tcLen);
+        toCheck = toCheck.substring(0, --tcLen);
       }
 
       if (Parser.isIdentifierStart(ch)) {
@@ -393,10 +381,8 @@ export class Parser {
             raw: ident.name,
           };
         } else {
-          // The `this` keyword and other identifiers we don't want must be
-          // rejected here. `this` would normally be promoted to a
-          // ThisExpression node; in this DSL it's just an identifier the
-          // parser refuses to recognize as anything special.
+          // Refuse to promote `this` to a ThisExpression — this DSL does
+          // not bind a receiver.
           if (ident.name === 'this') {
             this.throwError('The `this` keyword is not supported');
           }
@@ -409,13 +395,12 @@ export class Parser {
 
     if (!node) {
       const after = this.runHook('after-token', false);
-      return (after as Expression | false) ?? false;
+      return (after ?? false) as Expression | false;
     }
 
-    // SequenceExpression (from `(a, b)`) flows through unchanged so the
-    // arrow plugin can later expand `(a, b) => x` into multi-param arrow.
-    // Member access / call expressions on a sequence are nonsensical and
-    // get rejected at the top level.
+    // Skip property access on SequenceExpression — the arrow plugin will
+    // expand `(a, b) => x` later; member/call on a sequence is rejected
+    // at the top level.
     if (node.type !== 'SequenceExpression') {
       node = this.gobbleTokenProperty(asExpression(node));
     }
@@ -434,10 +419,13 @@ export class Parser {
       ch === Parser.QUMARK_CODE
     ) {
       let optional = false;
+      if (
+        ch === Parser.QUMARK_CODE &&
+        this.expr.charCodeAt(this.index + 1) !== Parser.PERIOD_CODE
+      ) {
+        break;
+      }
       if (ch === Parser.QUMARK_CODE) {
-        if (this.expr.charCodeAt(this.index + 1) !== Parser.PERIOD_CODE) {
-          break;
-        }
         optional = true;
         this.index += 2;
         this.gobbleSpaces();
@@ -491,10 +479,9 @@ export class Parser {
     return node;
   }
 
-  gobbleNumericLiteral(): Expression {
+  gobbleNumericLiteral(): Literal {
     let number = '';
     let ch: string;
-    let chCode: number;
 
     while (Parser.isDecimalDigit(this.code())) {
       number += this.expr.charAt(this.index++);
@@ -522,7 +509,7 @@ export class Parser {
       }
     }
 
-    chCode = this.code();
+    const chCode = this.code();
     if (Parser.isIdentifierStart(chCode)) {
       this.throwError(
         'Variable names cannot start with a number (' + number + this.char() + ')',
@@ -541,7 +528,7 @@ export class Parser {
     };
   }
 
-  gobbleStringLiteral(): Expression {
+  gobbleStringLiteral(): Literal {
     let str = '';
     const startIndex = this.index;
     const quote = this.expr.charAt(this.index++);
@@ -592,7 +579,7 @@ export class Parser {
     };
   }
 
-  gobbleIdentifier(): { type: 'Identifier'; name: string } {
+  gobbleIdentifier(): Identifier {
     let ch = this.code();
     const start = this.index;
 
@@ -639,13 +626,17 @@ export class Parser {
       } else if (chI === Parser.COMMA_CODE) {
         this.index++;
         separatorCount++;
-        if (separatorCount !== args.length) {
-          if (termination === Parser.CPAREN_CODE) {
-            this.throwError('Unexpected token ,');
-          } else if (termination === Parser.CBRACK_CODE) {
-            for (let arg = args.length; arg < separatorCount; arg++) {
-              args.push(null);
-            }
+        if (
+          separatorCount !== args.length &&
+          termination === Parser.CPAREN_CODE
+        ) {
+          this.throwError('Unexpected token ,');
+        } else if (
+          separatorCount !== args.length &&
+          termination === Parser.CBRACK_CODE
+        ) {
+          for (let arg = args.length; arg < separatorCount; arg++) {
+            args.push(null);
           }
         }
       } else if (
@@ -672,10 +663,9 @@ export class Parser {
     return args as (Expression | SpreadElement)[];
   }
 
-  /**
-   * Parses a parenthesised group. Unlike upstream jsep this rejects
-   * comma sequences (`(a, b)`); the language is single-expression only.
-   */
+  // Unlike upstream jsep, this rejects comma sequences `(a, b)` at the
+  // public surface; the only legitimate survivor is the arrow plugin
+  // expanding `(a, b) => x` into a multi-param arrow head.
   gobbleGroup(): ParseResult | false {
     this.index++;
     const nodes = this.gobbleExpressions(Parser.CPAREN_CODE);
@@ -689,11 +679,6 @@ export class Parser {
     if (nodes.length === 0) {
       return false;
     }
-    // Multi-expression groups produce a SequenceExpression. This is a
-    // transient: the arrow plugin's after-expression hook expands
-    // `(a, b) => x` into an ArrowFunctionExpression with multiple params.
-    // If a SequenceExpression survives to the public surface, parse()
-    // rejects it as "comma sequences are not supported".
     return {
       type: 'SequenceExpression',
       expressions: nodes.map((n) => asExpression(n)),
@@ -712,13 +697,9 @@ export class Parser {
     };
   }
 
-  // ========================================================================
-  // Static members
-  // ========================================================================
-
   static hooks = new Hooks();
 
-  static register(...plugins: Plugin[]): void {
+  static register(...plugins: Plugin[]) {
     for (const plugin of plugins) {
       plugin.init(Parser as unknown as ParserStatic);
     }
@@ -728,7 +709,6 @@ export class Parser {
     return new Parser(expr).parse();
   }
 
-  // Character codes
   static readonly TAB_CODE = 9;
   static readonly LF_CODE = 10;
   static readonly CR_CODE = 13;
@@ -745,7 +725,6 @@ export class Parser {
   static readonly SEMCOL_CODE = 59;
   static readonly COLON_CODE = 58;
 
-  // Node type tags (exposed for plugin convenience)
   static readonly IDENTIFIER = 'Identifier' as const;
   static readonly LITERAL = 'Literal' as const;
   static readonly MEMBER_EXP = 'MemberExpression' as const;
@@ -754,10 +733,9 @@ export class Parser {
   static readonly BINARY_EXP = 'BinaryExpression' as const;
   static readonly ARRAY_EXP = 'ArrayExpression' as const;
 
-  // Tables. `=` is intentionally absent so `a = b` is a parse error.
-  // `delete` is also absent for the same reason: mutating operators have no
-  // place in a pure expression language.
-  static unary_ops: Record<string, number> = {
+  // `=` and `delete` are intentionally absent: this is a pure expression
+  // language with no mutation.
+  static unary_ops: Record<string, number | undefined> = {
     '-': 1,
     '!': 1,
     '~': 1,
@@ -766,7 +744,7 @@ export class Parser {
     void: 1,
   };
 
-  static binary_ops: Record<string, number> = {
+  static binary_ops: Record<string, number | undefined> = {
     '||': 1,
     '??': 1,
     '&&': 2,
@@ -844,20 +822,18 @@ export class Parser {
   }
 
   static binaryPrecedence(opVal: string): number {
-    return Parser.binary_ops[opVal] || 0;
+    return Parser.binary_ops[opVal] ?? 0;
   }
 }
 
-function getMaxKeyLen(obj: Record<string, unknown>): number {
+function getMaxKeyLen(obj: Record<string, unknown>) {
   return Math.max(0, ...Object.keys(obj).map((k) => k.length));
 }
 
-/**
- * Narrows a parser node down to an Expression. Throws when a SpreadElement
- * appears in a position the grammar should not have produced one — binary
- * operands, member-access keys, etc.
- */
-function asExpression(node: ParseResult): Expression {
+// Narrows ParseResult to Expression, throwing when a parser-internal
+// transient (SpreadElement, SequenceExpression) appears where only the
+// public surface is allowed.
+function asExpression(node: ParseResult) {
   if (node.type === 'SpreadElement') {
     throw new Error('Spread is not valid in this position');
   }
@@ -867,11 +843,8 @@ function asExpression(node: ParseResult): Expression {
   return node;
 }
 
-/**
- * Constructs a BinaryExpression or LogicalExpression node depending on the
- * operator. Short-circuit operators (`&&`, `||`, `??`) must be LogicalExpression
- * so the evaluator does not eagerly evaluate the right operand.
- */
+// Short-circuit operators must produce LogicalExpression so the evaluator
+// does not eagerly evaluate the right operand.
 function makeBinaryNode(
   operator: string,
   left: Expression,
