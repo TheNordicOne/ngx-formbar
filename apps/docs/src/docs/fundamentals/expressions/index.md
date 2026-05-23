@@ -3,7 +3,7 @@ Expressions are JavaScript-like snippets provided as strings. They are parsed by
 ## Parsing and Caching
 
 - **Parsing:**
-  An expression string is parsed into an AST by an in-tree parser. The grammar is restricted to a small subset of JavaScript expressions; statements, declarations, control flow, classes, assignments, `this`, dynamic `import`, `await`, `yield`, `new`, tagged templates, and update operators (`++`/`--`) are all parse errors. Each evaluation must produce exactly one expression — multi-statement and comma-sequence inputs are rejected.
+  An expression string is parsed into an AST by an in-tree parser. The grammar is restricted to a small subset of JavaScript expressions; statements, declarations, control flow, classes, assignments, `this`, dynamic `import`, `await`, `yield`, `new`, tagged templates, and update operators (`++`/`--`) are all parse errors. Each evaluation must produce exactly one expression. Multi-statement and comma-sequence inputs are rejected.
 
 - **Caching:**
   Parsed ASTs are cached in a bounded LRU. Repeated evaluations of the same expression source reuse the parsed AST. The cache evicts the least-recently-used entry when full, so unbounded dynamic expression strings cannot grow it without limit.
@@ -29,7 +29,7 @@ The parser produces only the following AST node types:
 
 ## Supported Operators
 - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `\*\*` (exponentiation, right-associative). Division and modulo by zero throw, diverging from JS which returns `Infinity`/`NaN`.
-- **Comparison Operators:** `<`, `>`, `<=`, `>=` (both operands must be same primitive type — number or string).
+- **Comparison Operators:** `<`, `>`, `<=`, `>=` (both operands must be same primitive type, number or string).
 - **Equality Operators:** `==`, `!=`, `===`, `!==`. **In this DSL, `==` is equivalent to `===` and `!=` to `!==`.** Loose-equality coercion (`0 == ""`, `null == undefined`, etc.) is intentionally rejected.
 - **Bitwise Operators:** `|`, `&`, `^`, `<<`, `>>`, `>>>`
 - **Logical Operations:** `&&`, `||`, `??` (short-circuit evaluation)
@@ -54,7 +54,7 @@ The parser produces only the following AST node types:
 
 ## Threat boundary
 
-The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**: a sufficiently pathological expression — catastrophic-backtracking regex, deeply nested operations, huge string allocations via `"x".repeat(1e9)` — can hang the host tab. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
+The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
 
 ## Function-based Expressions
 
@@ -77,8 +77,8 @@ Where:
   - disabled: `boolean`
   - readonly: `boolean`
   - computedValue: `unknown` (it should return the same type of value as your control uses)
-  - dynamicLabel: `string`
-  - dynamicTitle: `string`
+  - dynamicLabel: `string | null`
+  - dynamicTitle: `string | null`
 
 
 ### Advantages

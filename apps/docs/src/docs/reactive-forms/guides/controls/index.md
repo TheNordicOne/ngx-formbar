@@ -69,7 +69,7 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
     readonly isReadonly = input(false);
     readonly isHidden = input(false);
     readonly labelText = input<string | undefined>('');
-    readonly dynamicLabel = input<string>();
+    readonly dynamicLabel = input<string | null>();
     readonly testId = input('');
     readonly errors = input<ValidationErrors | null>(null);
     readonly isDirty = input(false);
@@ -294,7 +294,7 @@ import { TextControl } from './text-control.type';
 export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
     readonly name = input.required<string>();
     readonly labelText = input<string | undefined>('');
-    readonly dynamicLabel = input<string>();
+    readonly dynamicLabel = input<string | null>();
 
     readonly displayLabel = computed(() => {
         const dynamic = this.dynamicLabel();
@@ -413,5 +413,5 @@ The `ReactiveFormbarControl<T>` contract is implemented by your component. The l
 | `errors`          | `SignalInput<ValidationErrors \| null>`   | Validation errors of the underlying form control.                                                    |
 | `isDirty`         | `SignalInput<boolean>`                    | Whether the underlying form control is dirty.                                                        |
 | `labelText`       | `SignalInput<string \| undefined>`        | The static `label` value from the control configuration.                                             |
-| `dynamicLabel`    | `SignalInput<string \| undefined>`        | The computed dynamic label, if a `dynamicLabel` expression is configured.                            |
+| `dynamicLabel`    | `SignalInput<string \| null \| undefined>` | The computed dynamic label, if a `dynamicLabel` expression is configured. The expression engine can yield `null` (for example from `'maybeProp ?? null'`), so the type widens accordingly. Treat `null` and `undefined` the same way in your template. |
 | `controlInstance` | `SignalInput<FormControl>`                | The underlying `FormControl` instance. Only declare this when you need direct access to the control. |

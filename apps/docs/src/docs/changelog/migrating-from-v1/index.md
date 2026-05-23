@@ -233,7 +233,7 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
   readonly labelText = input<string | undefined>('');
-  readonly dynamicLabel = input<string>();
+  readonly dynamicLabel = input<string | null>();
   readonly testId = input('');
   readonly placeholder = input<string>();
   readonly errors = input<ValidationErrors | null>(null);
@@ -304,7 +304,7 @@ export class GroupComponent implements ReactiveFormbarGroup {
   readonly isReadonly = input(false);
   readonly isHidden = input(false);
   readonly titleText = input<string | undefined>('');
-  readonly dynamicTitle = input<string>();
+  readonly dynamicTitle = input<string | null>();
   readonly testId = input('');
 }
 ```
@@ -469,6 +469,38 @@ Method calls on plain objects, `Date`, `Map`, `Set`, and `RegExp` instances now 
 - `this`, `delete`, update operators (`++`/`--`), and rest parameters in arrows (`(...x) => x`) are parse errors.
 - Multi-expression template placeholders (`` `${a; b}` ``) are parse errors. Each placeholder must contain exactly one expression.
 
+### `dynamicLabel` and `dynamicTitle` accept `null`
+
+The directive contracts now declare `dynamicLabel?: SignalInput<string | null | undefined>` on `ReactiveFormbarControl<T>` and `dynamicTitle?: SignalInput<string | null | undefined>` on `ReactiveFormbarGroup<T>`. An expression can legitimately evaluate to `null` (for example `'maybeProp ?? null'` or the literal `'null'`), so the type now reflects that.
+
+Update consumer components implementing those contracts:
+
+```typescript
+// Before
+readonly dynamicLabel = input<string>();
+readonly dynamicTitle = input<string>();
+
+// After
+readonly dynamicLabel = input<string | null>();
+readonly dynamicTitle = input<string | null>();
+```
+
+A falsy check in the template handles both `null` and `undefined` the same way ({% raw %}`{{ dynamicLabel() ?? labelText() ?? '' }}`{% endraw %}).
+
+### `ExpressionService.evaluateExpression` accepts a type parameter
+
+The signature is now `evaluateExpression<T = unknown>(ast, context): T | null`. Calls that previously cast the result can use the type parameter directly:
+
+```typescript
+// Before
+const flag = service.evaluateExpression(ast, ctx) as boolean;
+
+// After
+const flag = service.evaluateExpression<boolean>(ast, ctx);
+```
+
+The default `T = unknown` keeps existing call sites working.
+
 ## What stays in `@ngx-formbar/core`
 
 The following remain in `@ngx-formbar/core` and need no path change:
@@ -514,3 +546,5 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 | Plain-object / `Date` / `Map` / `Set` method calls               | reachable                                         | throw                                                           |
 | Division / modulo by zero                                        | `Infinity` / `NaN`                                | throws                                                          |
 | Multi-statement and top-level comma sequences                    | silently dropped trailing input                   | parse error                                                     |
+| `dynamicLabel` / `dynamicTitle` input type                       | `string \| undefined`                             | `string \| null \| undefined`                                   |
+| `evaluateExpression` signature                                   | `(ast, ctx): unknown`                             | `<T = unknown>(ast, ctx): T \| null`                            |
