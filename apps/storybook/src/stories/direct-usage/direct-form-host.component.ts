@@ -32,9 +32,19 @@ function flattenFormValue(
 
   for (const [key, val] of Object.entries(value)) {
     const path = prefix ? `${prefix}.${key}` : key;
+    const isPlainObject =
+      val !== null &&
+      typeof val === 'object' &&
+      !Array.isArray(val) &&
+      !(val instanceof File);
+    const isObjectArray =
+      Array.isArray(val) &&
+      val.some((v) => v !== null && typeof v === 'object');
 
-    if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof File)) {
+    if (isPlainObject) {
       entries.push(...flattenFormValue(val as Record<string, unknown>, path));
+    } else if (isObjectArray) {
+      entries.push({ path, value: JSON.stringify(val) });
     } else {
       entries.push({ path, value: val });
     }

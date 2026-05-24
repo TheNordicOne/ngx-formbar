@@ -30,7 +30,8 @@
 
 .items {
   display: grid;
-  gap: 0.5rem;
+  column-gap: 0.5rem;
+  row-gap: 2rem;
 }
 
 button {

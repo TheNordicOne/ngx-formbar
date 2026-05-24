@@ -204,5 +204,10 @@ export const AllControls: Story = {
     await expect(await canvas.findByTestId('tags-value')).toHaveTextContent(
       'angular,signals',
     );
+    const contactsValue = await canvas.findByTestId('contacts-value');
+    await expect(contactsValue).toHaveTextContent('Alice');
+    await expect(contactsValue).toHaveTextContent('alice@example.com');
+    await expect(contactsValue).toHaveTextContent('Bob');
+    await expect(contactsValue).toHaveTextContent('bob@example.com');
   },
 };

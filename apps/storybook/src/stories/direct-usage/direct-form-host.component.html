@@ -112,18 +112,24 @@
     <ng-template #item let-control let-i="index" let-removeAt="removeAt">
       @let contact = asContactGroup(control);
       <div class="contact-row">
-        <input
-          type="text"
-          placeholder="Name"
-          [formControl]="contact.controls.name"
-          [attr.data-testid]="`contacts-${i}-name`"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          [formControl]="contact.controls.email"
-          [attr.data-testid]="`contacts-${i}-email`"
-        />
+        <div class="field">
+          <label [htmlFor]="`contacts-${i}-name`">Name</label>
+          <input
+            type="text"
+            [id]="`contacts-${i}-name`"
+            [formControl]="contact.controls.name"
+            [attr.data-testid]="`contacts-${i}-name`"
+          />
+        </div>
+        <div class="field">
+          <label [htmlFor]="`contacts-${i}-email`">Email</label>
+          <input
+            type="email"
+            [id]="`contacts-${i}-email`"
+            [formControl]="contact.controls.email"
+            [attr.data-testid]="`contacts-${i}-email`"
+          />
+        </div>
         <button
           type="button"
           [attr.data-testid]="`contacts-${i}-remove`"
