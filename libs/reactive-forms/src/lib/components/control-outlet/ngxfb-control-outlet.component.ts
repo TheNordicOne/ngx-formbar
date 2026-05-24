@@ -5,6 +5,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  isFormbarArray,
   isFormbarBlock,
   isFormbarControl,
   isFormbarGroup,
@@ -25,6 +26,7 @@ export class NgxfbControlOutlet {
   readonly controls = computed(() => this.token?.() ?? []);
 
   protected readonly isFormbarGroup = isFormbarGroup;
+  protected readonly isFormbarArray = isFormbarArray;
   protected readonly isFormbarBlock = isFormbarBlock;
   protected readonly isFormbarControl = isFormbarControl;
 }
