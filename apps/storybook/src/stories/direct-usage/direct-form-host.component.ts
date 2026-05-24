@@ -4,6 +4,7 @@ import {
   signal,
 } from '@angular/core';
 import {
+  AbstractControl,
   FormArray,
   FormControl,
   FormGroup,
@@ -98,6 +99,32 @@ export class DirectFormHostComponent {
   ];
 
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
+
+  readonly newTag = (): FormControl<string | null> =>
+    new FormControl<string | null>('');
+
+  readonly newContact = (): FormGroup<{
+    name: FormControl<string | null>;
+    email: FormControl<string | null>;
+  }> =>
+    new FormGroup({
+      name: new FormControl<string | null>(''),
+      email: new FormControl<string | null>(''),
+    });
+
+  asFormControl(control: AbstractControl): FormControl<string | null> {
+    return control as FormControl<string | null>;
+  }
+
+  asContactGroup(control: AbstractControl): FormGroup<{
+    name: FormControl<string | null>;
+    email: FormControl<string | null>;
+  }> {
+    return control as FormGroup<{
+      name: FormControl<string | null>;
+      email: FormControl<string | null>;
+    }>;
+  }
 
   onSubmit(): void {
     const formValue = this.form.getRawValue() as Record<string, unknown>;

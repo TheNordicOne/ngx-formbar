@@ -95,13 +95,75 @@ export const AllControls: Story = {
 
     // --- Array control (simple strings) ---
     const tagsLabel = await canvas.findByTestId('tags-label');
-    await expect(tagsLabel).toBeInTheDocument();
     await expect(tagsLabel).toHaveTextContent('Tags');
+
+    const tagsAdd = await canvas.findByTestId('tags-add');
+    await userEvent.click(tagsAdd);
+    await userEvent.click(tagsAdd);
+    await userEvent.click(tagsAdd);
+
+    await userEvent.type(await canvas.findByTestId('tags-0-input'), 'angular');
+    await userEvent.type(
+      await canvas.findByTestId('tags-1-input'),
+      'remove-me',
+    );
+    await userEvent.type(await canvas.findByTestId('tags-2-input'), 'signals');
+
+    await userEvent.click(await canvas.findByTestId('tags-1-remove'));
+
+    await expect(canvas.queryByTestId('tags-2-input')).not.toBeInTheDocument();
+    await expect(await canvas.findByTestId('tags-0-input')).toHaveValue(
+      'angular',
+    );
+    await expect(await canvas.findByTestId('tags-1-input')).toHaveValue(
+      'signals',
+    );
 
     // --- Array control (complex objects) ---
     const contactsLabel = await canvas.findByTestId('contacts-label');
-    await expect(contactsLabel).toBeInTheDocument();
     await expect(contactsLabel).toHaveTextContent('Contacts');
+
+    const contactsAdd = await canvas.findByTestId('contacts-add');
+    await userEvent.click(contactsAdd);
+    await userEvent.click(contactsAdd);
+    await userEvent.click(contactsAdd);
+
+    await userEvent.type(
+      await canvas.findByTestId('contacts-0-name'),
+      'Alice',
+    );
+    await userEvent.type(
+      await canvas.findByTestId('contacts-0-email'),
+      'alice@example.com',
+    );
+    await userEvent.type(
+      await canvas.findByTestId('contacts-1-name'),
+      'Charlie',
+    );
+    await userEvent.type(
+      await canvas.findByTestId('contacts-1-email'),
+      'charlie@example.com',
+    );
+    await userEvent.type(await canvas.findByTestId('contacts-2-name'), 'Bob');
+    await userEvent.type(
+      await canvas.findByTestId('contacts-2-email'),
+      'bob@example.com',
+    );
+
+    await userEvent.click(await canvas.findByTestId('contacts-1-remove'));
+
+    await expect(
+      canvas.queryByTestId('contacts-2-name'),
+    ).not.toBeInTheDocument();
+    await expect(await canvas.findByTestId('contacts-0-name')).toHaveValue(
+      'Alice',
+    );
+    await expect(await canvas.findByTestId('contacts-1-name')).toHaveValue(
+      'Bob',
+    );
+    await expect(await canvas.findByTestId('contacts-1-email')).toHaveValue(
+      'bob@example.com',
+    );
 
     // --- Note block ---
     await expect(
@@ -139,5 +201,8 @@ export const AllControls: Story = {
     await expect(
       await canvas.findByTestId('address.city-value'),
     ).toHaveTextContent('Springfield');
+    await expect(await canvas.findByTestId('tags-value')).toHaveTextContent(
+      'angular,signals',
+    );
   },
 };

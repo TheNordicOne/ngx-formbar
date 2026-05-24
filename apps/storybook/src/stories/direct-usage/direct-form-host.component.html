@@ -82,13 +82,58 @@
     name="tags"
     labelText="Tags"
     testId="tags"
-  />
+    [itemFactory]="newTag"
+  >
+    <ng-template #item let-control let-i="index" let-removeAt="removeAt">
+      <div class="tag-row">
+        <input
+          type="text"
+          placeholder="Tag"
+          [formControl]="asFormControl(control)"
+          [attr.data-testid]="`tags-${i}-input`"
+        />
+        <button
+          type="button"
+          [attr.data-testid]="`tags-${i}-remove`"
+          (click)="removeAt(i)"
+        >
+          Remove
+        </button>
+      </div>
+    </ng-template>
+  </ngxfb-examples-array-control>
 
   <ngxfb-examples-array-control
     name="contacts"
     labelText="Contacts"
     testId="contacts"
-  />
+    [itemFactory]="newContact"
+  >
+    <ng-template #item let-control let-i="index" let-removeAt="removeAt">
+      @let contact = asContactGroup(control);
+      <div class="contact-row">
+        <input
+          type="text"
+          placeholder="Name"
+          [formControl]="contact.controls.name"
+          [attr.data-testid]="`contacts-${i}-name`"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          [formControl]="contact.controls.email"
+          [attr.data-testid]="`contacts-${i}-email`"
+        />
+        <button
+          type="button"
+          [attr.data-testid]="`contacts-${i}-remove`"
+          (click)="removeAt(i)"
+        >
+          Remove
+        </button>
+      </div>
+    </ng-template>
+  </ngxfb-examples-array-control>
 
   <ngxfb-examples-note-control
     testId="info"

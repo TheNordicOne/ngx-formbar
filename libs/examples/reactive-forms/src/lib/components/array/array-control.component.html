@@ -1,13 +1,38 @@
 <div class="inline-input" [attr.data-testid]="testId()">
-  <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
-  <div class=item>
+  <label [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
+  <div class="items">
     <ngxfb-control-outlet />
+    @for (control of controls(); track control) {
+      <ng-container
+        *ngTemplateOutlet="
+          itemTemplate();
+          context: {
+            $implicit: control,
+            index: $index,
+            first: $first,
+            last: $last,
+            count: $count,
+            removeAt: removeAt.bind(this),
+          }
+        "
+      />
+    }
+
+    <button
+      type="button"
+      [attr.data-testid]="`${testId()}-add`"
+      (click)="add()"
+    >
+      Add
+    </button>
   </div>
-  <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
+  <ngxfb-examples-validation-errors
+    [errors]="errors()"
+    [testId]="testId()"
+    [dirty]="isDirty()"
+  />
 </div>
 
-<ng-template #item let-control>
-  <div class="item">
-    <span>Placeholder</span>
-  </div>
+<ng-template #defaultItem let-control>
+  <span>Placeholder</span>
 </ng-template>

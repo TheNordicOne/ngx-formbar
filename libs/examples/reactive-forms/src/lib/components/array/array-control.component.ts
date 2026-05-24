@@ -2,9 +2,20 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChild,
+  inject,
   input,
+  TemplateRef,
 } from '@angular/core';
-import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  AbstractControl,
+  ControlContainer,
+  FormArray,
+  FormControl,
+  ReactiveFormsModule,
+  ValidationErrors,
+} from '@angular/forms';
 import {
   NgxfbControlOutlet,
   ReactiveFormbarControl,
@@ -15,7 +26,12 @@ import { ArrayControl } from '../../../../../src/lib/types/array-control.type';
 
 @Component({
   selector: 'ngxfb-examples-array-control',
-  imports: [ReactiveFormsModule, ValidationErrorsComponent, NgxfbControlOutlet],
+  imports: [
+    ReactiveFormsModule,
+    ValidationErrorsComponent,
+    NgxfbControlOutlet,
+    NgTemplateOutlet,
+  ],
   templateUrl: './array-control.component.html',
   styleUrl: './array-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +40,8 @@ import { ArrayControl } from '../../../../../src/lib/types/array-control.type';
 export class ArrayControlComponent
   implements ReactiveFormbarControl<ArrayControl>
 {
+  private readonly parent = inject(ControlContainer);
+
   readonly name = input.required<string>();
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
@@ -33,6 +51,17 @@ export class ArrayControlComponent
   readonly testId = input('');
   readonly errors = input<ValidationErrors | null>(null);
   readonly isDirty = input(false);
+  readonly itemFactory = input<() => AbstractControl>(
+    () => new FormControl<string | null>(null),
+  );
+
+  readonly itemTemplate = contentChild('item', { read: TemplateRef });
+
+  readonly formArray = computed(
+    () => this.parent.control?.get(this.name()) as FormArray | null,
+  );
+
+  readonly controls = computed(() => this.formArray()?.controls ?? []);
 
   readonly displayLabel = computed(() => {
     const dynamic = this.dynamicLabel();
@@ -41,4 +70,12 @@ export class ArrayControlComponent
     }
     return this.labelText();
   });
+
+  add(): void {
+    this.formArray()?.push(this.itemFactory()());
+  }
+
+  removeAt(index: number): void {
+    this.formArray()?.removeAt(index);
+  }
 }
