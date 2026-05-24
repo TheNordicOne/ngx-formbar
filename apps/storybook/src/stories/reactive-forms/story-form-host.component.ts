@@ -76,13 +76,21 @@ export class StoryFormHostComponent {
 
     for (const [key, value] of Object.entries(obj)) {
       const path = parentPath ? `${parentPath}.${key}` : key;
-
-      if (
+      const isPlainObject =
         value !== null &&
         typeof value === 'object' &&
-        !Array.isArray(value)
-      ) {
+        !Array.isArray(value);
+      const isObjectArray =
+        Array.isArray(value) &&
+        value.some((v) => v !== null && typeof v === 'object');
+
+      if (isPlainObject) {
         result = result.concat(this.flattenFormValues(value as object, path));
+        continue;
+      }
+
+      if (isObjectArray) {
+        result.push({ path, value: JSON.stringify(value) });
         continue;
       }
 

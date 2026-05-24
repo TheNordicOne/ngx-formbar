@@ -10,6 +10,7 @@ import {
   ValueStrategy,
 } from '@ngx-formbar/core';
 import {
+  AbstractControl,
   FormArray,
   FormControl,
   FormGroup,
@@ -110,6 +111,7 @@ export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> =
       readonly labelText?: SignalInput<string | undefined>;
       readonly dynamicLabel?: SignalInput<string | null | undefined>;
       readonly arrayInstance?: SignalInput<FormArray>;
+      readonly itemFactory?: SignalInput<() => AbstractControl>;
     };
 
 /**

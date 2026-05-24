@@ -9,6 +9,7 @@ export * from './config/config';
 export * from './config/provide-formbar';
 export * from './directives/ngx-fb-control.directive';
 export * from './directives/ngx-fb-group.directive';
+export * from './directives/ngx-fb-array.directive';
 export * from './directives/ngxfb-block.directive';
 export * from './tokens/validator-registrations';
 export * from './tokens/validator-resolver';

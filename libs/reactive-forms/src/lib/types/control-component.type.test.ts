@@ -9,12 +9,14 @@ test('type declarations compile', () => {
 
 import { InputSignal, InputSignalWithTransform } from '@angular/core';
 import {
+  NgxFbArray,
   NgxFbBlock,
   NgxFbControl,
   NgxFbFormGroup,
 } from '@ngx-formbar/core';
 import {
   FormbarBlock,
+  ReactiveFormbarArray,
   ReactiveFormbarControl,
   ReactiveFormbarGroup,
 } from './control-component.type';
@@ -105,6 +107,30 @@ declare class FullGroupControl implements ReactiveFormbarGroup<GroupControl> {
 // minimal group — name only (legend is optional)
 declare class MinimalGroupControl
   implements ReactiveFormbarGroup<GroupControl>
+{
+  readonly name: InputSignalWithTransform<string, string>;
+}
+
+interface ArrayControl extends NgxFbArray {
+  type: 'array';
+  addLabel?: string;
+}
+
+// full array with all properties
+declare class FullArrayControl implements ReactiveFormbarArray<ArrayControl> {
+  readonly name: InputSignalWithTransform<string, string>;
+  readonly isDisabled: InputSignal<boolean>;
+  readonly isReadonly: InputSignal<boolean>;
+  readonly isHidden: InputSignal<boolean>;
+  readonly labelText: InputSignal<string | undefined>;
+  readonly dynamicLabel: InputSignal<string | null | undefined>;
+  readonly testId: InputSignal<string>;
+  readonly addLabel: InputSignal<string | undefined>;
+}
+
+// minimal array — name only
+declare class MinimalArrayControl
+  implements ReactiveFormbarArray<ArrayControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
 }

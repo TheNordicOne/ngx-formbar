@@ -1,21 +1,20 @@
 <fieldset class="array-group" [attr.data-testid]="testId()">
   <legend [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</legend>
   <div class="items">
-    <ngxfb-control-outlet />
     @if (controls().length === 0 && emptyMessage(); as msg) {
       <p class="empty" [attr.data-testid]="`${testId()}-empty`">{{ msg }}</p>
     }
     @for (control of controls(); track control) {
       <ng-container
         *ngTemplateOutlet="
-          itemTemplate();
+          itemTemplate() ?? formbarRow;
           context: {
             $implicit: control,
             index: $index,
             first: $first,
             last: $last,
             count: $count,
-            removeAt: removeAt.bind(this),
+            removeAt: removeAt.bind(this)
           }
         "
       />
@@ -36,3 +35,15 @@
     [dirty]="isDirty()"
   />
 </fieldset>
+
+<ng-template
+  #formbarRow
+  let-control
+  let-i="index"
+  let-removeAt="removeAt"
+>
+  <div class="row" [formGroup]="$any(control)">
+    <ngxfb-control-outlet />
+    <button type="button" (click)="removeAt(i)">Remove</button>
+  </div>
+</ng-template>
