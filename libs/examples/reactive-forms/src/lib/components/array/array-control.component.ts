@@ -55,6 +55,9 @@ export class ArrayControlComponent
   readonly itemFactory = input<() => AbstractControl>(
     () => new FormControl<string | null>(null),
   );
+  readonly addLabel = input<string>();
+  readonly itemLabel = input<string>();
+  readonly emptyMessage = input<string>();
 
   readonly itemTemplate = contentChild('item', { read: TemplateRef });
 
@@ -76,17 +79,17 @@ export class ArrayControlComponent
 
   add(): void {
     this.formArray()?.push(this.itemFactory()());
-    this.announce('Item added');
+    this.announce('added');
   }
 
   removeAt(index: number): void {
     this.formArray()?.removeAt(index);
-    this.announce('Item removed');
+    this.announce('removed');
   }
 
-  private announce(action: string): void {
+  private announce(action: 'added' | 'removed'): void {
     const count = this.formArray()?.length ?? 0;
-    const noun = count === 1 ? 'item' : 'items';
-    this.announcement.set(`${action}. ${String(count)} ${noun} total.`);
+    const noun = this.itemLabel() ?? 'item';
+    this.announcement.set(`${noun} ${action}. ${String(count)} total.`);
   }
 }

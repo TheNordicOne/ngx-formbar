@@ -107,6 +107,9 @@
     name="contacts"
     labelText="Contacts"
     testId="contacts"
+    addLabel="Add contact"
+    itemLabel="contact"
+    emptyMessage="No contacts added yet."
     [itemFactory]="newContact"
   >
     <ng-template #item let-control let-i="index" let-removeAt="removeAt">

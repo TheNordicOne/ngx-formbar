@@ -2,6 +2,9 @@
   <legend [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</legend>
   <div class="items">
     <ngxfb-control-outlet />
+    @if (controls().length === 0 && emptyMessage(); as msg) {
+      <p class="empty" [attr.data-testid]="`${testId()}-empty`">{{ msg }}</p>
+    }
     @for (control of controls(); track control) {
       <ng-container
         *ngTemplateOutlet="
@@ -23,7 +26,7 @@
       [attr.data-testid]="`${testId()}-add`"
       (click)="add()"
     >
-      Add
+      {{ addLabel() ?? 'Add' }}
     </button>
   </div>
   <div class="sr-only" role="status">{{ announcement() }}</div>
