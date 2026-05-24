@@ -5,6 +5,7 @@ import {
   contentChild,
   inject,
   input,
+  signal,
   TemplateRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
@@ -71,11 +72,21 @@ export class ArrayControlComponent
     return this.labelText();
   });
 
+  readonly announcement = signal('');
+
   add(): void {
     this.formArray()?.push(this.itemFactory()());
+    this.announce('Item added');
   }
 
   removeAt(index: number): void {
     this.formArray()?.removeAt(index);
+    this.announce('Item removed');
+  }
+
+  private announce(action: string): void {
+    const count = this.formArray()?.length ?? 0;
+    const noun = count === 1 ? 'item' : 'items';
+    this.announcement.set(`${action}. ${count} ${noun} total.`);
   }
 }
