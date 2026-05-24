@@ -47,4 +47,9 @@ export const componentRegistrations: ComponentRegistrations = {
       ),
     { hiddenHandling: 'manual' },
   ),
+  array: loadComponent(() =>
+    import('../components/array/array-control.component').then(
+      (m) => m.ArrayControlComponent,
+    ),
+  ),
 };

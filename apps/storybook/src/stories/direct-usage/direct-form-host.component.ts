@@ -3,7 +3,12 @@ import {
   Component,
   signal,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormArray,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import {
   TextControlComponent,
   NumberControlComponent,
@@ -15,6 +20,7 @@ import {
   FileControlComponent,
   NoteControlComponent,
   GroupControlComponent,
+  ArrayControlComponent,
 } from '@ngx-formbar/examples/reactive-forms';
 
 function flattenFormValue(
@@ -50,6 +56,7 @@ function flattenFormValue(
     FileControlComponent,
     NoteControlComponent,
     GroupControlComponent,
+    ArrayControlComponent,
   ],
   templateUrl: './direct-form-host.component.html',
   styleUrl: './direct-form-host.component.scss',
@@ -69,6 +76,13 @@ export class DirectFormHostComponent {
       street: new FormControl(''),
       city: new FormControl(''),
     }),
+    tags: new FormArray<FormControl<string | null>>([]),
+    contacts: new FormArray<
+      FormGroup<{
+        name: FormControl<string | null>;
+        email: FormControl<string | null>;
+      }>
+    >([]),
   });
 
   readonly colorOptions = [

@@ -93,6 +93,16 @@ export const AllControls: Story = {
     await userEvent.type(cityInput, 'Springfield');
     await expect(cityInput).toHaveValue('Springfield');
 
+    // --- Array control (simple strings) ---
+    const tagsLabel = await canvas.findByTestId('tags-label');
+    await expect(tagsLabel).toBeInTheDocument();
+    await expect(tagsLabel).toHaveTextContent('Tags');
+
+    // --- Array control (complex objects) ---
+    const contactsLabel = await canvas.findByTestId('contacts-label');
+    await expect(contactsLabel).toBeInTheDocument();
+    await expect(contactsLabel).toHaveTextContent('Contacts');
+
     // --- Note block ---
     await expect(
       await canvas.findByText(

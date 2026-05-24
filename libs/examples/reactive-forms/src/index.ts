@@ -13,6 +13,7 @@ export { NoteControlComponent } from './lib/components/note/note-control.compone
 export { TextareaControlComponent } from './lib/components/textarea/textarea-control.component';
 export { DateControlComponent } from './lib/components/date/date-control.component';
 export { FileControlComponent } from './lib/components/file/file-control.component';
+export { ArrayControlComponent } from './lib/components/array/array-control.component';
 
 // Provider
 export { provideReactiveFormsExamples } from './lib/provide-reactive-forms-examples';
