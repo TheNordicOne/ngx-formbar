@@ -1,5 +1,5 @@
-import { NgxFbControl } from '@ngx-formbar/core';
+import { NgxFbArray } from '@ngx-formbar/core';
 
-export interface ArrayControl extends NgxFbControl {
+export interface ArrayControl extends NgxFbArray {
   type: 'array';
 }

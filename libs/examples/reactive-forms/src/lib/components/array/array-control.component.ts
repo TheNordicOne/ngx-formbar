@@ -19,7 +19,7 @@ import {
 } from '@angular/forms';
 import {
   NgxfbControlOutlet,
-  ReactiveFormbarControl,
+  ReactiveFormbarArray,
 } from '@ngx-formbar/reactive-forms';
 import { viewProviders } from '../../helpers';
 import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';
@@ -39,7 +39,7 @@ import { ArrayControl } from '../../../../../src/lib/types/array-control.type';
   viewProviders: viewProviders,
 })
 export class ArrayControlComponent
-  implements ReactiveFormbarControl<ArrayControl>
+  implements ReactiveFormbarArray<ArrayControl>
 {
   private readonly parent = inject(ControlContainer);
 
@@ -87,6 +87,6 @@ export class ArrayControlComponent
   private announce(action: string): void {
     const count = this.formArray()?.length ?? 0;
     const noun = count === 1 ? 'item' : 'items';
-    this.announcement.set(`${action}. ${count} ${noun} total.`);
+    this.announcement.set(`${action}. ${String(count)} ${noun} total.`);
   }
 }
