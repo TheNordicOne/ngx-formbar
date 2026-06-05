@@ -22,7 +22,9 @@ import {
   withUpdateStrategy,
 } from '@ngx-formbar/core';
 import { ReactiveFormbarControl } from '../types/control-component.type';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl } from '@angular/forms';
+import { ROW_IDENTITY } from '../services/row-identity';
+import { withBindMode } from '../composables/bind-mode';
 import { withControlState } from '../composables/control-state';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
@@ -39,6 +41,7 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly parent = withFormParent();
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
+  private readonly rowIdentity = inject(ROW_IDENTITY);
 
   private readonly parentContext = inject<NgxFwParentContext | null>(
     NGX_FW_PARENT_CONTEXT,
@@ -87,7 +90,7 @@ export class NgxFbControlDirective implements OnDestroy {
   private readonly validators = withValidators(this.controlConfig);
   private readonly asyncValidators = withAsyncValidators(this.controlConfig);
 
-  readonly controlInstance = computed(
+  private readonly createdInstance = computed(
     () =>
       new FormControl(this.resolveInitialValue(), {
         nonNullable: this.controlConfig().nonNullable,
@@ -96,6 +99,20 @@ export class NgxFbControlDirective implements OnDestroy {
         asyncValidators: this.asyncValidators(),
       }),
   );
+
+  // A row top lives directly in a FormArray (adopt by index, never attach).
+  // A control nested inside a group row also binds (adopts the existing named
+  // child) but still attaches by name to its row's FormGroup, exactly like a
+  // normal group child.
+  private readonly bind = withBindMode({
+    parent: this.parent,
+    controlName: this.controlName,
+    createdInstance: this.createdInstance,
+    isInstance: (control): control is FormControl =>
+      control instanceof FormControl,
+  });
+
+  readonly controlInstance = this.bind.instance;
 
   private readonly isDisabled = withDisabledLifecycle({
     controlConfig: this.controlConfig,
@@ -134,25 +151,27 @@ export class NgxFbControlDirective implements OnDestroy {
     controlConfig: this.controlConfig,
   });
 
-  get parentFormGroup(): FormGroup | null {
-    return this.parent.formGroup;
-  }
-
   private get controlPath(): string {
-    return this.parent.pathTo(this.controlName());
+    // Rewrite any array-index segment to a stable row id so the last-value
+    // cache survives insert/remove/reorder of rows.
+    return this.rowIdentity.stablePath(
+      this.formService.formGroup,
+      this.parent.pathTo(this.controlName()),
+    );
   }
 
   private readonly lifecycle = withHiddenLifecycle({
     component: this.base.component,
     isHidden: this.isHidden,
     host: this.host,
-    parentFormGroup: () => this.parentFormGroup,
+    parentControl: () => this.parent.control,
     controlName: this.controlName,
     instance: this.controlInstance,
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
     beforeDetach: this.saveLastValue.bind(this),
+    attach: () => !this.bind.isRowTop(),
   });
 
   constructor() {
@@ -165,16 +184,17 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   private setValueByStrategy() {
+    const instance = this.controlInstance();
     const valueStrategy = this.valueStrategy();
     const defaultValue = this.defaultValue();
     switch (valueStrategy) {
       case 'last':
         break;
       case 'reset':
-        this.controlInstance().reset(undefined, { emitEvent: false });
+        instance.reset(undefined, { emitEvent: false });
         break;
       default:
-        this.controlInstance().setValue(defaultValue);
+        instance.setValue(defaultValue);
         break;
     }
   }
@@ -212,6 +232,13 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // In bind mode the directive never owns its instance: a row top is owned by
+    // the FormArray, and a nested row child is discarded with its row group.
+    // Mutating or detaching on destroy would corrupt the live tree.
+    if (this.bind.bindMode) {
+      return;
+    }
+
     this.saveLastValue();
     this.setValueByStrategy();
 

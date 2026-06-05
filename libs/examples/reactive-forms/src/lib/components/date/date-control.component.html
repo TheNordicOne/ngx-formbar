@@ -1,11 +1,11 @@
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
-    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{
+    <label [htmlFor]="testId()" [attr.data-testid]="`${testId()}-label`">{{
       displayLabel()
     }}</label>
     <input
       type="date"
-      [id]="name()"
+      [id]="testId()"
       [formControlName]="name()"
       [attr.readonly]="isReadonly() || null"
       [min]="minDate()"

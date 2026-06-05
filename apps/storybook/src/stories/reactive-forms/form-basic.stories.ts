@@ -74,11 +74,9 @@ export const AllControls: Story = {
         tags: {
           type: 'array',
           label: 'Tags',
-          rowControls: {
-            value: {
-              type: 'text',
-              label: 'Tag',
-            },
+          rowControl: {
+            type: 'text',
+            label: 'Tag',
           },
         },
         contacts: {
@@ -87,9 +85,12 @@ export const AllControls: Story = {
           addLabel: 'Add contact',
           itemLabel: 'contact',
           emptyMessage: 'No contacts added yet.',
-          rowControls: {
-            name: { type: 'text', label: 'Name' },
-            email: { type: 'text', label: 'Email' },
+          rowControl: {
+            type: 'group',
+            controls: {
+              name: { type: 'text', label: 'Name' },
+              email: { type: 'text', label: 'Email' },
+            },
           },
         },
         group: {

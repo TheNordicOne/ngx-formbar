@@ -10,7 +10,6 @@ import {
   ValueStrategy,
 } from '@ngx-formbar/core';
 import {
-  AbstractControl,
   FormArray,
   FormControl,
   FormGroup,
@@ -91,7 +90,7 @@ export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
 /**
  * Implement this on components registered as form arrays.
  *
- * The structural `rowControls` property of the schema is not exposed as
+ * The structural `rowControl` property of the schema is not exposed as
  * a signal input; the library uses it internally to render each row's
  * controls. Custom properties on `T` beyond `NgxFbArray` become additional
  * signal inputs.
@@ -111,7 +110,6 @@ export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> =
       readonly labelText?: SignalInput<string | undefined>;
       readonly dynamicLabel?: SignalInput<string | null | undefined>;
       readonly arrayInstance?: SignalInput<FormArray>;
-      readonly itemFactory?: SignalInput<() => AbstractControl>;
     };
 
 /**

@@ -4,8 +4,11 @@ import {
   inject,
   input,
   OnDestroy,
+  signal,
   Signal,
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import {
   FormConfigEntry,
   HideStrategy,
@@ -25,14 +28,20 @@ import {
   withTestId,
   withUpdateStrategy,
 } from '@ngx-formbar/core';
-import { AbstractControl, FormArray, FormGroup } from '@angular/forms';
+import { AbstractControl, FormArray } from '@angular/forms';
 import { ReactiveFormbarArray } from '../types/control-component.type';
 import { withFormParent } from '../composables/form-parent';
 import { withControlState } from '../composables/control-state';
-import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
+import {
+  NGXFB_ARRAY_CONTROL,
+  NgxfbArrayContext,
+} from '../tokens/control-entries';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withAsyncValidators, withValidators } from '../composables/validators';
+import { RowFactoryService } from '../services/row-factory.service';
+import { NGXFB_BIND_MODE } from '../tokens/bind-mode';
+import { withBindMode } from '../composables/bind-mode';
 
 @Directive({
   selector: '[ngxfbArray]',
@@ -44,6 +53,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy, NgxFwParentContext
 {
   private readonly parent = withFormParent();
+  private readonly rowFactory = inject(RowFactoryService);
 
   private readonly parentContext = inject<NgxFwParentContext | null>(
     NGX_FW_PARENT_CONTEXT,
@@ -62,11 +72,8 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly controlName = this.base.controlName;
   private readonly registrationEntry = this.base.registrationEntry;
 
-  private readonly rowEntries = computed<FormConfigEntry<NgxFbItem>[]>(() =>
-    Object.entries(this.controlConfig().rowControls).map(([name, config]) => ({
-      name,
-      config,
-    })),
+  private readonly rowEntries = computed<T>(
+    () => this.controlConfig().rowControl,
   );
 
   readonly hideStrategy: Signal<HideStrategy | undefined> = withInheritedValue(
@@ -99,7 +106,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly validators = withValidators(this.controlConfig);
   private readonly asyncValidators = withAsyncValidators(this.controlConfig);
 
-  readonly formArrayInstance = computed(
+  private readonly createdInstance = computed(
     () =>
       new FormArray<AbstractControl>([], {
         updateOn: this.updateStrategy(),
@@ -108,9 +115,71 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
       }),
   );
 
-  private readonly itemFactory = computed(
-    () => (): AbstractControl => new FormGroup({}),
+  // A nested array that is itself a row top adopts the FormArray built by the
+  // row factory; otherwise it creates its own and self-registers by name.
+  private readonly bind = withBindMode({
+    parent: this.parent,
+    controlName: this.controlName,
+    createdInstance: this.createdInstance,
+    isInstance: (control): control is FormArray => control instanceof FormArray,
+  });
+
+  readonly formArrayInstance = this.bind.instance;
+
+  // FormArray.controls is mutated in place, so it is not reactive on its own.
+  // Structural changes go through this directive's add/insertAt/removeAt, which
+  // bump a version signal; valueChanges also bumps it so external structural
+  // edits (e.g. the loader growing the array) still re-render the rows.
+  private readonly structureVersion = signal(0);
+
+  private readonly arrayChanges = toSignal(
+    toObservable(this.formArrayInstance).pipe(
+      switchMap((array) => array.valueChanges),
+    ),
+    { initialValue: null },
   );
+
+  private readonly rows = computed<AbstractControl[]>(() => {
+    this.structureVersion();
+    this.arrayChanges();
+    return [...this.formArrayInstance().controls];
+  });
+
+  private insertRow(index: number): void {
+    this.formArrayInstance().insert(
+      index,
+      this.rowFactory.build(this.rowEntries()),
+    );
+    this.structureVersion.update((v) => v + 1);
+  }
+
+  private readonly arrayContext: NgxfbArrayContext = {
+    rowControl: this.rowEntries,
+    rows: this.rows,
+    add: () => {
+      this.insertRow(this.formArrayInstance().length);
+    },
+    insertAt: (index: number) => {
+      this.insertRow(index);
+    },
+    removeAt: (index: number) => {
+      this.formArrayInstance().removeAt(index);
+      this.structureVersion.update((v) => v + 1);
+    },
+    move: (from: number, to: number) => {
+      const array = this.formArrayInstance();
+      const count = array.length;
+      if (from === to || from < 0 || from >= count || to < 0 || to >= count) {
+        return;
+      }
+      // Re-insert the same control instance so the row keeps its identity
+      // (and its cached last-value) across the move.
+      const row = array.at(from);
+      array.removeAt(from);
+      array.insert(to, row);
+      this.structureVersion.update((v) => v + 1);
+    },
+  };
 
   readonly isDisabled = withDisabledLifecycle({
     controlConfig: this.controlConfig,
@@ -137,34 +206,37 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     errors: this.errors,
     isDirty: this.isDirty,
     arrayInstance: this.formArrayInstance,
-    itemFactory: this.itemFactory,
   });
 
   private readonly host = withComponentHost({
     signalMap: this.signalMap,
     controlConfig: this.controlConfig,
     additionalProviders: [
-      { provide: NGXFB_CONTROL_ENTRIES, useValue: this.rowEntries },
+      { provide: NGXFB_ARRAY_CONTROL, useValue: this.arrayContext },
+      { provide: NGXFB_BIND_MODE, useValue: true },
     ],
   });
-
-  private get parentFormGroup(): FormGroup | null {
-    return this.parent.formGroup;
-  }
 
   private readonly lifecycle = withHiddenLifecycle({
     component: this.base.component,
     isHidden: this.isHidden,
     host: this.host,
-    parentFormGroup: () => this.parentFormGroup,
+    parentControl: () => this.parent.control,
     controlName: this.controlName,
     instance: this.formArrayInstance,
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
+    attach: () => !this.bind.isRowTop(),
   });
 
   ngOnDestroy(): void {
+    // In bind mode the directive never owns its instance (a row top is owned by
+    // the parent FormArray; a nested row array is discarded with its row), so
+    // it must not detach on destroy.
+    if (this.bind.bindMode) {
+      return;
+    }
     if (this.keepFormValue()) {
       return;
     }

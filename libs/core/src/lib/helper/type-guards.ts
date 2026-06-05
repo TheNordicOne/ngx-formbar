@@ -31,7 +31,7 @@ export function isFormbarArray(
   item: NgxFbBaseContent | Signal<NgxFbBaseContent>,
 ): boolean {
   const value = isSignal(item) ? item() : item;
-  return 'rowControls' in value;
+  return 'rowControl' in value;
 }
 
 export function isFormbarControl<T extends NgxFbBaseContent = NgxFbItem>(
@@ -44,7 +44,7 @@ export function isFormbarControl(
   item: NgxFbBaseContent | Signal<NgxFbBaseContent>,
 ): boolean {
   const value = isSignal(item) ? item() : item;
-  return !('controls' in value) && !('rowControls' in value);
+  return !('controls' in value) && !('rowControl' in value);
 }
 
 export function isFormbarBlock<T extends NgxFbBaseContent = NgxFbItem>(

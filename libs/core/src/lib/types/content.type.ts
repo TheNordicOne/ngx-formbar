@@ -98,8 +98,14 @@ export interface NgxFbControl extends NgxFbAbstractControl {
  */
 export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem>
   extends NgxFbAbstractControl {
-  /** Control definition of a single item in an array */
-  rowControls: Record<string, T>;
+  /**
+   * Control definition of a single item in an array. The row's top control
+   * may not set `hideStrategy: 'remove'`: a removed row top would shift the
+   * `FormArray` indices, so rows are always kept. Hiding still works; only
+   * the `remove` strategy is disallowed at the row top. Controls nested
+   * inside a group row keep full `hideStrategy` support.
+   */
+  rowControl: T & { hideStrategy?: 'keep' };
   /** Static label for the control. */
   label?: string;
   /** Label evaluated from form data. */

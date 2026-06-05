@@ -1,6 +1,7 @@
-import { NgxFbArray } from '@ngx-formbar/core';
+import { NgxFbArray, NgxFbBaseContent, NgxFbItem } from '@ngx-formbar/core';
 
-export interface ArrayControl extends NgxFbArray {
+export interface ArrayControl<T extends NgxFbBaseContent = NgxFbItem>
+  extends NgxFbArray<T> {
   type: 'array';
   addLabel?: string;
   itemLabel?: string;

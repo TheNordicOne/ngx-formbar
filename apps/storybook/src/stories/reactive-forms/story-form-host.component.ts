@@ -4,6 +4,7 @@ import {
   inject,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,6 +23,7 @@ export class StoryFormHostComponent {
   static lastInstance: StoryFormHostComponent | null = null;
 
   private readonly formBuilder = inject(FormBuilder);
+  private readonly formRef = viewChild.required(NgxfbFormComponent);
 
   readonly formConfig = input.required<NgxFbForm>();
   readonly patchData = input<Record<string, unknown>>({});
@@ -60,7 +62,10 @@ export class StoryFormHostComponent {
   }
 
   patchValue(): void {
-    this.form.patchValue(this.patchData());
+    // Route through the form's load(), which grows configured arrays to match
+    // the data before patching. For array-free configs this behaves like a
+    // plain patchValue.
+    this.formRef().load(this.patchData());
   }
 
   onSubmit(): void {

@@ -30,6 +30,7 @@ import { withFormParent } from '../composables/form-parent';
 import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
 import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
+import { withBindMode } from '../composables/bind-mode';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withAsyncValidators, withValidators } from '../composables/validators';
@@ -99,7 +100,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly validators = withValidators(this.controlConfig);
   private readonly asyncValidators = withAsyncValidators(this.controlConfig);
 
-  readonly formGroupInstance = computed(
+  private readonly createdInstance = computed(
     () =>
       new FormGroup(
         {},
@@ -110,6 +111,17 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
         },
       ),
   );
+
+  // A row top lives directly in a FormArray: adopt the existing group built by
+  // the row factory and never attach/detach by name (the FormArray owns it).
+  private readonly bind = withBindMode({
+    parent: this.parent,
+    controlName: this.controlName,
+    createdInstance: this.createdInstance,
+    isInstance: (control): control is FormGroup => control instanceof FormGroup,
+  });
+
+  readonly formGroupInstance = this.bind.instance;
 
   readonly isDisabled = withDisabledLifecycle({
     controlConfig: this.controlConfig,
@@ -146,20 +158,17 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     ],
   });
 
-  private get parentFormGroup() {
-    return this.parent.formGroup;
-  }
-
   private readonly lifecycle = withHiddenLifecycle({
     component: this.base.component,
     isHidden: this.isHidden,
     host: this.host,
-    parentFormGroup: () => this.parentFormGroup,
+    parentControl: () => this.parent.control,
     controlName: this.controlName,
     instance: this.formGroupInstance,
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
+    attach: () => !this.bind.isRowTop(),
   });
 
   private setValueByStrategy() {
@@ -194,6 +203,12 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   ngOnDestroy(): void {
+    // In bind mode the directive never owns its instance (a row top is owned by
+    // the FormArray; a nested row group is discarded with its row), so it must
+    // not detach on destroy.
+    if (this.bind.bindMode) {
+      return;
+    }
     if (this.keepFormValue()) {
       return;
     }

@@ -1,8 +1,8 @@
 <div class="inline-input" [attr.data-testid]="testId()">
-  <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
+  <label [htmlFor]="testId()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
   <input
     type="text"
-    [id]="name()"
+    [id]="testId()"
     [placeholder]="placeHolder() ?? ''"
     [title]="hint()"
     [formControlName]="name()"

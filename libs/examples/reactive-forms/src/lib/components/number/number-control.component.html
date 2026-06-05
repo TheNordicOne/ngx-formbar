@@ -1,9 +1,9 @@
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
-    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
+    <label [htmlFor]="testId()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <input
       type="number"
-      [id]="name()"
+      [id]="testId()"
       [attr.min]="min()"
       [attr.max]="max() ?? null"
       [formControlName]="name()"

@@ -16,7 +16,7 @@ const control: NgxFbControl = { type: 'text' };
 const group: NgxFbFormGroup = { type: 'group', controls: { a: control } };
 const array: NgxFbArray = {
   type: 'array',
-  rowControls: { value: control },
+  rowControl: { type: 'text' },
 };
 const block: NgxFbBlock = { type: 'note', isControl: false };
 
@@ -38,7 +38,7 @@ describe('isFormbarGroup', () => {
 });
 
 describe('isFormbarArray', () => {
-  it('matches nodes with a rowControls property', () => {
+  it('matches nodes with a rowControl property', () => {
     expect(isFormbarArray(array)).toBe(true);
   });
 

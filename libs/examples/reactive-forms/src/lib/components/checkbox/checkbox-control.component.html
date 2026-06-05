@@ -1,12 +1,12 @@
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
-    <label [htmlFor]="name()" [attr.data-testid]="`${testId()}-label`">{{
+    <label [htmlFor]="testId()" [attr.data-testid]="`${testId()}-label`">{{
       displayLabel()
     }}</label>
     <div>
       <input
         type="checkbox"
-        [id]="name()"
+        [id]="testId()"
         [formControlName]="name()"
         [attr.data-testid]="`${testId()}-input`"
       />

@@ -702,3 +702,70 @@ export const SubmitFormValues: Story = {
     ).toHaveTextContent('Nested Grouped Input');
   },
 };
+
+// ---------------------------------------------------------------------------
+// PatchGrowsArrays
+// ---------------------------------------------------------------------------
+
+export const PatchGrowsArrays: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Loading data that contains array rows grows each array to match the data before patching, so scalar and group rows render with their loaded values. A plain patchValue cannot grow a FormArray; the form load path handles it.',
+      },
+    },
+  },
+  args: {
+    formConfig: {
+      content: {
+        tags: {
+          type: 'array',
+          label: 'Tags',
+          rowControl: { type: 'text', label: 'Tag' },
+        },
+        contacts: {
+          type: 'array',
+          label: 'Contacts',
+          rowControl: {
+            type: 'group',
+            controls: {
+              name: { type: 'text', label: 'Name' },
+              email: { type: 'text', label: 'Email' },
+            },
+          },
+        },
+      },
+    },
+    patchData: {
+      tags: ['red', 'green', 'blue'],
+      contacts: [
+        { name: 'Ada', email: 'ada@example.com' },
+        { name: 'Bob', email: 'bob@example.com' },
+      ],
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    // Starts empty
+    await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
+
+    // Load data — arrays grow to match, then values are patched in
+    await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
+
+    // Scalar rows
+    const tagInputs = await canvas.findAllByRole('textbox', { name: 'Tag' });
+    await expect(tagInputs).toHaveLength(3);
+    await expect(tagInputs[0]).toHaveValue('red');
+    await expect(tagInputs[1]).toHaveValue('green');
+    await expect(tagInputs[2]).toHaveValue('blue');
+
+    // Group rows
+    const names = await canvas.findAllByRole('textbox', { name: 'Name' });
+    const emails = await canvas.findAllByRole('textbox', { name: 'Email' });
+    await expect(names).toHaveLength(2);
+    await expect(names[0]).toHaveValue('Ada');
+    await expect(emails[0]).toHaveValue('ada@example.com');
+    await expect(names[1]).toHaveValue('Bob');
+    await expect(emails[1]).toHaveValue('bob@example.com');
+  },
+};
