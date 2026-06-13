@@ -1,16 +1,47 @@
 :host {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'form result';
+  gap: var(--form-spacing-lg);
+  align-items: start;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.875rem;
+  font-size: var(--form-input-font-size);
   color: var(--form-text);
 }
 
+form {
+  grid-area: form;
+}
+
+.story-result {
+  grid-area: result;
+  display: grid;
+  gap: var(--form-spacing-md);
+  align-content: start;
+}
+
+// The action buttons live in the narrow result column, so they stack.
+.story-result .form-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--form-spacing-sm);
+}
+
 .story-form-values {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
+  padding: var(--form-spacing-md);
   background: var(--form-surface-sunken);
   border-radius: var(--form-input-border-radius);
   font-family: monospace;
-  font-size: 0.8125rem;
+  font-size: var(--form-label-font-size);
+  overflow-wrap: anywhere;
+}
+
+.story-value-history {
+  font-size: var(--form-label-font-size);
+
+  > pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }

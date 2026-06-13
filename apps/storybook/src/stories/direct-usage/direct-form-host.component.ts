@@ -53,6 +53,8 @@ function flattenFormValue(
   return entries;
 }
 
+let nextFormId = 0;
+
 @Component({
   selector: 'ngxfb-direct-form-host',
   imports: [
@@ -74,6 +76,10 @@ function flattenFormValue(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DirectFormHostComponent {
+  // Unique per instance so the submit button's `form` attribute binds to this
+  // host's form, not another story rendered on the same autodocs page.
+  readonly formId = `ngxfb-direct-form-${nextFormId++}`;
+
   readonly form = new FormGroup({
     firstName: new FormControl(''),
     age: new FormControl<number | null>(null),

@@ -1,90 +1,81 @@
 :host {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'form result';
+  gap: var(--form-spacing-lg);
+  align-items: start;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.875rem;
-  color: hsl(220, 9%, 20%);
+  font-size: var(--form-input-font-size);
+  color: var(--form-text);
 }
 
 form {
+  grid-area: form;
+}
+
+.story-result {
+  grid-area: result;
   display: grid;
-  gap: 1rem;
+  gap: var(--form-spacing-md);
+  align-content: start;
 }
 
-.story-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-button {
-  padding: 0.5rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: inherit;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.05);
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px hsla(217, 91%, 46%, 0.25);
-  }
-}
-
-button[type='submit'] {
-  background: hsl(217, 91%, 60%);
-  color: hsl(0, 0%, 100%);
-
-  &:hover {
-    box-shadow: 0 2px 4px hsla(0, 0%, 0%, 0.1);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-button:not([type='submit']) {
-  padding: 0.375rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  background: hsl(220, 13%, 91%);
-  color: hsl(220, 9%, 20%);
-  border: 1px solid hsl(220, 13%, 84%);
-
-  &:hover {
-    background: hsl(216, 12%, 84%);
-    border-color: hsl(217, 91%, 60%);
-  }
+.story-result .form-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--form-spacing-sm);
 }
 
 %field-input {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
+  padding: var(--form-input-padding);
+  font-size: var(--form-input-font-size);
   font-family: inherit;
-  border: 1px solid hsl(220, 13%, 84%);
-  border-radius: 0.375rem;
-  background: hsl(0, 0%, 100%);
-  color: hsl(220, 9%, 20%);
-  transition: border-color 0.15s;
+  border: var(--form-input-border-width) solid var(--form-border);
+  border-radius: var(--form-input-border-radius);
+  background: var(--form-surface);
+  color: var(--form-text);
+  transition: border-color var(--form-transition-speed);
   min-width: 0;
 
   &:focus {
     outline: none;
-    border-color: hsl(217, 91%, 60%);
-    box-shadow: 0 0 0 2px hsla(217, 91%, 60%, 0.2);
+    border-color: var(--form-primary);
+    box-shadow: 0 0 0 2px var(--form-focus-ring);
   }
 }
 
+// The array rows are hand-written here (no array component), so their Remove
+// buttons need their own styling rather than the shared .form-actions look.
 .tag-row,
 .contact-row {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--form-spacing-md);
   align-items: end;
   flex-wrap: wrap;
+
+  > button {
+    padding: 0.375rem 1rem;
+    font-size: var(--form-label-font-size);
+    font-weight: 500;
+    font-family: inherit;
+    border: var(--form-input-border-width) solid var(--form-border);
+    border-radius: var(--form-input-border-radius);
+    background: var(--form-surface-raised);
+    color: var(--form-text);
+    cursor: pointer;
+    transition: all var(--form-transition-speed);
+
+    &:hover {
+      background: var(--form-surface-raised-hover);
+      border-color: var(--form-primary);
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--form-primary);
+      box-shadow: 0 0 0 2px var(--form-focus-ring);
+    }
+  }
 }
 
 .tag-row > input {
@@ -100,9 +91,9 @@ button:not([type='submit']) {
   min-width: 0;
 
   > label {
-    font-size: 0.8125rem;
+    font-size: var(--form-label-font-size);
     font-weight: 500;
-    color: hsl(220, 9%, 20%);
+    color: var(--form-text);
   }
 
   > input {
@@ -111,10 +102,10 @@ button:not([type='submit']) {
 }
 
 .story-form-values {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: hsl(220, 14%, 96%);
-  border-radius: 0.375rem;
+  padding: var(--form-spacing-md);
+  background: var(--form-surface-sunken);
+  border-radius: var(--form-input-border-radius);
   font-family: monospace;
-  font-size: 0.8125rem;
+  font-size: var(--form-label-font-size);
+  overflow-wrap: anywhere;
 }
