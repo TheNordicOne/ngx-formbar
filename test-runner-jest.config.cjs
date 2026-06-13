@@ -4,5 +4,5 @@ const testRunnerConfig = getJestConfig();
 
 module.exports = {
   ...testRunnerConfig,
-  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/.nx/cache/'],
+  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/.nx/cache/', '<rootDir>/tmp/'],
 };
