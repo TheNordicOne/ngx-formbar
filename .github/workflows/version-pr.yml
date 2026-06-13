@@ -40,7 +40,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Calculate version bumps and generate changelogs
-        run: npx nx release --skip-publish
+        run: |
+          npx nx release version
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          npx nx release changelog "$VERSION"
 
       - name: Check for changes
         id: changes

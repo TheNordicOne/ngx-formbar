@@ -76,7 +76,10 @@ jobs:
       # --- Hotfix versioning + changelog ---
       - name: Version packages and generate changelogs (hotfix)
         if: inputs.mode == 'hotfix'
-        run: npx nx release --skip-publish
+        run: |
+          npx nx release version
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          npx nx release changelog "$VERSION"
 
       - name: Check for hotfix changes
         if: inputs.mode == 'hotfix'
