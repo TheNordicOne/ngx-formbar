@@ -117,6 +117,10 @@
       "@ngx-formbar/schematics",
       "@ngx-formbar/setup"
     ],
+    "git": {
+      "commit": false,
+      "tag": false
+    },
     "version": {
       "preVersionCommand": "npx nx run-many -t build && npx nx run @ngx-formbar/reactive-forms:clean-schematics",
       "conventionalCommits": true,
@@ -126,19 +130,11 @@
           "path": "dist/{projectRoot}",
           "preserveLocalDependencyProtocols": false
         }
-      ],
-      "git": {
-        "commit": false,
-        "tag": false
-      }
+      ]
     },
     "changelog": {
       "workspaceChangelog": false,
-      "projectChangelogs": true,
-      "git": {
-        "commit": false,
-        "tag": false
-      }
+      "projectChangelogs": true
     }
   }
 }
