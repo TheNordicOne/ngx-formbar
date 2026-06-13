@@ -1,8 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -11,17 +7,17 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import {
-  TextControlComponent,
-  NumberControlComponent,
-  CheckboxControlComponent,
-  RadioControlComponent,
-  DropdownControlComponent,
-  TextareaControlComponent,
-  DateControlComponent,
-  FileControlComponent,
-  NoteControlComponent,
-  GroupControlComponent,
   ArrayControlComponent,
+  CheckboxControlComponent,
+  DateControlComponent,
+  DropdownControlComponent,
+  FileControlComponent,
+  GroupControlComponent,
+  NoteControlComponent,
+  NumberControlComponent,
+  RadioControlComponent,
+  TextareaControlComponent,
+  TextControlComponent,
 } from '@ngx-formbar/examples/reactive-forms';
 
 function flattenFormValue(
@@ -78,7 +74,7 @@ let nextFormId = 0;
 export class DirectFormHostComponent {
   // Unique per instance so the submit button's `form` attribute binds to this
   // host's form, not another story rendered on the same autodocs page.
-  readonly formId = `ngxfb-direct-form-${nextFormId++}`;
+  readonly formId = `ngxfb-direct-form-${String(nextFormId++)}`;
 
   readonly form = new FormGroup({
     firstName: new FormControl(''),
@@ -121,6 +117,7 @@ export class DirectFormHostComponent {
 
   readonly newContact = (): FormGroup<{
     name: FormControl<string | null>;
+
     email: FormControl<string | null>;
   }> =>
     new FormGroup({
