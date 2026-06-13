@@ -149,13 +149,13 @@ Add, insert, and remove build and place row controls for you; `move` re-inserts 
 
 ## Row Controls
 
-The library builds each row from `rowControl` with the `RowFactoryService`. A scalar row becomes a `FormControl`, a group row becomes a `FormGroup` with all of its children, and a nested array row becomes an empty `FormArray`. Validators, `updateOn`, `nonNullable`, and default values from the row definition are applied at build time.
+The library builds each row from `rowControl` with the `RowFactoryService`. A scalar row becomes a `FormControl`, a group row becomes a `FormGroup` with all of its children, and a nested array row becomes an empty `FormArray`. Validators, `nonNullable`, and default values from the row definition are applied at build time. `updateOn` is applied only when the row sets it; when omitted, the row inherits the array's `updateOn` (and ultimately the application default) through Angular's native parent chain, exactly as a control inherits its group's `updateOn` outside an array.
 
 A group row renders its children with the standard `<ngxfb-control-outlet />`, exactly like a top-level group. Build a group component as described in the [Groups guide](/reactive-forms/guides/groups) and reference it from `rowControl`.
 
 ## Loading Values
 
-Angular's `patchValue` and `setValue` do not grow a `FormArray`. Patching an array value into an empty `FormArray` silently keeps it empty, and `setValue` throws on a length mismatch. To load data that includes array rows, use the `load` method on `<ngxfb-form>`. It grows every configured array to match the incoming data, then patches.
+Angular's `patchValue` and `setValue` do not grow a `FormArray`. Patching an array value into an empty `FormArray` silently keeps it empty, and `setValue` throws on a length mismatch. To load data that includes array rows, use the `load` method on `<ngxfb-form>`. It sizes every configured array to match the incoming data (growing or shrinking), then patches.
 
 Get a reference to the form component and call `load`:
 
@@ -204,7 +204,7 @@ form.patchValue(data);
 The array as a whole supports `hidden` like any other control. Controls inside a row support `hidden` as well, including `hideStrategy: 'remove'`, because a hidden row child detaches and re-attaches by name within its row and does not affect the other rows.
 
 > **Note**
-> The row's top control may not use `hideStrategy: 'remove'`. Removing a row top would shift the `FormArray` indices of the rows after it, so rows are always kept. This is a compile-time error on `rowControl` and is also rejected at runtime. Use `add`, `insertAt`, and `removeAt` to change which rows exist.
+> The row's top control may not use `hideStrategy: 'remove'`. The array renders its rows from the `FormArray`, so a removed row top would have nothing left to evaluate its hidden expression and could never be restored. Rows are therefore always kept. This is the one intentional divergence from a non-array control: it is a compile-time error on `rowControl` and is also rejected at runtime. Use `add`, `insertAt`, and `removeAt` to change which rows exist.
 
 {% include "../../../shared/value-strategy.md" %}
 

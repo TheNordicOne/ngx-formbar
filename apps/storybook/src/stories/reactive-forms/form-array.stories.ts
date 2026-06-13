@@ -498,6 +498,80 @@ export const RowChildLastSurvivesRemoval: Story = {
 };
 
 // ---------------------------------------------------------------------------
+// valueStrategy 'last' inside a row follows the row across a reorder
+// ---------------------------------------------------------------------------
+
+export const RowChildLastFollowsReorder: Story = {
+  name: 'Row Child Last — Follows Reorder',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A row child with hideStrategy keep + valueStrategy last keeps its cached value tied to the row's identity, not its index. After the rows are reordered while hidden, each cached value re-shows on its original row at its new position.",
+      },
+    },
+  },
+  args: {
+    autoUpdate: true,
+    formConfig: formConfig({
+      toggle: {
+        type: 'text',
+        label: 'Type "hide" to hide rows',
+      },
+      contacts: {
+        type: 'array',
+        label: 'Contacts',
+        rowControl: {
+          type: 'group',
+          controls: {
+            name: {
+              type: 'text',
+              label: 'Name',
+              hidden: 'toggle === "hide"',
+              hideStrategy: 'keep',
+              valueStrategy: 'last',
+            },
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const add = await canvas.findByTestId('contacts-add');
+    await userEvent.click(add);
+    await userEvent.click(add);
+
+    const names = await waitFor(async () => {
+      const found = canvas.getAllByRole('textbox', { name: 'Name' });
+      await expect(found).toHaveLength(2);
+      return found;
+    });
+    await userEvent.type(names[0], 'first');
+    await userEvent.type(names[1], 'second');
+
+    // Hide the child in every row; values are cached by row identity.
+    const toggle = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide rows',
+    });
+    await userEvent.type(toggle, 'hide');
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Name' }),
+    ).not.toBeInTheDocument();
+
+    // Reorder while hidden: move row 0 down so the rows swap positions.
+    await userEvent.click(await canvas.findByTestId('contacts-0-move-down'));
+
+    // Re-show — values followed their rows, so the order is now swapped.
+    // Index-keyed caching would instead leave 'first' at index 0.
+    await userEvent.clear(toggle);
+    const shown = await canvas.findAllByRole('textbox', { name: 'Name' });
+    await expect(shown).toHaveLength(2);
+    await expect(shown[0]).toHaveValue('second');
+    await expect(shown[1]).toHaveValue('first');
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Disabled cascades from the array to its rows
 // ---------------------------------------------------------------------------
 
@@ -686,6 +760,54 @@ export const LoadShrinks: Story = {
     const after = await canvas.findAllByRole('textbox', { name: 'Tag' });
     await expect(after).toHaveLength(1);
     await expect(after[0]).toHaveValue('x');
+  },
+};
+
+// ---------------------------------------------------------------------------
+// load() empties an array whose key is absent from the data
+// ---------------------------------------------------------------------------
+
+export const LoadAbsentKeyEmpties: Story = {
+  name: 'Load — Absent Key Empties Array',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Loading data that omits a configured array key sizes that array to zero, removing every row, while other fields patch normally.',
+      },
+    },
+  },
+  args: {
+    autoUpdate: true,
+    patchData: { title: 'loaded' },
+    formConfig: formConfig({
+      title: { type: 'text', label: 'Title' },
+      tags: {
+        type: 'array',
+        label: 'Tags',
+        rowControl: { type: 'text', label: 'Tag' },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const add = await canvas.findByTestId('tags-add');
+    await userEvent.click(add);
+    await userEvent.click(add);
+    await expect(
+      await canvas.findAllByRole('textbox', { name: 'Tag' }),
+    ).toHaveLength(2);
+
+    // Load data that omits the 'tags' key entirely.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
+
+    // Every tag row is gone; the array value is empty and 'title' patched.
+    await expect(
+      canvas.queryByRole('textbox', { name: 'Tag' }),
+    ).not.toBeInTheDocument();
+    await expect(getFormValue()['tags']).toEqual([]);
+    await expect(await canvas.findByRole('textbox', { name: 'Title' })).toHaveValue(
+      'loaded',
+    );
   },
 };
 
