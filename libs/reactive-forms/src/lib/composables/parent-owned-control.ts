@@ -1,4 +1,4 @@
-import { computed, inject, Signal } from '@angular/core';
+import { computed, inject, Signal, Type } from '@angular/core';
 import { AbstractControl, FormArray } from '@angular/forms';
 import { NGXFB_PARENT_OWNED_CONTROL } from '../tokens/parent-owned-control';
 import { FormParent } from './form-parent';
@@ -36,22 +36,22 @@ export interface ParentOwnedControl<C extends AbstractControl> {
  *   index when the parent is a `FormArray`).
  * @param options.createdInstance The instance the directive builds when it owns
  *   the control.
- * @param options.isInstance Type guard narrowing an `AbstractControl` to the
- *   directive's concrete control type.
+ * @param options.controlType The concrete control class this directive renders.
+ *   A parent-held control is adopted only when it is an instance of this class.
  */
 export function withParentOwnedControl<C extends AbstractControl>(options: {
   parent: FormParent;
   controlName: Signal<string>;
   createdInstance: Signal<C>;
-  isInstance: (control: AbstractControl) => control is C;
+  controlType: Type<C>;
 }): ParentOwnedControl<C> {
   const isParentOwned =
     inject(NGXFB_PARENT_OWNED_CONTROL, { optional: true }) ?? false;
 
-  const existingInstance = (): C | null => {
+  const existingInstance = computed(() => {
     const control = options.parent.control?.get(options.controlName());
-    return control && options.isInstance(control) ? control : null;
-  };
+    return control instanceof options.controlType ? control : null;
+  });
 
   const instance = computed<C>(() => {
     if (isParentOwned) {

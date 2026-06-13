@@ -98,8 +98,7 @@ export class NgxFbControlDirective implements OnDestroy {
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
-    isInstance: (control): control is FormControl =>
-      control instanceof FormControl,
+    controlType: FormControl,
   });
 
   readonly controlInstance = this.ownership.instance;

@@ -116,7 +116,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
-    isInstance: (control): control is FormGroup => control instanceof FormGroup,
+    controlType: FormGroup,
   });
 
   readonly formGroupInstance = this.ownership.instance;

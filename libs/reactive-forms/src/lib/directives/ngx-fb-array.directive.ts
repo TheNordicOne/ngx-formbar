@@ -118,7 +118,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
-    isInstance: (control): control is FormArray => control instanceof FormArray,
+    controlType: FormArray,
   });
 
   readonly formArrayInstance = this.ownership.instance;
