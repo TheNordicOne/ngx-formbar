@@ -166,7 +166,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
-    attach: () => !this.ownership.isRowTop(),
+    skipControlRegistration: this.ownership.isDirectFormArrayChild,
   });
 
   private setValueByStrategy() {

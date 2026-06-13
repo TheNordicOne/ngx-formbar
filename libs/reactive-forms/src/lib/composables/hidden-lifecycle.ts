@@ -37,7 +37,7 @@ export interface HiddenLifecycle {
  * @param options.beforeDetach Optional hook invoked just before
  *   `removeControl` runs as part of an onHidden cycle. Used by control
  *   directives to save the last value for `valueStrategy: 'last'`.
- * @param options.attach When this resolves to `false`, `setControl` and
+ * @param options.skipControlRegistration When `true`, `setControl` and
  *   `removeControl` are no-ops. Used by array rows, whose membership is owned
  *   by the parent `FormArray`, so the row directive must never attach or
  *   detach itself by name.
@@ -53,20 +53,17 @@ export function withHiddenLifecycle(options: {
   keepFormValue: Signal<boolean>;
   applyValueStrategy: () => void;
   beforeDetach?: () => void;
-  attach?: () => boolean;
+  skipControlRegistration?: boolean;
 }): HiddenLifecycle {
-  const shouldAttach = () => options.attach?.() ?? true;
+  const skipControlRegistration = options.skipControlRegistration;
 
-  // Name-keyed attach/detach only applies to a FormGroup parent. A row top's
-  // parent is a FormArray, but `attach` is gated off for it, so this never
-  // runs against an array.
   const parentGroup = (): FormGroup | null => {
     const parent = options.parentControl();
     return parent instanceof FormGroup ? parent : null;
   };
 
   const setControl = () => {
-    if (!shouldAttach()) {
+    if (skipControlRegistration) {
       return;
     }
     const name = options.controlName();
@@ -79,7 +76,7 @@ export function withHiddenLifecycle(options: {
   };
 
   const removeControl = () => {
-    if (!shouldAttach()) {
+    if (skipControlRegistration) {
       return;
     }
     const name = options.controlName();

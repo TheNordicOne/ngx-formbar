@@ -20,7 +20,7 @@ export interface ParentOwnedControl<C extends AbstractControl> {
    * (its immediate parent is the array). The `FormArray` owns row membership
    * by index, so a row top never attaches, detaches, or runs teardown.
    */
-  isRowTop(): boolean;
+  isDirectFormArrayChild: boolean;
 }
 
 /**
@@ -63,8 +63,7 @@ export function withParentOwnedControl<C extends AbstractControl>(options: {
   return {
     isParentOwned,
     instance,
-    isRowTop(): boolean {
-      return isParentOwned && options.parent.control instanceof FormArray;
-    },
+    isDirectFormArrayChild:
+      isParentOwned && options.parent.control instanceof FormArray,
   };
 }

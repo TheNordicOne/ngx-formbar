@@ -161,7 +161,7 @@ export class NgxFbControlDirective implements OnDestroy {
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
     beforeDetach: this.saveLastValue.bind(this),
-    attach: () => !this.ownership.isRowTop(),
+    skipControlRegistration: this.ownership.isDirectFormArrayChild,
   });
 
   constructor() {
