@@ -1,10 +1,4 @@
-import {
-  computed,
-  Directive,
-  inject,
-  input,
-  OnDestroy,
-} from '@angular/core';
+import { computed, Directive, inject, input, OnDestroy } from '@angular/core';
 import {
   FormConfigEntry,
   NGX_FW_PARENT_CONTEXT,
@@ -24,7 +18,7 @@ import {
 import { ReactiveFormbarControl } from '../types/control-component.type';
 import { FormControl } from '@angular/forms';
 import { ROW_IDENTITY } from '../services/row-identity';
-import { withBindMode } from '../composables/bind-mode';
+import { withParentOwnedControl } from '../composables/parent-owned-control';
 import { withControlState } from '../composables/control-state';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { FORM_LIFECYCLE_STATE } from '../services/form-lifecycle-state';
@@ -100,11 +94,7 @@ export class NgxFbControlDirective implements OnDestroy {
       }),
   );
 
-  // A row top lives directly in a FormArray (adopt by index, never attach).
-  // A control nested inside a group row also binds (adopts the existing named
-  // child) but still attaches by name to its row's FormGroup, exactly like a
-  // normal group child.
-  private readonly bind = withBindMode({
+  private readonly ownership = withParentOwnedControl({
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
@@ -112,7 +102,7 @@ export class NgxFbControlDirective implements OnDestroy {
       control instanceof FormControl,
   });
 
-  readonly controlInstance = this.bind.instance;
+  readonly controlInstance = this.ownership.instance;
 
   private readonly isDisabled = withDisabledLifecycle({
     controlConfig: this.controlConfig,
@@ -171,7 +161,7 @@ export class NgxFbControlDirective implements OnDestroy {
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
     beforeDetach: this.saveLastValue.bind(this),
-    attach: () => !this.bind.isRowTop(),
+    attach: () => !this.ownership.isRowTop(),
   });
 
   constructor() {
@@ -232,10 +222,7 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // In bind mode the directive never owns its instance: a row top is owned by
-    // the FormArray, and a nested row child is discarded with its row group.
-    // Mutating or detaching on destroy would corrupt the live tree.
-    if (this.bind.bindMode) {
+    if (this.ownership.isParentOwned) {
       return;
     }
 

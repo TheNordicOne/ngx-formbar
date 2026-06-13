@@ -56,9 +56,6 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
   ],
 })
 export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
-  // Resolved lazily in load(): FormService reads the bound ControlContainer
-  // eagerly on construction, which is not available while this component is
-  // being created.
   private readonly injector = inject(Injector);
   private readonly loader = inject(FormLoaderService);
 

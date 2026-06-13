@@ -40,8 +40,8 @@ import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withAsyncValidators, withValidators } from '../composables/validators';
 import { RowFactoryService } from '../services/row-factory.service';
-import { NGXFB_BIND_MODE } from '../tokens/bind-mode';
-import { withBindMode } from '../composables/bind-mode';
+import { NGXFB_PARENT_OWNED_CONTROL } from '../tokens/parent-owned-control';
+import { withParentOwnedControl } from '../composables/parent-owned-control';
 
 @Directive({
   selector: '[ngxfbArray]',
@@ -115,16 +115,14 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
       }),
   );
 
-  // A nested array that is itself a row top adopts the FormArray built by the
-  // row factory; otherwise it creates its own and self-registers by name.
-  private readonly bind = withBindMode({
+  private readonly ownership = withParentOwnedControl({
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
     isInstance: (control): control is FormArray => control instanceof FormArray,
   });
 
-  readonly formArrayInstance = this.bind.instance;
+  readonly formArrayInstance = this.ownership.instance;
 
   // FormArray.controls is mutated in place, so it is not reactive on its own.
   // Structural changes go through this directive's add/insertAt/removeAt, which
@@ -213,7 +211,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     controlConfig: this.controlConfig,
     additionalProviders: [
       { provide: NGXFB_ARRAY_CONTROL, useValue: this.arrayContext },
-      { provide: NGXFB_BIND_MODE, useValue: true },
+      { provide: NGXFB_PARENT_OWNED_CONTROL, useValue: true },
     ],
   });
 
@@ -227,14 +225,11 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
-    attach: () => !this.bind.isRowTop(),
+    attach: () => !this.ownership.isRowTop(),
   });
 
   ngOnDestroy(): void {
-    // In bind mode the directive never owns its instance (a row top is owned by
-    // the parent FormArray; a nested row array is discarded with its row), so
-    // it must not detach on destroy.
-    if (this.bind.bindMode) {
+    if (this.ownership.isParentOwned) {
       return;
     }
     if (this.keepFormValue()) {

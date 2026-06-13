@@ -20,14 +20,6 @@ import { NgxfbBlockDirective } from '../../directives/ngxfb-block.directive';
 import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
 import { ReactiveFormsModule } from '@angular/forms';
 
-/**
- * Renders the controls of a single array row. The consumer's array component
- * owns the row loop and the surrounding markup; it places this outlet once per
- * row, passing the row's `index`. The outlet stamps the matching bind-mode
- * directive so the row's control adopts the existing instance held by the
- * `FormArray` at that index, the same way `<ngxfb-control-outlet />` renders a
- * group's children.
- */
 @Component({
   selector: 'ngxfb-form-array-outlet',
   imports: [
