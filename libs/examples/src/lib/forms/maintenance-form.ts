@@ -292,6 +292,20 @@ export const maintenanceForm: NgxFbForm<ExampleControls> = {
       },
     },
 
+    tags: {
+      type: 'array',
+      label: 'Tags',
+      addLabel: 'Add tag',
+      itemLabel: 'tag',
+      emptyMessage: 'No tags yet. Add a keyword to help route this request.',
+      rowControl: {
+        type: 'text',
+        label: 'Tag',
+        placeHolder: 'e.g., after-hours',
+        validators: ['required', 'min2Characters'],
+      },
+    },
+
     submitNote: {
       isControl: false,
       type: 'note',

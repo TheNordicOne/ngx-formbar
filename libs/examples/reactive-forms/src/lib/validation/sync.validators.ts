@@ -266,6 +266,14 @@ export function forbiddenLetterAValidator(
     : null;
 }
 
+export function minRows(min: number): ValidatorFn {
+  return (c: AbstractControl) => {
+    const value = c.value as unknown;
+    const length = Array.isArray(value) ? value.length : 0;
+    return length < min ? { minRows: `At least ${min} rows required` } : null;
+  };
+}
+
 function containsText(value: unknown, text: string) {
   if (typeof value !== 'string') {
     return false;

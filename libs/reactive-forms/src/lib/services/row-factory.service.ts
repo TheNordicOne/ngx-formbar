@@ -13,7 +13,6 @@ import {
   NgxFbControl,
   NgxFbFormGroup,
   NgxFbItem,
-  NGX_FW_DEFAULT_UPDATE_STRATEGY,
 } from '@ngx-formbar/core';
 import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
 import {
@@ -29,12 +28,14 @@ import {
  *
  * Validators are resolved from their registration keys and baked into the
  * instance at build time, mirroring how the rendering directives construct
- * their own instances.
+ * their own instances. `updateOn` is intentionally left unset when a node does
+ * not configure it, so the built control inherits the enclosing `FormArray`'s
+ * `updateOn` through Angular's native parent chain, matching how controls
+ * behave outside arrays.
  */
 @Injectable({ providedIn: 'root' })
 export class RowFactoryService {
   private readonly resolver = inject(NGX_VALIDATOR_RESOLVER);
-  private readonly defaultUpdateOn = inject(NGX_FW_DEFAULT_UPDATE_STRATEGY);
 
   /**
    * Builds a row instance from its `rowControl` config. The top node may not
@@ -69,7 +70,7 @@ export class RowFactoryService {
     const group = new FormGroup(
       {},
       {
-        updateOn: config.updateOn ?? this.defaultUpdateOn,
+        updateOn: config.updateOn,
         validators: resolveValidators(config.validators, this.resolver),
         asyncValidators: resolveAsyncValidators(
           config.asyncValidators,
@@ -88,7 +89,7 @@ export class RowFactoryService {
 
   private buildArray(config: NgxFbArray): FormArray {
     return new FormArray<AbstractControl>([], {
-      updateOn: config.updateOn ?? this.defaultUpdateOn,
+      updateOn: config.updateOn,
       validators: resolveValidators(config.validators, this.resolver),
       asyncValidators: resolveAsyncValidators(
         config.asyncValidators,
@@ -100,7 +101,7 @@ export class RowFactoryService {
   private buildControl(config: NgxFbControl): FormControl {
     return new FormControl(config.defaultValue, {
       nonNullable: config.nonNullable,
-      updateOn: config.updateOn ?? this.defaultUpdateOn,
+      updateOn: config.updateOn,
       validators: resolveValidators(config.validators, this.resolver),
       asyncValidators: resolveAsyncValidators(
         config.asyncValidators,

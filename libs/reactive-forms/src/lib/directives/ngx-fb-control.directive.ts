@@ -221,7 +221,7 @@ export class NgxFbControlDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.ownership.isParentOwned) {
+    if (this.ownership.isDirectFormArrayChild) {
       return;
     }
 

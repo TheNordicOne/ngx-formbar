@@ -10,6 +10,7 @@ import {
   letterValidator,
   min0,
   minLen,
+  minRows,
   noDuplicateValuesValidator,
   range1to10,
   range1to480,
@@ -51,4 +52,5 @@ export const validatorRegistrations = defineValidatorRegistrations({
   combined: ['min-chars', Validators.required, 'letter'],
   'no-duplicates': [noDuplicateValuesValidator],
   'forbidden-letter-a': [forbiddenLetterAValidator],
+  'min-rows': [minRows(2)],
 });
