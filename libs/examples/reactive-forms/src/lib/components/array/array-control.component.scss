@@ -1,17 +1,17 @@
 @use '../inline-input';
 
 .array-group {
-  border: 1px solid hsl(220, 13%, 84%);
-  border-radius: 0.375rem;
+  border: var(--form-input-border-width) solid var(--form-border);
+  border-radius: var(--form-input-border-radius);
   padding: 0.75rem 1rem 1rem;
   margin: 0;
   display: grid;
   gap: 0.5rem;
 
   > legend {
-    font-size: 0.875rem;
+    font-size: var(--form-input-font-size);
     font-weight: 600;
-    color: hsl(220, 9%, 20%);
+    color: var(--form-text);
     padding: 0 0.25rem;
   }
 }
@@ -41,25 +41,25 @@
 
 button {
   padding: 0.375rem 1rem;
-  font-size: 0.8125rem;
+  font-size: var(--form-label-font-size);
   font-weight: 500;
   font-family: inherit;
-  border: 1px solid hsl(220, 13%, 84%);
-  border-radius: 0.375rem;
-  background: hsl(220, 13%, 91%);
-  color: hsl(220, 9%, 20%);
+  border: var(--form-input-border-width) solid var(--form-border);
+  border-radius: var(--form-input-border-radius);
+  background: var(--form-surface-raised);
+  color: var(--form-text);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--form-transition-speed);
   justify-self: start;
 
   &:hover {
-    background: hsl(216, 12%, 84%);
-    border-color: hsl(217, 91%, 60%);
+    background: var(--form-surface-raised-hover);
+    border-color: var(--form-primary);
   }
 
   &:focus-visible {
     outline: none;
-    border-color: hsl(217, 91%, 60%);
-    box-shadow: 0 0 0 2px hsla(217, 91%, 60%, 0.2);
+    border-color: var(--form-primary);
+    box-shadow: 0 0 0 2px var(--form-focus-ring);
   }
 }

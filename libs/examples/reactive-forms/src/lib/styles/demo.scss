@@ -1,0 +1,106 @@
+// Canonical styling tokens and demo scaffolding for the reactive-forms
+// examples. This is the single source of truth: the example components style
+// themselves from these tokens, and the docs and storybook hosts import this
+// sheet to lay out and theme a demo. The docs app remaps the colour tokens
+// onto its own theme (see apps/docs/src/styles.scss) so the examples follow
+// light and dark mode; everywhere else the light defaults below apply.
+:root {
+  --form-input-padding: 0.5rem 0.75rem;
+  --form-input-border-width: 1px;
+  --form-input-border-radius: 0.375rem;
+  --form-input-font-size: 0.875rem;
+  --form-label-font-size: 0.8125rem;
+
+  --form-spacing-sm: 0.5rem;
+  --form-spacing-md: 0.75rem;
+  --form-spacing-lg: 1rem;
+
+  --form-transition-speed: 0.15s;
+  --button-transition-speed: 0.2s;
+  --form-disabled-opacity: 0.5;
+
+  --form-text: hsl(220 9% 20%);
+  --form-surface: hsl(0 0% 100%);
+  --form-surface-sunken: hsl(220 14% 96%);
+  --form-surface-raised: hsl(220 13% 91%);
+  --form-surface-raised-hover: hsl(216 12% 84%);
+  --form-border: hsl(220 13% 84%);
+  --form-primary: hsl(217 91% 60%);
+  --form-primary-hover: hsl(from var(--form-primary) h s calc(l * 0.9));
+  --form-on-primary: hsl(0 0% 100%);
+
+  --form-focus-ring: hsl(from var(--form-primary) h s l / 0.2);
+  --button-focus-ring: hsl(from var(--form-primary) h s calc(l * 0.77) / 0.25);
+  --form-shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.05);
+  --form-shadow-md: 0 2px 4px hsl(0 0% 0% / 0.1);
+}
+
+.demo-form {
+  display: grid;
+  gap: var(--form-spacing-lg);
+  justify-items: center;
+}
+
+.demo-form-content {
+  display: grid;
+  gap: var(--form-spacing-lg);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--form-spacing-lg);
+}
+
+.form-actions button {
+  padding: var(--form-spacing-sm) 1.5rem;
+  font-size: var(--form-input-font-size);
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--form-input-border-radius);
+  cursor: pointer;
+  transition: all var(--button-transition-speed) ease;
+  box-shadow: var(--form-shadow-sm);
+
+  &:disabled {
+    opacity: var(--form-disabled-opacity);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--button-focus-ring);
+  }
+
+  &[type='submit'] {
+    background: var(--form-primary);
+    color: var(--form-on-primary);
+
+    &:hover:not(:disabled) {
+      background: var(--form-primary-hover);
+      box-shadow: var(--form-shadow-md);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: var(--form-shadow-sm);
+    }
+  }
+
+  &:not([type='submit']) {
+    background: var(--form-surface-raised);
+    color: var(--form-text);
+
+    &:hover:not(:disabled) {
+      background: var(--form-surface-raised-hover);
+      box-shadow: var(--form-shadow-md);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: var(--form-shadow-sm);
+    }
+  }
+}

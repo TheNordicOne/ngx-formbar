@@ -1,6 +1,6 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <ngxfb-form [formConfig]="formConfig()" />
-  <div class="story-actions">
+<form class="demo-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <ngxfb-form class="demo-form-content" [formConfig]="formConfig()" />
+  <div class="form-actions">
     <button data-testid="submit" type="submit">Submit</button>
     <button data-testid="patch" type="button" (click)="patchValue()">
       Patch
