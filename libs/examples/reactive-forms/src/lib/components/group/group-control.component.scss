@@ -2,10 +2,10 @@
   border: var(--form-input-border-width) solid var(--form-border);
   border-radius: var(--form-input-border-radius);
   padding: 0.75rem 1rem 1rem;
-  margin: 0 0 0.75rem;
+  margin: 0;
 
   display: grid;
-  gap: 2rem;
+  gap: var(--form-field-gap);
 
   > legend {
     font-size: var(--form-input-font-size);
