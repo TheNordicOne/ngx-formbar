@@ -43,7 +43,7 @@ This project uses **trunk-based development**:
 
 ### Maintenance Branches
 
-When a stable release is published, the **Release Packages** workflow automatically creates a maintenance branch (e.g. `2.0.x`). This branch receives critical patches only. Fixes are committed to `main` first, then cherry-picked to the maintenance branch. Pushing to a maintenance branch triggers the **Hotfix Release** workflow, which publishes a stable patch release directly.
+When a stable release is published, the **Publish** workflow (release mode) automatically creates a maintenance branch (e.g. `2.0.x`). This branch receives critical patches only. Fixes are committed to `main` first, then cherry-picked to the maintenance branch. Pushing to a maintenance branch triggers the **Publish** workflow in hotfix mode, which publishes a stable patch release directly.
 
 ## Pull Requests
 
@@ -113,7 +113,7 @@ Releases are fully automated via GitHub Actions.
    - Calculates version bumps from conventional commit messages
    - Generates changelogs
    - Creates or updates a PR titled `chore: version packages`
-3. When the version PR is merged, the **Release Packages** workflow runs:
+3. When the version PR is merged, the **Publish** workflow runs automatically in **release** mode:
    - Builds all packages
    - Creates git tags and GitHub releases
    - Publishes to npm
@@ -125,7 +125,7 @@ Releases are fully automated via GitHub Actions.
 Pre-releases are published from `main` via manual trigger:
 
 1. Commits land on `main` via squash-merged PRs
-2. When ready to publish a pre-release, manually trigger the **Pre-release Packages** workflow (Actions > Pre-release Packages > Run workflow):
+2. When ready to publish a pre-release, manually trigger the **Publish** workflow with **mode `prerelease`** (Actions > Publish > Run workflow > Mode: prerelease):
    - Queries npm for the latest `next` version and auto-increments the `-next.X` suffix
    - For the first pre-release, conventional commits determine the base version (e.g. breaking change from `1.0.0` produces `2.0.0-next.0`)
    - Creates git tags and GitHub pre-releases
@@ -145,7 +145,7 @@ Critical fixes for released versions use maintenance branches:
 
 1. Cherry-pick the fix from `main` to the maintenance branch (e.g. `2.0.x`)
 2. Push to the maintenance branch
-3. The **Hotfix Release** workflow runs automatically:
+3. The **Publish** workflow runs automatically in **hotfix** mode:
    - Determines the patch version from conventional commits
    - Publishes directly to npm as a stable release
    - Creates git tags and GitHub releases
