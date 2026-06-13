@@ -1,6 +1,7 @@
 @use '../inline-input';
 
 .array-group {
+  grid-column: 1 / -1;
   border: var(--form-input-border-width) solid var(--form-border);
   border-radius: var(--form-input-border-radius);
   padding: 0.75rem 1rem 1rem;
@@ -34,7 +35,20 @@
   row-gap: 2rem;
 }
 
+ngxfb-form-array-outlet {
+  display: contents;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: fit-content(14rem) minmax(0, 1fr);
+  column-gap: var(--form-spacing-lg);
+  row-gap: var(--form-spacing-sm);
+  align-items: baseline;
+}
+
 .actions-wrapper {
+  grid-column: 1 / -1;
   display: flex;
   gap: 1rem;
 }

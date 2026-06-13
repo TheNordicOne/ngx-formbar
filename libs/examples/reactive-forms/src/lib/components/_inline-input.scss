@@ -1,8 +1,11 @@
+:host {
+  display: contents;
+}
+
 .inline-input {
-  // Every field shares --form-label-col so labels line up across the group.
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: var(--form-label-col) minmax(0, 1fr);
-  column-gap: var(--form-spacing-lg);
+  grid-template-columns: subgrid;
   row-gap: var(--form-spacing-sm);
   align-items: baseline;
 
@@ -13,8 +16,6 @@
     color: var(--form-text);
   }
 
-  // The error host collapses to nothing when empty (see
-  // validation-errors.component) so it adds no phantom gap below a field.
   > :not(label) {
     grid-column: 2;
   }

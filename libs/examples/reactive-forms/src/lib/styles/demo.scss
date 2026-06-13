@@ -15,8 +15,6 @@
   --form-spacing-md: 0.75rem;
   --form-spacing-lg: 1rem;
 
-  // Shared so every field resolves the same label column and lines up.
-  --form-label-col: minmax(8rem, 13rem);
   --form-field-gap: 1.25rem;
 
   --form-transition-speed: 0.15s;
@@ -47,15 +45,13 @@
 
 .demo-form-content {
   display: grid;
-  gap: var(--form-spacing-lg);
+  grid-template-columns: fit-content(14rem) minmax(0, 1fr);
+  column-gap: var(--form-spacing-lg);
+  row-gap: var(--form-field-gap);
 }
 
-// The library renders fields into this outlet. It must be the grid: it is the
-// element whose direct children are the field hosts, so without this the
-// fields are plain blocks with no vertical rhythm between them.
 ngxfb-control-outlet {
-  display: grid;
-  row-gap: var(--form-field-gap);
+  display: contents;
 }
 
 .form-actions {
