@@ -49,9 +49,12 @@ describe('RowFactoryService', () => {
     expect(() => createFactory().build(block)).toThrow(/block/i);
   });
 
+  // Intentional, supported divergence: a non-array control may use
+  // hideStrategy 'remove', a row top may not, because a removed row top cannot
+  // be restored. The guard fails loud instead of silently treating it as keep.
   it("rejects hideStrategy 'remove' on the row top", () => {
     expect(() =>
       createFactory().build({ type: 'text', hideStrategy: 'remove' }),
-    ).toThrow(/hideStrategy/i);
+    ).toThrow('cannot be restored');
   });
 });

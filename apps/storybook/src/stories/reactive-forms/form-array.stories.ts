@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { applicationConfig } from '@storybook/angular';
 import { expect, waitFor } from 'storybook/test';
 import type { FormContext } from '@ngx-formbar/core';
+import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { StoryFormHostComponent } from './story-form-host.component';
 import { formConfig } from './story-helpers';
 
@@ -1333,9 +1335,16 @@ export const RowChildComputedValue: Story = {
       return found;
     });
 
-    // Both rows compute from the shared root source on first render.
+    const computedGreetings = () =>
+      (getFormValue()['people'] as { greeting: string }[]).map(
+        (row) => row.greeting,
+      );
+
+    // Both rows compute from the shared root source on first render, and the
+    // computed value lands in the form model, not just the rendered input.
     await expect(greetings[0]).toHaveValue('Hello World');
     await expect(greetings[1]).toHaveValue('Hello World');
+    await expect(computedGreetings()).toEqual(['Hello World', 'Hello World']);
 
     // Updating the root source updates every row's computed child.
     const source = await canvas.findByRole('textbox', { name: 'Source' });
@@ -1345,6 +1354,10 @@ export const RowChildComputedValue: Story = {
     const updated = canvas.getAllByRole('textbox', { name: 'Greeting' });
     await expect(updated[0]).toHaveValue('Goodbye World');
     await expect(updated[1]).toHaveValue('Goodbye World');
+    await expect(computedGreetings()).toEqual([
+      'Goodbye World',
+      'Goodbye World',
+    ]);
   },
 };
 
@@ -3006,5 +3019,108 @@ export const RowGroupTopTestId: Story = {
     await expect(
       await canvas.findByTestId('contacts-0-name-input'),
     ).toBeInTheDocument();
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Row inherits the global default updateOn (no array or row override)
+// ---------------------------------------------------------------------------
+
+export const RowInheritsGlobalUpdateOn: Story = {
+  name: 'Row Inherits Global Update On — Blur',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With a global updateOn blur and no override on the array or its row, a row control commits to the model only on blur — the same default a non-array control receives.',
+      },
+    },
+  },
+  decorators: [
+    applicationConfig({
+      providers: [provideReactiveFormsExamples({ updateOn: 'blur' })],
+    }),
+  ],
+  args: {
+    autoUpdate: true,
+    formConfig: formConfig({
+      tags: {
+        type: 'array',
+        label: 'Tags',
+        rowControl: { type: 'text', label: 'Tag' },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByTestId('tags-add'));
+    const input = await canvas.findByRole('textbox', { name: 'Tag' });
+
+    // Typing does not commit; only blur does, per the global default.
+    await userEvent.type(input, 'typed');
+    await expect(input).toHaveValue('typed');
+    await expect(getFormValue()['tags']).not.toEqual(['typed']);
+
+    await userEvent.tab();
+    await expect(getFormValue()['tags']).toEqual(['typed']);
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Non-nullable row child reverts to its default on reset
+// ---------------------------------------------------------------------------
+
+export const RowChildNonNullableReset: Story = {
+  name: 'Row Child Non-Nullable — Reset',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A non-nullable row child reverts to its defaultValue on form reset (not blank), exactly as a non-nullable control does outside an array; a nullable sibling clears to null.',
+      },
+    },
+  },
+  args: {
+    autoUpdate: true,
+    formConfig: formConfig({
+      contacts: {
+        type: 'array',
+        label: 'Contacts',
+        rowControl: {
+          type: 'group',
+          controls: {
+            role: {
+              type: 'text',
+              label: 'Role',
+              defaultValue: 'member',
+              nonNullable: true,
+            },
+            note: { type: 'text', label: 'Note' },
+          },
+        },
+      },
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByTestId('contacts-add'));
+
+    const role = await canvas.findByRole('textbox', { name: 'Role' });
+    const note = await canvas.findByRole('textbox', { name: 'Note' });
+
+    // The non-nullable child starts at its defaultValue.
+    await expect(role).toHaveValue('member');
+
+    await userEvent.clear(role);
+    await userEvent.type(role, 'admin');
+    await userEvent.type(note, 'temp');
+
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
+
+    // The row is kept; the non-nullable child returns to its default in the
+    // model, the nullable sibling clears.
+    await expect(role).toHaveValue('member');
+    await expect(note).toHaveValue('');
+    const contacts = getFormValue()['contacts'] as { role: string }[];
+    await expect(contacts).toHaveLength(1);
+    await expect(contacts[0].role).toBe('member');
   },
 };

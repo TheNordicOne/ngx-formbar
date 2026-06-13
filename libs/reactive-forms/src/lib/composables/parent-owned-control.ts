@@ -5,14 +5,8 @@ import { FormParent } from './form-parent';
 
 export interface ParentOwnedControl<C extends AbstractControl> {
   /**
-   * `true` inside a `FormArray` subtree, where the parent already holds the
-   * control. The directive reuses that control instead of creating and
-   * self-registering its own.
-   */
-  readonly isParentOwned: boolean;
-  /**
    * The control the directive should render: the one already held by the
-   * parent when {@link isParentOwned}, otherwise the freshly created one.
+   * parent inside a `FormArray` subtree, otherwise the freshly created one.
    */
   readonly instance: Signal<C>;
   /**
@@ -61,7 +55,6 @@ export function withParentOwnedControl<C extends AbstractControl>(options: {
   });
 
   return {
-    isParentOwned,
     instance,
     isDirectFormArrayChild:
       isParentOwned && options.parent.control instanceof FormArray,

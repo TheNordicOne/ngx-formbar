@@ -14,47 +14,57 @@
               context: {
                 $implicit: control,
                 index: $index,
-                removeAt: removeAt.bind(this)
+                removeAt: removeAt.bind(this),
               }
             "
           />
         } @else {
           <ngxfb-form-array-outlet [index]="$index" />
-          <button
-            type="button"
-            [attr.aria-label]="`Insert ${itemLabel() ?? 'item'} above position ${$index + 1}`"
-            [attr.data-testid]="`${testId()}-${$index}-insert`"
-            (click)="insertAt($index)"
-          >
-            Insert above
-          </button>
-          <button
-            type="button"
-            [attr.aria-label]="`Move ${itemLabel() ?? 'item'} ${$index + 1} up`"
-            [disabled]="$first"
-            [attr.data-testid]="`${testId()}-${$index}-move-up`"
-            (click)="move($index, $index - 1)"
-          >
-            Move up
-          </button>
-          <button
-            type="button"
-            [attr.aria-label]="`Move ${itemLabel() ?? 'item'} ${$index + 1} down`"
-            [disabled]="$last"
-            [attr.data-testid]="`${testId()}-${$index}-move-down`"
-            (click)="move($index, $index + 1)"
-          >
-            Move down
-          </button>
-          <button
-            #removeButton
-            type="button"
-            [attr.aria-label]="`Remove ${itemLabel() ?? 'item'} ${$index + 1}`"
-            [attr.data-testid]="`${testId()}-${$index}-remove`"
-            (click)="removeAt($index)"
-          >
-            Remove
-          </button>
+          <div class="actions-wrapper">
+            <button
+              type="button"
+              [attr.aria-label]="
+                `Insert ${itemLabel() ?? 'item'} above position ${$index + 1}`
+              "
+              [attr.data-testid]="`${testId()}-${$index}-insert`"
+              (click)="insertAt($index)"
+            >
+              Insert above
+            </button>
+            <button
+              type="button"
+              [attr.aria-label]="
+                `Move ${itemLabel() ?? 'item'} ${$index + 1} up`
+              "
+              [disabled]="$first"
+              [attr.data-testid]="`${testId()}-${$index}-move-up`"
+              (click)="move($index, $index - 1)"
+            >
+              Move up
+            </button>
+            <button
+              type="button"
+              [attr.aria-label]="
+                `Move ${itemLabel() ?? 'item'} ${$index + 1} down`
+              "
+              [disabled]="$last"
+              [attr.data-testid]="`${testId()}-${$index}-move-down`"
+              (click)="move($index, $index + 1)"
+            >
+              Move down
+            </button>
+            <button
+              #removeButton
+              type="button"
+              [attr.aria-label]="
+                `Remove ${itemLabel() ?? 'item'} ${$index + 1}`
+              "
+              [attr.data-testid]="`${testId()}-${$index}-remove`"
+              (click)="removeAt($index)"
+            >
+              Remove
+            </button>
+          </div>
         }
       </div>
     }

@@ -201,9 +201,6 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   }
 
   ngOnDestroy(): void {
-    if (this.ownership.isParentOwned) {
-      return;
-    }
     if (this.keepFormValue()) {
       return;
     }

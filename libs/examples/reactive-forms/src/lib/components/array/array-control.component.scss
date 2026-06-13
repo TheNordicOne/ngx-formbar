@@ -34,6 +34,11 @@
   row-gap: 2rem;
 }
 
+.actions-wrapper {
+  display: flex;
+  gap: 1rem;
+}
+
 button {
   padding: 0.375rem 1rem;
   font-size: 0.8125rem;

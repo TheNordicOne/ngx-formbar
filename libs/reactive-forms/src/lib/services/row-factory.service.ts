@@ -38,14 +38,17 @@ export class RowFactoryService {
   private readonly resolver = inject(NGX_VALIDATOR_RESOLVER);
 
   /**
-   * Builds a row instance from its `rowControl` config. The top node may not
-   * use `hideStrategy: 'remove'` (a removed row top would shift FormArray
-   * indices); that is rejected here as a fail-fast guard.
+   * Builds a row instance from its `rowControl` config. A row top may not use
+   * `hideStrategy: 'remove'`: the array renders from its FormArray membership,
+   * so a removed row top has nothing left to evaluate its hidden expression and
+   * could never be restored. This is the one intentional divergence from a
+   * non-array control, and it fails loud rather than silently behaving as
+   * `'keep'`.
    */
   build(rowControl: NgxFbItem): AbstractControl {
     if ('hideStrategy' in rowControl && rowControl.hideStrategy === 'remove') {
       throw new Error(
-        'A form array row top cannot use hideStrategy "remove"; rows are kept to preserve FormArray indices. Use "keep".',
+        'A form array row top cannot use hideStrategy "remove": a removed row top cannot be restored. Use "keep".',
       );
     }
     return this.buildNode(rowControl);
