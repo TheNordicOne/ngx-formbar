@@ -1,33 +1,32 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <ngxfb-form [formConfig]="formConfig()" />
-  <div class="story-actions">
-    <button data-testid="submit" type="submit">Submit</button>
-    <button data-testid="patch" type="button" (click)="patchValue()">
-      Patch
-    </button>
-    <button data-testid="reset" type="button" (click)="reset()">
-      Reset
-    </button>
-  </div>
+<form [id]="formId" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <ngxfb-form class="demo-form-content" [formConfig]="formConfig()" />
 </form>
 
-@if (formValues().length > 0) {
-  <div class="story-form-values" data-testid="form-values">
-    @for (entry of formValues(); track entry.path) {
-      <div>
-        <span [attr.data-testid]="`${entry.path}-path`">{{ entry.path }}: </span>
-        <span [attr.data-testid]="`${entry.path}-value`">{{ entry.value }}</span>
-      </div>
-    }
+<aside class="story-result">
+  <div class="form-actions">
+    <button data-testid="submit" type="submit" [attr.form]="formId">Submit</button>
+    <button data-testid="patch" type="button" (click)="patchValue()">Patch</button>
+    <button data-testid="reset" type="button" (click)="reset()">Reset</button>
   </div>
-}
 
-@if (valueHistory().length > 0) {
-  <details class="story-value-history" open>
-    <summary>Value History ({{ valueHistory().length }})</summary>
-    <pre data-testid="value-history">@for (entry of valueHistory(); track $index) {
+  @if (formValues().length > 0) {
+    <div class="story-form-values" data-testid="form-values">
+      @for (entry of formValues(); track entry.path) {
+        <div>
+          <span [attr.data-testid]="`${entry.path}-path`">{{ entry.path }}: </span>
+          <span [attr.data-testid]="`${entry.path}-value`">{{ entry.value }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  @if (valueHistory().length > 0) {
+    <details class="story-value-history" open>
+      <summary>Value History ({{ valueHistory().length }})</summary>
+      <pre data-testid="value-history">@for (entry of valueHistory(); track $index) {
 {{ entry.timestamp }} {{ entry.raw }}
 }
 </pre>
-  </details>
-}
+    </details>
+  }
+</aside>

@@ -12,6 +12,8 @@ import { filter } from 'rxjs';
 import { NgxFbForm } from '@ngx-formbar/core';
 import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
 
+let nextFormId = 0;
+
 @Component({
   selector: 'ngxfb-story-form-host',
   imports: [ReactiveFormsModule, NgxfbFormComponent],
@@ -21,6 +23,10 @@ import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
 })
 export class StoryFormHostComponent {
   static lastInstance: StoryFormHostComponent | null = null;
+
+  // Unique per instance so the submit button's `form` attribute binds to this
+  // host's form, not another story rendered on the same autodocs page.
+  readonly formId = `ngxfb-story-form-${String(nextFormId++)}`;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly formRef = viewChild.required(NgxfbFormComponent);
@@ -82,9 +88,7 @@ export class StoryFormHostComponent {
     for (const [key, value] of Object.entries(obj)) {
       const path = parentPath ? `${parentPath}.${key}` : key;
       const isPlainObject =
-        value !== null &&
-        typeof value === 'object' &&
-        !Array.isArray(value);
+        value !== null && typeof value === 'object' && !Array.isArray(value);
       const isObjectArray =
         Array.isArray(value) &&
         value.some((v) => v !== null && typeof v === 'object');

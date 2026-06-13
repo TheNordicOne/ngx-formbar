@@ -20,6 +20,7 @@ import { viewProviders } from '../../helpers';
   selector: 'ngxfb-examples-manual-text-control',
   imports: [ReactiveFormsModule],
   templateUrl: './manual-text-control.component.html',
+  styleUrl: './manual-text-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: viewProviders,
 })

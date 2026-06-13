@@ -15,7 +15,8 @@
         "port": 4400,
         "configDir": "apps/storybook/.storybook",
         "browserTarget": "storybook:build-storybook",
-        "compodoc": false
+        "compodoc": false,
+        "styles": ["libs/examples/reactive-forms/src/lib/styles/demo.scss"]
       },
       "configurations": {
         "ci": {
@@ -30,7 +31,8 @@
         "outputDir": "dist/storybook",
         "configDir": "apps/storybook/.storybook",
         "browserTarget": "storybook:build-storybook",
-        "compodoc": false
+        "compodoc": false,
+        "styles": ["libs/examples/reactive-forms/src/lib/styles/demo.scss"]
       },
       "configurations": {
         "ci": {

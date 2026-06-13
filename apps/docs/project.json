@@ -42,6 +42,7 @@
         ],
         "styles": [
           "node_modules/@ng-doc/app/styles/global.css",
+          "libs/examples/reactive-forms/src/lib/styles/demo.scss",
           "apps/docs/src/styles.scss"
         ],
         "allowedCommonJsDependencies": ["@ng-doc/core"],

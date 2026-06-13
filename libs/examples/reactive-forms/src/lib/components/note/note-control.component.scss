@@ -1,4 +1,9 @@
+:host {
+  display: contents;
+}
+
 .note-block {
+  grid-column: 1 / -1;
   border: 1px solid var(--color);
   background-color: var(--background);
   padding: 0.5rem;

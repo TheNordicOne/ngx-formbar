@@ -1,72 +1,47 @@
 :host {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'form result';
+  gap: var(--form-spacing-lg);
+  align-items: start;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.875rem;
-  color: hsl(220, 9%, 20%);
+  font-size: var(--form-input-font-size);
+  color: var(--form-text);
 }
 
 form {
+  grid-area: form;
+}
+
+.story-result {
+  grid-area: result;
   display: grid;
-  gap: 1rem;
+  gap: var(--form-spacing-md);
+  align-content: start;
 }
 
-.story-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-button {
-  padding: 0.5rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: inherit;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.05);
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px hsla(217, 91%, 46%, 0.25);
-  }
-}
-
-button[type='submit'] {
-  background: hsl(217, 91%, 60%);
-  color: hsl(0, 0%, 100%);
-
-  &:hover {
-    box-shadow: 0 2px 4px hsla(0, 0%, 0%, 0.1);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-button:not([type='submit']) {
-  background: hsl(220, 13%, 91%);
-  color: hsl(220, 9%, 20%);
-
-  &:hover {
-    background: hsl(216, 12%, 84%);
-    box-shadow: 0 2px 4px hsla(0, 0%, 0%, 0.1);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
+// The action buttons live in the narrow result column, so they stack.
+.story-result .form-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--form-spacing-sm);
 }
 
 .story-form-values {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: hsl(220, 14%, 96%);
-  border-radius: 0.375rem;
+  padding: var(--form-spacing-md);
+  background: var(--form-surface-sunken);
+  border-radius: var(--form-input-border-radius);
   font-family: monospace;
-  font-size: 0.8125rem;
+  font-size: var(--form-label-font-size);
+  overflow-wrap: anywhere;
+}
+
+.story-value-history {
+  font-size: var(--form-label-font-size);
+
+  > pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }
