@@ -1,6 +1,6 @@
 {
   "name": "@ngx-formbar/schematics",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "type": "commonjs",
   "main": "./index.cjs",
   "types": "./src/index.d.ts",
