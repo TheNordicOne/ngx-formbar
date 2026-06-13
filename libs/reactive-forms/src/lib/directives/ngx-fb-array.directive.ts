@@ -6,45 +6,53 @@ import {
   OnDestroy,
   Signal,
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import {
   FormConfigEntry,
   HideStrategy,
   NGX_FW_PARENT_CONTEXT,
+  NgxFbArray,
   NgxFbBaseContent,
-  NgxFbFormGroup,
   NgxFbItem,
   NgxFwParentContext,
   toSignalMap,
   ValueStrategy,
   withBase,
   withComponentHost,
-  withDynamicTitle,
+  withDynamicLabel,
   withHiddenState,
   withInheritedValue,
   withReadonlyState,
   withTestId,
   withUpdateStrategy,
 } from '@ngx-formbar/core';
-import { ReactiveFormbarGroup } from '../types/control-component.type';
+import { AbstractControl, FormArray } from '@angular/forms';
+import { ReactiveFormbarArray } from '../types/control-component.type';
 import { withFormParent } from '../composables/form-parent';
-import { FormGroup } from '@angular/forms';
 import { withControlState } from '../composables/control-state';
-import { NGXFB_CONTROL_ENTRIES } from '../tokens/control-entries';
-import { withParentOwnedControl } from '../composables/parent-owned-control';
+import {
+  NGXFB_ARRAY_CONTROL,
+  NgxfbArrayContext,
+} from '../tokens/control-entries';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
 import { withAsyncValidators, withValidators } from '../composables/validators';
+import { RowFactoryService } from '../services/row-factory.service';
+import { NGXFB_PARENT_OWNED_CONTROL } from '../tokens/parent-owned-control';
+import { withParentOwnedControl } from '../composables/parent-owned-control';
 
 @Directive({
-  selector: '[ngxfbGroup]',
+  selector: '[ngxfbArray]',
   providers: [
-    { provide: NGX_FW_PARENT_CONTEXT, useExisting: NgxFbGroupDirective },
+    { provide: NGX_FW_PARENT_CONTEXT, useExisting: NgxFbArrayDirective },
   ],
 })
-export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
+export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy, NgxFwParentContext
 {
   private readonly parent = withFormParent();
+  private readonly rowFactory = inject(RowFactoryService);
 
   private readonly parentContext = inject<NgxFwParentContext | null>(
     NGX_FW_PARENT_CONTEXT,
@@ -54,8 +62,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     },
   );
 
-  readonly config = input.required<FormConfigEntry<NgxFbFormGroup<T>>>({
-    alias: 'ngxfbGroup',
+  readonly config = input.required<FormConfigEntry<NgxFbArray<T>>>({
+    alias: 'ngxfbArray',
   });
 
   private readonly base = withBase(this.config);
@@ -63,11 +71,8 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   private readonly controlName = this.base.controlName;
   private readonly registrationEntry = this.base.registrationEntry;
 
-  private readonly groupControls = computed<FormConfigEntry<NgxFbItem>[]>(() =>
-    Object.entries(this.controlConfig().controls).map(([name, config]) => ({
-      name,
-      config,
-    })),
+  private readonly rowEntries = computed<T>(
+    () => this.controlConfig().rowControl,
   );
 
   readonly hideStrategy: Signal<HideStrategy | undefined> = withInheritedValue(
@@ -102,38 +107,80 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   private readonly createdInstance = computed(
     () =>
-      new FormGroup(
-        {},
-        {
-          updateOn: this.updateStrategy(),
-          validators: this.validators(),
-          asyncValidators: this.asyncValidators(),
-        },
-      ),
+      new FormArray<AbstractControl>([], {
+        updateOn: this.updateStrategy(),
+        validators: this.validators(),
+        asyncValidators: this.asyncValidators(),
+      }),
   );
 
   private readonly ownership = withParentOwnedControl({
     parent: this.parent,
     controlName: this.controlName,
     createdInstance: this.createdInstance,
-    controlType: FormGroup,
+    controlType: FormArray,
   });
 
-  readonly formGroupInstance = this.ownership.instance;
+  readonly formArrayInstance = this.ownership.instance;
+
+  private readonly arrayChanges = toSignal(
+    toObservable(this.formArrayInstance).pipe(
+      switchMap((array) => array.valueChanges),
+    ),
+    { initialValue: null },
+  );
+
+  private readonly rows = computed<AbstractControl[]>(() => {
+    this.arrayChanges();
+    return [...this.formArrayInstance().controls];
+  });
+
+  private insertRow(index: number): void {
+    this.formArrayInstance().insert(
+      index,
+      this.rowFactory.build(this.rowEntries()),
+    );
+  }
+
+  private readonly arrayContext: NgxfbArrayContext = {
+    rowControl: this.rowEntries,
+    rows: this.rows,
+    add: () => {
+      this.insertRow(this.formArrayInstance().length);
+    },
+    insertAt: (index: number) => {
+      this.insertRow(index);
+    },
+    removeAt: (index: number) => {
+      this.formArrayInstance().removeAt(index);
+    },
+    move: (from: number, to: number) => {
+      const array = this.formArrayInstance();
+      const count = array.length;
+      if (from === to || from < 0 || from >= count || to < 0 || to >= count) {
+        return;
+      }
+      // Re-insert the same control instance so the row keeps its identity
+      // (and its cached last-value) across the move.
+      const row = array.at(from);
+      array.removeAt(from);
+      array.insert(to, row);
+    },
+  };
 
   readonly isDisabled = withDisabledLifecycle({
     controlConfig: this.controlConfig,
     registrationEntry: this.registrationEntry,
-    instance: this.formGroupInstance,
+    instance: this.formArrayInstance,
   });
 
-  private readonly groupState = withControlState(this.formGroupInstance);
-  readonly errors = this.groupState.errors;
-  readonly isDirty = this.groupState.isDirty;
+  private readonly arrayState = withControlState(this.formArrayInstance);
+  readonly errors = this.arrayState.errors;
+  readonly isDirty = this.arrayState.isDirty;
 
   readonly testId = withTestId(this.controlConfig, this.controlName);
 
-  private readonly signalMap = toSignalMap<ReactiveFormbarGroup>({
+  private readonly signalMap = toSignalMap<ReactiveFormbarArray>({
     name: this.controlName,
     isHidden: this.isHidden,
     isDisabled: this.isDisabled,
@@ -141,18 +188,19 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     hideStrategy: this.hideStrategy,
     valueStrategy: this.valueStrategy,
     testId: this.testId,
-    titleText: computed(() => this.controlConfig().title),
-    dynamicTitle: withDynamicTitle(this.controlConfig),
+    labelText: computed(() => this.controlConfig().label),
+    dynamicLabel: withDynamicLabel(this.controlConfig),
     errors: this.errors,
     isDirty: this.isDirty,
-    groupInstance: this.formGroupInstance,
+    arrayInstance: this.formArrayInstance,
   });
 
   private readonly host = withComponentHost({
     signalMap: this.signalMap,
     controlConfig: this.controlConfig,
     additionalProviders: [
-      { provide: NGXFB_CONTROL_ENTRIES, useValue: this.groupControls },
+      { provide: NGXFB_ARRAY_CONTROL, useValue: this.arrayContext },
+      { provide: NGXFB_PARENT_OWNED_CONTROL, useValue: true },
     ],
   });
 
@@ -162,48 +210,22 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     host: this.host,
     parentControl: () => this.parent.control,
     controlName: this.controlName,
-    instance: this.formGroupInstance,
+    instance: this.formArrayInstance,
     handleVisibility: this.handleVisibility,
     keepFormValue: this.keepFormValue,
     applyValueStrategy: this.setValueByStrategy.bind(this),
     skipControlRegistration: this.ownership.isDirectFormArrayChild,
   });
 
-  private setValueByStrategy() {
-    const valueStrategy = this.valueStrategy();
-
-    switch (valueStrategy) {
-      case 'last':
-        break;
-      case 'default':
-        break;
-      default:
-        // Instead of resetting the group, we need to reset the controls individually
-        // to allow them to overwrite the value strategy
-        // If a control doesn't have a value strategy, we reset it
-        Object.entries(this.controlConfig().controls).forEach(
-          ([name, control]) => {
-            if (!('valueStrategy' in control)) {
-              return;
-            }
-
-            if (control.valueStrategy) {
-              return;
-            }
-            const formControl = this.formGroupInstance().get(name);
-            if (formControl) {
-              formControl.reset(undefined, { emitEvent: false });
-            }
-          },
-        );
-        break;
-    }
-  }
-
   ngOnDestroy(): void {
     if (this.keepFormValue()) {
       return;
     }
     this.lifecycle.removeControl();
+  }
+
+  private setValueByStrategy(): void {
+    // Per-row controls inside the array manage their own value strategies on
+    // show/hide. The array does not touch its row count here.
   }
 }

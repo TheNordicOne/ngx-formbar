@@ -1,0 +1,13 @@
+@let rowEntry = entry();
+@if (isFormbarGroup(rowEntry.config)) {
+  <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
+  <ng-template *ngxfbGroup="$any(rowEntry)" />
+} @else if (isFormbarArray(rowEntry.config)) {
+  <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
+  <ng-template *ngxfbArray="$any(rowEntry)" />
+} @else if (isFormbarBlock(rowEntry.config)) {
+  <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
+  <ng-template *ngxfbBlock="$any(rowEntry)" />
+} @else if (isFormbarControl(rowEntry.config)) {
+  <ng-template *ngxfbControl="rowEntry" />
+}

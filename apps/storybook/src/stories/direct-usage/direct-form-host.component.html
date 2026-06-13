@@ -78,6 +78,72 @@
     </ng-container>
   </ngxfb-examples-group-control>
 
+  <ngxfb-examples-array-control
+    name="tags"
+    labelText="Tags"
+    testId="tags"
+    [itemFactory]="newTag"
+  >
+    <ng-template #item let-control let-i="index" let-removeAt="removeAt">
+      <div class="tag-row">
+        <input
+          type="text"
+          placeholder="Tag"
+          [formControl]="asFormControl(control)"
+          [attr.data-testid]="`tags-${i}-input`"
+        />
+        <button
+          type="button"
+          [attr.data-testid]="`tags-${i}-remove`"
+          (click)="removeAt(i)"
+        >
+          Remove
+        </button>
+      </div>
+    </ng-template>
+  </ngxfb-examples-array-control>
+
+  <ngxfb-examples-array-control
+    name="contacts"
+    labelText="Contacts"
+    testId="contacts"
+    addLabel="Add contact"
+    itemLabel="contact"
+    emptyMessage="No contacts added yet."
+    [itemFactory]="newContact"
+  >
+    <ng-template #item let-control let-i="index" let-removeAt="removeAt">
+      @let contact = asContactGroup(control);
+      <div class="contact-row">
+        <div class="field">
+          <label [htmlFor]="`contacts-${i}-name`">Name</label>
+          <input
+            type="text"
+            [id]="`contacts-${i}-name`"
+            [formControl]="contact.controls.name"
+            [attr.data-testid]="`contacts-${i}-name`"
+          />
+        </div>
+        <div class="field">
+          <label [htmlFor]="`contacts-${i}-email`">Email</label>
+          <input
+            type="email"
+            [id]="`contacts-${i}-email`"
+            [formControl]="contact.controls.email"
+            [attr.data-testid]="`contacts-${i}-email`"
+          />
+        </div>
+        <button
+          type="button"
+          [attr.data-testid]="`contacts-${i}-remove`"
+          (click)="removeAt(i)"
+        >
+          Remove
+        </button>
+      </div>
+    </ng-template>
+  </ngxfb-examples-array-control>
+
   <ngxfb-examples-note-control
     testId="info"
     message="All fields above are used directly without formbar."

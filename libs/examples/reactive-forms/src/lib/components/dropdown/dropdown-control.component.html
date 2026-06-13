@@ -1,8 +1,8 @@
 @if (!isHidden()) {
   <div class="inline-input" [attr.data-testid]="testId()">
-    <label [for]="name()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
+    <label [for]="testId()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <select
-      [id]="name()"
+      [id]="testId()"
       [formControlName]="name()"
       [attr.data-testid]="`${testId()}-input`"
     >

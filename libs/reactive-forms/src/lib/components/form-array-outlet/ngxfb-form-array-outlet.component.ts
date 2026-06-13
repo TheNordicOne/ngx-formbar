@@ -3,33 +3,44 @@ import {
   Component,
   computed,
   inject,
+  input,
 } from '@angular/core';
 import {
+  FormConfigEntry,
   isFormbarArray,
   isFormbarBlock,
   isFormbarControl,
   isFormbarGroup,
+  NgxFbItem,
 } from '@ngx-formbar/core';
 import { NgxFbControlDirective } from '../../directives/ngx-fb-control.directive';
 import { NgxFbGroupDirective } from '../../directives/ngx-fb-group.directive';
 import { NgxFbArrayDirective } from '../../directives/ngx-fb-array.directive';
 import { NgxfbBlockDirective } from '../../directives/ngxfb-block.directive';
-import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
+import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'ngxfb-control-outlet',
+  selector: 'ngxfb-form-array-outlet',
   imports: [
     NgxFbControlDirective,
     NgxFbGroupDirective,
     NgxFbArrayDirective,
     NgxfbBlockDirective,
+    ReactiveFormsModule,
   ],
-  templateUrl: './ngxfb-control-outlet.component.html',
+  templateUrl: './ngxfb-form-array-outlet.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NgxfbControlOutlet {
-  private readonly token = inject(NGXFB_CONTROL_ENTRIES, { optional: true });
-  readonly controls = computed(() => this.token?.() ?? []);
+export class NgxFbFormArrayOutlet {
+  private readonly context = inject(NGXFB_ARRAY_CONTROL);
+
+  readonly index = input.required<number>();
+
+  readonly entry = computed<FormConfigEntry<NgxFbItem>>(() => ({
+    name: String(this.index()),
+    config: this.context.rowControl(),
+  }));
 
   protected readonly isFormbarGroup = isFormbarGroup;
   protected readonly isFormbarArray = isFormbarArray;

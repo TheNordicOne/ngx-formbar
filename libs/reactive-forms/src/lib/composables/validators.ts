@@ -1,7 +1,34 @@
 import { computed, inject, Signal } from '@angular/core';
 import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import { NGX_VALIDATOR_RESOLVER } from '../tokens/validator-resolver';
+import { ValidatorResolver } from '../types/validator-resolver.type';
 import { NgxFbAbstractControl } from '@ngx-formbar/core';
+
+/**
+ * Flattens a list of sync validator registration keys to their
+ * `ValidatorFn[]` using the resolver's current registrations. Unknown or
+ * missing keys contribute nothing.
+ */
+export function resolveValidators(
+  keys: string[] | undefined,
+  resolver: ValidatorResolver,
+): ValidatorFn[] {
+  const registrations = resolver.registrations();
+  return (keys ?? []).flatMap((key) => registrations.get(key) ?? []);
+}
+
+/**
+ * Flattens a list of async validator registration keys to their
+ * `AsyncValidatorFn[]` using the resolver's current registrations. Unknown
+ * or missing keys contribute nothing.
+ */
+export function resolveAsyncValidators(
+  keys: string[] | undefined,
+  resolver: ValidatorResolver,
+): AsyncValidatorFn[] {
+  const registrations = resolver.asyncRegistrations();
+  return (keys ?? []).flatMap((key) => registrations.get(key) ?? []);
+}
 
 /**
  * Resolves the control's `validators` keys to a signal of `ValidatorFn[]`
@@ -16,14 +43,9 @@ import { NgxFbAbstractControl } from '@ngx-formbar/core';
 export function withValidators(
   content: Signal<NgxFbAbstractControl>,
 ): Signal<ValidatorFn[]> {
-  const validatorRegistrations = inject(NGX_VALIDATOR_RESOLVER).registrations;
+  const resolver = inject(NGX_VALIDATOR_RESOLVER);
 
-  return computed(() => {
-    const validatorKeys = content().validators ?? [];
-    return validatorKeys.flatMap(
-      (key) => validatorRegistrations().get(key) ?? [],
-    );
-  });
+  return computed(() => resolveValidators(content().validators, resolver));
 }
 
 /**
@@ -40,13 +62,9 @@ export function withValidators(
 export function withAsyncValidators(
   content: Signal<NgxFbAbstractControl>,
 ): Signal<AsyncValidatorFn[]> {
-  const asyncValidatorRegistrations = inject(
-    NGX_VALIDATOR_RESOLVER,
-  ).asyncRegistrations;
-  return computed(() => {
-    const validatorKeys = content().asyncValidators ?? [];
-    return validatorKeys.flatMap(
-      (key) => asyncValidatorRegistrations().get(key) ?? [],
-    );
-  });
+  const resolver = inject(NGX_VALIDATOR_RESOLVER);
+
+  return computed(() =>
+    resolveAsyncValidators(content().asyncValidators, resolver),
+  );
 }

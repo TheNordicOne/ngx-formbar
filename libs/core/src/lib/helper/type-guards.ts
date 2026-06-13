@@ -1,5 +1,6 @@
 import { isSignal, Signal } from '@angular/core';
 import {
+  NgxFbArray,
   NgxFbBaseContent,
   NgxFbBlock,
   NgxFbControl,
@@ -20,6 +21,19 @@ export function isFormbarGroup(
   return 'controls' in value;
 }
 
+export function isFormbarArray<T extends NgxFbBaseContent = NgxFbItem>(
+  item: Signal<T>,
+): item is Signal<T & NgxFbArray>;
+export function isFormbarArray<T extends NgxFbBaseContent = NgxFbItem>(
+  item: T,
+): item is T & NgxFbArray;
+export function isFormbarArray(
+  item: NgxFbBaseContent | Signal<NgxFbBaseContent>,
+): boolean {
+  const value = isSignal(item) ? item() : item;
+  return 'rowControl' in value;
+}
+
 export function isFormbarControl<T extends NgxFbBaseContent = NgxFbItem>(
   item: Signal<T>,
 ): item is Signal<T & NgxFbControl>;
@@ -30,7 +44,7 @@ export function isFormbarControl(
   item: NgxFbBaseContent | Signal<NgxFbBaseContent>,
 ): boolean {
   const value = isSignal(item) ? item() : item;
-  return !('controls' in value);
+  return !('controls' in value) && !('rowControl' in value);
 }
 
 export function isFormbarBlock<T extends NgxFbBaseContent = NgxFbItem>(

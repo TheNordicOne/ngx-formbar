@@ -71,6 +71,28 @@ export const AllControls: Story = {
           type: 'file',
           label: 'File',
         },
+        tags: {
+          type: 'array',
+          label: 'Tags',
+          rowControl: {
+            type: 'text',
+            label: 'Tag',
+          },
+        },
+        contacts: {
+          type: 'array',
+          label: 'Contacts',
+          addLabel: 'Add contact',
+          itemLabel: 'contact',
+          emptyMessage: 'No contacts added yet.',
+          rowControl: {
+            type: 'group',
+            controls: {
+              name: { type: 'text', label: 'Name' },
+              email: { type: 'text', label: 'Email' },
+            },
+          },
+        },
         group: {
           type: 'group',
           legend: 'Group',

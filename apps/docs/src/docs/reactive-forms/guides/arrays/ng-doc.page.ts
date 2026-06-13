@@ -1,11 +1,11 @@
 import { NgDocPage } from '@ng-doc/core';
 import ReactiveFormsGuidesCategory from '../ng-doc.category';
 
-const BlocksPage: NgDocPage = {
-  title: 'Blocks',
+const ArraysPage: NgDocPage = {
+  title: 'Arrays',
   mdFile: './index.md',
   category: ReactiveFormsGuidesCategory,
-  order: 4,
+  order: 3,
 };
 
-export default BlocksPage;
+export default ArraysPage;

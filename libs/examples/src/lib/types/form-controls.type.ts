@@ -8,6 +8,7 @@ import { NoteControl } from './note-control.type';
 import { TextareaControl } from './textarea-control.type';
 import { DateControl } from './date-control.type';
 import { FileControl } from './file-control.type';
+import { ArrayControl } from './array-control.type';
 import { ManualTextControl } from './manual-text-control.type';
 
 export type ExampleControls =
@@ -17,6 +18,7 @@ export type ExampleControls =
   | RadioControl
   | DropdownControl
   | GroupControl<ExampleControls>
+  | ArrayControl<ExampleControls>
   | NoteControl
   | TextareaControl
   | DateControl

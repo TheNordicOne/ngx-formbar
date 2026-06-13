@@ -3,7 +3,13 @@ import {
   Component,
   signal,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import {
   TextControlComponent,
   NumberControlComponent,
@@ -15,6 +21,7 @@ import {
   FileControlComponent,
   NoteControlComponent,
   GroupControlComponent,
+  ArrayControlComponent,
 } from '@ngx-formbar/examples/reactive-forms';
 
 function flattenFormValue(
@@ -25,9 +32,19 @@ function flattenFormValue(
 
   for (const [key, val] of Object.entries(value)) {
     const path = prefix ? `${prefix}.${key}` : key;
+    const isPlainObject =
+      val !== null &&
+      typeof val === 'object' &&
+      !Array.isArray(val) &&
+      !(val instanceof File);
+    const isObjectArray =
+      Array.isArray(val) &&
+      val.some((v) => v !== null && typeof v === 'object');
 
-    if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof File)) {
+    if (isPlainObject) {
       entries.push(...flattenFormValue(val as Record<string, unknown>, path));
+    } else if (isObjectArray) {
+      entries.push({ path, value: JSON.stringify(val) });
     } else {
       entries.push({ path, value: val });
     }
@@ -50,6 +67,7 @@ function flattenFormValue(
     FileControlComponent,
     NoteControlComponent,
     GroupControlComponent,
+    ArrayControlComponent,
   ],
   templateUrl: './direct-form-host.component.html',
   styleUrl: './direct-form-host.component.scss',
@@ -69,6 +87,13 @@ export class DirectFormHostComponent {
       street: new FormControl(''),
       city: new FormControl(''),
     }),
+    tags: new FormArray<FormControl<string | null>>([]),
+    contacts: new FormArray<
+      FormGroup<{
+        name: FormControl<string | null>;
+        email: FormControl<string | null>;
+      }>
+    >([]),
   });
 
   readonly colorOptions = [
@@ -84,6 +109,32 @@ export class DirectFormHostComponent {
   ];
 
   readonly formValues = signal<{ path: string; value: unknown }[]>([]);
+
+  readonly newTag = (): FormControl<string | null> =>
+    new FormControl<string | null>('');
+
+  readonly newContact = (): FormGroup<{
+    name: FormControl<string | null>;
+    email: FormControl<string | null>;
+  }> =>
+    new FormGroup({
+      name: new FormControl<string | null>(''),
+      email: new FormControl<string | null>(''),
+    });
+
+  asFormControl(control: AbstractControl): FormControl<string | null> {
+    return control as FormControl<string | null>;
+  }
+
+  asContactGroup(control: AbstractControl): FormGroup<{
+    name: FormControl<string | null>;
+    email: FormControl<string | null>;
+  }> {
+    return control as FormGroup<{
+      name: FormControl<string | null>;
+      email: FormControl<string | null>;
+    }>;
+  }
 
   onSubmit(): void {
     const formValue = this.form.getRawValue() as Record<string, unknown>;

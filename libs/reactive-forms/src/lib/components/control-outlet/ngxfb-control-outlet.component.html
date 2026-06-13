@@ -2,6 +2,9 @@
   @if (isFormbarGroup(entry.config)) {
     <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
     <ng-template *ngxfbGroup="$any(entry)" />
+  } @else if (isFormbarArray(entry.config)) {
+    <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
+    <ng-template *ngxfbArray="$any(entry)" />
   } @else if (isFormbarBlock(entry.config)) {
     <!--  eslint-disable-next-line @angular-eslint/template/no-any-->
     <ng-template *ngxfbBlock="$any(entry)" />

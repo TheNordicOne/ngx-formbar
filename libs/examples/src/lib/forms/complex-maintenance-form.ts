@@ -340,6 +340,39 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
       },
     },
 
+    // --- Line Items -------------------------------
+    lineItems: {
+      type: 'array',
+      dynamicLabel:
+        "'Line Items' + (lineItems && lineItems.length ? ' (' + lineItems.length + ')' : '')",
+      addLabel: 'Add line item',
+      itemLabel: 'line item',
+      emptyMessage: 'No line items yet. Add parts or labor to itemize the cost.',
+      rowControl: {
+        type: 'group',
+        controls: {
+          description: {
+            type: 'text',
+            label: 'Description',
+            placeHolder: 'e.g., Replacement filter',
+            validators: ['required', 'min2Characters'],
+          },
+          quantity: {
+            type: 'number',
+            label: 'Quantity',
+            min: 0,
+            validators: ['required', 'integer', 'min0'],
+          },
+          unitCost: {
+            type: 'number',
+            label: 'Unit Cost',
+            min: 0,
+            validators: ['min0'],
+          },
+        },
+      },
+    },
+
     // --- Costs ------------------------------------
     costs: {
       type: 'group',

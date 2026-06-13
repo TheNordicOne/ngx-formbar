@@ -94,6 +94,35 @@ export interface NgxFbControl extends NgxFbAbstractControl {
 }
 
 /**
+ * An individual form control with label and value properties.
+ */
+export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem>
+  extends NgxFbAbstractControl {
+  /**
+   * Control definition of a single item in an array. The row's top control
+   * may not set `hideStrategy: 'remove'`: the array renders its rows from the
+   * `FormArray`, so a removed row top could never be restored. Hiding still
+   * works; only the `remove` strategy is disallowed at the row top. Controls
+   * nested inside a group row keep full `hideStrategy` support.
+   */
+  rowControl: T & { hideStrategy?: 'keep' };
+  /** Static label for the control. */
+  label?: string;
+  /** Label evaluated from form data. */
+  dynamicLabel?: Expression<string>;
+  /**
+   * Default value for the control. Narrow this in extending interfaces
+   * to match the control's value type.
+   */
+  defaultValue?: unknown;
+  /**
+   * Whether the control rejects null. Maps to the `nonNullable` option
+   * on reactive form controls.
+   */
+  nonNullable?: boolean;
+}
+
+/**
  * A non-control content element such as a heading or divider.
  */
 export interface NgxFbBlock extends NgxFbBaseContent {
@@ -103,7 +132,7 @@ export interface NgxFbBlock extends NgxFbBaseContent {
 }
 
 /** Any content that can appear in a form. */
-export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbBlock;
+export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
 
 /**
  * What happens to the form control when hidden.

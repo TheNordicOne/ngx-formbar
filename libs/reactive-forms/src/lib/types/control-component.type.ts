@@ -1,6 +1,7 @@
 import {
   ExtendedBlockInputs,
   HideStrategy,
+  NgxFbArray,
   NgxFbBlock,
   NgxFbControl,
   NgxFbFormGroup,
@@ -8,7 +9,12 @@ import {
   ToSignalInputs,
   ValueStrategy,
 } from '@ngx-formbar/core';
-import { FormControl, FormGroup, ValidationErrors } from '@angular/forms';
+import {
+  FormArray,
+  FormControl,
+  FormGroup,
+  ValidationErrors,
+} from '@angular/forms';
 
 /** Common signal inputs shared by all formbar component types. */
 export interface ReactiveFormbarAbstractControl {
@@ -79,6 +85,31 @@ export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
       readonly titleText?: SignalInput<string | undefined>;
       readonly dynamicTitle?: SignalInput<string | null | undefined>;
       readonly groupInstance?: SignalInput<FormGroup>;
+    };
+
+/**
+ * Implement this on components registered as form arrays.
+ *
+ * The structural `rowControl` property of the schema is not exposed as
+ * a signal input; the library uses it internally to render each row's
+ * controls. Custom properties on `T` beyond `NgxFbArray` become additional
+ * signal inputs.
+ *
+ * @example
+ * ```ts
+ * @Component({ ... })
+ * export class ArrayComponent implements ReactiveFormbarArray {
+ *   readonly name = input.required<string>();
+ *   readonly labelText = input<string>();
+ * }
+ * ```
+ */
+export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> =
+  ReactiveFormbarAbstractControl &
+    ToSignalInputs<Omit<T, keyof NgxFbArray>> & {
+      readonly labelText?: SignalInput<string | undefined>;
+      readonly dynamicLabel?: SignalInput<string | null | undefined>;
+      readonly arrayInstance?: SignalInput<FormArray>;
     };
 
 /**
