@@ -143,8 +143,9 @@ The library provides `NGXFB_ARRAY_CONTROL`, an injectable context for the array 
 | `add`        | `() => void`                      | Appends a new row, built from `rowControl`.                       |
 | `insertAt`   | `(index: number) => void`         | Inserts a new row at the given index.                            |
 | `removeAt`   | `(index: number) => void`         | Removes the row at the given index.                              |
+| `move`       | `(from: number, to: number) => void` | Moves a row to a new index, shifting the rows in between. The row keeps its identity and cached value. |
 
-Add, insert, and remove build and place row controls for you. You never construct a row control yourself.
+Add, insert, and remove build and place row controls for you; `move` re-inserts an existing row rather than building one. You never construct a row control yourself.
 
 ## Row Controls
 
@@ -176,7 +177,7 @@ export class HostComponent {
 }
 ```
 
-`load` uses `patchValue` semantics, so partial data is fine. Keys absent from the data leave their arrays empty, and extra keys are ignored.
+Scalar and group values follow `patchValue` semantics, so partial data is fine. Arrays are different: each one is first sized to match the incoming data, so a key absent from the data empties its array (every row is removed), while extra keys are ignored.
 
 ### Loading Without the Helper
 
