@@ -4,7 +4,6 @@ import { ComponentHost } from '@ngx-formbar/core';
 import { hiddenEffects } from './hidden-effects';
 
 export interface HiddenLifecycle {
-  setControl: () => void;
   removeControl: () => void;
 }
 
@@ -18,8 +17,7 @@ export interface HiddenLifecycle {
  * - On show: attach (or re-attach) the form control to the parent group and
  *   re-mount the component (when the library handles visibility).
  *
- * Returns the `setControl` and `removeControl` helpers so the directive can
- * also drive attachment from `ngOnDestroy`.
+ * Returns `removeControl` so the directive can also detach from `ngOnDestroy`.
  *
  * @param options.component Signal of the resolved component class to mount.
  * @param options.isHidden Signal of the directive's resolved hidden state.
@@ -121,5 +119,5 @@ export function withHiddenLifecycle(options: {
     onVisible,
   });
 
-  return { setControl, removeControl };
+  return { removeControl };
 }
