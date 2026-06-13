@@ -4,7 +4,6 @@ import {
   inject,
   input,
   OnDestroy,
-  signal,
   Signal,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -124,12 +123,6 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
 
   readonly formArrayInstance = this.ownership.instance;
 
-  // FormArray.controls is mutated in place, so it is not reactive on its own.
-  // Structural changes go through this directive's add/insertAt/removeAt, which
-  // bump a version signal; valueChanges also bumps it so external structural
-  // edits (e.g. the loader growing the array) still re-render the rows.
-  private readonly structureVersion = signal(0);
-
   private readonly arrayChanges = toSignal(
     toObservable(this.formArrayInstance).pipe(
       switchMap((array) => array.valueChanges),
@@ -138,7 +131,6 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   );
 
   private readonly rows = computed<AbstractControl[]>(() => {
-    this.structureVersion();
     this.arrayChanges();
     return [...this.formArrayInstance().controls];
   });
@@ -148,7 +140,6 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
       index,
       this.rowFactory.build(this.rowEntries()),
     );
-    this.structureVersion.update((v) => v + 1);
   }
 
   private readonly arrayContext: NgxfbArrayContext = {
@@ -162,7 +153,6 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     },
     removeAt: (index: number) => {
       this.formArrayInstance().removeAt(index);
-      this.structureVersion.update((v) => v + 1);
     },
     move: (from: number, to: number) => {
       const array = this.formArrayInstance();
@@ -175,7 +165,6 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
       const row = array.at(from);
       array.removeAt(from);
       array.insert(to, row);
-      this.structureVersion.update((v) => v + 1);
     },
   };
 
