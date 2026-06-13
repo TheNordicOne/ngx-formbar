@@ -16,8 +16,9 @@ New package containing all reactive forms functionality previously bundled in `@
 - **Types:** `FormbarConfig`, `ValidatorConfig`, `AsyncValidatorConfig`, `RegistrationRecord`, `ValidatorKey`, `ValidatorResolver`.
 - **Composables:** `setComputedValueEffect`, `disabledEffect`, `hiddenEffects`, `withValidators`, `withAsyncValidators`. (Resolution-only composables such as `withDynamicLabel`, `withHiddenState`, `withDisabledState`, `withReadonlyState`, `withTestId`, `withUpdateStrategy`, `withComputedValue`, `withDynamicTitle` live in `@ngx-formbar/core`.)
 - **Helpers:** `controlContainerViewProviders`.
-- **Form-level lifecycle cache.** Values from destroyed controls are stored against their dotted form path and restored when the control is recreated, so `valueStrategy: 'last'` survives both hide/show cycles and `hideStrategy: 'remove'` cycles. The cache is cleared on form reset.
+- **Form-level lifecycle cache.** Values from destroyed controls are stored against their form path and restored when the control is recreated, so `valueStrategy: 'last'` survives hide/show and `hideStrategy: 'remove'` cycles, and follows array rows by identity. The cache is cleared on form reset.
 - **Schematics:** `ng-add` schematic for automated project setup.
+- **Form arrays.** Repeating rows from a single `rowControl`, backed by a native `FormArray`.
 
 ### Changed
 
