@@ -35,7 +35,7 @@ export const controlContainerViewProviders = [
 
 For official documentation of Union Types check out the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
 
-Setting up a union type for your own controls is highly recommended. It gives you much better type safety when writing your forms in TypeScript.
+Set up a union type for your own controls for stronger type safety when writing your forms in TypeScript.
 
 ```typescript name="app-controls.type.ts"
 export type MyAppControls = TestTextControl | TestGroup | InfoBlock;

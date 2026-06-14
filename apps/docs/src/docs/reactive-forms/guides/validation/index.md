@@ -1,4 +1,4 @@
-ngx-formbar supports native Angular validators and async validators. That means all custom validators are fully supported.
+ngx-formbar supports native Angular validators and async validators, including custom ones.
 
 To make validators available to ngx-formbar, you need to register them. You can also combine multiple validators under one key, which is useful when you frequently use certain combinations.
 
@@ -35,7 +35,7 @@ export const appConfig: ApplicationConfig = {
 
 ### Combining Validators
 
-Combining validators is as easy as adding them in the same array. This is also possible for async validators.
+To combine validators, add them to the same array. This is also possible for async validators.
 
 > **Note**
 > You can use an existing validator registration by referring to it via its key. Sibling key references are type-checked against the keys you have declared, so misspellings raise a TS error and your IDE auto-completes valid references.

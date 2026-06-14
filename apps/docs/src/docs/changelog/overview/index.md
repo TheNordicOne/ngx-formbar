@@ -31,4 +31,4 @@ Version 2 splits the monolithic `@ngx-formbar/core` package into four focused pa
 
 For the full step-by-step migration guide, see [**Migrating from v1**](/changelog/migrating-from-v1).
 
-In short: four packages instead of one, a cleaner interface-based contract for custom controls and groups, and more registration options. For detailed changes per package, see the individual package changelogs.
+In short: four packages instead of one, an interface-based contract for custom controls and groups, and more registration options. For detailed changes per package, see the individual package changelogs.

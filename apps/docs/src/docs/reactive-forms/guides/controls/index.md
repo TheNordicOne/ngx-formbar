@@ -19,7 +19,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 > **Note**
 > Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
 
-Here is an example of a simple text control.
+Here is an example of a text control.
 
 First create an interface for your control.
 

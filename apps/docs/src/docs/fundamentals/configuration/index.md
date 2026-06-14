@@ -78,7 +78,7 @@ The following configurations are only applicable to the interface `NgxFbBlock`.
 
 ## Full Example
 
-As you can see the configuration is just an object of controls and/or groups. Every entry in that object will be registered on the top-level of the form.
+The configuration is an object of controls and/or groups. Every entry in that object is registered on the top level of the form.
 
 How to register validators depends on your integration package:
 

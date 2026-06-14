@@ -2,7 +2,7 @@
 
 A group is used to group controls together. It results in an Angular `FormGroup` instance.
 
-Most of the time you only need one or two different group types. They become really handy when you need different behaviors. For example, one group that does nothing special visually and one that is collapsible.
+Most of the time you only need one or two different group types. They are useful when you need different behaviors. For example, one group with no special visual treatment and one that is collapsible.
 
 Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, groups are plain Angular components that implement the `ReactiveFormbarGroup<T>` contract. The library writes its state into your component through signal inputs, so you only declare the inputs you actually care about. There is no host directive, no injection, and no manual signal forwarding.
 

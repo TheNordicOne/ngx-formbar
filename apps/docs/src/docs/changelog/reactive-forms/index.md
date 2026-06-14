@@ -2,7 +2,7 @@
 
 ### Overview
 
-New package containing all reactive forms functionality previously bundled in `@ngx-formbar/core`. Components register against the form via a plain interface contract: implement `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, or `FormbarBlock<T>` and declare matching `input()` signals. No host directives, no directive injection, no boilerplate on consumer components.
+New package containing all reactive forms functionality previously bundled in `@ngx-formbar/core`. Components register against the form via a plain interface contract: implement `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, or `FormbarBlock<T>` and declare matching `input()` signals. No host directives and no directive injection on consumer components.
 
 ### Added
 

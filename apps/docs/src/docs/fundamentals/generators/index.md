@@ -1,4 +1,4 @@
-Creating and registering a new control, group or block can be cumbersome. To make this easier, ngx-formbar comes with three generator schematics.
+ngx-formbar includes three generator schematics that scaffold and register a new control, group, or block.
 
 ## Options
 

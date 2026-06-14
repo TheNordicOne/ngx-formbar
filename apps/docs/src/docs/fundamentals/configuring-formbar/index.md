@@ -93,7 +93,7 @@ There are two ways to register components: **config-based** and **token-based**.
 
 ### Config-Based Registration
 
-Pass registrations as properties of the configuration object to `provideFormbar()`. This is the simpler approach.
+Pass registrations as properties of the configuration object to `provideFormbar()`.
 
 ```typescript
 provideFormbar({

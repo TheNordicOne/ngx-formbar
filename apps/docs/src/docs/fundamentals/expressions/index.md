@@ -58,7 +58,7 @@ The sandbox protects **access** (no read of host state outside the supplied cont
 
 ## Function-based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more flexible and type-safe way to define dynamic behavior.
+In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This is type-safe and can use any TypeScript logic.
 
 ### Signature
 
@@ -85,7 +85,7 @@ Where:
 - Type Safety: When using TypeScript, function-based expressions provide better type checking for both the formValue and the return type.
 - Complex Logic: You can implement more complex logic directly within the function, without the limitations of the string-based expression parser.
 - No Parsing Overhead: Since it's already a function, there's no need for AST parsing.
-- Access to Outer Scope: These functions can use any other function from your app, allowing for more flexible and reusable logic.
+- Access to Outer Scope: These functions can call any other function from your app.
 
 ### Disadvantages
 - Non-Serializable: Function-based Expressions are not serializable to JSON and therefore should only be used if the form configuration is not stored in a database.

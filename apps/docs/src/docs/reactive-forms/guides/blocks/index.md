@@ -16,7 +16,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 
 ## Manual Setup
 
-Here is an example of a simple information block.
+Here is an example of an information block.
 
 First create an interface for your block by extending `NgxFbBlock`.
 

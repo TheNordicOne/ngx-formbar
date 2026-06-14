@@ -1,6 +1,6 @@
 ## Notes
 
-While it is possible to set up everything yourself, it is highly recommended to use the installation via `ng add`.
+You can set up everything yourself, but `ng add` is the supported installation path.
 
 However, if you want to or have to install it manually, here is the bare minimum setup.
 
@@ -122,7 +122,7 @@ Add this file next to your `app.config.ts`.
 
 ### Splitting Configuration
 
-To avoid bloating your _app.config.ts_, put your registrations in a separate file. Check out the Code Splitting Section in the [Formbar Configuration guide](/reactive-forms/guides/formbar-configuration) for the details.
+To keep your _app.config.ts_ small, put your registrations in a separate file. Check out the Code Splitting Section in the [Formbar Configuration guide](/reactive-forms/guides/formbar-configuration) for the details.
 
 ## Setting Up Helpers
 

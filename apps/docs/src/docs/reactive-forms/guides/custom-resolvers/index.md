@@ -163,7 +163,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Use Cases for Custom Resolvers
 
-Custom resolvers can be particularly valuable in the following scenarios:
+Custom resolvers apply in the following scenarios:
 
 1. **Dynamic Component Loading** - Load components on-demand based on user actions or application state
 2. **Feature-Based Validators** - Switch between different validation rule sets based on application features or user roles

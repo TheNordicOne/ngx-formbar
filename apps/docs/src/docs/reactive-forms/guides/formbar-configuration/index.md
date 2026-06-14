@@ -28,7 +28,7 @@ Each component registration is either **static** or **lazy**:
 - **Static** `{ component: Type<unknown> }`: the component is eagerly imported and included in the main bundle
 - **Lazy** `{ loadComponent: LoadComponentFn }`: the component is loaded on demand via dynamic `import()`
 
-The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
+The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` create these objects. You can also construct them directly:
 
 ```typescript
 // These are equivalent:
@@ -53,7 +53,7 @@ This configuration provides a global runtime configuration that is used by all c
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in _app.config.ts_ is not ideal. ngx-formbar provides multiple ways to organize your code better.
+Registering all controls, validators, etc. directly in _app.config.ts_ grows that file as the form grows. ngx-formbar provides multiple ways to split this configuration across files.
 
 If you ran `ng add` with default parameters to install ngx-formbar, your setup already uses split configurations.
 

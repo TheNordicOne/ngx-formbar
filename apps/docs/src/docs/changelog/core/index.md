@@ -4,7 +4,7 @@
 
 The core package has been narrowed to focus on content rendering, expression evaluation, and DI infrastructure. All reactive forms code has been moved to `@ngx-formbar/reactive-forms`.
 
-If you want, you can also use the core package on its own to build your own implementations, or use it as a utility library.
+The core package can also be used on its own to build custom implementations, or as a utility library.
 
 ### Added
 
