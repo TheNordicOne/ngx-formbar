@@ -1,10 +1,10 @@
 import { NgDocPage } from '@ng-doc/core';
-import ReactiveFormsCategory from '../ng-doc.category';
+import AboutCategory from '../ng-doc.category';
 
 const KnownIssuesPage: NgDocPage = {
   title: 'Known Issues',
   mdFile: './index.md',
-  category: ReactiveFormsCategory,
+  category: AboutCategory,
   order: 4,
 };
 
