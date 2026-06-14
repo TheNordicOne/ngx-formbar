@@ -1,6 +1,6 @@
 This is the shared helper that every example control template renders via `<ngxfb-examples-validation-errors>` to surface a control's active validation messages.
 
-It is a plain presentational component, not a registered formbar control, so it has no form config of its own.
+It is a plain presentational component, not a registered formbar control, so it has no form config.
 
 Implementation:
 

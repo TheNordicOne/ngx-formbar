@@ -331,7 +331,7 @@ Declare the `isReadonly` input and use it in your template:
 
 ## Dynamic Label
 
-To make an array's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Tags for ' + user.name`). The library evaluates it and forwards the result through the `dynamicLabel` signal input.
+To make an array's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Tags for ' + user.name`); the library evaluates it and forwards the result through the `dynamicLabel` signal input.
 
 Declare both `labelText` (the static value from the configuration) and `dynamicLabel`, then derive a `displayLabel` that prefers the dynamic value when it resolves to something meaningful:
 

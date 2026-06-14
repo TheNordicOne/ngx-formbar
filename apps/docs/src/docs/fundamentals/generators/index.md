@@ -99,7 +99,7 @@ For implementation details and advanced usage, see the [Blocks](/reactive-forms/
 
 ## Setting Options
 
-There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
+There are two ways to set custom default options, avoiding repeated parameters on every CLI command.
 
 ### In formbar-schematic.config.json
 

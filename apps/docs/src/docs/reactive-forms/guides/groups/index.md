@@ -86,7 +86,7 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% endraw %}
 
-The `<ngxfb-control-outlet />` element marks the slot where the library projects the child controls registered for this group. You do not iterate the children yourself. The outlet picks them up automatically via injection. The optional `<ng-content />` lets consumers project additional template content alongside the children.
+The `<ngxfb-control-outlet />` element marks the slot where the library projects the child controls registered for this group. You do not iterate the children yourself; the outlet picks them up automatically via injection. The optional `<ng-content />` lets consumers project additional template content alongside the children.
 
 Finally, register the group in _app.config.ts_
 
@@ -262,7 +262,7 @@ Declare the `isReadonly` input and use it in your template:
 
 ## Dynamic Title
 
-To make a group's title respond to other form data, use the `dynamicTitle` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`). The library evaluates it and forwards the result through the `dynamicTitle` signal input.
+To make a group's title respond to other form data, use the `dynamicTitle` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`); the library evaluates it and forwards the result through the `dynamicTitle` signal input.
 
 Declare both `titleText` (the static value from the configuration) and `dynamicTitle`, then derive a `displayTitle` that prefers the dynamic value when it resolves to something meaningful:
 

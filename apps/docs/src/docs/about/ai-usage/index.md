@@ -6,7 +6,7 @@ All AI-generated work was human-directed and reviewed. Design decisions, archite
 
 ## Areas Where AI Was Used
 
-In the following areas AI played a major role, besides helping out with tedious refactorings or smaller helper functions.
+AI played a major role in the following areas, besides helping with tedious refactorings or smaller helper functions.
 
 ### Expression Engine
 

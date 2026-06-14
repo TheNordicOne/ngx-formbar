@@ -2,7 +2,7 @@ While the Generator Schematics, by default, already register every new component
 
 ## What Does It Do
 
-This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those always have to be manually registered.
+This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those must always be registered manually.
 
 ## Options
 
@@ -17,7 +17,7 @@ This schematic tries to find all relevant controls and registers them at the app
 
 ## Setting Options
 
-There are two ways to set custom default options. This helps avoid repeating the same parameters on every CLI command.
+There are two ways to set custom default options, avoiding repeated parameters on every CLI command.
 
 ### In formbar-schematic.config.json
 

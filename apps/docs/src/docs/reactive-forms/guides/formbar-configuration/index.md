@@ -7,7 +7,7 @@ There are two configuration files used by ngx-formbar.
 - Formbar Configuration: `formbar.config.ts`
 - Schematics Configuration: `formbar-schematic.config.json`
 
-The schematics configuration is only used by the schematics and only holds default values. This file is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
+The schematics configuration is only used by the schematics and only holds default values. It is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
 
 ## Formbar Configuration Object
 
@@ -44,7 +44,7 @@ You can freely mix static and lazy registrations within the same configuration.
 
 ### NgxFbGlobalConfiguration
 
-This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
+This provides a global runtime configuration used by all controls, groups or blocks.
 
 | Property        | Type                                                                         | Required | Description                                              |
 |-----------------|------------------------------------------------------------------------------|----------|----------------------------------------------------------|
@@ -101,7 +101,7 @@ export const appConfig: ApplicationConfig = {
 
 ### Using Injection Tokens
 
-For more advanced code organization, you can use Angular's dependency injection system by providing the tokens directly.
+For more advanced code organization, you can use Angular's dependency injection by providing the tokens directly.
 
 > **Note**
 > When using the DI tokens, be aware of how resolution works:

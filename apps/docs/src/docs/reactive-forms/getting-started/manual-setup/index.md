@@ -2,7 +2,7 @@
 
 You can set up everything yourself, but `ng add` is the supported installation path.
 
-However, if you want to or have to install it manually, here is the bare minimum setup.
+If you want to or have to install it manually, here is the bare minimum setup.
 
 ## Installation
 
@@ -111,7 +111,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-In addition to setting up the `app.config.ts`, you must add a configuration file so formbar knows you are using the config registration style.
+Besides setting up the `app.config.ts`, you must add a configuration file so formbar knows you are using the config registration style.
 
 Add this file next to your `app.config.ts`.
 ```json name="formbar-schematic.config.json"

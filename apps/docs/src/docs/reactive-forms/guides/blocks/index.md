@@ -1,4 +1,4 @@
-Sometimes you need additional information or functionality within a form. For example, you might want to add an information block, images, or anything else that does not contribute to the form's value.
+Sometimes you need additional information or functionality within a form, for example an information block, images, or anything else that does not contribute to the form's value.
 
 Blocks are non-control elements: they have no `FormControl`, are never disabled or readonly, and contribute nothing to the form's value.
 

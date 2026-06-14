@@ -165,7 +165,7 @@ Check out the [Configuration guide](/fundamentals/configuration) for how to conf
 
 {% include "../../../shared/hidden-intro.md" %}
 
-The `isHidden` input on the contract is the resolved hidden state for this control. The resolution rules above already account for parent inheritance. Reading `isHidden()` in your template is enough. You do not need to walk up the configuration yourself.
+The `isHidden` input on the contract is the resolved hidden state for this control. The resolution rules above already account for parent inheritance. Reading `isHidden()` in your template is enough; you do not need to walk up the configuration yourself.
 
 Declare the input and use it directly in your template:
 
@@ -261,7 +261,7 @@ Declare the `isReadonly` input and reflect it onto the input element:
 
 ## Computed Values
 
-Sometimes you want to pre-fill an input with a value derived from other controls. Use the `computedValue` property on the control configuration to do this. The library sets the value based on the provided expression. If the control is editable, the value is only overwritten when a dependency changes. Usually you will want to make the control readonly.
+To pre-fill an input with a value derived from other controls, use the `computedValue` property on the control configuration. The library sets the value based on the provided expression. If the control is editable, the value is only overwritten when a dependency changes. Usually you will want to make the control readonly.
 
 The result is reflected through Angular's reactive form value, so your component does not need a special input for it. `[formControlName]` already shows the up-to-date value.
 
@@ -275,7 +275,7 @@ See the [Expressions guide](/fundamentals/expressions) for details on how expres
 
 ## Dynamic Label
 
-To make a control's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`). The library evaluates it and forwards the result through the `dynamicLabel` signal input.
+To make a control's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Hello, ' + user.name`); the library evaluates it and forwards the result through the `dynamicLabel` signal input.
 
 Declare both `labelText` (the static value from the configuration) and `dynamicLabel`, then derive a `displayLabel` that prefers the dynamic value when it resolves to something meaningful:
 

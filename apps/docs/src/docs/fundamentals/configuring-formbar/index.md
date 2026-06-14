@@ -1,17 +1,17 @@
-This page explains how to configure ngx-formbar itself. It covers the provider setup, the registration system, and the global options that tell ngx-formbar how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines what a form looks like.
+This page explains how to configure ngx-formbar itself. It covers the provider setup, the registration system, and the global options that tell ngx-formbar how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines a form.
 
 ## Overview
- 
+
 Configuration in ngx-formbar is split into two categories:
 
 - **Runtime configuration**: Sets up component registrations, global options, and default behavior. This is what your application needs to run.
 - **Schematics configuration**: Default values for CLI generators stored in `formbar-schematic.config.json`. This file is only used at build time and has no effect at runtime. See [Generators](/fundamentals/generators) and [Register](/fundamentals/register) for details.
 
-The rest of this page covers runtime configuration. Integration packages like `@ngx-formbar/reactive-forms` add their own configuration options on top of what is described here. See your integration package's guide for those details.
- 
+The rest of this page covers runtime configuration. Integration packages like `@ngx-formbar/reactive-forms` add their own configuration options on top of those described here. See your integration package's guide for those details.
+
 ## How Configuration Flows
 
-The diagram below shows how configuration reaches ngx-formbar at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services that components consume.
+The diagram below shows how configuration reaches ngx-formbar at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services components consume.
 
 ```
 ┌─ Your Files ─────────────────────────────────────────────────┐

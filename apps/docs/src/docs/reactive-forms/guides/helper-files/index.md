@@ -1,4 +1,4 @@
-To reduce the amount of boilerplate needed with each component and to improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
+To reduce boilerplate per component and improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
 
 
 ## Manual Helper File Integration
@@ -10,7 +10,7 @@ Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to y
 
 ## Control Container View Providers
 
-`ControlContainer` is required for all controls and groups used within ngx-formbar. Injecting the control container lets the components use reactive forms functionality without passing the form group through inputs or wrapping the template in extra tags. For a more detailed explanation, see this YouTube video: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI).
+`ControlContainer` is required for all controls and groups used within ngx-formbar. Injecting the control container lets components use reactive forms functionality without passing the form group through inputs or wrapping the template in extra tags. For a more detailed explanation, see this YouTube video: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI).
 
 ```typescript group="view-provider" name="control-container.view-provider.ts"
 export const controlContainerViewProviders = [

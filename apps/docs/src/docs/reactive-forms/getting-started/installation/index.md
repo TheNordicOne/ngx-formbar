@@ -1,16 +1,16 @@
 ## Compatibility
 
-At this time this package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
+This package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
 
 ## Primary Installation via ng-add
 
-Running the following command will install ngx-formbar.
+This command installs ngx-formbar.
 
 ```shell
 ng add @ngx-formbar/reactive-forms
 ```
 
-By default, the following things will be done.
+By default, this does the following.
 
 - Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
 - Install `@ngx-formbar/schematics` as a dev dependency (for component generators)

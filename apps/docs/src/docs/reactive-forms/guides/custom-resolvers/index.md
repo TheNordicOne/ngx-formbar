@@ -1,4 +1,4 @@
-ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own. This guide explains how to create and use custom component and validator resolvers in your application.
+ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own. This guide explains how to create and use custom component and validator resolvers.
 
 ## Understanding Resolvers
 
@@ -127,7 +127,7 @@ export class AppCustomValidatorResolver implements ValidatorResolver {
 
 ## Registering Custom Resolvers
 
-To use your custom resolvers, you need to provide them in your application configuration:
+To use your custom resolvers, provide them in your application configuration:
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';

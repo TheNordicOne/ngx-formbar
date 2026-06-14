@@ -112,7 +112,7 @@ export const exampleForm: NgxFbForm = {
 
 ## Default Validators
 
-For convenience some static validators, that are built into Angular, are registered by default. Built-in functions that return a validator, like `Validators.minLength` cannot be provided by default, as they require an argument.
+Some static validators built into Angular are registered by default. Built-in functions that return a validator, like `Validators.minLength`, cannot be provided by default because they require an argument.
 
 Check out the [Validators Documentation on angular.dev](https://angular.dev/api/forms/Validators) to see how these work.
 
@@ -158,7 +158,7 @@ validatorRegistrations: {
 ```
 ### Async Validator
 
-Async validators work pretty much the same as synchronous ones.
+Async validators work much the same as synchronous ones.
 
 This example uses a validator that ensures the text contains the word "async".
 

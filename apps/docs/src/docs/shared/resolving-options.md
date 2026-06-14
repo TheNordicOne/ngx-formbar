@@ -1,4 +1,4 @@
-Due to the current implementation and how the default values are set, the options are resolved in the following cascading order.
+Options are resolved in the following cascading order.
 
 1. Values from `angular.json`
 2. CLI Options

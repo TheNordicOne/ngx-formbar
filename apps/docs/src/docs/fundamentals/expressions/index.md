@@ -58,11 +58,11 @@ The sandbox protects **access** (no read of host state outside the supplied cont
 
 ## Function-based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This is type-safe and can use any TypeScript logic.
+In addition to string-based expressions, you can provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This is type-safe and can use any TypeScript logic.
 
 ### Signature
 
-These functions receive the current `formValue` (an object representing the entire form's data) as their single argument and are expected to return a value of the type appropriate for the property they are controlling.
+These functions receive the current `formValue` (an object representing the entire form's data) as their single argument and return a value of the type appropriate for the property they control.
 
 The general signature is:
 

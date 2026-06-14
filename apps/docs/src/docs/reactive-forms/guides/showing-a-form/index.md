@@ -1,4 +1,4 @@
-You build the form as usual. This gives you full access to the underlying form object, and you can do everything you normally can.
+You build the form as usual. This gives you full access to the underlying form object.
 
 ```typescript group="showing-form" name="some-feature.component.ts" icon="angular"
 @Component({

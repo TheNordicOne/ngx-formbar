@@ -137,7 +137,7 @@ const component = withLoadedComponent(registrationEntry);
 
 ### withDynamicLabel / withDynamicTitle / withComputedValue
 
-Each wraps `resolveExpression` and reads the form value from `NGX_FW_FORM_VALUE`. Returns a signal of the evaluated result, or `undefined` when the corresponding field is not configured.
+Each wraps `resolveExpression` and reads the form value from `NGX_FW_FORM_VALUE`. Returns a signal of the evaluated result, or `undefined` when the field is not configured.
 
 ```typescript
 const dynamicLabel = withDynamicLabel(content);            // Signal<string | null | undefined>
@@ -200,7 +200,7 @@ const result = expressionService.evaluateExpression<boolean>(ast, { user: { age:
 // result === true (typed as boolean | null)
 ```
 
-`evaluateExpression` accepts an optional type parameter `T` (defaults to `unknown`). Use it to declare the expected result type at the call site, avoiding a manual cast. The return is `T | null`: `null` only when `ast` or `context` are nullish.
+`evaluateExpression` accepts an optional type parameter `T` (defaults to `unknown`). Use it to declare the expected result type at the call site, avoiding a manual cast. The return is `T | null`, with `null` only when `ast` or `context` are nullish.
 
 ### ComponentRegistrationService
 
@@ -233,7 +233,7 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 
 `@ngx-formbar/core` is form-agnostic. It owns the configuration model, the expression engine, the registration system, dynamic component mounting, and all state-resolution logic. It has no opinion about where form values live or how the form model gets updated. An integration package wires those two ends together.
 
-`@ngx-formbar/reactive-forms` is one such integration, built on top of `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
+`@ngx-formbar/reactive-forms` is one such integration, built on `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
 
 ### Three Layers
 

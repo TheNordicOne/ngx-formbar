@@ -1,4 +1,4 @@
-The form configuration defines the structure and behavior of your form. It is the same regardless of which integration package you use. You can write it directly in JSON or in TypeScript for better typing information.
+The form configuration defines the structure and behavior of your form. It is the same regardless of which integration package you use. You can write it directly in JSON, or in TypeScript for better typing information.
 
 ## Form
 
@@ -17,7 +17,7 @@ By default, you don't need to pass any type generic to `NgxFbForm`, but if you h
 
 ## Content
 
-The following configuration options are supported built in. When setting up Controls or Groups you can add more options.
+The following configuration options are supported built in. When setting up Controls or Groups you can add more.
 
 ### Base
 
