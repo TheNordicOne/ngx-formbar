@@ -1,3 +1,14 @@
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--form-spacing-sm);
+}
+
+.navbar-logo {
+  block-size: 1.5em;
+  inline-size: 1.5em;
+}
+
 .navbar-right {
   --gap: var(--form-spacing-lg);
   display: flex;
