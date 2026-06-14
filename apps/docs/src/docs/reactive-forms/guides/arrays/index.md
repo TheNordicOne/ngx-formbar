@@ -39,8 +39,7 @@ A row can be a group, which makes each row a sub-form:
 
 ## Manual Setup
 
-> **Note**
-> Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
+{% include "../../../shared/helper-files-note.md" %}
 
 First create an interface for your array.
 

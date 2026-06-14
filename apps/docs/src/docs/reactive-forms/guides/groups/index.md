@@ -18,8 +18,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 
 ## Manual Setup
 
-> **Note**
-> Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
+{% include "../../../shared/helper-files-note.md" %}
 
 Here is an example of a simple group. Most likely you will only set up one or two group components, if at all.
 
@@ -114,8 +113,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-> **Note**
-> `staticComponent` and `loadComponent` come from `@ngx-formbar/core`. `provideFormbar` comes from `@ngx-formbar/reactive-forms`.
+{% include "../../../shared/component-helper-origins.md" %}
 
 ## Reusability
 
