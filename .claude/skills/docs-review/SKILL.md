@@ -28,6 +28,7 @@ Useful framework facts (verify before relying on them, they can drift):
 - Code groups use `group="..."`, external file embeds use `file="..."`, demos use `{{ NgDocActions.demo("Name") }}`.
 - API reference is auto-generated from `libs/*/src/index.ts`; do not hand-write API docs that ng-doc generates.
 - The example domain is **asset/maintenance forms** (maintenance-form, complex-maintenance-form, etc.). Consistency work should keep that domain coherent, not invent new ones.
+- There is currently one published forms package (**Reactive Forms**), but a **Signal Forms** package is coming (note the `signal-forms/` placeholder category). Package-qualified references are deliberate — see the rule below.
 
 ## Operating rules (apply to every phase)
 
@@ -45,6 +46,8 @@ Useful framework facts (verify before relying on them, they can drift):
 3. Gate: spawn an **independent review subagent** that reads the phase diff and judges it against this phase's goal — did it fix the real issues, introduce regressions, or overreach? Address whatever it surfaces.
 4. Commit.
 5. Append a one-line entry to the running summary (what changed, or "clean pass").
+
+**Preserve package-qualified references.** Where a doc explicitly scopes something to a package — for example a link or heading like "Reactive Forms: Formbar Configuration" — that qualifier is intentional and MUST stay. It is a routing seam: a Signal Forms package is coming, and these references will route to either the Reactive Forms or the Signal Forms package. Do not strip the "Reactive Forms" qualifier as if it were redundant, do not merge such references into one generic page, and do not deduplicate per-package content into a single shared include during Phases 2, 4, 5, or 6. When unsure whether a qualifier is a routing seam or accidental, treat it as a routing seam and leave it.
 
 **Writing constraints** (these reflect standing project preferences):
 - No em-dashes. Use short, direct sentences instead.
