@@ -1,17 +1,10 @@
 The date control renders a date `input` with optional min and max bounds.
 
+<docs-component-example>
+
 {{ NgDocActions.demo("DateExampleComponent", { container: false }) }}
 
-Configure it in your form like this:
-
-```typescript name="form config"
-preferredDate: {
-  type: 'date',
-  label: 'Preferred Date',
-  minDate: '1900-01-01',
-  maxDate: '2026-12-31',
-}
-```
+</docs-component-example>
 
 Implementation:
 
@@ -22,4 +15,15 @@ Implementation:
 ```
 
 ```scss group="date-source" name="date-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/date/date-control.component.scss"
+```
+
+Configure it in your form like this:
+
+```typescript name="form config"
+preferredDate: {
+  type: 'date',
+  label: 'Preferred Date',
+  minDate: '1900-01-01',
+  maxDate: '2026-12-31',
+}
 ```

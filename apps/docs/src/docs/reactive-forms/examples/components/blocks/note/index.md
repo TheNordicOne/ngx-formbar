@@ -1,17 +1,10 @@
 The note block renders a static message and holds no form value.
 
+<docs-component-example>
+
 {{ NgDocActions.demo("NoteExampleComponent", { container: false }) }}
 
-Configure it in your form like this:
-
-```typescript name="form config"
-infoNote: {
-  type: 'note',
-  isControl: false,
-  severity: 'info',
-  message: 'An informational note rendered as a block.',
-}
-```
+</docs-component-example>
 
 Implementation:
 
@@ -22,4 +15,15 @@ Implementation:
 ```
 
 ```scss group="note-source" name="note-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/note/note-control.component.scss"
+```
+
+Configure it in your form like this:
+
+```typescript name="form config"
+infoNote: {
+  type: 'note',
+  isControl: false,
+  severity: 'info',
+  message: 'An informational note rendered as a block.',
+}
 ```

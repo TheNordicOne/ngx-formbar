@@ -1,17 +1,10 @@
 The number control renders a numeric `input` with optional min and max bounds.
 
+<docs-component-example>
+
 {{ NgDocActions.demo("NumberExampleComponent", { container: false }) }}
 
-Configure it in your form like this:
-
-```typescript name="form config"
-peopleAffected: {
-  type: 'number',
-  label: 'People Affected',
-  min: 0,
-  max: 5000,
-}
-```
+</docs-component-example>
 
 Implementation:
 
@@ -22,4 +15,15 @@ Implementation:
 ```
 
 ```scss group="number-source" name="number-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/number/number-control.component.scss"
+```
+
+Configure it in your form like this:
+
+```typescript name="form config"
+peopleAffected: {
+  type: 'number',
+  label: 'People Affected',
+  min: 0,
+  max: 5000,
+}
 ```

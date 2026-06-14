@@ -1,16 +1,10 @@
 The file control renders a file `input` with an optional list of accepted types.
 
+<docs-component-example>
+
 {{ NgDocActions.demo("FileExampleComponent", { container: false }) }}
 
-Configure it in your form like this:
-
-```typescript name="form config"
-attachment: {
-  type: 'file',
-  label: 'Attachment',
-  accept: ['.pdf', '.txt'],
-}
-```
+</docs-component-example>
 
 Implementation:
 
@@ -21,4 +15,14 @@ Implementation:
 ```
 
 ```scss group="file-source" name="file-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/file/file-control.component.scss"
+```
+
+Configure it in your form like this:
+
+```typescript name="form config"
+attachment: {
+  type: 'file',
+  label: 'Attachment',
+  accept: ['.pdf', '.txt'],
+}
 ```
