@@ -1,3 +1,5 @@
+{% import "../../../shared/scaffolds.njk" as scaffold %}
+
 A control can be whatever you need it to be. It can be as generic as a `TextControl`, be more specific like an `EMailControl`, just wrap existing controls like a `DateRangeControl` or have custom logic like a `SearchableDropdownControl`.
 
 Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, controls are plain Angular components that implement the `ReactiveFormbarControl<T>` contract. The library writes its state into your component through signal inputs, so you only declare the inputs you actually care about. There is no host directive, no injection, and no manual signal forwarding.
@@ -121,6 +123,40 @@ export const appConfig: ApplicationConfig = {
 > **Note**
 > `staticComponent` and `loadComponent` come from `@ngx-formbar/core`. `provideFormbar` comes from `@ngx-formbar/reactive-forms`.
 
+## Reusability
+
+A formbar component is input-driven, so the same component works whether formbar drives it from config or you use it directly in a plain reactive form.
+
+**Formbar only**
+
+```typescript group="control-formbar-only" name="text-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.ts"
+```
+
+```html group="control-formbar-only" name="text-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.html"
+```
+
+**Reusable**
+
+```typescript group="control-reusable" name="text-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.ts"
+```
+
+```html group="control-reusable" name="text-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.html"
+```
+
+The two are identical. A control binds itself to the form with `[formControlName]="name()"`, which works the same with or without formbar, so a control needs nothing extra to be reusable.
+
+Used directly in a plain reactive form, with no formbar config:
+
+{% raw %}
+
+```html name="standalone.component.html"
+<form [formGroup]="form">
+  <ngxfb-examples-text-control name="fullName" labelText="Full Name" />
+</form>
+```
+
+{% endraw %}
+
 ## Configuration
 
 Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a control.
@@ -133,23 +169,11 @@ The `isHidden` input on the contract is the resolved hidden state for this contr
 
 Declare the input and use it directly in your template:
 
-{% raw %}
-
-```typescript group="hidden-control" name="text-control.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly labelText = input<string | undefined>('');
+{{ scaffold.controlTs("hidden-control", "    readonly labelText = input<string | undefined>('');
     readonly isHidden = input(false);
-    readonly hint = input<string>();
-}
-```
+    readonly hint = input<string>();") }}
+
+{% raw %}
 
 ```html group="hidden-control" name="text-control.component.html"
 @if (isHidden()) {
@@ -183,23 +207,11 @@ provideFormbar({
 
 Declare the `isDisabled` input and use it in your template:
 
-{% raw %}
-
-```typescript group="disabled-control" name="text-control.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly labelText = input<string | undefined>('');
+{{ scaffold.controlTs("disabled-control", "    readonly labelText = input<string | undefined>('');
     readonly isDisabled = input(false);
-    readonly hint = input<string>();
-}
-```
+    readonly hint = input<string>();") }}
+
+{% raw %}
 
 ```html group="disabled-control" name="text-control.component.html"
 <label [htmlFor]="name()">{{ labelText() }}</label>
@@ -229,23 +241,11 @@ provideFormbar({
 
 Declare the `isReadonly` input and reflect it onto the input element:
 
-{% raw %}
-
-```typescript group="readonly-control" name="text-control.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly labelText = input<string | undefined>('');
+{{ scaffold.controlTs("readonly-control", "    readonly labelText = input<string | undefined>('');
     readonly isReadonly = input(false);
-    readonly hint = input<string>();
-}
-```
+    readonly hint = input<string>();") }}
+
+{% raw %}
 
 ```html group="readonly-control" name="text-control.component.html"
 <label [htmlFor]="name()">{{ labelText() }}</label>
@@ -281,19 +281,7 @@ Declare both `labelText` (the static value from the configuration) and `dynamicL
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
-{% raw %}
-
-```typescript group="dynamic-label" name="text-control.component.ts" icon="angular"
-import { Component, computed, input } from '@angular/core';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly labelText = input<string | undefined>('');
+{{ scaffold.controlTs("dynamic-label", "    readonly labelText = input<string | undefined>('');
     readonly dynamicLabel = input<string | null>();
 
     readonly displayLabel = computed(() => {
@@ -302,9 +290,9 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
             return dynamic;
         }
         return this.labelText();
-    });
-}
-```
+    });", core="Component, computed, input") }}
+
+{% raw %}
 
 ```html group="dynamic-label" name="text-control.component.html"
 <label [htmlFor]="name()">{{ displayLabel() }}</label>
@@ -317,22 +305,10 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 {% include "../../../shared/test-id.md" %}
 
+{{ scaffold.controlTs("test-id-control", "    readonly labelText = input<string | undefined>('');
+    readonly testId = input('');") }}
+
 {% raw %}
-
-```typescript group="test-id-control" name="text-control.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly labelText = input<string | undefined>('');
-    readonly testId = input('');
-}
-```
 
 ```html group="test-id-control" name="text-control.component.html"
 <label
@@ -352,23 +328,10 @@ export class TextControlComponent implements ReactiveFormbarControl<TextControl>
 
 The contract exposes the resolved validation errors through the `errors` signal input and the touched/dirty status through `isDirty`. This is the recommended way to show errors. There is no need to reach into the underlying form control.
 
+{{ scaffold.controlTs("errors-control", "    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);", forms="ValidationErrors") }}
+
 {% raw %}
-
-```typescript group="errors-control" name="text-control.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
-import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { TextControl } from './text-control.type';
-
-@Component({
-    // ...
-})
-export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
-    readonly name = input.required<string>();
-    readonly errors = input<ValidationErrors | null>(null);
-    readonly isDirty = input(false);
-}
-```
 
 ```html group="errors-control" name="text-control.component.html"
 <input [id]="name()" [formControlName]="name()" />

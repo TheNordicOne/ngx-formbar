@@ -1,3 +1,5 @@
+{% import "../../../shared/scaffolds.njk" as scaffold %}
+
 A group is used to group controls together. It results in an Angular `FormGroup` instance.
 
 Most of the time you only need one or two different group types. They become really handy when you need different behaviors. For example, one group that does nothing special visually and one that is collapsible.
@@ -115,6 +117,45 @@ export const appConfig: ApplicationConfig = {
 > **Note**
 > `staticComponent` and `loadComponent` come from `@ngx-formbar/core`. `provideFormbar` comes from `@ngx-formbar/reactive-forms`.
 
+## Reusability
+
+A formbar component is input-driven, so the same component works whether formbar drives it from config or you place it in a plain reactive form yourself. The one thing that differs for a group is how the children get rendered. With formbar, `<ngxfb-control-outlet />` renders the children from the configuration. Without formbar there is no configuration feeding the outlet, so the reusable group also projects children through `<ng-content />`.
+
+**Formbar only**
+
+```typescript group="group-formbar-only" name="formbar-group-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-group/formbar-group-control.component.ts"
+```
+
+```html group="group-formbar-only" name="formbar-group-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-group/formbar-group-control.component.html"
+```
+
+**Reusable**
+
+```typescript group="group-reusable" name="group-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/group/group-control.component.ts"
+```
+
+```html group="group-reusable" name="group-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/group/group-control.component.html"
+```
+
+The reusable group is the same component plus a single `<ng-content />`. That projection slot is the only addition needed to also use the group in a plain reactive form, where you wire the nested `FormGroup` yourself.
+
+Used directly in a plain reactive form, with no formbar config. You bind the nested `FormGroup` with `formGroupName` and project the children through `<ng-content />`:
+
+{% raw %}
+
+```html name="standalone.component.html"
+<form [formGroup]="form">
+  <ngxfb-examples-group-control name="requester" titleText="Requester" legend="Requester">
+    <ng-container formGroupName="requester">
+      <ngxfb-examples-text-control name="fullName" labelText="Full Name" />
+      <ngxfb-examples-text-control name="email" labelText="Email" />
+    </ng-container>
+  </ngxfb-examples-group-control>
+</form>
+```
+
+{% endraw %}
+
 ## Configuration
 
 Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a group.
@@ -128,21 +169,9 @@ The `isHidden` input on the contract reflects the resolved hidden state for this
 > **Note**
 > `<ngxfb-control-outlet />` always projects the children registered in this group, regardless of the resolved `isHidden` value. With `hiddenHandling: 'auto'` (the default), the library handles the hidden lifecycle for you by destroying the group component when it becomes hidden. With `hiddenHandling: 'manual'`, you stay mounted and decide what to render based on `isHidden()` yourself.
 
+{{ scaffold.groupTs("hidden-group", "    readonly isHidden = input(false);") }}
+
 {% raw %}
-
-```typescript group="hidden-group" name="group.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly isHidden = input(false);
-}
-```
 
 ```html group="hidden-group" name="group.component.html"
 @if (isHidden()) {
@@ -178,21 +207,9 @@ provideFormbar({
 
 Declare the `isDisabled` input and use it in your template:
 
+{{ scaffold.groupTs("disabled-group", "    readonly isDisabled = input(false);") }}
+
 {% raw %}
-
-```typescript group="disabled-group" name="group.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly isDisabled = input(false);
-}
-```
 
 ```html group="disabled-group" name="group.component.html"
 <ng-container [formGroupName]="name()">
@@ -225,21 +242,9 @@ provideFormbar({
 
 Declare the `isReadonly` input and use it in your template:
 
+{{ scaffold.groupTs("readonly-group", "    readonly isReadonly = input(false);") }}
+
 {% raw %}
-
-```typescript group="readonly-group" name="group.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly isReadonly = input(false);
-}
-```
 
 ```html group="readonly-group" name="group.component.html"
 <ng-container [formGroupName]="name()">
@@ -263,19 +268,7 @@ Declare both `titleText` (the static value from the configuration) and `dynamicT
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
-{% raw %}
-
-```typescript group="dynamic-title" name="group.component.ts" icon="angular"
-import { Component, computed, input } from '@angular/core';
-import { ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly titleText = input<string | undefined>('');
+{{ scaffold.groupTs("dynamic-title", "    readonly titleText = input<string | undefined>('');
     readonly dynamicTitle = input<string | null>();
 
     readonly displayTitle = computed(() => {
@@ -284,9 +277,9 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
             return dynamic;
         }
         return this.titleText() ?? '';
-    });
-}
-```
+    });", core="Component, computed, input") }}
+
+{% raw %}
 
 ```html group="dynamic-title" name="group.component.html"
 <ng-container [formGroupName]="name()">
@@ -303,21 +296,9 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 {% include "../../../shared/test-id.md" %}
 
+{{ scaffold.groupTs("test-id-group", "    readonly testId = input('');") }}
+
 {% raw %}
-
-```typescript group="test-id-group" name="group.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly testId = input('');
-}
-```
 
 ```html group="test-id-group" name="group.component.html"
 <ng-container [formGroupName]="name()">
@@ -333,23 +314,10 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 The contract exposes the resolved validation errors through the `errors` signal input and the touched/dirty status through `isDirty`. This is the recommended way to show errors. There is no need to reach into the underlying form group.
 
+{{ scaffold.groupTs("errors-group", "    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);", forms="ValidationErrors") }}
+
 {% raw %}
-
-```typescript group="errors-group" name="group.component.ts" icon="angular"
-import { Component, input } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
-import { Group } from './group.type';
-
-@Component({
-    // ...
-})
-export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly errors = input<ValidationErrors | null>(null);
-    readonly isDirty = input(false);
-}
-```
 
 ```html group="errors-group" name="group.component.html"
 <ng-container [formGroupName]="name()">

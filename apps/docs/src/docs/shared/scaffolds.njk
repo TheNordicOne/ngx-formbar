@@ -1,0 +1,68 @@
+{# Reusable code scaffolds for the reactive-forms guides.
+   Each macro emits a fenced TypeScript code block with the invariant
+   component shell, so feature sections only pass the members that differ.
+   TS shells contain no Angular `{{ }}` interpolation, so they are safe to
+   render through nunjucks. Keep HTML examples in `{% raw %}` blocks.
+
+   Params:
+     group   - the ng-doc code group id (pairs the .ts tab with its .html tab)
+     members - class body lines after `name` (inputs, computed, etc.)
+     core    - named imports from '@angular/core' (default: 'Component, input')
+     forms   - named imports from '@angular/forms' (optional, e.g. 'ValidationErrors')
+#}
+
+{% macro controlTs(group, members, core='Component, input', forms='') -%}
+```typescript group="{{ group }}" name="text-control.component.ts" icon="angular"
+import { {{ core }} } from '@angular/core';
+{% if forms %}import { {{ forms }} } from '@angular/forms';
+{% endif -%}
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+import { TextControl } from './text-control.type';
+
+@Component({
+    // ...
+})
+export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
+    readonly name = input.required<string>();
+{{ members }}
+}
+```
+{%- endmacro %}
+
+{% macro groupTs(group, members, core='Component, input', forms='') -%}
+```typescript group="{{ group }}" name="group.component.ts" icon="angular"
+import { {{ core }} } from '@angular/core';
+{% if forms %}import { {{ forms }} } from '@angular/forms';
+{% endif -%}
+import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
+import { GroupControl } from './group-control.type';
+
+@Component({
+    // ...
+})
+export class GroupComponent implements ReactiveFormbarGroup<GroupControl> {
+    readonly name = input.required<string>();
+{{ members }}
+}
+```
+{%- endmacro %}
+
+{% macro arrayTs(group, members, core='Component, inject, input', forms='') -%}
+```typescript group="{{ group }}" name="array.component.ts" icon="angular"
+import { {{ core }} } from '@angular/core';
+{% if forms %}import { {{ forms }} } from '@angular/forms';
+{% endif -%}
+import { NgxFbFormArrayOutlet, NGXFB_ARRAY_CONTROL, ReactiveFormbarArray } from '@ngx-formbar/reactive-forms';
+import { ArrayControl } from './array-control.type';
+
+@Component({
+    // ...
+})
+export class ArrayComponent implements ReactiveFormbarArray<ArrayControl> {
+    readonly name = input.required<string>();
+
+    protected readonly array = inject(NGXFB_ARRAY_CONTROL);
+{{ members }}
+}
+```
+{%- endmacro %}

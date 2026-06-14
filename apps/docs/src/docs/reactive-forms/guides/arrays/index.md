@@ -1,3 +1,5 @@
+{% import "../../../shared/scaffolds.njk" as scaffold %}
+
 An array renders a repeating row from a single row definition. It results in an Angular `FormArray` instance. Each row is built from the array's `rowControl`, which can be a control, a group, or another array.
 
 The `FormArray` is the source of truth for the rows. You own the template: the row loop, the markup, and the add and remove buttons. The library builds and inserts row controls for you and renders a single row's controls through `<ngxfb-form-array-outlet [index]>`. You add and remove rows through the array context the library provides, and the form value follows.
@@ -132,6 +134,47 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+## Reusability
+
+A formbar component is input-driven, so the same component works whether formbar drives it from config or you place it in a plain reactive form yourself. For an array the difference is how rows are built and rendered. With formbar, the injected array context supplies the rows plus the add and remove operations, and `<ngxfb-form-array-outlet>` renders each row. Without formbar there is no array context, so the reusable array also accepts an `itemFactory` to build rows and a `<ng-template #item>` to render them.
+
+**Formbar only**
+
+```typescript group="array-formbar-only" name="formbar-array-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-array/formbar-array-control.component.ts"
+```
+
+```html group="array-formbar-only" name="formbar-array-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-array/formbar-array-control.component.html"
+```
+
+**Reusable**
+
+```typescript group="array-reusable" name="array-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/array/array-control.component.ts"
+```
+
+```html group="array-reusable" name="array-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/array/array-control.component.html"
+```
+
+The reusable array is the same component plus the standalone row path: it makes the array context optional, falls back to the raw `FormArray`, and renders a consumer `<ng-template #item>` built from an `itemFactory`. That extra logic is what lets the same component grow and render rows without formbar.
+
+Used directly in a plain reactive form, with no formbar config. There is no array context, so you provide an `itemFactory` to build new rows and a `<ng-template #item>` to render each one:
+
+{% raw %}
+
+```html name="standalone.component.html"
+<form [formGroup]="form">
+  <ngxfb-examples-array-control name="tags" labelText="Tags" [itemFactory]="newTag">
+    <ng-template #item let-i="index" let-removeAt="removeAt">
+      <div class="tag-row">
+        <input type="text" placeholder="Tag" [formControlName]="i" />
+        <button type="button" (click)="removeAt(i)">Remove</button>
+      </div>
+    </ng-template>
+  </ngxfb-examples-array-control>
+</form>
+```
+
+{% endraw %}
+
 ## The Array Context
 
 The library provides `NGXFB_ARRAY_CONTROL`, an injectable context for the array component:
@@ -203,6 +246,28 @@ form.patchValue(data);
 
 The array as a whole supports `hidden` like any other control. Controls inside a row support `hidden` as well, including `hideStrategy: 'remove'`, because a hidden row child detaches and re-attaches by name within its row and does not affect the other rows.
 
+Declare the `isHidden` input and use it in your template:
+
+{{ scaffold.arrayTs("hidden-array", "    readonly isHidden = input(false);") }}
+
+{% raw %}
+
+```html group="hidden-array" name="array.component.html"
+@if (isHidden()) {
+  <span>Some placeholder you want to use</span>
+} @else {
+  <fieldset>
+    <div [formArrayName]="name()">
+      @for (row of array.rows(); track row) {
+        <ngxfb-form-array-outlet [index]="$index" />
+      }
+    </div>
+  </fieldset>
+}
+```
+
+{% endraw %}
+
 > **Note**
 > The row's top control may not use `hideStrategy: 'remove'`. The array renders its rows from the `FormArray`, so a removed row top would have nothing left to evaluate its hidden expression and could never be restored. Rows are therefore always kept. This is the one intentional divergence from a non-array control: it is a compile-time error on `rowControl` and is also rejected at runtime. Use `add`, `insertAt`, and `removeAt` to change which rows exist.
 
@@ -216,13 +281,132 @@ The array as a whole supports `hidden` like any other control. Controls inside a
 
 Disabling the array disables its rows, since `FormArray.disable()` cascades.
 
+Declare the `isDisabled` input and use it in your template:
+
+{{ scaffold.arrayTs("disabled-array", "    readonly isDisabled = input(false);") }}
+
+{% raw %}
+
+```html group="disabled-array" name="array.component.html"
+<fieldset>
+  <div [formArrayName]="name()">
+    @for (row of array.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>
+</fieldset>
+
+@if (isDisabled()) {
+  <span>This is no longer relevant</span>
+}
+```
+
+{% endraw %}
+
 ## Readonly
 
 {% include "../../../shared/readonly-intro.md" %}
 
+Declare the `isReadonly` input and use it in your template:
+
+{{ scaffold.arrayTs("readonly-array", "    readonly isReadonly = input(false);") }}
+
+{% raw %}
+
+```html group="readonly-array" name="array.component.html"
+<fieldset>
+  <div [formArrayName]="name()">
+    @for (row of array.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>
+</fieldset>
+
+@if (isReadonly()) {
+  <span>This cannot be edited</span>
+}
+```
+
+{% endraw %}
+
+## Dynamic Label
+
+To make an array's label respond to other form data, use the `dynamicLabel` configuration property. You provide an expression (e.g. `'Tags for ' + user.name`). The library evaluates it and forwards the result through the `dynamicLabel` signal input.
+
+Declare both `labelText` (the static value from the configuration) and `dynamicLabel`, then derive a `displayLabel` that prefers the dynamic value when it resolves to something meaningful:
+
+See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
+
+{{ scaffold.arrayTs("dynamic-label-array", "    readonly labelText = input<string | undefined>('');
+    readonly dynamicLabel = input<string | null>();
+
+    readonly displayLabel = computed(() => {
+        const dynamic = this.dynamicLabel();
+        if (dynamic && dynamic.trim() !== '') {
+            return dynamic;
+        }
+        return this.labelText();
+    });", core="Component, computed, inject, input") }}
+
+{% raw %}
+
+```html group="dynamic-label-array" name="array.component.html"
+<fieldset>
+  <legend>{{ displayLabel() }}</legend>
+  <div [formArrayName]="name()">
+    @for (row of array.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>
+</fieldset>
+```
+
+{% endraw %}
+
+## Test ID
+
+{% include "../../../shared/test-id.md" %}
+
+{{ scaffold.arrayTs("test-id-array", "    readonly testId = input('');") }}
+
+{% raw %}
+
+```html group="test-id-array" name="array.component.html"
+<fieldset [attr.data-testid]="testId() + '-wrapper'">
+  <div [formArrayName]="name()">
+    @for (row of array.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>
+</fieldset>
+```
+
+{% endraw %}
+
 ## Showing Errors
 
 The contract exposes the resolved validation errors through the `errors` signal input and the dirty status through `isDirty`, the same as controls and groups.
+
+{{ scaffold.arrayTs("errors-array", "    readonly errors = input<ValidationErrors | null>(null);
+    readonly isDirty = input(false);", forms="ValidationErrors") }}
+
+{% raw %}
+
+```html group="errors-array" name="array.component.html"
+<fieldset>
+  <div [formArrayName]="name()">
+    @for (row of array.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>
+</fieldset>
+
+@if (isDirty() && errors()?.['required']) {
+  <span>Required</span>
+}
+```
+
+{% endraw %}
 
 For advanced cases that need the underlying `FormArray` (for example reading `pending`), declare the optional `arrayInstance` input. The library writes the resolved `FormArray` into it.
 
