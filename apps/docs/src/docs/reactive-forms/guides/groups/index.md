@@ -50,27 +50,27 @@ import { Group } from './group.type';
 import { controlContainerViewProviders } from './control-container.view-provider';
 
 @Component({
-    selector: 'app-group',
-    imports: [ReactiveFormsModule, NgxFbControlOutlet],
-    templateUrl: './group.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    viewProviders: controlContainerViewProviders,
+  selector: 'app-group',
+  imports: [ReactiveFormsModule, NgxFbControlOutlet],
+  templateUrl: './group.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  viewProviders: controlContainerViewProviders,
 })
 export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    // Required. The library always provides this
-    readonly name = input.required<string>();
+  // Required. The library always provides this
+  readonly name = input.required<string>();
 
-    // Optional contract inputs. Declare only the ones you use
-    readonly isDisabled = input(false);
-    readonly isReadonly = input(false);
-    readonly isHidden = input(false);
-    readonly titleText = input<string | undefined>('');
-    readonly dynamicTitle = input<string | null>();
-    readonly testId = input('');
-    readonly errors = input<ValidationErrors | null>(null);
-    readonly isDirty = input(false);
+  // Optional contract inputs. Declare only the ones you use
+  readonly isDisabled = input(false);
+  readonly isReadonly = input(false);
+  readonly isHidden = input(false);
+  readonly titleText = input<string | undefined>('');
+  readonly dynamicTitle = input<string | null>();
+  readonly testId = input('');
+  readonly errors = input<ValidationErrors | null>(null);
+  readonly isDirty = input(false);
 
-    // Custom inputs from Group beyond NgxFbFormGroup go here
+  // Custom inputs from Group beyond NgxFbFormGroup go here
 }
 ```
 
@@ -119,20 +119,24 @@ export const appConfig: ApplicationConfig = {
 
 A formbar component is input-driven, so the same component works whether formbar drives it from config or you place it in a plain reactive form yourself. The one thing that differs for a group is how the children get rendered. With formbar, `<ngxfb-control-outlet />` renders the children from the configuration. Without formbar there is no configuration feeding the outlet, so the reusable group also projects children through `<ng-content />`.
 
-**Formbar only**
+**ngx-formbar only**
 
 ```typescript group="group-formbar-only" name="formbar-group-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-group/formbar-group-control.component.ts"
+
 ```
 
 ```html group="group-formbar-only" name="formbar-group-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/formbar-group/formbar-group-control.component.html"
+
 ```
 
 **Reusable**
 
 ```typescript group="group-reusable" name="group-control.component.ts" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/group/group-control.component.ts"
+
 ```
 
 ```html group="group-reusable" name="group-control.component.html" file="../../../../../../../libs/examples/reactive-forms/src/lib/components/group/group-control.component.html"
+
 ```
 
 The reusable group is the same component plus a single `<ng-content />`. That projection slot is the only addition needed to also use the group in a plain reactive form, where you wire the nested `FormGroup` yourself.
@@ -173,13 +177,13 @@ The `isHidden` input on the contract reflects the resolved hidden state for this
 
 ```html group="hidden-group" name="group.component.html"
 @if (isHidden()) {
-  <span>Some placeholder you want to use</span>
+<span>Some placeholder you want to use</span>
 } @else {
-  <ng-container [formGroupName]="name()">
-    <fieldset>
-      <ngxfb-control-outlet />
-    </fieldset>
-  </ng-container>
+<ng-container [formGroupName]="name()">
+  <fieldset>
+    <ngxfb-control-outlet />
+  </fieldset>
+</ng-container>
 }
 ```
 
@@ -218,7 +222,7 @@ Declare the `isDisabled` input and use it in your template:
 
 <!-- Only show hint when group is disabled -->
 @if (isDisabled()) {
-  <span>This is no longer relevant</span>
+<span>This is no longer relevant</span>
 }
 ```
 
@@ -252,7 +256,7 @@ Declare the `isReadonly` input and use it in your template:
 </ng-container>
 
 @if (isReadonly()) {
-  <span>This cannot be edited</span>
+<span>This cannot be edited</span>
 }
 ```
 
@@ -266,8 +270,8 @@ Declare both `titleText` (the static value from the configuration) and `dynamicT
 
 See the [Expressions guide](/fundamentals/expressions) for details on how expressions work and the [Configuration guide](/fundamentals/configuration) for other configuration options.
 
-{{ scaffold.groupTs("dynamic-title", "    readonly titleText = input<string | undefined>('');
-    readonly dynamicTitle = input<string | null>();
+{{ scaffold.groupTs("dynamic-title", " readonly titleText = input<string | undefined>('');
+readonly dynamicTitle = input<string | null>();
 
     readonly displayTitle = computed(() => {
         const dynamic = this.dynamicTitle();
@@ -325,7 +329,7 @@ The contract exposes the resolved validation errors through the `errors` signal 
 </ng-container>
 
 @if (isDirty() && errors()?.['required']) {
-  <span>Required</span>
+<span>Required</span>
 }
 ```
 
@@ -340,11 +344,11 @@ import { ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 
 @Component({
-    // ...
+  // ...
 })
 export class GroupComponent implements ReactiveFormbarGroup<Group> {
-    readonly name = input.required<string>();
-    readonly groupInstance = input<FormGroup>();
+  readonly name = input.required<string>();
+  readonly groupInstance = input<FormGroup>();
 }
 ```
 
@@ -352,17 +356,17 @@ export class GroupComponent implements ReactiveFormbarGroup<Group> {
 
 The `ReactiveFormbarGroup<T>` contract is implemented by your component. The library detects which inputs you declared (by name) and writes its resolved values into them, so every input below is optional except `name`. Any property you add to `T` beyond `NgxFbFormGroup` becomes an additional signal input on the contract. Required properties on `T` must be declared on the component; optional properties (`?`) can be omitted.
 
-| Input           | Type                                      | Description                                                                                      |
-|-----------------|-------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `name`          | `SignalInput<string>` (**required**)      | The group's name (the key used in the configuration).                                            |
-| `isDisabled`    | `SignalInput<boolean>`                    | Whether the group is currently disabled.                                                         |
-| `isReadonly`    | `SignalInput<boolean>`                    | Whether the group is currently readonly.                                                         |
-| `isHidden`      | `SignalInput<boolean>`                    | Whether the group is currently hidden (already accounts for parent inheritance).                 |
-| `testId`        | `SignalInput<string>`                     | The computed test ID for the group.                                                              |
-| `hideStrategy`  | `SignalInput<HideStrategy \| undefined>`  | The group's hide strategy (`'keep'` or `'remove'`).                                              |
-| `valueStrategy` | `SignalInput<ValueStrategy \| undefined>` | The group's value strategy (`'last'`, `'default'`, or `'reset'`).                                |
-| `errors`        | `SignalInput<ValidationErrors \| null>`   | Validation errors of the underlying form group.                                                  |
-| `isDirty`       | `SignalInput<boolean>`                    | Whether the underlying form group is dirty.                                                      |
-| `titleText`     | `SignalInput<string \| undefined>`        | The static `title` value from the group configuration.                                           |
+| Input           | Type                                       | Description                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`          | `SignalInput<string>` (**required**)       | The group's name (the key used in the configuration).                                                                                                                                                                                                  |
+| `isDisabled`    | `SignalInput<boolean>`                     | Whether the group is currently disabled.                                                                                                                                                                                                               |
+| `isReadonly`    | `SignalInput<boolean>`                     | Whether the group is currently readonly.                                                                                                                                                                                                               |
+| `isHidden`      | `SignalInput<boolean>`                     | Whether the group is currently hidden (already accounts for parent inheritance).                                                                                                                                                                       |
+| `testId`        | `SignalInput<string>`                      | The computed test ID for the group.                                                                                                                                                                                                                    |
+| `hideStrategy`  | `SignalInput<HideStrategy \| undefined>`   | The group's hide strategy (`'keep'` or `'remove'`).                                                                                                                                                                                                    |
+| `valueStrategy` | `SignalInput<ValueStrategy \| undefined>`  | The group's value strategy (`'last'`, `'default'`, or `'reset'`).                                                                                                                                                                                      |
+| `errors`        | `SignalInput<ValidationErrors \| null>`    | Validation errors of the underlying form group.                                                                                                                                                                                                        |
+| `isDirty`       | `SignalInput<boolean>`                     | Whether the underlying form group is dirty.                                                                                                                                                                                                            |
+| `titleText`     | `SignalInput<string \| undefined>`         | The static `title` value from the group configuration.                                                                                                                                                                                                 |
 | `dynamicTitle`  | `SignalInput<string \| null \| undefined>` | The computed dynamic title, if a `dynamicTitle` expression is configured. The expression engine can yield `null` (for example from `'maybeProp ?? null'`), so the type widens accordingly. Treat `null` and `undefined` the same way in your template. |
-| `groupInstance` | `SignalInput<FormGroup>`                  | The underlying `FormGroup` instance. Only declare this when you need direct access to the group. |
+| `groupInstance` | `SignalInput<FormGroup>`                   | The underlying `FormGroup` instance. Only declare this when you need direct access to the group.                                                                                                                                                       |

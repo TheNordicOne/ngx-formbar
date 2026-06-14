@@ -15,7 +15,14 @@ import {
   provideTokenNoSplit,
   setupWorkspace,
 } from './workspace-setup';
-import { app, exists, hasDynamicImportOf, read, src, writeJson } from './helper';
+import {
+  app,
+  exists,
+  hasDynamicImportOf,
+  read,
+  src,
+  writeJson,
+} from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   appConfigProvidersComponentRegistrationsMapHasIdentifier,

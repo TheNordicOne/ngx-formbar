@@ -1,4 +1,3 @@
-
 All examples use minimal styling and share the same set of control components,
 validators, and form configurations. The differences lie in **how things are wired up**.
 
@@ -8,7 +7,7 @@ along with the form configuration.
 ## What Each Example Demonstrates
 
 | Example                       | Focus                                                                                                |
-|-------------------------------|------------------------------------------------------------------------------------------------------|
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **Token-Based Registration**  | Registering components and validators via Angular DI tokens (`NGX_FW_COMPONENT_REGISTRATIONS`, etc.) |
 | **Config-Based Registration** | Registering everything through `defineFormbarConfig()` and `provideFormbar()`                        |
 | **Complex Form**              | Computed values, function expressions, dynamic titles, `updateOn`, `hideStrategy`, `valueStrategy`   |

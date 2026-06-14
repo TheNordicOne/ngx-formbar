@@ -74,8 +74,8 @@ componentRegistrations: {
 
 Each entry also accepts optional behavior flags:
 
-| Option             | Values                | Description                                                        |
-|--------------------|-----------------------|--------------------------------------------------------------------|
+| Option             | Values               | Description                                                        |
+| ------------------ | -------------------- | ------------------------------------------------------------------ |
 | `hiddenHandling`   | `'auto' \| 'manual'` | Whether the framework manages visibility or the component does     |
 | `disabledHandling` | `'auto' \| 'manual'` | Whether the framework manages disabled state or the component does |
 
@@ -83,8 +83,8 @@ Each entry also accepts optional behavior flags:
 
 Options that apply to all controls, groups, and blocks. Provided through the `globalConfig` property or the `NGX_FW_CONFIG` token.
 
-| Property          | Type              | Description                                                                                    |
-|-------------------|-------------------|------------------------------------------------------------------------------------------------|
+| Property          | Type              | Description                                                                                     |
+| ----------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
 | `testIdBuilderFn` | `TestIdBuilderFn` | Function that builds test IDs for controls given the content, name, and optional parent test ID |
 
 ## Registration Types
@@ -97,8 +97,10 @@ Pass registrations as properties of the configuration object to `provideFormbar(
 
 ```typescript
 provideFormbar({
-  componentRegistrations: { /* ... */ },
-})
+  componentRegistrations: {
+    /* ... */
+  },
+});
 ```
 
 ### Token-Based Registration
@@ -110,9 +112,11 @@ providers: [
   provideFormbar(),
   {
     provide: NGX_FW_COMPONENT_REGISTRATIONS,
-    useValue: new Map([/* ... */]),
+    useValue: new Map([
+      /* ... */
+    ]),
   },
-]
+];
 ```
 
 > **Warning**
@@ -123,7 +127,7 @@ providers: [
 When multiple registrations are provided (via `multi: true` tokens or multiple calls), they are resolved as follows:
 
 | Concern       | Strategy                                                       |
-|---------------|----------------------------------------------------------------|
+| ------------- | -------------------------------------------------------------- |
 | Components    | Only the last provided map is used                             |
 | Global config | All configs are deeply merged, nested properties are preserved |
 
@@ -133,4 +137,4 @@ Integration packages define their own merging behavior for their registrations.
 
 See your integration package's guide for additional configuration options and code splitting patterns:
 
-- [Formbar Configuration](/reactive-forms/guides/formbar-configuration)
+- [Reactive Forms: Formbar Configuration](/reactive-forms/guides/formbar-configuration)

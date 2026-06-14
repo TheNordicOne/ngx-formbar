@@ -5,7 +5,7 @@ The form configuration defines the structure and behavior of your form. It is th
 The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbItem>` interface defines these properties.
 
 | Name    | Type                          | Required | Description                                                                                             |
-|---------|-------------------------------|----------|---------------------------------------------------------------------------------------------------------|
+| ------- | ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
 | content | `Record<string, ContentType>` | Yes      | An object holding the content of the form (a.k.a. controls). The key will be used as the controls name. |
 
 ### Type Generic
@@ -24,17 +24,16 @@ The following configuration options are supported built in. When setting up Cont
 The `NgxFbBaseContent` interface is the foundation for all form content. It defines the minimal set of properties shared across all content types: type identification and visibility.
 
 | Name   | Type                  | Required | Description                                                                                                                                                                       |
-|--------|-----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------ | --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | type   | `string`              | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                                 |
 | hidden | `Expression<boolean>` | No       | An expression that determines when the control should be hidden. Can be a string expression evaluated at runtime against the form object, or a function receiving the form value. |
-
 
 ### Abstract Control
 
 Controls and Groups extend the `NgxFbAbstractControl` interface and therefore both have access to these options.
 
 | Name            | Type                             | Required | Description                                                                                                                                                               |
-|-----------------|----------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | validators      | `string[]`                       | No       | Array of strings representing names of synchronous validators that apply to the control. These can be registered globally with a validator registration object.           |
 | asyncValidators | `string[]`                       | No       | Similar to validators, but for asynchronous validation logic that may involve API calls or other deferred operations.                                                     |
 | disabled        | `Expression<boolean> \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean, a string expression, or a function receiving the form value.                                            |
@@ -48,33 +47,30 @@ Controls and Groups extend the `NgxFbAbstractControl` interface and therefore bo
 
 The following configurations options are only applicable to the interface `NgxFbControl`.
 
-| Name          | Type                  | Required | Description                                                                                                  |
-|---------------|-----------------------|----------|--------------------------------------------------------------------------------------------------------------|
-| label         | `string`              | No       | Specifies the label for the control                                                                          |
-| dynamicLabel  | `Expression<string>`  | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
-| defaultValue  | `unknown`             | No       | Should be overwritten with the proper value type of the control                                              |
-| nonNullable   | `boolean`             | No       | Whether the control rejects null. Maps to the `nonNullable` option on Angular's form controls                |
-
+| Name         | Type                 | Required | Description                                                                                                  |
+| ------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| label        | `string`             | No       | Specifies the label for the control                                                                          |
+| dynamicLabel | `Expression<string>` | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
+| defaultValue | `unknown`            | No       | Should be overwritten with the proper value type of the control                                              |
+| nonNullable  | `boolean`            | No       | Whether the control rejects null. Maps to the `nonNullable` option on Angular's form controls                |
 
 ### Group
 
 The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem>`.
 
-| Name         | Type                 | Required | Description                                                                                                   |
-|--------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
-| title        | `string`             | No       | Specifies a title for the group                                                                               |
-| dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value.  |
-| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbItem` that configure the controls of the group                                   |
-
+| Name         | Type                 | Required | Description                                                                                                  |
+| ------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| title        | `string`             | No       | Specifies a title for the group                                                                              |
+| dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value. |
+| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbItem` that configure the controls of the group                                  |
 
 ### Block
 
 The following configurations are only applicable to the interface `NgxFbBlock`.
 
 | Name      | Type    | Required | Description                                                    |
-|-----------|---------|----------|----------------------------------------------------------------|
+| --------- | ------- | -------- | -------------------------------------------------------------- |
 | isControl | `false` | Yes      | Required property for TypeScript to properly do type narrowing |
-
 
 ## Full Example
 
@@ -249,15 +245,15 @@ export const exampleForm: NgxFbForm = {
         },
       },
     },
-  }
+  },
 };
-``` 
+```
 
 ## Typing the Form Value
 
 {% include "../../shared/typed-form-value.md" %}
 
-## Next steps
+## Next Steps
 
 Once you have a configuration, see your integration package's guide on how to render it:
 

@@ -21,11 +21,13 @@ import { MyCustomTextComponent } from './components/custom-text.component';
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
   // Create a signal with your component mapping
-  private readonly _componentMap = signal(new Map<string, ComponentRegistrationEntry>([
-    ['custom-text', staticComponent(MyCustomTextComponent)],
-    ['special-group', loadComponent(() => import('./components/special-group.component').then(m => m.MySpecialGroupComponent))],
-    // Add more components as needed
-  ]));
+  private readonly _componentMap = signal(
+    new Map<string, ComponentRegistrationEntry>([
+      ['custom-text', staticComponent(MyCustomTextComponent)],
+      ['special-group', loadComponent(() => import('./components/special-group.component').then((m) => m.MySpecialGroupComponent))],
+      // Add more components as needed
+    ]),
+  );
 
   // Expose as readonly signal as required by the interface
   readonly registrations = this._componentMap.asReadonly();
@@ -94,17 +96,21 @@ import { ValidatorResolver } from '@ngx-formbar/reactive-forms';
 @Injectable()
 export class AppCustomValidatorResolver implements ValidatorResolver {
   // Create signals for both types of validators
-  private readonly _validatorMap = signal(new Map<string, ValidatorFn[]>([
-    ['customRequired', [Validators.required, myCustomRequiredValidator]],
-    ['passwordStrength', [passwordStrengthValidator]],
-    // Add more validators as needed
-  ]));
+  private readonly _validatorMap = signal(
+    new Map<string, ValidatorFn[]>([
+      ['customRequired', [Validators.required, myCustomRequiredValidator]],
+      ['passwordStrength', [passwordStrengthValidator]],
+      // Add more validators as needed
+    ]),
+  );
 
-  private readonly _asyncValidatorMap = signal(new Map<string, AsyncValidatorFn[]>([
-    ['uniqueUsername', [uniqueUsernameValidator]],
-    ['serverCheck', [serverCheckValidator]],
-    // Add more async validators as needed
-  ]));
+  private readonly _asyncValidatorMap = signal(
+    new Map<string, AsyncValidatorFn[]>([
+      ['uniqueUsername', [uniqueUsernameValidator]],
+      ['serverCheck', [serverCheckValidator]],
+      // Add more async validators as needed
+    ]),
+  );
 
   // Expose as readonly signals as required by the interface
   readonly registrations = this._validatorMap.asReadonly();
@@ -145,11 +151,11 @@ export const appConfig: ApplicationConfig = {
     // These MUST come after provideFormbar()
     {
       provide: NGX_FW_COMPONENT_RESOLVER,
-      useClass: AppCustomComponentResolver
+      useClass: AppCustomComponentResolver,
     },
     {
       provide: NGX_VALIDATOR_RESOLVER,
-      useClass: AppCustomValidatorResolver
+      useClass: AppCustomValidatorResolver,
     },
     // In case you need access to methods from your resolver add this
     // This ensures that you can inject your resolver, get the correct types for it, while still using the same instance that ngx-formbar uses
@@ -157,7 +163,7 @@ export const appConfig: ApplicationConfig = {
       provide: AppCustomComponentResolver,
       useExisting: NGX_FW_COMPONENT_RESOLVER,
     },
-  ]
+  ],
 };
 ```
 

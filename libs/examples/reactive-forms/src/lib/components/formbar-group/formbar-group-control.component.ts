@@ -1,6 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
-import { NgxFbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
+import {
+  NgxFbControlOutlet,
+  ReactiveFormbarGroup,
+} from '@ngx-formbar/reactive-forms';
 import { GroupControl } from '@ngx-formbar/examples';
 import { viewProviders } from '../../helpers';
 import { ValidationErrorsComponent } from '../validation-errors/validation-errors.component';

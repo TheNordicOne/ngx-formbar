@@ -61,7 +61,9 @@ export function roomExists(
       if (exists) {
         return null;
       }
-      return { roomExists: `Room "${String(room)}" not found in ${String(building)}-${String(floor)}` };
+      return {
+        roomExists: `Room "${String(room)}" not found in ${String(building)}-${String(floor)}`,
+      };
     }),
   );
 }
@@ -94,7 +96,9 @@ export function unitKnownAtLocation(
       if (list.includes(String(v))) {
         return null;
       }
-      return { unitKnownAtLocation: `Unit "${String(v)}" not found in building ${String(building)}` };
+      return {
+        unitKnownAtLocation: `Unit "${String(v)}" not found in building ${String(building)}`,
+      };
     }),
   );
 }

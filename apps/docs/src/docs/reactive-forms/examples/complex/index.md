@@ -1,11 +1,10 @@
-
-
 Advanced form features including computed values, dynamic titles/labels, hide strategies, and conditional interactivity.
 
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
 ```typescript file="./../../../../../../../libs/examples/src/lib/forms/complex-maintenance-form.ts"
+
 ```
 
 </details>

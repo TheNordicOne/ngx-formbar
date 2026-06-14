@@ -7,7 +7,7 @@ This matters when you have a hidden control but still want to access its value t
 The following strategies are available:
 
 | Strategy         | Effect                                                                            |
-|------------------|-----------------------------------------------------------------------------------|
+| ---------------- | --------------------------------------------------------------------------------- |
 | `keep` (default) | The form control stays attached to the parent group while the component is hidden |
 | `remove`         | The form control is removed from the parent group on hide and reattached on show  |
 

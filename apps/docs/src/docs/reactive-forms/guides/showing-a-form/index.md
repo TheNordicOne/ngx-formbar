@@ -4,7 +4,7 @@ You build the form as usual. This gives you full access to the underlying form o
 @Component({
   selector: 'app-some-form',
   imports: [ReactiveFormsModule, NgxFbFormComponent],
-  templateUrl: './form-integration-host.component.html'
+  templateUrl: './form-integration-host.component.html',
 })
 export class FormIntegrationHostComponent {
   // Construct the reactive form as usual
@@ -25,7 +25,7 @@ export class FormIntegrationHostComponent {
   patchValue() {
     // Setting the value of the form is done the same way as you normally would
     this.form.patchValue({
-    //  Whatever value we want to patch
+      //  Whatever value we want to patch
     });
   }
 }
@@ -34,7 +34,6 @@ export class FormIntegrationHostComponent {
 ```html group="showing-form" name="some-feature.component.html"
 <!-- Just normal form binding -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-
   <!-- This component renders your form  -->
   <ngxfb-form [formConfig]="formContent()" />
 

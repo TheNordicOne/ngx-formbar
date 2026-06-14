@@ -1,11 +1,10 @@
-
-
 Loading a form configuration at runtime from a JSON file via `HttpClient`, useful for server-driven forms, multi-tenant apps, and A/B testing.
 
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
 ```json file="./../../../../../public/examples/maintenanceForm.json"
+
 ```
 
 </details>

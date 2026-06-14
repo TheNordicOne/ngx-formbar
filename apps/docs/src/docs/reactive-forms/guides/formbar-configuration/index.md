@@ -14,7 +14,7 @@ The schematics configuration is only used by the schematics and only holds defau
 The configuration object that is used by the `provideFormbar` function has these properties
 
 | Property                    | Type                                           | Required | Description                                   |
-|-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
+| --------------------------- | ---------------------------------------------- | -------- | --------------------------------------------- |
 | componentRegistrations      | Record<string, ComponentRegistrationEntry>     | No       | Mapping between keys and controls.            |
 | validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
 | asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
@@ -32,12 +32,16 @@ The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formba
 
 ```typescript
 // These are equivalent:
-text: staticComponent(TextComponent)
-text: { component: TextComponent }
+text: staticComponent(TextComponent);
+text: {
+  component: TextComponent;
+}
 
 // These are equivalent:
-select: loadComponent(() => import('./select.component').then(m => m.SelectComponent))
-select: { loadComponent: () => import('./select.component').then(m => m.SelectComponent) }
+select: loadComponent(() => import('./select.component').then((m) => m.SelectComponent));
+select: {
+  loadComponent: () => import('./select.component').then((m) => m.SelectComponent);
+}
 ```
 
 You can freely mix static and lazy registrations within the same configuration.
@@ -47,9 +51,8 @@ You can freely mix static and lazy registrations within the same configuration.
 This provides a global runtime configuration used by all controls, groups or blocks.
 
 | Property        | Type                                                                         | Required | Description                                              |
-|-----------------|------------------------------------------------------------------------------|----------|----------------------------------------------------------|
+| --------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------------------------------- |
 | testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test id for a control |
-
 
 ## Code Splitting
 
@@ -120,8 +123,8 @@ export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
     ['text-control', staticComponent(TextControlComponent)],
-    ['group', loadComponent(() => import('./components/group.component').then(m => m.GroupComponent))],
-    ['info', loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent))],
+    ['group', loadComponent(() => import('./components/group.component').then((m) => m.GroupComponent))],
+    ['info', loadComponent(() => import('./components/info-block.component').then((m) => m.InfoBlockComponent))],
     // more registrations...
   ]),
 };
@@ -132,12 +135,7 @@ export const componentRegistrationsProvider = {
 Use `toValidatorRegistrationMap` and `toAsyncValidatorRegistrationMap` to build the token value from a config object. The helpers accept the same `{ key: [...] }` shape you use elsewhere, so sibling key references (such as `'min-chars'` inside `combined`) stay type-checked and resolvable. Without them you have to build the `Map` by hand, which loses cross-referencing.
 
 ```typescript name="validator-registrations.provider.ts"
-import {
-  NGX_FW_VALIDATOR_REGISTRATIONS,
-  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  toValidatorRegistrationMap,
-  toAsyncValidatorRegistrationMap,
-} from '@ngx-formbar/reactive-forms';
+import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS, toValidatorRegistrationMap, toAsyncValidatorRegistrationMap } from '@ngx-formbar/reactive-forms';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
 import { asyncValidator, asyncGroupValidator } from './async-validators';
@@ -201,7 +199,7 @@ export const baseComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
     ['text', staticComponent(TextComponent)],
-    ['number', loadComponent(() => import('./components/number.component').then(m => m.NumberComponent))],
+    ['number', loadComponent(() => import('./components/number.component').then((m) => m.NumberComponent))],
   ]),
 };
 
@@ -209,8 +207,8 @@ export const baseComponentsProvider = {
 export const extraComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
-    ['date', loadComponent(() => import('./components/date.component').then(m => m.DateComponent))],
-    ['select', loadComponent(() => import('./components/select.component').then(m => m.SelectComponent))],
+    ['date', loadComponent(() => import('./components/date.component').then((m) => m.DateComponent))],
+    ['select', loadComponent(() => import('./components/select.component').then((m) => m.SelectComponent))],
   ]),
 };
 
@@ -245,8 +243,8 @@ import { TextControlComponent } from './components/text-control.component';
 
 export const componentRegistrations: ComponentRegistrationConfig = {
   'text-control': staticComponent(TextControlComponent),
-  group: loadComponent(() => import('./components/group.component').then(m => m.GroupComponent)),
-  info: loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent)),
+  group: loadComponent(() => import('./components/group.component').then((m) => m.GroupComponent)),
+  info: loadComponent(() => import('./components/info-block.component').then((m) => m.InfoBlockComponent)),
   // more registrations...
 };
 ```

@@ -7,12 +7,12 @@ You can opt out of all of this by setting `hiddenHandling: 'manual'` in the regi
 
 ### Visibility State Overview
 
-| `hiddenHandling` | `hideStrategy`   | When hidden                                                       | Value on re-show                                                   |
-|-----------------------|------------------|-------------------------------------------------------------------|--------------------------------------------------------------------|
-| `auto` (default)      | `keep` (default) | Component destroyed; form control stays attached                  | Determined by `valueStrategy` (applied to existing control)        |
-| `auto`                | `remove`         | Component destroyed; form control removed from the parent group   | Determined by `valueStrategy` (restored from cache on re-creation) |
-| `manual`              | `keep`           | No automatic behavior; component manages visibility itself        | Value unchanged (library does not intervene)                       |
-| `manual`              | `remove`         | No automatic behavior; form control still removed and reattached  | Determined by `valueStrategy` (restored from cache on re-creation) |
+| `hiddenHandling` | `hideStrategy`   | When hidden                                                      | Value on re-show                                                   |
+| ---------------- | ---------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `auto` (default) | `keep` (default) | Component destroyed; form control stays attached                 | Determined by `valueStrategy` (applied to existing control)        |
+| `auto`           | `remove`         | Component destroyed; form control removed from the parent group  | Determined by `valueStrategy` (restored from cache on re-creation) |
+| `manual`         | `keep`           | No automatic behavior; component manages visibility itself       | Value unchanged (library does not intervene)                       |
+| `manual`         | `remove`         | No automatic behavior; form control still removed and reattached | Determined by `valueStrategy` (restored from cache on re-creation) |
 
 > **Note**
 > When `hiddenHandling` is `'manual'`, the library does not destroy or recreate the component on visibility changes and does not apply value strategies. The component receives the `isHidden` signal and is responsible for managing its own visibility.
@@ -20,6 +20,7 @@ You can opt out of all of this by setting `hiddenHandling: 'manual'` in the regi
 ### Hidden State Rules
 
 The hidden state is determined using the following rules (`content` could be any of your controls or groups):
+
 1. If no `hidden` expression is defined, the control inherits the hidden state from its parent group
 2. If `content.hidden` is a **string expression**, it's evaluated against the current form values and combined with the parent's hidden state. A control is hidden if either its own condition evaluates to `true` **or** its parent group is hidden
 3. If `content.hidden` is a **function expression**, the function's return value is combined with the parent's hidden state the same way

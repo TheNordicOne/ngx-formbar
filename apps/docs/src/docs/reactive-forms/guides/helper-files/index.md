@@ -1,12 +1,10 @@
 To reduce boilerplate per component and improve maintainability, you can set up a few helper objects. This way, should anything change, you only need to update one file.
 
-
 ## Manual Helper File Integration
 
 You can place the helper files in any folder in your project. If you put them in the default location (`app/shared/helper`), they can be discovered automatically.
 
 Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to your file or configure it as a default. The configuration for each schematic is described on the schematics pages Generators and Register.
-
 
 ## Control Container View Providers
 
@@ -29,7 +27,6 @@ export const controlContainerViewProviders = [
 ```
 
 > **Note:** Earlier versions of ngx-formbar shipped additional helpers (`ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, `ngxfbBlockHostDirective`) for applying host directives to consumer components. As of v2.0.0, components implement the interface contract directly, so those host-directive helpers are no longer needed and have been removed.
-
 
 ## Union Types
 
