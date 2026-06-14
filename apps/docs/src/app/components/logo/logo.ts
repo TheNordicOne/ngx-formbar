@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import favicon from '../../../../public/favicon.svg';
 
@@ -8,6 +13,9 @@ import favicon from '../../../../public/favicon.svg';
   templateUrl: './logo.html',
   styleUrl: './logo.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[style.--logo-size.px]': 'size()',
+  },
 })
 export class Logo {
   private readonly sanitizer = inject(DomSanitizer);

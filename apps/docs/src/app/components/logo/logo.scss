@@ -1,3 +1,5 @@
 .logo {
   display: inline-flex;
+  inline-size: var(--logo-size);
+  block-size: var(--logo-size);
 }
