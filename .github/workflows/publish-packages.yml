@@ -15,10 +15,16 @@ on:
         description: 'Run without publishing'
         type: boolean
         default: false
+    outputs:
+      version:
+        description: 'The resolved package version that was built/published'
+        value: ${{ jobs.publish.outputs.version }}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolved-version.outputs.version }}
     permissions:
       contents: write
       id-token: write
@@ -100,6 +106,12 @@ jobs:
           git push
 
       # --- Shared: resolve workspace protocols, tags, GitHub releases, npm publish ---
+      - name: Capture resolved version
+        id: resolved-version
+        run: |
+          VERSION=$(node -p "require('./libs/core/package.json').version")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Resolve workspace protocols in dist
         run: node scripts/resolve-workspace-protocols.mjs
 

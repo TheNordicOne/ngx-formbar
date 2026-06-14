@@ -7,6 +7,11 @@ on:
         description: 'Deployment environment (production or preview)'
         required: true
         type: string
+      version:
+        description: 'Resolved package version to stamp in the docs (falls back to libs/core/package.json)'
+        required: false
+        type: string
+        default: ''
     secrets:
       DOCS_FTP_SERVER:
         required: true
@@ -43,7 +48,10 @@ jobs:
 
       - name: Build documentation
         run: |
-          VERSION=$(node -p "require('./libs/core/package.json').version")
+          VERSION="${{ inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION=$(node -p "require('./libs/core/package.json').version")
+          fi
           npx nx build @ngx-formbar/docs "--define.NGXFB_VERSION=\"'v${VERSION}'\""
 
       - name: Install lftp
