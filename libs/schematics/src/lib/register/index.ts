@@ -66,7 +66,9 @@ function mergeOptions(
     ...discoverConfig,
     controlRegistrations,
     registrationType:
-      automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
+      automationConfig?.registrationType ??
+      options.registrationType ??
+      DEFAULT_REGISTRATION_TYPE,
     components: [],
   };
 

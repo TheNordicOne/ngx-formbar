@@ -370,8 +370,8 @@ The defaults match v1's behavior, so most registrations need no options at all.
 
 The two `hideStrategy` values keep their meaning, but the way the library implements them in v2 is uniform. With `hiddenHandling: 'auto'` (the default), the consumer component is destroyed when the resolved hidden state becomes true. It is recreated when the state becomes false again, regardless of `hideStrategy`. The strategies still differ in what happens to the form control:
 
-- `'keep'` (default): the form control stays attached to the parent group while the component is hidden. The configured `valueStrategy` is applied to the existing form control.
-- `'remove'`: the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).
+- `'keep'`: the form control stays attached to the parent group while the component is hidden. The configured `valueStrategy` is applied to the existing form control.
+- `'remove'` (default): the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).
 
 If your v1 code relied on the keep strategy keeping the component itself mounted (for example, to preserve an internal component-only state across hide/show cycles), move that state into the form model. Alternatively, wrap the relevant subtree in your own `@if`.
 
