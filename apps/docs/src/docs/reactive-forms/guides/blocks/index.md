@@ -166,7 +166,7 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 ```
 
 ```html group="test-id-block" name="info-block.component.html"
-<p [attr.data-testId]="testId()">{{ message() }}</p>
+<p [attr.data-testid]="testId()">{{ message() }}</p>
 ```
 
 {% endraw %}

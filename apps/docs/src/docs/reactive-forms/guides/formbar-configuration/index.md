@@ -52,7 +52,7 @@ This provides a global runtime configuration used by all controls, groups or blo
 
 | Property        | Type                                                                         | Required | Description                                              |
 | --------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------------------------------- |
-| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test id for a control |
+| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test ID for a control |
 
 ## Code Splitting
 
