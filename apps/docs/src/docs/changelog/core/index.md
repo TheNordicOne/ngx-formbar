@@ -31,7 +31,7 @@ If you want, you can also use the core package on its own to build your own impl
 
 ### Removed
 
-- `NgxfbFormComponent`, `NgxfbControlDirective`, `NgxfbGroupDirective`, `NgxfbBlockDirective` (moved to `@ngx-formbar/reactive-forms`)
+- `NgxFbFormComponent`, `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbBlockDirective` (moved to `@ngx-formbar/reactive-forms`)
 - `provideFormbar` and `defineFormbarConfig` (moved to `@ngx-formbar/reactive-forms`)
 - `ValidatorConfig`, `AsyncValidatorConfig`, `RegistrationRecord` types (moved to `@ngx-formbar/reactive-forms`)
 - `NGX_FW_VALIDATOR_REGISTRATIONS`, `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`, `NGX_VALIDATOR_RESOLVER` tokens (moved to `@ngx-formbar/reactive-forms`)

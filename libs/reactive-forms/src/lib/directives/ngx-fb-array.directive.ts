@@ -33,7 +33,7 @@ import { withFormParent } from '../composables/form-parent';
 import { withControlState } from '../composables/control-state';
 import {
   NGXFB_ARRAY_CONTROL,
-  NgxfbArrayContext,
+  NgxFbArrayContext,
 } from '../tokens/control-entries';
 import { withHiddenLifecycle } from '../composables/hidden-lifecycle';
 import { withDisabledLifecycle } from '../composables/disabled-lifecycle';
@@ -142,7 +142,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
     );
   }
 
-  private readonly arrayContext: NgxfbArrayContext = {
+  private readonly arrayContext: NgxFbArrayContext = {
     rowControl: this.rowEntries,
     rows: this.rows,
     add: () => {

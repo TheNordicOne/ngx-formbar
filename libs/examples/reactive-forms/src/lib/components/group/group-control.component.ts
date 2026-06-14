@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import {
-  NgxfbControlOutlet,
+  NgxFbControlOutlet,
   ReactiveFormbarGroup,
 } from '@ngx-formbar/reactive-forms';
 import { GroupControl } from '@ngx-formbar/examples';
@@ -15,7 +15,7 @@ import { ValidationErrorsComponent } from '../validation-errors/validation-error
 
 @Component({
   selector: 'ngxfb-examples-group-control',
-  imports: [ReactiveFormsModule, NgxfbControlOutlet, ValidationErrorsComponent],
+  imports: [ReactiveFormsModule, NgxFbControlOutlet, ValidationErrorsComponent],
   templateUrl: './group-control.component.html',
   styleUrl: './group-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

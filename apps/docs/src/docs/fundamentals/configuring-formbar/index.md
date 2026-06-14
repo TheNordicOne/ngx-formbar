@@ -1,8 +1,8 @@
-This page explains how to configure _ngx-formbar_ itself. It covers the provider setup, the registration system, and the global options that tell _ngx-formbar_ how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines what a form looks like.
+This page explains how to configure ngx-formbar itself. It covers the provider setup, the registration system, and the global options that tell ngx-formbar how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines what a form looks like.
 
 ## Overview
  
-Configuration in _ngx-formbar_ is split into two categories:
+Configuration in ngx-formbar is split into two categories:
 
 - **Runtime configuration**: Sets up component registrations, global options, and default behavior. This is what your application needs to run.
 - **Schematics configuration**: Default values for CLI generators stored in `formbar-schematic.config.json`. This file is only used at build time and has no effect at runtime. See [Generators](/fundamentals/generators) and [Register](/fundamentals/register) for details.
@@ -11,7 +11,7 @@ The rest of this page covers runtime configuration. Integration packages like `@
  
 ## How Configuration Flows
 
-The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services that components consume.
+The diagram below shows how configuration reaches ngx-formbar at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services that components consume.
 
 ```
 ┌─ Your Files ─────────────────────────────────────────────────┐
@@ -61,7 +61,7 @@ The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It s
 
 ## Component Registrations
 
-Maps a string type name to a component. When a form control has `type: 'text'`, _ngx-formbar_ looks up `'text'` in this map to determine which component to render.
+Maps a string type name to a component. When a form control has `type: 'text'`, ngx-formbar looks up `'text'` in this map to determine which component to render.
 
 Each entry can be **static** (eagerly imported) or **lazy** (loaded on demand):
 
@@ -133,4 +133,4 @@ Integration packages define their own merging behavior for their registrations.
 
 See your integration package's guide for additional configuration options and code splitting patterns:
 
-- [Reactive Forms: Formbar Configuration](/reactive-forms/guides/formbar-configuration)
+- [Formbar Configuration](/reactive-forms/guides/formbar-configuration)

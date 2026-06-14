@@ -40,7 +40,7 @@ A row can be a group, which makes each row a sub-form:
 ## Manual Setup
 
 > **Note**
-> Checkout the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
+> Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
 
 First create an interface for your array.
 
@@ -205,13 +205,13 @@ Get a reference to the form component and call `load`:
 ```typescript name="host.component.ts" icon="angular"
 import { Component, viewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 
 @Component({
     // ...
 })
 export class HostComponent {
-    readonly formRef = viewChild.required(NgxfbFormComponent);
+    readonly formRef = viewChild.required(NgxFbFormComponent);
     readonly form = new FormGroup({ /* ... */ });
 
     loadExisting(data: Record<string, unknown>): void {

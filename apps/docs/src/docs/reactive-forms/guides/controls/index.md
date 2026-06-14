@@ -17,7 +17,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 ## Manual Setup
 
 > **Note**
-> Checkout the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
+> Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
 
 Here is an example of a simple text control.
 
@@ -159,7 +159,7 @@ Used directly in a plain reactive form, with no formbar config:
 
 ## Configuration
 
-Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a control.
+Check out the [Configuration guide](/fundamentals/configuration) for how to configure a control.
 
 ## Hidden
 

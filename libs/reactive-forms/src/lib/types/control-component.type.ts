@@ -67,7 +67,7 @@ export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
  * @example
  * ```ts
  * @Component({
- *   imports: [NgxfbControlOutlet],
+ *   imports: [NgxFbControlOutlet],
  *   template: `
  *     <ngxfb-control-outlet />
  *     <ng-content />

@@ -1,4 +1,4 @@
-**formbar** disables and enables controls and groups through Angular's form API. You can also get access to the resolved disabled state and use it in your template for whatever makes sense.
+ngx-formbar disables and enables controls and groups through Angular's form API. You can also get access to the resolved disabled state and use it in your template for whatever makes sense.
 
 The disabled state is determined using the following priority (`content` could be any of your controls or groups):
 1. If `content.disabled` is a **boolean**, that value is used directly

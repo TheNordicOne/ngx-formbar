@@ -66,7 +66,7 @@ The form component, `provideFormbar`, `defineFormbarConfig`, and validator types
 
 ```typescript
 import {
-  NgxfbFormComponent,
+  NgxFbFormComponent,
   provideFormbar,
   defineFormbarConfig,
   ValidatorConfig,
@@ -82,7 +82,7 @@ import {
 
 ```typescript
 import {
-  NgxfbFormComponent,
+  NgxFbFormComponent,
   provideFormbar,
   defineFormbarConfig,
   ValidatorConfig,
@@ -245,7 +245,7 @@ There are no `hostDirectives`, no `inject(NgxfbControlDirective)`, and the schem
 
 ### 6b. Refactor a group
 
-Groups receive their children through `<ngxfb-control-outlet />` (component `NgxfbControlOutlet` from `@ngx-formbar/reactive-forms`). The outlet picks up the registered child entries automatically via injection. You no longer iterate `content` with `ngxfbAbstractControl`.
+Groups receive their children through `<ngxfb-control-outlet />` (component `NgxFbControlOutlet` from `@ngx-formbar/reactive-forms`). The outlet picks up the registered child entries automatically via injection. You no longer iterate `content` with `ngxfbAbstractControl`.
 
 **Before:**
 
@@ -283,13 +283,13 @@ export class GroupComponent {
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
-  NgxfbControlOutlet,
+  NgxFbControlOutlet,
   ReactiveFormbarGroup,
 } from '@ngx-formbar/reactive-forms';
 
 @Component({
   selector: 'app-group',
-  imports: [ReactiveFormsModule, NgxfbControlOutlet],
+  imports: [ReactiveFormsModule, NgxFbControlOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <fieldset [formGroupName]="name()" [attr.data-testid]="testId()">
@@ -317,20 +317,20 @@ Blocks have no `FormControl`. They never receive `isDisabled` or `isReadonly`, o
 
 ```typescript
 import { Component, inject, input } from '@angular/core';
-import { NgxfbBlockDirective } from '@ngx-formbar/core';
+import { NgxFbBlockDirective } from '@ngx-formbar/core';
 
 @Component({
   selector: 'app-note',
   hostDirectives: [
     {
-      directive: NgxfbBlockDirective,
+      directive: NgxFbBlockDirective,
       inputs: ['content', 'name'],
     },
   ],
   template: `<p>{{ block.content().message }}</p>`,
 })
 export class NoteComponent {
-  protected readonly block = inject(NgxfbBlockDirective);
+  protected readonly block = inject(NgxFbBlockDirective);
   readonly name = input.required<string>();
 }
 ```
@@ -519,7 +519,7 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 
 | Symbol                                                           | v1                                                | v2.0.0                                                          |
 |------------------------------------------------------------------|---------------------------------------------------|-----------------------------------------------------------------|
-| `NgxfbFormComponent`                                             | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
+| `NgxFbFormComponent`                                             | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `provideFormbar`                                                 | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `ValidatorConfig`, `AsyncValidatorConfig`                        | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
@@ -527,7 +527,7 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 | `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `NGX_VALIDATOR_RESOLVER`                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock` | *did not exist*                                   | `@ngx-formbar/reactive-forms`                                   |
-| `NgxfbControlOutlet`                                             | *did not exist*                                   | `@ngx-formbar/reactive-forms`                                   |
+| `NgxFbControlOutlet`                                             | *did not exist*                                   | `@ngx-formbar/reactive-forms`                                   |
 | `staticComponent`, `loadComponent`, `ComponentRegistrationEntry` | *did not exist*                                   | `@ngx-formbar/core`                                             |
 | `Expression`, `NgxFbForm`, `NgxFbControl`, etc.                  | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |
 | `ExpressionService`, `NGX_FW_COMPONENT_REGISTRATIONS`            | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |

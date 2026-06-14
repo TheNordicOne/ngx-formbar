@@ -4,7 +4,7 @@ The core principles and architecture of this library were conceived and designed
 
 All AI-generated work was human-directed and reviewed. Design decisions, architecture, and the overall direction of the project are driven by the maintainers. AI served as an implementation tool under human supervision.
 
-## Areas where AI was used
+## Areas Where AI Was Used
 
 In the following areas AI played a major role, besides helping out with tedious refactorings or smaller helper functions.
 

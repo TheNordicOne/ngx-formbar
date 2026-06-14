@@ -1,4 +1,4 @@
-Creating and registering a new control, group or block can be cumbersome. To make this easier, _ngx-formbar_ comes with three generator schematics.
+Creating and registering a new control, group or block can be cumbersome. To make this easier, ngx-formbar comes with three generator schematics.
 
 ## Options
 
@@ -167,6 +167,6 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
 ```
 
 
-## Resolving options
+## Resolving Options
 
 {% include "../../shared/resolving-options.md" %}

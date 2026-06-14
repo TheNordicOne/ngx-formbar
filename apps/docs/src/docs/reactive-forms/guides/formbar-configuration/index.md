@@ -1,6 +1,8 @@
+This guide covers how to configure ngx-formbar itself: the configuration object passed to `provideFormbar`, the two configuration files involved, and the options for splitting that configuration across files and injection tokens.
+
 ## Formbar Configuration vs. Schematics Configuration
 
-There are two configuration files used by _ngx-formbar_.
+There are two configuration files used by ngx-formbar.
 
 - Formbar Configuration: `formbar.config.ts`
 - Schematics Configuration: `formbar-schematic.config.json`
@@ -51,9 +53,9 @@ This configuration provides a global runtime configuration that is used by all c
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in _app.config.ts_ is not ideal. _ngx-formbar_ provides multiple ways to organize your code better.
+Registering all controls, validators, etc. directly in _app.config.ts_ is not ideal. ngx-formbar provides multiple ways to organize your code better.
 
-If you ran `ng add` with default parameters to install _ngx-formbar_, your setup already uses split configurations.
+If you ran `ng add` with default parameters to install ngx-formbar, your setup already uses split configurations.
 
 > **Note**
 > This section assumes that you have read and understood the [Configuring Formbar](/fundamentals/configuring-formbar) guide and know how to set the configuration.

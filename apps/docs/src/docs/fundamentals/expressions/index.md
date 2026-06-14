@@ -52,7 +52,7 @@ The parser produces only the following AST node types:
 - **Cross-group `computedValue` references:**
   String expressions in `computedValue` that reference fields inside sibling groups (e.g., `'groupA.fieldA + groupB.fieldB'`) do not resolve on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). This affects only `computedValue`; other expression properties (`hidden`, `disabled`, `readonly`, `dynamicLabel`, `dynamicTitle`) work correctly with cross-group references. Use optional chaining as a workaround: `'groupA?.fieldA + " " + groupB?.fieldB'`.
 
-## Threat boundary
+## Threat Boundary
 
 The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
 

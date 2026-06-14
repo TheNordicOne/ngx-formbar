@@ -1,6 +1,6 @@
 While the Generator Schematics, by default, already register every new component, you may not always use them. In those cases you can either manually register them or use this schematic.
 
-## What does it do
+## What Does It Do
 
 This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those always have to be manually registered.
 
@@ -58,6 +58,6 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
 }
 ```
 
-## Resolving options
+## Resolving Options
 
 {% include "../../shared/resolving-options.md" %}

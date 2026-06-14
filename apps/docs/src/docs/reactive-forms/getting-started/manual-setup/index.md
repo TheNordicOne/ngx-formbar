@@ -19,7 +19,7 @@ npm install @ngx-formbar/core @ngx-formbar/reactive-forms
 > ```
 
 ## Providing Formbar
-_ngx-formbar_ is provided and configured in _app.config.ts_.
+ngx-formbar is provided and configured in _app.config.ts_.
 
 
 ### With Tokens
@@ -124,6 +124,6 @@ Add this file next to your `app.config.ts`.
 
 To avoid bloating your _app.config.ts_, put your registrations in a separate file. Check out the Code Splitting Section in the [Formbar Configuration guide](/reactive-forms/guides/formbar-configuration) for the details.
 
-## Setting up helpers
+## Setting Up Helpers
 
 Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.

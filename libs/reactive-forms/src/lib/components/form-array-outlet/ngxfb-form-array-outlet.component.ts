@@ -16,7 +16,7 @@ import {
 import { NgxFbControlDirective } from '../../directives/ngx-fb-control.directive';
 import { NgxFbGroupDirective } from '../../directives/ngx-fb-group.directive';
 import { NgxFbArrayDirective } from '../../directives/ngx-fb-array.directive';
-import { NgxfbBlockDirective } from '../../directives/ngxfb-block.directive';
+import { NgxFbBlockDirective } from '../../directives/ngxfb-block.directive';
 import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -26,7 +26,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     NgxFbControlDirective,
     NgxFbGroupDirective,
     NgxFbArrayDirective,
-    NgxfbBlockDirective,
+    NgxFbBlockDirective,
     ReactiveFormsModule,
   ],
   templateUrl: './ngxfb-form-array-outlet.component.html',

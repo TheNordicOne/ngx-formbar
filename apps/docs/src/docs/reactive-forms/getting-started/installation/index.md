@@ -4,7 +4,7 @@ At this time this package is compatible with Angular 20.0.0 up to (but not inclu
 
 ## Primary Installation via ng-add
 
-Running the following command will install _ngx-formbar_.
+Running the following command will install ngx-formbar.
 
 ```shell
 ng add @ngx-formbar/reactive-forms
@@ -24,7 +24,7 @@ By default, the following things will be done.
   - barrel export
   - control container view provider
 - Create a schematics configuration file
-- Provide formbar in your `app.config.ts`
+- Provide ngx-formbar in your `app.config.ts`
 - Install dependencies
 
 > **Note**

@@ -1,4 +1,4 @@
-By default the visibility lifecycle is handled by **formbar**. With `hiddenHandling: 'auto'` (the default registration option), the library destroys the consumer component when the resolved hidden state becomes `true` and recreates it when the state becomes `false` again. The `hideStrategy` controls what happens to the underlying form control during that cycle:
+By default the visibility lifecycle is handled by ngx-formbar. With `hiddenHandling: 'auto'` (the default registration option), the library destroys the consumer component when the resolved hidden state becomes `true` and recreates it when the state becomes `false` again. The `hideStrategy` controls what happens to the underlying form control during that cycle:
 
 - **`keep`** (default): the form control stays attached to the parent group while the component is hidden, so the value remains part of `form.value`. The configured `valueStrategy` is applied to that existing form control.
 - **`remove`**: the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).

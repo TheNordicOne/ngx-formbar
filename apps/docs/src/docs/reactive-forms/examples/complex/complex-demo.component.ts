@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 import { complexMaintenanceForm } from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-complex-demo',
-  imports: [NgxfbFormComponent, ReactiveFormsModule],
+  imports: [NgxFbFormComponent, ReactiveFormsModule],
   templateUrl: './complex-demo.component.html',
 
   changeDetection: ChangeDetectionStrategy.OnPush,

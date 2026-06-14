@@ -7,8 +7,8 @@ New package containing all reactive forms functionality previously bundled in `@
 ### Added
 
 - **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `ReactiveFormbarArray<T>`, `FormbarBlock<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbArray` / `NgxFbBlock`) become additional signal inputs the consumer declares.
-- **Components:** `NgxfbFormComponent` (root, takes `formConfig`), `NgxfbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children), and `NgxFbFormArrayOutlet` (renders array rows).
-- **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbArrayDirective`, `NgxfbBlockDirective`.
+- **Components:** `NgxFbFormComponent` (root, takes `formConfig`), `NgxFbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children), and `NgxFbFormArrayOutlet` (renders array rows).
+- **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbArrayDirective`, `NgxFbBlockDirective`.
 - **Provider setup:** `provideFormbar`, `defineFormbarConfig`, `defineValidatorRegistrations`, `defineAsyncValidatorRegistrations`.
 - **Validator map helpers:** `toValidatorRegistrationMap`, `toAsyncValidatorRegistrationMap`. Use them in token-based providers (`NGX_FW_VALIDATOR_REGISTRATIONS` / `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`) so that cross-references between sibling validators stay type-checked, resolved at runtime, and discoverable through auto-complete ([#65](https://github.com/TheNordicOne/ngx-formbar/issues/65)).
 - **Services:** `FormService`, `ValidatorRegistrationService`.
@@ -42,7 +42,7 @@ New package containing all reactive forms functionality previously bundled in `@
 
 - `NgxfbAbstractControlDirective`. Superseded by per-kind directives backed by composables.
 - Host directive helpers `ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, and `ngxfbBlockHostDirective`. Consumer components no longer need host directives.
-- The earlier `NgxfbControlDirective` / `NgxfbGroupDirective` class names. Replaced by `NgxFbControlDirective` / `NgxFbGroupDirective` (capital `Fb`). `NgxfbBlockDirective` keeps its name.
+- The earlier `Ngxfb…` directive class names. All directive classes now use a consistent capital `Fb`: `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbBlockDirective`.
 - `setVisibilityHandling()` runtime method. Declare `hiddenHandling` on the component registration instead.
 
 ### Migration

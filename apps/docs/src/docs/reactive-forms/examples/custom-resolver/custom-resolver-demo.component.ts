@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { loadComponent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 import {
   HybridComponentResolver,
   maintenanceForm,
@@ -9,7 +9,7 @@ import {
 
 @Component({
   selector: 'docs-custom-resolver-demo',
-  imports: [NgxfbFormComponent, ReactiveFormsModule],
+  imports: [NgxFbFormComponent, ReactiveFormsModule],
   templateUrl: './custom-resolver-demo.component.html',
 
   providers: [

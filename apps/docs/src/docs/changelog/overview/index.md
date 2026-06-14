@@ -18,7 +18,7 @@ Version 2 splits the monolithic `@ngx-formbar/core` package into four focused pa
 - Component registrations require the new `ComponentRegistrationEntry` shape (static or lazy) instead of bare `Type<unknown>`.
 - Registration option `visibilityHandling` renamed to `hiddenHandling`.
 - Type `NgxFbContent` renamed to `NgxFbItem` (the union of `NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock`).
-- `NgxfbFormComponent`, `provideFormbar`, `defineFormbarConfig`, validator types and tokens, `ValidatorRegistrationService`, and the directives moved to `@ngx-formbar/reactive-forms`.
+- `NgxFbFormComponent`, `provideFormbar`, `defineFormbarConfig`, validator types and tokens, `ValidatorRegistrationService`, and the directives moved to `@ngx-formbar/reactive-forms`.
 - All schematics moved to `@ngx-formbar/schematics`.
 
 **`@ngx-formbar/reactive-forms`:**
@@ -26,7 +26,7 @@ Version 2 splits the monolithic `@ngx-formbar/core` package into four focused pa
 - Consumer components no longer use `hostDirectives` or `inject(NgxfbControlDirective)`. They implement `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, or `FormbarBlock<T>` and declare `input()` signals.
 - Group composition uses `<ngxfb-control-outlet />` in the template; `ngxfbAbstractControl` is gone.
 - Hidden lifecycle now destroys and recreates the consumer component when the resolved hidden state changes (with `hiddenHandling: 'auto'`, the default).
-- Directive class names `NgxfbControlDirective` and `NgxfbGroupDirective` were renamed with capital `Fb` (`NgxFbControlDirective`, `NgxFbGroupDirective`). `NgxfbBlockDirective` keeps its lowercase form.
+- Directive class names now use a consistent capital `Fb`: `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbBlockDirective`.
 - `NgxfbAbstractControlDirective`, the `ngxfbControlHostDirective` / `ngxfbGroupHostDirective` / `ngxfbBlockHostDirective` helpers, and the runtime `setVisibilityHandling()` method were removed.
 
 For the full step-by-step migration guide, see [**Migrating from v1**](/changelog/migrating-from-v1).

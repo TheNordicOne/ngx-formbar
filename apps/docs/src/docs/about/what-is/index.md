@@ -1,13 +1,13 @@
-**ngx-formbar** generates forms from JSON or a plain object. You can hide, disable, and mark fields as readonly using expressions that evaluate against the form's current value.
+ngx-formbar generates forms from JSON or a plain object. You can hide, disable, and mark fields as readonly using expressions that evaluate against the form's current value.
 
 The first focus is JSON compatibility. A form configuration is plain data, so anything that holds JSON can hold a form: a database column, a config file, an API response. No custom serialization is needed.
 
 The second focus is staying close to Angular. The terminology mirrors Angular's, and the implementation builds on its form primitives and signals. You keep full control of the form and read values through the standard forms API.
 
-_ngx-formbar_ ships **no** pre-built components by design. You pick the UI library and the markup. Your components are still plain Angular and stay usable on their own. They implement a small interface contract and declare `input()` signals instead of extending a base class. The core logic stays encapsulated without locking you into a specific component shape.
+ngx-formbar ships **no** pre-built components by design. You pick the UI library and the markup. Your components are still plain Angular and stay usable on their own. They implement a small interface contract and declare `input()` signals instead of extending a base class. The core logic stays encapsulated without locking you into a specific component shape.
 
 
-## What is the motivation?
+## What Is the Motivation?
 
 There are a few popular solutions that already give you "JSON forms", and they are fine for many cases. On the projects I worked on, though, they kept falling short. Paying for a commercial alternative was not on the table either.
 

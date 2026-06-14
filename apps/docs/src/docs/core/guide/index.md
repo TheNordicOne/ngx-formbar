@@ -1,6 +1,6 @@
 The `@ngx-formbar/core` package provides the foundation for building your own form integration. It contains the expression engine, composable functions, DI tokens, and services that `@ngx-formbar/reactive-forms` is built on. You can use it directly to create integrations for other form approaches.
 
-## What the core package provides
+## What the Core Package Provides
 
 **Composables** resolve form configuration into reactive signals. They handle expression parsing, state inheritance from parent groups, and update strategy resolution.
 
@@ -229,13 +229,13 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 | NGX_FW_FORM_VALUE              | -             | `Signal<FormContext>` of the current form value. Provided per form by integrations   |
 | NGX_FW_PARENT_CONTEXT          | -             | `NgxFwParentContext` of the enclosing group. Provided by group directives themselves |
 
-## Building an integration
+## Building an Integration
 
 `@ngx-formbar/core` is form-agnostic. It owns the configuration model, the expression engine, the registration system, dynamic component mounting, and all state-resolution logic. It has no opinion about where form values live or how the form model gets updated. An integration package wires those two ends together.
 
 `@ngx-formbar/reactive-forms` is one such integration, built on top of `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
 
-### Three layers
+### Three Layers
 
 Think of a complete formbar setup as three layers stacked vertically:
 
@@ -245,7 +245,7 @@ Think of a complete formbar setup as three layers stacked vertically:
 
 Core only requires the middle layer to function. Once those tokens are provided, every `with*` composable in core works inside any directive or component that runs in an injection context with access to them.
 
-### The two tokens you must provide
+### The Two Tokens You Must Provide
 
 **`NGX_FW_FORM_VALUE: InjectionToken<Signal<FormContext>>`** holds the current form value as a signal. Composables that evaluate expressions (`withDynamicLabel`, `withHiddenState`, `withComputedValue`, etc.) read from this token. Provide it once per form, sourced from wherever your integration holds form state.
 
@@ -267,7 +267,7 @@ interface NgxFwParentContext {
 
 If your integration has no concept for a particular field, return a sentinel: `false` for booleans, `''` for `testId`, `undefined` for the optional strategies. Composables that read parent context use `inject(NGX_FW_PARENT_CONTEXT, { optional: true, skipSelf: true })`, so top-level entries (no enclosing group) get `null` and behave correctly. The `skipSelf` matters because a group directive that provides itself must look up the parent above its own provided context.
 
-### Provider pattern
+### Provider Pattern
 
 How `@ngx-formbar/reactive-forms` wires the two tokens:
 
@@ -284,7 +284,7 @@ How `@ngx-formbar/reactive-forms` wires the two tokens:
     },
   ],
 })
-export class NgxfbFormComponent { /* ... */ }
+export class NgxFbFormComponent { /* ... */ }
 
 // A group directive implements NgxFwParentContext and provides itself.
 @Directive({
@@ -321,7 +321,7 @@ A pure-state integration (no `@angular/forms`) might look like this instead:
 export class MyFormComponent { /* ... */ }
 ```
 
-### What you still have to build
+### What You Still Have to Build
 
 Core does not own the form-model side. Your integration is responsible for:
 
@@ -332,7 +332,7 @@ Core does not own the form-model side. Your integration is responsible for:
 
 `@ngx-formbar/reactive-forms` handles these via a thin layer of effects (`disabledEffect`, `setComputedValueEffect`, `hiddenEffects`) wrapped around the core composables, plus its own `withControlState`/`withFormParent` helpers. The pattern is reusable as a template.
 
-### Minimal integration sketch
+### Minimal Integration Sketch
 
 A directive that uses the configuration to resolve hidden/disabled state, mounts the registered component, and lets your form-state source handle everything else:
 

@@ -336,7 +336,7 @@ describe('control schematic', () => {
         expect(importsInputFromCore).toBe(true);
       });
 
-      it('group implements ReactiveFormbarGroup and imports NgxfbControlOutlet', async () => {
+      it('group implements ReactiveFormbarGroup and imports NgxFbControlOutlet', async () => {
         const tree = await runSchematic('group');
         const sf = parseTS(read(tree, groupComponentOutputPath));
 
@@ -355,7 +355,7 @@ describe('control schematic', () => {
         const importsControlOutlet = hasNamedImport(
           sf,
           REACTIVE_FORMS_PACKAGE_NAME,
-          'NgxfbControlOutlet',
+          'NgxFbControlOutlet',
         );
 
         const hasHostDirectivesInDecorator = decoratorHasProp(

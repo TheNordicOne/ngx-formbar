@@ -5,7 +5,7 @@ export {
   NGXFB_CONTROL_ENTRIES,
   NGXFB_ARRAY_CONTROL,
 } from './tokens/control-entries';
-export type { NgxfbArrayContext } from './tokens/control-entries';
+export type { NgxFbArrayContext } from './tokens/control-entries';
 export * from './services/row-factory.service';
 export * from './services/form-loader.service';
 export { ROW_IDENTITY } from './services/row-identity';

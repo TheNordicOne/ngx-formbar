@@ -94,7 +94,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Configuration
 
-Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a block. A block only has access to the base properties from `NgxFbBlock`. There is no `name`, no `isDisabled`, no `isReadonly`, and no value strategies, because blocks have no form value.
+Check out the [Configuration guide](/fundamentals/configuration) for how to configure a block. A block only has access to the base properties from `NgxFbBlock`. There is no `name`, no `isDisabled`, no `isReadonly`, and no value strategies, because blocks have no form value.
 
 ## Hidden
 

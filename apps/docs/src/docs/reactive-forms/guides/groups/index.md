@@ -19,7 +19,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 ## Manual Setup
 
 > **Note**
-> Checkout the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
+> Check out the [Helper Files guide](/reactive-forms/guides/helper-files) to see how to set up helpers.
 
 Here is an example of a simple group. Most likely you will only set up one or two group components, if at all.
 
@@ -46,13 +46,13 @@ Then implement the component.
 ```typescript group="group-component" name="group.component.ts" icon="angular"
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
-import { NgxfbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
+import { NgxFbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 import { Group } from './group.type';
 import { controlContainerViewProviders } from './control-container.view-provider';
 
 @Component({
     selector: 'app-group',
-    imports: [ReactiveFormsModule, NgxfbControlOutlet],
+    imports: [ReactiveFormsModule, NgxFbControlOutlet],
     templateUrl: './group.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     viewProviders: controlContainerViewProviders,
@@ -158,7 +158,7 @@ Used directly in a plain reactive form, with no formbar config. You bind the nes
 
 ## Configuration
 
-Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a group.
+Check out the [Configuration guide](/fundamentals/configuration) for how to configure a group.
 
 ## Hidden
 

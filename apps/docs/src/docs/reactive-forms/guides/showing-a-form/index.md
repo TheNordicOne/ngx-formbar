@@ -3,7 +3,7 @@ You build the form as usual. This gives you full access to the underlying form o
 ```typescript group="showing-form" name="some-feature.component.ts" icon="angular"
 @Component({
   selector: 'app-some-form',
-  imports: [ReactiveFormsModule, NgxfbFormComponent],
+  imports: [ReactiveFormsModule, NgxFbFormComponent],
   templateUrl: './form-integration-host.component.html'
 })
 export class FormIntegrationHostComponent {
