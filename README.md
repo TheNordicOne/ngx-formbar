@@ -4,7 +4,7 @@
 
 A framework for generating declarative reactive forms from a configuration.
 
-This package provides a framework for creating Angular Reactive Forms, based on a configuration. This configuration can come from a server in the form of JSON or directly from an object written in TypeScript. It stays as close to Angular as possible: you keep direct access to the form object, and the library builds and manages the form controls from your configuration.
+The configuration can come from a server as JSON or directly from a TypeScript object. ngx-formbar stays as close to Angular as possible: you keep direct access to the form object, and the library builds and manages the form controls from your configuration.
 
 ## Documentation
 

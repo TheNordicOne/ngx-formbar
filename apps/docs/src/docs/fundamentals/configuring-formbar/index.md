@@ -1,4 +1,4 @@
-This page explains how to configure ngx-formbar itself. It covers the provider setup, the registration system, and the global options that tell ngx-formbar how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines a form.
+How to configure ngx-formbar itself: provider setup, the registration system, and global options. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines a form.
 
 ## Overview
 

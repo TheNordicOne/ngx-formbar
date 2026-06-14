@@ -24,10 +24,8 @@ New package containing all reactive forms functionality previously in `@ngx-form
 
 - Component authoring is interface-based. Consumer components implement the contract interfaces and declare `input()` signals; no host directive and no directive to inject.
 - Group composition uses `<ngxfb-control-outlet />`. See [Groups](/reactive-forms/guides/groups).
-- The hidden lifecycle destroys and recreates the consumer component (with `hiddenHandling: 'auto'`, the default), for both `hideStrategy: 'keep'` and `'remove'`. See [Blocks](/reactive-forms/guides/blocks).
+- The hidden lifecycle destroys and recreates the consumer component. See [Blocks](/reactive-forms/guides/blocks).
 - Visibility and disabled handling are per-registration: `hiddenHandling` and `disabledHandling` (`'auto' | 'manual'`) are read from the registration entry.
-- `hiddenEffects` orchestrates the mount and form-attachment hooks via `onHidden` / `onVisible` callbacks.
-- `setComputedValueEffect` only runs when a `computedValue` is configured.
 - `provideFormbar` accepts `ComponentRegistrationEntry` values in `componentRegistrations`. See [Register](/fundamentals/register).
 - Schematics generate `ComponentRegistrationEntry`-based registrations.
 

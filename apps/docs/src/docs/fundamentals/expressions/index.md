@@ -22,7 +22,7 @@ The parser produces only the following AST node types:
 - `ConditionalExpression` (ternary)
 - `ObjectExpression` (with optional spread)
 - `TemplateLiteral` with `${expr}` placeholders (one expression per placeholder)
-- `CallExpression` for safe method calls only
+- `CallExpression` for safe method calls only (arguments may use spread, e.g. `s.concat(...rest)`)
 - `ArrowFunctionExpression` for higher-order array methods (e.g. `items.map(x => x * 2)`)
 
 `SequenceExpression`, `SpreadElement` (outside of containers), `ThisExpression`, `BlockStatement`, `AssignmentExpression`, `UpdateExpression`, `NewExpression`, `YieldExpression`, `AwaitExpression`, `ImportExpression`, `ClassExpression`, `FunctionExpression`, `TaggedTemplateExpression`, `PrivateIdentifier`, and `Super` are all rejected at parse time.
@@ -55,7 +55,7 @@ The parser produces only the following AST node types:
 
 ## Threat Boundary
 
-The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
+The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). Object literals and object spreads skip `__proto__` keys, so `{__proto__: x}` cannot reset the prototype of the returned object. It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
 
 ## Function-Based Expressions
 

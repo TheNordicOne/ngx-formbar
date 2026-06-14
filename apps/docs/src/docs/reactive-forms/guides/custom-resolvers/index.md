@@ -1,4 +1,4 @@
-ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own. This guide explains how to create and use custom component and validator resolvers.
+ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own.
 
 ## Understanding Resolvers
 

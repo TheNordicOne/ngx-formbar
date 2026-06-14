@@ -38,38 +38,7 @@ The core package now focuses on content rendering, expression evaluation, and DI
 
 ### Expression engine
 
-The expression language used by `Expression<T>` strings has been hardened. Parsing now uses an in-tree allow-list parser adapted from [jsep](https://github.com/EricSmekens/jsep) (MIT); the runtime `acorn` dependency is gone and core has zero parsing dependencies. See [Expressions](/fundamentals/expressions).
-
-#### Added
-
-- Object literal spread (`({...a, b: 1})`).
-- Spread in call arguments (`s.concat(...rest)`).
-- Bounded LRU cache on parsed ASTs (cap 256), replacing the previous unbounded `Map`.
-- Generic type parameter on `ExpressionService.evaluateExpression`: `evaluateExpression<T = unknown>(ast, context): T | null`.
-
-#### Changed
-
-- `==` and `!=` are now strict, behaving like `===` and `!==`. Loose-equality coercion returns `false`.
-- Division and modulo by zero throw instead of returning `Infinity` or `NaN`.
-- Identifier lookup uses own-property semantics. Members inherited from `Object.prototype` no longer resolve from a bare identifier.
-- The `in` operator uses hasOwn semantics. `'toString' in obj` returns `false`.
-- Member access on plain objects uses hasOwn. Inherited members return `undefined`.
-- Member access on arrays is restricted to `.length` and canonical non-negative integer indices. Reading prototype methods as values throws.
-- Member access on strings is restricted to `.length` and canonical integer indices. Raw method extraction throws; calls via the call form still work.
-- Member access on function-typed values throws.
-- Method calls are gated by a per-type allow-list of non-mutating methods. Array mutators throw. Plain objects, `Date`, `Map`, `Set`, and `RegExp` instances have no callable methods.
-- Object literal `__proto__` keys no longer reset the prototype of the returned object.
-- `LICENSE` and `LICENSE-jsep` are now included in the published bundle.
-
-#### Removed
-
-- Runtime dependency on `acorn`.
-- Multi-statement input. `1; 2` and similar throw at parse time.
-- Top-level comma sequences. `(a, b)` and `1, 2, 3` are parse errors; `(a, b) => ...` still parses as a multi-param arrow.
-- The `this` keyword. Bare `this` and any access through it are parse errors.
-- The `delete` operator.
-- Multi-expression template placeholders. `` `${a; b}` `` and `` `${a, b}` `` are parse errors.
-- Rest parameters in arrow functions. `(...x) => x` is a parse error.
+The expression language for `Expression<T>` strings was hardened and now uses an in-tree allow-list parser adapted from [jsep](https://github.com/EricSmekens/jsep) (MIT), removing the runtime `acorn` dependency. See [Expressions](/fundamentals/expressions) and [Migration Step 10](/changelog/migrating-from-v1#step-10-audit-string-based-expressions) for the behavior changes.
 
 ### Migration
 

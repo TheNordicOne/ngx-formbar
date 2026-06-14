@@ -1,4 +1,4 @@
-This guide covers how to configure ngx-formbar itself: the configuration object passed to `provideFormbar`, the two configuration files involved, and the options for splitting that configuration across files and injection tokens.
+How to configure ngx-formbar: the object passed to `provideFormbar`, the two config files involved, and splitting configuration across files and injection tokens.
 
 ## Formbar Configuration vs. Schematics Configuration
 
