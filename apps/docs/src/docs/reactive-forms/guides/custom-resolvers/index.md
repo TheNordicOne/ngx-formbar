@@ -169,31 +169,4 @@ export const appConfig: ApplicationConfig = {
 
 ## Use Cases for Custom Resolvers
 
-Custom resolvers apply in the following scenarios:
-
-1. **Dynamic Component Loading** - Load components on-demand based on user actions or application state
-2. **Feature-Based Validators** - Switch between different validation rule sets based on application features or user roles
-3. **Permission-Based Components** - Show or hide components based on user permissions
-4. **Internationalized Validators** - Use different validation rules based on locale or region
-5. **A/B Testing** - Swap components for different user groups to test UI variations
-6. **Plugin Architecture** - Allow third-party modules to register their own components and validators
-7. **Environment-Specific Components** - Use different implementations in development vs. production environments
-
-## Best Practices
-
-When implementing custom resolvers:
-
-1. **Performance**: Use `signal()` efficiently and avoid unnecessary computations
-2. **Immutability**: Always create new Maps when updating signals
-3. **Error Handling**: Add proper error handling for missing components or validators
-4. **Testing**: Create unit tests to verify your resolver's behavior
-5. **Integration**: Ensure smooth integration with existing ngx-formbar configurations
-
-## Debug Tips
-
-If you encounter issues with your custom resolvers:
-
-1. Verify that your resolver is properly registered in the DI container
-2. Check that your resolver correctly implements the required interface
-3. Ensure your resolver is provided at the correct level (root or module)
-4. Verify that component and validator names match those used in your form configurations
+Custom resolvers fit dynamic or permission-driven component loading, feature- or locale-specific validator sets, A/B testing, and plugin architectures where third-party modules register their own components and validators.

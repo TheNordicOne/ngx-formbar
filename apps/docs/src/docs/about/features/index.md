@@ -57,7 +57,7 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 
 ## Testing
 
-- Automatic test-id generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
+- Automatic test ID generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
 
 ## Planned Features
 

@@ -1,8 +1,8 @@
-To make testing easier, a base test ID will always be generated for you.
+A base test ID is always generated for each control.
 
 ### Default Behavior
 
-By default, the test ID is equal to the control's name (the key used in the configuration), prepended with its parent's test ID if it's part of a group. For example, a control with name `'firstName'` inside a group with test ID `'user-details'` would have a final test ID of `'user-details-firstName'`. If the control is at the root level, its test ID would simply be `'firstName'`.
+By default, the test ID is equal to the control's name (the key used in the configuration), prepended with its parent's test ID if it's part of a group. For example, a control with name `'firstName'` inside a group with test ID `'user-details'` would have a final test ID of `'user-details-firstName'`. If the control is at the root level, its test ID is `'firstName'`.
 
 ### Customizing Test IDs
 

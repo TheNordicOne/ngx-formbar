@@ -10,7 +10,7 @@ There are already several solid libraries for dynamic, JSON-driven forms. ngx-fo
 - **Built on Angular's form primitives.** You read and write values through Angular's own form API, not a library-specific surface.
 - **Display-only blocks alongside form controls.** Notes, dividers, headers, and other non-input elements live in the configuration as first-class entries. They are custom Angular components you register, not a fixed set of built-in types, and they participate in the same conditional show/hide system as the controls.
 - **Type safety when defining forms in TypeScript.** The contracts are generic over your schema type, so unknown fields surface as compile errors.
-- **Built-in test-id generation.** Every control gets a stable selector for end-to-end tests.
+- **Built-in test ID generation.** Every control gets a stable selector for end-to-end tests.
 
 The two biggest differentiators are that configurations are pure JSON and that controls are ordinary Angular components. Each control can be as generic or as specialized as the form needs.
 
