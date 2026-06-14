@@ -6,7 +6,7 @@ Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is sp
 
 | Package                       | Purpose                                                                                                                                                     |
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependency is `@angular/core` only; `@angular/forms` and `@angular/cdk` are no longer required by core. |
+| `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependencies are `@angular/core` and `rxjs`; `@angular/forms` and `@angular/cdk` are no longer required by core. |
 | `@ngx-formbar/reactive-forms` | Form component, provider setup, validators, composables, the interface contracts.                                                                           |
 | `@ngx-formbar/schematics`     | `control` / `group` / `block` / `register` generators.                                                                                                      |
 | `@ngx-formbar/setup`          | Internal helper for the schematics (installed automatically as a dep).                                                                                      |
@@ -536,8 +536,8 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 | Group child template                                             | `ngxfbAbstractControl`                            | `<ngxfb-control-outlet />`                                      |
 | Registration visibility option                                   | `visibilityHandling`                              | `hiddenHandling`                                           |
 | Content union type                                               | `NgxFbContent`                                    | `NgxFbItem`                                                     |
-| Minimum Angular version                                          | 19.2.0                                            | 20.0.0                                                          |
-| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core` only                                            |
+| Minimum Angular version                                          | 19.2.1                                            | 20.0.0                                                          |
+| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core`, `rxjs`                                         |
 | `ng add`                                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | Code generators                                                  | `@ngx-formbar/core:*`                             | `@ngx-formbar/schematics:*`                                     |
 | Expression parser                                                | `acorn` (runtime dep)                             | in-tree adaptation of `jsep`, no runtime dep                    |

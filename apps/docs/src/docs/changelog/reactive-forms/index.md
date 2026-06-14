@@ -6,9 +6,9 @@ New package containing all reactive forms functionality previously bundled in `@
 
 ### Added
 
-- **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `FormbarBlock<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbBlock`) become additional signal inputs the consumer declares.
-- **Components:** `NgxfbFormComponent` (root, takes `formConfig`) and `NgxfbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children).
-- **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxfbBlockDirective`.
+- **Component contract types:** `ReactiveFormbarAbstractControl`, `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, `ReactiveFormbarArray<T>`, `FormbarBlock<T>`. The custom properties on `T` (beyond `NgxFbControl` / `NgxFbFormGroup` / `NgxFbArray` / `NgxFbBlock`) become additional signal inputs the consumer declares.
+- **Components:** `NgxfbFormComponent` (root, takes `formConfig`), `NgxfbControlOutlet` (selector `<ngxfb-control-outlet />`, used inside group components to render their children), and `NgxFbFormArrayOutlet` (renders array rows).
+- **Directives (mostly internal, used by the outlet, not by consumers):** `NgxFbControlDirective`, `NgxFbGroupDirective`, `NgxFbArrayDirective`, `NgxfbBlockDirective`.
 - **Provider setup:** `provideFormbar`, `defineFormbarConfig`, `defineValidatorRegistrations`, `defineAsyncValidatorRegistrations`.
 - **Validator map helpers:** `toValidatorRegistrationMap`, `toAsyncValidatorRegistrationMap`. Use them in token-based providers (`NGX_FW_VALIDATOR_REGISTRATIONS` / `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`) so that cross-references between sibling validators stay type-checked, resolved at runtime, and discoverable through auto-complete ([#65](https://github.com/TheNordicOne/ngx-formbar/issues/65)).
 - **Services:** `FormService`, `ValidatorRegistrationService`.

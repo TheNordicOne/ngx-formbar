@@ -34,6 +34,8 @@ export {
   range1to10,
   range1to480,
   minLen,
+  maxFiles5,
+  imagesOrPdf,
   floorPattern,
   alnumDash,
   circuitPattern,
@@ -52,6 +54,7 @@ export {
   roomExists,
   unitKnownAtLocation,
   approverActive,
+  totalSizeUnder10mb,
   asyncValidator,
   asyncGroupValidator,
 } from './lib/validation/async.validators';

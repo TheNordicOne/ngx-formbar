@@ -3,6 +3,7 @@
     <label [htmlFor]="testId()" [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</label>
     <input
       type="file"
+      ngxfbFileInput
       [id]="testId()"
       [formControlName]="name()"
       [attr.readonly]="isReadonly() || null"

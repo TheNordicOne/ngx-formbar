@@ -8,10 +8,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 import { FileControl } from '@ngx-formbar/examples';
 import { viewProviders } from '../../helpers';
+import { FileInputDirective } from './file-input.directive';
 
 @Component({
   selector: 'ngxfb-examples-file-control',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FileInputDirective],
   templateUrl: './file-control.component.html',
   styleUrl: './file-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -70,11 +70,10 @@ Generates hierarchical test IDs using a configurable builder function.
 
 ```typescript
 const testId = resolveTestId(
-  content,            // Signal<NgxFbBaseContent>
-  name,               // Signal<string>
-  localTestIdBuilder, // Signal<TestIdBuilderFn | undefined>
-  globalTestIdBuilder,
-  parentTestId,       // Signal<string | undefined>
+  content,             // Signal<NgxFbBaseContent>
+  name,                // Signal<string>
+  globalTestIdBuilder, // TestIdBuilderFn | undefined
+  parentTestId,        // Signal<string | undefined>
 );
 // Default output: "parentTestId-name"
 ```

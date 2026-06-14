@@ -27,7 +27,7 @@ The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It s
 ┌─ Injection Tokens ───────────────────────────────────────────┐
 │                                                              │
 │  NGX_FW_COMPONENT_REGISTRATIONS    default: empty Map        │
-│  NGX_FW_CONFIG                     default: {}    (multi)    │
+│  NGX_FW_CONFIG                     default: []    (multi)    │
 │                                                              │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │    Integration packages add their own tokens here            │

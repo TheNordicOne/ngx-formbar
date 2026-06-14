@@ -134,6 +134,27 @@ export function approverActive(
 }
 
 // ---------------------------------------------------------------------------
+// File async validators
+// ---------------------------------------------------------------------------
+const tenMegabytes = 10 * 1024 * 1024;
+
+export function totalSizeUnder10mb(
+  c: AbstractControl,
+): Observable<ValidationErrors | null> {
+  const value = c.value as unknown;
+  if (isEmpty(value) || !Array.isArray(value) || value.length === 0) {
+    return of(null);
+  }
+
+  const files = value.filter((item): item is File => item instanceof File);
+  const total = files.reduce((sum, f) => sum + f.size, 0);
+
+  return timer(300).pipe(
+    map(() => (total > tenMegabytes ? { totalSizeUnder10mb: true } : null)),
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Test async validators (from reactive-forms test suite)
 // ---------------------------------------------------------------------------
 export function asyncValidator(

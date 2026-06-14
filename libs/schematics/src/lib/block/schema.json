@@ -30,13 +30,13 @@
     },
     "interfaceSuffix": {
       "type": "string",
-      "description": "The suffix of the interface. Defaults to 'Control'",
-      "default": "Control"
+      "description": "The suffix of the interface. Defaults to 'Block'",
+      "default": "Block"
     },
     "componentSuffix": {
       "type": "string",
-      "description": "The suffix of the component. Defaults to 'Control'",
-      "default": "Control"
+      "description": "The suffix of the component. Defaults to 'Block'",
+      "default": "Block"
     },
     "skipRegistration": {
       "type": "boolean",
