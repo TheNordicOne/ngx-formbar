@@ -9,12 +9,15 @@ The text control renders a single-line `input` for free-form text.
 Implementation:
 
 ```typescript group="text-source" name="text-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.ts"
+
 ```
 
 ```html group="text-source" name="text-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.html"
+
 ```
 
 ```scss group="text-source" name="text-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.scss"
+
 ```
 
 Configure it in your form like this:

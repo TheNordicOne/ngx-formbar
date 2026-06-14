@@ -9,14 +9,17 @@ The dropdown control renders a `select` from a configured list of options.
 Implementation:
 
 ```typescript group="dropdown-source" name="dropdown-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/dropdown/dropdown-control.component.ts"
+
 ```
 
 ```html group="dropdown-source" name="dropdown-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/dropdown/dropdown-control.component.html"
+
 ```
 
 ```scss group="dropdown-source" name="dropdown-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/dropdown/dropdown-control.component.scss"
+
 ```
- 
+
 Configure it in your form like this:
 
 ```typescript name="form config"

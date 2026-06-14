@@ -9,12 +9,15 @@ The number control renders a numeric `input` with optional min and max bounds.
 Implementation:
 
 ```typescript group="number-source" name="number-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/number/number-control.component.ts"
+
 ```
 
 ```html group="number-source" name="number-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/number/number-control.component.html"
+
 ```
 
 ```scss group="number-source" name="number-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/number/number-control.component.scss"
+
 ```
 
 Configure it in your form like this:

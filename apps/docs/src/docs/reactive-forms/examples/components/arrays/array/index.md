@@ -9,12 +9,15 @@ The array control repeats a row control so users can add and remove entries.
 Implementation:
 
 ```typescript group="array-source" name="array-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/array/array-control.component.ts"
+
 ```
 
 ```html group="array-source" name="array-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/array/array-control.component.html"
+
 ```
 
 ```scss group="array-source" name="array-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/array/array-control.component.scss"
+
 ```
 
 Configure it in your form like this:

@@ -9,12 +9,15 @@ The date control renders a date `input` with optional min and max bounds.
 Implementation:
 
 ```typescript group="date-source" name="date-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/date/date-control.component.ts"
+
 ```
 
 ```html group="date-source" name="date-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/date/date-control.component.html"
+
 ```
 
 ```scss group="date-source" name="date-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/date/date-control.component.scss"
+
 ```
 
 Configure it in your form like this:

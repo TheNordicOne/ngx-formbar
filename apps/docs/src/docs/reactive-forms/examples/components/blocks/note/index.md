@@ -9,12 +9,15 @@ The note block renders a static message and holds no form value.
 Implementation:
 
 ```typescript group="note-source" name="note-control.component.ts" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/note/note-control.component.ts"
+
 ```
 
 ```html group="note-source" name="note-control.component.html" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/note/note-control.component.html"
+
 ```
 
 ```scss group="note-source" name="note-control.component.scss" file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/note/note-control.component.scss"
+
 ```
 
 Configure it in your form like this:
