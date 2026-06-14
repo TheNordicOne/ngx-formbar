@@ -13,7 +13,7 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 - Components implement a small interface contract and declare `input()` signals. There is no base class to extend and no host directive to attach.
 - Custom component resolvers cover cases where the standard registration is not enough.
 
-## Component registration
+## Component Registration
 
 - Each entry is either eager (`staticComponent(MyComponent)`) or lazy (`loadComponent(() => import('...'))`). Both kinds can be mixed freely within the same registration.
 - The registration is the central place to configure per-component-type behavior. Options that should apply to every instance of a component (like `hiddenHandling` or `disabledHandling`) live with the registration, not on each form's config.
@@ -24,14 +24,14 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 - `ng add @ngx-formbar/reactive-forms` configures providers, imports, and the bits of setup most projects need.
 - `ng generate @ngx-formbar/schematics:control` (and `:group`, `:block`, `:register`) scaffolds new components against the right interface contract and wires up their registration.
 
-## Conditional state
+## Conditional State
 
 - Hide, disable, or mark a control as readonly through an expression that evaluates against the form's current value.
 - Each can also be set statically or inherited from a parent group.
 - Per-control hide strategy: `keep` leaves the form control attached to the parent group while hidden, `remove` detaches it on hide and reattaches it on show.
 - Three value strategies for hidden controls: keep the last value, reset, or apply a configured default.
 
-## Dynamic values and labels
+## Dynamic Values and Labels
 
 - Compute the value of a control from other parts of the form.
 - Dynamic labels and titles that update when the form value changes.
@@ -57,9 +57,9 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 
 ## Testing
 
-- Automatic test-id generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
+- Automatic test ID generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
 
-## Planned features
+## Planned Features
 
 Committed for future versions, in no particular order.
 
@@ -67,7 +67,7 @@ Committed for future versions, in no particular order.
 - Support for signal-based forms once they stabilise upstream.
 - Stricter separation of concerns: form configurations should hold only what is relevant per form (structure, expressions, validators), with all technical behavior configured globally or per component. Partially in place today; some properties still cross the boundary.
 
-## Open feature ideas
+## Open Feature Ideas
 
 Ideas under consideration with no commitment to ship. Feedback is welcome if any of them would unblock work for you.
 

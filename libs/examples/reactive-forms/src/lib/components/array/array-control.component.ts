@@ -54,6 +54,7 @@ export class ArrayControlComponent
   });
   private readonly injector = inject(Injector);
 
+  // Contract inputs. Formbar resolves these for you.
   readonly name = input.required<string>();
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
@@ -63,6 +64,8 @@ export class ArrayControlComponent
   readonly testId = input('');
   readonly errors = input<ValidationErrors | null>(null);
   readonly isDirty = input(false);
+
+  // Custom inputs. Formbar passes these straight from your config.
   readonly itemFactory = input<() => AbstractControl>(
     () => new FormControl<string | null>(null),
   );

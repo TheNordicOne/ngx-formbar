@@ -1,0 +1,24 @@
+<fieldset class="array-group" [attr.data-testid]="testId()">
+  <legend [attr.data-testid]="`${testId()}-label`">{{ displayLabel() }}</legend>
+  <div class="items" [formArrayName]="name()">
+    @if (array.rows().length === 0 && emptyMessage(); as msg) {
+      <p class="empty" [attr.data-testid]="`${testId()}-empty`">{{ msg }}</p>
+    }
+    @for (row of array.rows(); track row) {
+      <div class="row">
+        <ngxfb-form-array-outlet [index]="$index" />
+        <button
+          type="button"
+          [attr.data-testid]="`${testId()}-${$index}-remove`"
+          (click)="array.removeAt($index)"
+        >
+          Remove
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" [attr.data-testid]="`${testId()}-add`" (click)="array.add()">
+    {{ addLabel() ?? 'Add' }}
+  </button>
+  <ngxfb-examples-validation-errors [errors]="errors()" [testId]="testId()" [dirty]="isDirty()" />
+</fieldset>

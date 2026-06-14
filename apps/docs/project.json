@@ -42,10 +42,14 @@
         ],
         "styles": [
           "node_modules/@ng-doc/app/styles/global.css",
+          "node_modules/@ng-doc/app/styles/themes/dark.css",
           "libs/examples/reactive-forms/src/lib/styles/demo.scss",
           "apps/docs/src/styles.scss"
         ],
         "allowedCommonJsDependencies": ["@ng-doc/core"],
+        "loader": {
+          ".svg": "text"
+        },
         "define": {
           "NGXFB_VERSION": "'v0.0.0'"
         }

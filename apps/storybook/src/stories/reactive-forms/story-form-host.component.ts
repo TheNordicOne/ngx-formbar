@@ -10,13 +10,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { NgxFbForm } from '@ngx-formbar/core';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 
 let nextFormId = 0;
 
 @Component({
   selector: 'ngxfb-story-form-host',
-  imports: [ReactiveFormsModule, NgxfbFormComponent],
+  imports: [ReactiveFormsModule, NgxFbFormComponent],
   templateUrl: './story-form-host.component.html',
   styleUrl: './story-form-host.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,7 +29,7 @@ export class StoryFormHostComponent {
   readonly formId = `ngxfb-story-form-${String(nextFormId++)}`;
 
   private readonly formBuilder = inject(FormBuilder);
-  private readonly formRef = viewChild.required(NgxfbFormComponent);
+  private readonly formRef = viewChild.required(NgxFbFormComponent);
 
   readonly formConfig = input.required<NgxFbForm>();
   readonly patchData = input<Record<string, unknown>>({});

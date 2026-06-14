@@ -11,9 +11,9 @@
         "$source": "projectName"
       }
     },
-    "registrationStyle": {
+    "registrationType": {
       "type": "string",
-      "description": "How components will be registered. Possible values: token, map",
+      "description": "How components will be registered. Possible values: token, config",
       "default": "token"
     },
     "controlRegistrations": {

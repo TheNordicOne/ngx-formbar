@@ -1,11 +1,11 @@
-The form configuration defines the structure and behavior of your form. It is the same regardless of which integration package you use. You can write it directly in JSON or in TypeScript for better typing information.
+The form configuration defines the structure and behavior of your form. It is the same regardless of which integration package you use. You can write it directly in JSON, or in TypeScript for better typing information.
 
 ## Form
 
 The `NgxFbForm<ContentType extends NgxFbBaseContent = NgxFbItem>` interface defines these properties.
 
 | Name    | Type                          | Required | Description                                                                                             |
-|---------|-------------------------------|----------|---------------------------------------------------------------------------------------------------------|
+| ------- | ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
 | content | `Record<string, ContentType>` | Yes      | An object holding the content of the form (a.k.a. controls). The key will be used as the controls name. |
 
 ### Type Generic
@@ -17,24 +17,23 @@ By default, you don't need to pass any type generic to `NgxFbForm`, but if you h
 
 ## Content
 
-The following configuration options are supported built in. When setting up Controls or Groups you can add more options.
+The following configuration options are supported built in. When setting up Controls or Groups you can add more.
 
 ### Base
 
 The `NgxFbBaseContent` interface is the foundation for all form content. It defines the minimal set of properties shared across all content types: type identification and visibility.
 
 | Name   | Type                  | Required | Description                                                                                                                                                                       |
-|--------|-----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------ | --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | type   | `string`              | Yes      | Specifies the kind of form control. Determines what control is used and what additional properties are available.                                                                 |
 | hidden | `Expression<boolean>` | No       | An expression that determines when the control should be hidden. Can be a string expression evaluated at runtime against the form object, or a function receiving the form value. |
-
 
 ### Abstract Control
 
 Controls and Groups extend the `NgxFbAbstractControl` interface and therefore both have access to these options.
 
 | Name            | Type                             | Required | Description                                                                                                                                                               |
-|-----------------|----------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | validators      | `string[]`                       | No       | Array of strings representing names of synchronous validators that apply to the control. These can be registered globally with a validator registration object.           |
 | asyncValidators | `string[]`                       | No       | Similar to validators, but for asynchronous validation logic that may involve API calls or other deferred operations.                                                     |
 | disabled        | `Expression<boolean> \| boolean` | No       | Defines whether the control should be disabled. Can be a boolean, a string expression, or a function receiving the form value.                                            |
@@ -48,37 +47,34 @@ Controls and Groups extend the `NgxFbAbstractControl` interface and therefore bo
 
 The following configurations options are only applicable to the interface `NgxFbControl`.
 
-| Name          | Type                  | Required | Description                                                                                                  |
-|---------------|-----------------------|----------|--------------------------------------------------------------------------------------------------------------|
-| label         | `string`              | No       | Specifies the label for the control                                                                          |
-| dynamicLabel  | `Expression<string>`  | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
-| defaultValue  | `unknown`             | No       | Should be overwritten with the proper value type of the control                                              |
-| nonNullable   | `boolean`             | No       | Whether this control can have a null value. Used to set the same property through Angular's form API         |
-
+| Name         | Type                 | Required | Description                                                                                                  |
+| ------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| label        | `string`             | No       | Specifies the label for the control                                                                          |
+| dynamicLabel | `Expression<string>` | No       | A dynamic label evaluated from form data. Can be a string expression or a function receiving the form value. |
+| defaultValue | `unknown`            | No       | Should be overwritten with the proper value type of the control                                              |
+| nonNullable  | `boolean`            | No       | Whether the control rejects null. Maps to the `nonNullable` option on Angular's form controls                |
 
 ### Group
 
 The following configurations options are only applicable to the interface `NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem>`.
 
-| Name         | Type                 | Required | Description                                                                                                   |
-|--------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
-| title        | `string`             | No       | Specifies a title for the group                                                                               |
-| dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value.  |
-| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbItem` that configure the controls of the group                                   |
-
+| Name         | Type                 | Required | Description                                                                                                  |
+| ------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| title        | `string`             | No       | Specifies a title for the group                                                                              |
+| dynamicTitle | `Expression<string>` | No       | A dynamic title evaluated from form data. Can be a string expression or a function receiving the form value. |
+| controls     | `Record<string, T>`  | Yes      | Object mapping keys to `NgxFbItem` that configure the controls of the group                                  |
 
 ### Block
 
 The following configurations are only applicable to the interface `NgxFbBlock`.
 
 | Name      | Type    | Required | Description                                                    |
-|-----------|---------|----------|----------------------------------------------------------------|
+| --------- | ------- | -------- | -------------------------------------------------------------- |
 | isControl | `false` | Yes      | Required property for TypeScript to properly do type narrowing |
-
 
 ## Full Example
 
-As you can see the configuration is just an object of controls and/or groups. Every entry in that object will be registered on the top-level of the form.
+The configuration is an object of controls and/or groups. Every entry in that object is registered on the top level of the form.
 
 How to register validators depends on your integration package:
 
@@ -91,86 +87,86 @@ How to register validators depends on your integration package:
 export const exampleForm: NgxFbForm = {
   content: {
     // Simple fields with no additional configuration
-    name: {
+    fullName: {
       type: 'text',
-      label: 'First and Lastname',
+      label: 'Full Name',
     },
     company: {
       type: 'text',
       label: 'Name of Company',
       hint: 'If applicable',
     },
-    licenses: {
-      type: 'numeric',
-      label: 'Amount of Licenses',
-      max: 3,
+    peopleAffected: {
+      type: 'number',
+      label: 'People Affected (estimate)',
+      max: 5000,
     },
     // Example how a configuration for a radio button group could look like
-    plan: {
+    urgency: {
       type: 'radio',
-      label: 'Price Plan',
+      label: 'Urgency',
       options: [
         {
-          id: 'plan-123',
-          label: 'Free',
-          value: 'p123',
+          id: 'urg-low',
+          label: 'Low',
+          value: 'low',
         },
         {
-          id: 'plan-456',
+          id: 'urg-med',
           label: 'Medium',
-          value: 'p456',
+          value: 'medium',
         },
         {
-          id: 'plan-789',
-          label: 'Large',
-          value: 'p789',
+          id: 'urg-high',
+          label: 'High',
+          value: 'high',
         },
       ],
     },
-    termsAccepted: {
+    policyAccepted: {
       type: 'checkbox',
-      label: 'I Accept Terms',
+      label: 'I Accept the Facility Policy',
     },
-    repo: {
+    requester: {
       type: 'group',
       controls: {
-        username: {
+        contactName: {
           type: 'text',
-          label: 'Username',
-          defaultValue: 'UsernameSuggestion123',
-          validators: ['min5Characters'],
-          asyncValidators: ['usernameIsFreeValidator'],
+          label: 'Contact Name',
+          defaultValue: 'Emma Frost',
+          validators: ['min2Characters'],
+          asyncValidators: ['contactIsKnown'],
         },
-        repositories: {
-          type: 'numeric',
-          label: 'Repositories to create',
+        room: {
+          type: 'number',
+          label: 'Room Number',
           defaultValue: 1,
         },
         // Example how a configuration for a dropdown could look like
-        repoTemplate: {
+        building: {
           type: 'dropdown',
-          label: 'Template',
-          defaultValue: 'none',
+          label: 'Building',
+          defaultValue: 'A',
           options: [
             {
-              id: 'template-1',
-              label: 'None',
-              value: 'none',
+              id: 'b-a',
+              label: 'A',
+              value: 'A',
             },
             {
-              id: 'template-2',
-              label: 'Monorepo',
-              value: 'mono',
+              id: 'b-b',
+              label: 'B',
+              value: 'B',
             },
             {
-              id: 'template-3',
-              label: 'Documentation',
-              value: 'doc',
+              id: 'b-c',
+              label: 'C',
+              value: 'C',
             },
             {
-              id: 'template-4',
-              label: 'Note Management',
-              value: 'note',
+              id: 'b-d',
+              label: 'D',
+              value: 'D',
             },
           ],
         },
@@ -180,83 +176,84 @@ export const exampleForm: NgxFbForm = {
           defaultValue: true,
         },
         confirmationMailTarget: {
-          type: 'email',
+          type: 'text',
           label: 'E-Mail',
-          hidden: '!repo.sendConfirmation',
+          validators: ['email'],
+          hidden: '!requester.sendConfirmation',
           hideStrategy: 'remove',
           valueStrategy: 'reset',
         },
-        editProjectId: {
+        editTicketId: {
           type: 'checkbox',
-          label: 'Edit Project ID',
+          label: 'Edit Ticket ID',
           defaultValue: false,
         },
-        projectId: {
+        ticketId: {
           type: 'text',
-          label: 'Project ID',
+          label: 'Ticket ID',
           defaultValue: '123456789',
-          hidden: '!repo.editProjectId',
+          hidden: '!requester.editTicketId',
           hideStrategy: 'keep',
           valueStrategy: 'reset',
         },
       },
     },
-    docs: {
+    details: {
       type: 'group',
       controls: {
-        docAmount: {
-          type: 'numeric',
-          label: 'Documents to store',
+        peopleImpacted: {
+          type: 'number',
+          label: 'People Impacted',
         },
         acceptedLimits: {
           type: 'checkbox',
-          label: 'I accept the limits for large volumes of documents',
-          hidden: 'docs.docAmount > 1000',
+          label: 'I accept the handling time for large impact requests',
+          hidden: 'details.peopleImpacted > 1000',
         },
-        updateFrequency: {
+        category: {
           type: 'dropdown',
-          label: 'Documentation Update Frequency',
+          label: 'Category',
           options: [
             {
-              id: 'on-the-fly',
-              label: 'On the fly',
-              value: 'otf',
+              id: 'cat-hvac',
+              label: 'HVAC',
+              value: 'hvac',
             },
             {
-              id: 'sprint',
-              label: 'Sprint',
-              value: 'spr',
+              id: 'cat-elec',
+              label: 'Electrical',
+              value: 'electrical',
             },
             {
-              id: 'cycle',
-              label: 'Cycle',
-              value: 'cyc',
+              id: 'cat-plum',
+              label: 'Plumbing',
+              value: 'plumbing',
             },
             {
-              id: 'planned',
-              label: 'Planned',
-              value: 'pla',
+              id: 'cat-clean',
+              label: 'Cleaning',
+              value: 'cleaning',
             },
           ],
         },
-        frequency: {
-          type: 'numeric',
-          label: 'Frequency (Sprint / Cycle Duration)',
-          hidden: 'docs.docAmount > 2000 && (docs.updateFrequency === "spr" || docs.updateFrequency === "cyc")',
+        unitId: {
+          type: 'text',
+          label: 'Unit ID (HVAC / Electrical)',
+          hidden: 'details.peopleImpacted > 2000 && (details.category === "hvac" || details.category === "electrical")',
           hideStrategy: 'remove',
           valueStrategy: 'last',
         },
       },
     },
-  }
+  },
 };
-``` 
+```
 
 ## Typing the Form Value
 
 {% include "../../shared/typed-form-value.md" %}
 
-## Next steps
+## Next Steps
 
 Once you have a configuration, see your integration package's guide on how to render it:
 

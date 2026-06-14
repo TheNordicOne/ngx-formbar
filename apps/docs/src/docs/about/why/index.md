@@ -1,6 +1,6 @@
 There are already several solid libraries for dynamic, JSON-driven forms. ngx-formbar makes a different set of trade-offs that pay off when configurations have to be storable as JSON, expressions have to stay readable, and components have to fit a specific design system.
 
-## What are the key differences compared to other solutions?
+## What Are the Key Differences Compared to Other Solutions?
 
 - **JSON-serializable end to end.** Configurations are plain data you can store, send over an API, and load back without a serialization layer in between.
 - **JavaScript-like expressions.** String expressions support boolean operators, comparisons, member access, and method calls, evaluated against the form's current value. No nested operator objects.
@@ -10,11 +10,11 @@ There are already several solid libraries for dynamic, JSON-driven forms. ngx-fo
 - **Built on Angular's form primitives.** You read and write values through Angular's own form API, not a library-specific surface.
 - **Display-only blocks alongside form controls.** Notes, dividers, headers, and other non-input elements live in the configuration as first-class entries. They are custom Angular components you register, not a fixed set of built-in types, and they participate in the same conditional show/hide system as the controls.
 - **Type safety when defining forms in TypeScript.** The contracts are generic over your schema type, so unknown fields surface as compile errors.
-- **Built-in test-id generation.** Every control gets a stable selector for end-to-end tests.
+- **Built-in test ID generation.** Every control gets a stable selector for end-to-end tests.
 
 The two biggest differentiators are that configurations are pure JSON and that controls are ordinary Angular components. Each control can be as generic or as specialized as the form needs.
 
-## Who is this for?
+## Who Is This For?
 
 ngx-formbar is for projects that need flexibility and control over dynamic forms. It fits especially well when configurations have to be stored or transmitted as JSON, when forms need rich conditional logic, or when the UI has to align with a specific design system.
 

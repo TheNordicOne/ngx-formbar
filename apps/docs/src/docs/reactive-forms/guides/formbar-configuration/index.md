@@ -1,18 +1,20 @@
+How to configure ngx-formbar: the object passed to `provideFormbar`, the two config files involved, and splitting configuration across files and injection tokens.
+
 ## Formbar Configuration vs. Schematics Configuration
 
-There are two configuration files used by _ngx-formbar_.
+There are two configuration files used by ngx-formbar.
 
 - Formbar Configuration: `formbar.config.ts`
 - Schematics Configuration: `formbar-schematic.config.json`
 
-The schematics configuration is only used by the schematics and only holds default values. This file is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
+The schematics configuration is only used by the schematics and only holds default values. It is not relevant at runtime. All relevant options are shown on the schematics pages Generators and Register.
 
 ## Formbar Configuration Object
 
 The configuration object that is used by the `provideFormbar` function has these properties
 
 | Property                    | Type                                           | Required | Description                                   |
-|-----------------------------|------------------------------------------------|----------|-----------------------------------------------|
+| --------------------------- | ---------------------------------------------- | -------- | --------------------------------------------- |
 | componentRegistrations      | Record<string, ComponentRegistrationEntry>     | No       | Mapping between keys and controls.            |
 | validatorRegistrations      | [key]: (ValidatorFn \| ValidatorKey<T>)[]      | No       | Mapping between keys and validators.          |
 | asyncValidatorRegistrations | [key]: (AsyncValidatorFn \| ValidatorKey<T>)[] | No       | Mapping between keys and async validators.    |
@@ -26,34 +28,37 @@ Each component registration is either **static** or **lazy**:
 - **Static** `{ component: Type<unknown> }`: the component is eagerly imported and included in the main bundle
 - **Lazy** `{ loadComponent: LoadComponentFn }`: the component is loaded on demand via dynamic `import()`
 
-The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` are convenience wrappers that create these objects. You can also construct them directly:
+The helper functions `staticComponent()` and `loadComponent()` from `@ngx-formbar/core` create these objects. You can also construct them directly:
 
 ```typescript
 // These are equivalent:
-text: staticComponent(TextComponent)
-text: { component: TextComponent }
+text: staticComponent(TextComponent);
+text: {
+  component: TextComponent;
+}
 
 // These are equivalent:
-select: loadComponent(() => import('./select.component').then(m => m.SelectComponent))
-select: { loadComponent: () => import('./select.component').then(m => m.SelectComponent) }
+select: loadComponent(() => import('./select.component').then((m) => m.SelectComponent));
+select: {
+  loadComponent: () => import('./select.component').then((m) => m.SelectComponent);
+}
 ```
 
 You can freely mix static and lazy registrations within the same configuration.
 
 ### NgxFbGlobalConfiguration
 
-This configuration provides a global runtime configuration that is used by all controls, groups or blocks.
+This provides a global runtime configuration used by all controls, groups or blocks.
 
 | Property        | Type                                                                         | Required | Description                                              |
-|-----------------|------------------------------------------------------------------------------|----------|----------------------------------------------------------|
-| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test id for a control |
-
+| --------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------------------------------- |
+| testIdBuilderFn | `(content: NgxFbBaseContent, name: string, parentTestId?: string) => string` | No       | Function that is used to build the test ID for a control |
 
 ## Code Splitting
 
-Registering all controls, validators, etc. directly in _app.config.ts_ is not ideal. _ngx-formbar_ provides multiple ways to organize your code better.
+Registering all controls, validators, etc. directly in _app.config.ts_ grows that file as the form grows. ngx-formbar provides multiple ways to split this configuration across files.
 
-If you ran `ng add` with default parameters to install _ngx-formbar_, your setup already uses split configurations.
+If you ran `ng add` with default parameters to install ngx-formbar, your setup already uses split configurations.
 
 > **Note**
 > This section assumes that you have read and understood the [Configuring Formbar](/fundamentals/configuring-formbar) guide and know how to set the configuration.
@@ -99,7 +104,7 @@ export const appConfig: ApplicationConfig = {
 
 ### Using Injection Tokens
 
-For more advanced code organization, you can use Angular's dependency injection system by providing the tokens directly.
+For more advanced code organization, you can use Angular's dependency injection by providing the tokens directly.
 
 > **Note**
 > When using the DI tokens, be aware of how resolution works:
@@ -118,8 +123,8 @@ export const componentRegistrationsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
     ['text-control', staticComponent(TextControlComponent)],
-    ['group', loadComponent(() => import('./components/group.component').then(m => m.GroupComponent))],
-    ['info', loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent))],
+    ['group', loadComponent(() => import('./components/group.component').then((m) => m.GroupComponent))],
+    ['info', loadComponent(() => import('./components/info-block.component').then((m) => m.InfoBlockComponent))],
     // more registrations...
   ]),
 };
@@ -130,12 +135,7 @@ export const componentRegistrationsProvider = {
 Use `toValidatorRegistrationMap` and `toAsyncValidatorRegistrationMap` to build the token value from a config object. The helpers accept the same `{ key: [...] }` shape you use elsewhere, so sibling key references (such as `'min-chars'` inside `combined`) stay type-checked and resolvable. Without them you have to build the `Map` by hand, which loses cross-referencing.
 
 ```typescript name="validator-registrations.provider.ts"
-import {
-  NGX_FW_VALIDATOR_REGISTRATIONS,
-  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  toValidatorRegistrationMap,
-  toAsyncValidatorRegistrationMap,
-} from '@ngx-formbar/reactive-forms';
+import { NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS, toValidatorRegistrationMap, toAsyncValidatorRegistrationMap } from '@ngx-formbar/reactive-forms';
 import { Validators } from '@angular/forms';
 import { letterValidator, noDuplicateValuesValidator, forbiddenLetterAValidator } from './validators';
 import { asyncValidator, asyncGroupValidator } from './async-validators';
@@ -199,7 +199,7 @@ export const baseComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
     ['text', staticComponent(TextComponent)],
-    ['number', loadComponent(() => import('./components/number.component').then(m => m.NumberComponent))],
+    ['number', loadComponent(() => import('./components/number.component').then((m) => m.NumberComponent))],
   ]),
 };
 
@@ -207,8 +207,8 @@ export const baseComponentsProvider = {
 export const extraComponentsProvider = {
   provide: NGX_FW_COMPONENT_REGISTRATIONS,
   useValue: new Map<string, ComponentRegistrationEntry>([
-    ['date', loadComponent(() => import('./components/date.component').then(m => m.DateComponent))],
-    ['select', loadComponent(() => import('./components/select.component').then(m => m.SelectComponent))],
+    ['date', loadComponent(() => import('./components/date.component').then((m) => m.DateComponent))],
+    ['select', loadComponent(() => import('./components/select.component').then((m) => m.SelectComponent))],
   ]),
 };
 
@@ -243,8 +243,8 @@ import { TextControlComponent } from './components/text-control.component';
 
 export const componentRegistrations: ComponentRegistrationConfig = {
   'text-control': staticComponent(TextControlComponent),
-  group: loadComponent(() => import('./components/group.component').then(m => m.GroupComponent)),
-  info: loadComponent(() => import('./components/info-block.component').then(m => m.InfoBlockComponent)),
+  group: loadComponent(() => import('./components/group.component').then((m) => m.GroupComponent)),
+  info: loadComponent(() => import('./components/info-block.component').then((m) => m.InfoBlockComponent)),
   // more registrations...
 };
 ```

@@ -600,6 +600,33 @@ describe('register schematic', () => {
       directComponentRegistrationsHasIdentifier,
     );
   });
+
+  it('honors the registrationType option when no config file is present', async () => {
+    const files: TestComponentDetails[] = [
+      {
+        path: app('components/form/controls/inline.component.ts'),
+        content: createControlComponent(
+          'inline',
+          inlineProviders,
+          'InlineComponent',
+        ),
+        className: 'InlineComponent',
+        key: 'inline',
+      },
+    ];
+
+    addComponentFiles(appTree, files);
+    provideMap(appTree, appConfigPathRaw, registrationsPath, formbarConfigPath);
+
+    const tree = await runSchematic({ registrationType: 'config' });
+
+    assertRegisteredComponents(
+      tree,
+      files,
+      src(registrationsPath),
+      directComponentRegistrationsHasIdentifier,
+    );
+  });
 });
 
 function assertRegisteredComponents(

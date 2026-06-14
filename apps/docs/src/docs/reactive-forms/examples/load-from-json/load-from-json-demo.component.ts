@@ -3,12 +3,12 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgxFbForm } from '@ngx-formbar/core';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 import { ExampleControls } from '@ngx-formbar/examples';
 
 @Component({
   selector: 'docs-load-from-json-demo',
-  imports: [NgxfbFormComponent, ReactiveFormsModule],
+  imports: [NgxFbFormComponent, ReactiveFormsModule],
   templateUrl: './load-from-json-demo.component.html',
 
   changeDetection: ChangeDetectionStrategy.OnPush,

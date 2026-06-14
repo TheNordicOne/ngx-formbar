@@ -1,4 +1,4 @@
-ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own. This guide explains how to create and use custom component and validator resolvers in your application.
+ngx-formbar provides built-in resolvers for components and validators. For specialized use cases, you can implement your own.
 
 ## Understanding Resolvers
 
@@ -21,11 +21,13 @@ import { MyCustomTextComponent } from './components/custom-text.component';
 @Injectable()
 export class AppCustomComponentResolver implements ComponentResolver {
   // Create a signal with your component mapping
-  private readonly _componentMap = signal(new Map<string, ComponentRegistrationEntry>([
-    ['custom-text', staticComponent(MyCustomTextComponent)],
-    ['special-group', loadComponent(() => import('./components/special-group.component').then(m => m.MySpecialGroupComponent))],
-    // Add more components as needed
-  ]));
+  private readonly _componentMap = signal(
+    new Map<string, ComponentRegistrationEntry>([
+      ['custom-text', staticComponent(MyCustomTextComponent)],
+      ['special-group', loadComponent(() => import('./components/special-group.component').then((m) => m.MySpecialGroupComponent))],
+      // Add more components as needed
+    ]),
+  );
 
   // Expose as readonly signal as required by the interface
   readonly registrations = this._componentMap.asReadonly();
@@ -94,17 +96,21 @@ import { ValidatorResolver } from '@ngx-formbar/reactive-forms';
 @Injectable()
 export class AppCustomValidatorResolver implements ValidatorResolver {
   // Create signals for both types of validators
-  private readonly _validatorMap = signal(new Map<string, ValidatorFn[]>([
-    ['customRequired', [Validators.required, myCustomRequiredValidator]],
-    ['passwordStrength', [passwordStrengthValidator]],
-    // Add more validators as needed
-  ]));
+  private readonly _validatorMap = signal(
+    new Map<string, ValidatorFn[]>([
+      ['customRequired', [Validators.required, myCustomRequiredValidator]],
+      ['passwordStrength', [passwordStrengthValidator]],
+      // Add more validators as needed
+    ]),
+  );
 
-  private readonly _asyncValidatorMap = signal(new Map<string, AsyncValidatorFn[]>([
-    ['uniqueUsername', [uniqueUsernameValidator]],
-    ['serverCheck', [serverCheckValidator]],
-    // Add more async validators as needed
-  ]));
+  private readonly _asyncValidatorMap = signal(
+    new Map<string, AsyncValidatorFn[]>([
+      ['uniqueUsername', [uniqueUsernameValidator]],
+      ['serverCheck', [serverCheckValidator]],
+      // Add more async validators as needed
+    ]),
+  );
 
   // Expose as readonly signals as required by the interface
   readonly registrations = this._validatorMap.asReadonly();
@@ -127,7 +133,7 @@ export class AppCustomValidatorResolver implements ValidatorResolver {
 
 ## Registering Custom Resolvers
 
-To use your custom resolvers, you need to provide them in your application configuration:
+To use your custom resolvers, provide them in your application configuration:
 
 ```typescript name="app.config.ts"
 import { ApplicationConfig } from '@angular/core';
@@ -145,11 +151,11 @@ export const appConfig: ApplicationConfig = {
     // These MUST come after provideFormbar()
     {
       provide: NGX_FW_COMPONENT_RESOLVER,
-      useClass: AppCustomComponentResolver
+      useClass: AppCustomComponentResolver,
     },
     {
       provide: NGX_VALIDATOR_RESOLVER,
-      useClass: AppCustomValidatorResolver
+      useClass: AppCustomValidatorResolver,
     },
     // In case you need access to methods from your resolver add this
     // This ensures that you can inject your resolver, get the correct types for it, while still using the same instance that ngx-formbar uses
@@ -157,37 +163,10 @@ export const appConfig: ApplicationConfig = {
       provide: AppCustomComponentResolver,
       useExisting: NGX_FW_COMPONENT_RESOLVER,
     },
-  ]
+  ],
 };
 ```
 
 ## Use Cases for Custom Resolvers
 
-Custom resolvers can be particularly valuable in the following scenarios:
-
-1. **Dynamic Component Loading** - Load components on-demand based on user actions or application state
-2. **Feature-Based Validators** - Switch between different validation rule sets based on application features or user roles
-3. **Permission-Based Components** - Show or hide components based on user permissions
-4. **Internationalized Validators** - Use different validation rules based on locale or region
-5. **A/B Testing** - Swap components for different user groups to test UI variations
-6. **Plugin Architecture** - Allow third-party modules to register their own components and validators
-7. **Environment-Specific Components** - Use different implementations in development vs. production environments
-
-## Best Practices
-
-When implementing custom resolvers:
-
-1. **Performance**: Use `signal()` efficiently and avoid unnecessary computations
-2. **Immutability**: Always create new Maps when updating signals
-3. **Error Handling**: Add proper error handling for missing components or validators
-4. **Testing**: Create unit tests to verify your resolver's behavior
-5. **Integration**: Ensure smooth integration with existing ngx-formbar configurations
-
-## Debug Tips
-
-If you encounter issues with your custom resolvers:
-
-1. Verify that your resolver is properly registered in the DI container
-2. Check that your resolver correctly implements the required interface
-3. Ensure your resolver is provided at the correct level (root or module)
-4. Verify that component and validator names match those used in your form configurations
+Custom resolvers fit dynamic or permission-driven component loading, feature- or locale-specific validator sets, A/B testing, and plugin architectures where third-party modules register their own components and validators.

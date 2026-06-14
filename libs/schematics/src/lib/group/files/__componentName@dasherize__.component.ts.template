@@ -3,7 +3,7 @@ import { ControlContainer, ReactiveFormsModule } from '@angular/forms';
 <% } else { %>import { Component, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 <% } %>import {
-  NgxfbControlOutlet,
+  NgxFbControlOutlet,
   ReactiveFormbarGroup,
 } from '@ngx-formbar/reactive-forms';
 import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
@@ -11,7 +11,7 @@ import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<%
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
-  imports: [ReactiveFormsModule, NgxfbControlOutlet],
+  imports: [ReactiveFormsModule, NgxFbControlOutlet],
   templateUrl: './<%= dasherize(componentName) %>.component.html',
   viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
     {

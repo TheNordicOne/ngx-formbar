@@ -121,4 +121,5 @@ jobs:
     uses: ./.github/workflows/publish-docs.yml
     with:
       environment: ${{ needs.resolve.outputs.mode == 'release' && 'production' || 'preview' }}
+      version: ${{ needs.publish.outputs.version }}
     secrets: inherit

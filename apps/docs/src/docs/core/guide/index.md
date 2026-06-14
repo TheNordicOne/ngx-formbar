@@ -1,6 +1,6 @@
 The `@ngx-formbar/core` package provides the foundation for building your own form integration. It contains the expression engine, composable functions, DI tokens, and services that `@ngx-formbar/reactive-forms` is built on. You can use it directly to create integrations for other form approaches.
 
-## What the core package provides
+## What the Core Package Provides
 
 **Composables** resolve form configuration into reactive signals. They handle expression parsing, state inheritance from parent groups, and update strategy resolution.
 
@@ -18,8 +18,8 @@ Resolves an `Expression<T>` into a computed signal. String expressions are parse
 
 ```typescript
 const label = resolveExpression(
-  labelOption,     // Signal<Expression<string> | string | undefined>
-  formContext,     // Signal<FormContext>
+  labelOption, // Signal<Expression<string> | string | undefined>
+  formContext, // Signal<FormContext>
   expressionService,
 );
 // label() returns the resolved string or undefined
@@ -31,10 +31,10 @@ Like `resolveExpression`, but falls back to a parent state when the option is un
 
 ```typescript
 const disabled = resolveInheritableExpression(
-  disabledOption,  // Signal<Expression<boolean> | boolean | undefined>
+  disabledOption, // Signal<Expression<boolean> | boolean | undefined>
   formContext,
   expressionService,
-  parentDisabled,  // Signal<boolean>
+  parentDisabled, // Signal<boolean>
 );
 // If disabledOption is undefined, inherits parentDisabled
 ```
@@ -44,12 +44,7 @@ const disabled = resolveInheritableExpression(
 Resolves hidden state with parent combination logic. Unlike other inheritable states, string expressions are combined with the parent using OR logic: a control is hidden if its own expression evaluates to true **or** if its parent is hidden.
 
 ```typescript
-const hidden = resolveHiddenState(
-  hiddenOption,
-  formContext,
-  expressionService,
-  parentHidden,
-);
+const hidden = resolveHiddenState(hiddenOption, formContext, expressionService, parentHidden);
 ```
 
 ### resolveUpdateStrategy
@@ -58,9 +53,9 @@ Resolves the update strategy using a priority chain: control value > parent grou
 
 ```typescript
 const updateOn = resolveUpdateStrategy(
-  controlUpdateOn,  // Signal<UpdateStrategy | undefined>
-  parentStrategy,   // Signal<UpdateStrategy | undefined>
-  defaultStrategy,  // UpdateStrategy (injected via NGX_FW_DEFAULT_UPDATE_STRATEGY)
+  controlUpdateOn, // Signal<UpdateStrategy | undefined>
+  parentStrategy, // Signal<UpdateStrategy | undefined>
+  defaultStrategy, // UpdateStrategy (injected via NGX_FW_DEFAULT_UPDATE_STRATEGY)
 );
 ```
 
@@ -70,11 +65,10 @@ Generates hierarchical test IDs using a configurable builder function.
 
 ```typescript
 const testId = resolveTestId(
-  content,            // Signal<NgxFbBaseContent>
-  name,               // Signal<string>
-  localTestIdBuilder, // Signal<TestIdBuilderFn | undefined>
-  globalTestIdBuilder,
-  parentTestId,       // Signal<string | undefined>
+  content, // Signal<NgxFbBaseContent>
+  name, // Signal<string>
+  globalTestIdBuilder, // TestIdBuilderFn | undefined
+  parentTestId, // Signal<string | undefined>
 );
 // Default output: "parentTestId-name"
 ```
@@ -86,7 +80,7 @@ Returns `true` or `null` for binding to the HTML `hidden` attribute. Respects `S
 ```typescript
 const hiddenAttr = resolveHiddenAttribute({
   hiddenSignal: hidden,
-  handleVisibility,    // Signal<boolean>: true when the library handles visibility
+  handleVisibility, // Signal<boolean>: true when the library handles visibility
 });
 // Use in template: [attr.hidden]="hiddenAttr()"
 ```
@@ -96,8 +90,7 @@ const hiddenAttr = resolveHiddenAttribute({
 Splits a directive's `FormConfigEntry` input into its constituent signals and resolves the matching component registration. Returns the inner config, the bound name, the registration entry (or `null`), and the loaded component class. Must run in an injection context because it reads `NGX_FW_COMPONENT_RESOLVER`.
 
 ```typescript
-const { controlConfig, controlName, registrationEntry, component } =
-  withBase(this.config); // Signal<FormConfigEntry<T>>
+const { controlConfig, controlName, registrationEntry, component } = withBase(this.config); // Signal<FormConfigEntry<T>>
 ```
 
 ### withComponentHost
@@ -106,8 +99,8 @@ Manages a host for a dynamically created component. Returns `{ mount, clear }`; 
 
 ```typescript
 const host = withComponentHost({
-  signalMap,        // Map<string, Signal<unknown>>
-  controlConfig,    // Signal<object>
+  signalMap, // Map<string, Signal<unknown>>
+  controlConfig, // Signal<object>
   additionalProviders, // optional Provider[] exposed via a child injector
 });
 
@@ -121,9 +114,9 @@ Reads a field from the directive's own config and falls back to a parent group's
 
 ```typescript
 const hideStrategy = withInheritedValue(
-  controlConfig,                     // Signal<T>
-  'hideStrategy',                    // K extends keyof T
-  parentGroup?.hideStrategy,         // Signal<T[K]> | undefined
+  controlConfig, // Signal<T>
+  'hideStrategy', // K extends keyof T
+  parentGroup?.hideStrategy, // Signal<T[K]> | undefined
 );
 ```
 
@@ -138,12 +131,12 @@ const component = withLoadedComponent(registrationEntry);
 
 ### withDynamicLabel / withDynamicTitle / withComputedValue
 
-Each wraps `resolveExpression` and reads the form value from `NGX_FW_FORM_VALUE`. Returns a signal of the evaluated result, or `undefined` when the corresponding field is not configured.
+Each wraps `resolveExpression` and reads the form value from `NGX_FW_FORM_VALUE`. Returns a signal of the evaluated result, or `undefined` when the field is not configured.
 
 ```typescript
-const dynamicLabel = withDynamicLabel(content);            // Signal<string | null | undefined>
-const dynamicTitle = withDynamicTitle(content);            // Signal<string | null | undefined>
-const computedValue = withComputedValue<number>(content);  // Signal<number | null | undefined>
+const dynamicLabel = withDynamicLabel(content); // Signal<string | null | undefined>
+const dynamicTitle = withDynamicTitle(content); // Signal<string | null | undefined>
+const computedValue = withComputedValue<number>(content); // Signal<number | null | undefined>
 ```
 
 ### withHiddenState
@@ -165,7 +158,7 @@ const isReadonly = withReadonlyState(content);
 
 ### withTestId
 
-Builds a hierarchical test id using the `testIdBuilder` accessor on `NgxFbConfigurationService`, scoped under the parent group's resolved test id when present.
+Builds a hierarchical test ID using the `testIdBuilder` accessor on `NgxFbConfigurationService`, scoped under the parent group's resolved test ID when present.
 
 ```typescript
 const testId = withTestId(content, name); // Signal<string>
@@ -173,7 +166,7 @@ const testId = withTestId(content, name); // Signal<string>
 
 ### withUpdateStrategy
 
-Resolves the update strategy in the priority chain *own > parent > application default*, reading the parent from `NGX_FW_PARENT_CONTEXT` and the default from `NGX_FW_DEFAULT_UPDATE_STRATEGY`.
+Resolves the update strategy in the priority chain _own > parent > application default_, reading the parent from `NGX_FW_PARENT_CONTEXT` and the default from `NGX_FW_DEFAULT_UPDATE_STRATEGY`.
 
 ```typescript
 const updateOn = withUpdateStrategy(content); // Signal<UpdateStrategy>
@@ -192,7 +185,7 @@ Parses and evaluates a constrained pure-expression DSL within a form context. Th
 
 Assignments, `this`, `new`, `super`, `import`, `delete`, `await`, `yield`, classes, function expressions, tagged templates, multi-statement input, and comma sequences are all parse errors. `==` and `!=` behave strictly (no JS coercion). Plain objects, `Date`, `Map`, `Set`, and `RegExp` instances expose no callable methods. Division by zero throws.
 
-See [Expressions](../fundamentals/expressions) for the full language reference and threat-boundary documentation.
+See [Expressions](/fundamentals/expressions) for the full language reference and threat-boundary documentation.
 
 ```typescript
 const expressionService = inject(ExpressionService);
@@ -201,7 +194,7 @@ const result = expressionService.evaluateExpression<boolean>(ast, { user: { age:
 // result === true (typed as boolean | null)
 ```
 
-`evaluateExpression` accepts an optional type parameter `T` (defaults to `unknown`). Use it to declare the expected result type at the call site, avoiding a manual cast. The return is `T | null`: `null` only when `ast` or `context` are nullish.
+`evaluateExpression` accepts an optional type parameter `T` (defaults to `unknown`). Use it to declare the expected result type at the call site, avoiding a manual cast. The return is `T | null`, with `null` only when `ast` or `context` are nullish.
 
 ### ComponentRegistrationService
 
@@ -220,7 +213,7 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 ## Tokens
 
 | Token                          | Default       | Purpose                                                                              |
-|--------------------------------|---------------|--------------------------------------------------------------------------------------|
+| ------------------------------ | ------------- | ------------------------------------------------------------------------------------ |
 | NGX_FW_COMPONENT_REGISTRATIONS | Empty Map     | Maps type strings to `ComponentRegistrationEntry`                                    |
 | NGX_FW_COMPONENT_RESOLVER      | -             | Provides access to the component registration map                                    |
 | NGX_FW_DEFAULT_UPDATE_STRATEGY | `'change'`    | Application-wide default update strategy                                             |
@@ -230,13 +223,13 @@ Provides access to the resolved global configuration, such as the `testIdBuilder
 | NGX_FW_FORM_VALUE              | -             | `Signal<FormContext>` of the current form value. Provided per form by integrations   |
 | NGX_FW_PARENT_CONTEXT          | -             | `NgxFwParentContext` of the enclosing group. Provided by group directives themselves |
 
-## Building an integration
+## Building an Integration
 
 `@ngx-formbar/core` is form-agnostic. It owns the configuration model, the expression engine, the registration system, dynamic component mounting, and all state-resolution logic. It has no opinion about where form values live or how the form model gets updated. An integration package wires those two ends together.
 
-`@ngx-formbar/reactive-forms` is one such integration, built on top of `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
+`@ngx-formbar/reactive-forms` is one such integration, built on `@angular/forms`. The same shape applies if you want to build an integration on signal-forms, template-driven forms, or pure local state.
 
-### Three layers
+### Three Layers
 
 Think of a complete formbar setup as three layers stacked vertically:
 
@@ -246,7 +239,7 @@ Think of a complete formbar setup as three layers stacked vertically:
 
 Core only requires the middle layer to function. Once those tokens are provided, every `with*` composable in core works inside any directive or component that runs in an injection context with access to them.
 
-### The two tokens you must provide
+### The Two Tokens You Must Provide
 
 **`NGX_FW_FORM_VALUE: InjectionToken<Signal<FormContext>>`** holds the current form value as a signal. Composables that evaluate expressions (`withDynamicLabel`, `withHiddenState`, `withComputedValue`, etc.) read from this token. Provide it once per form, sourced from wherever your integration holds form state.
 
@@ -268,7 +261,7 @@ interface NgxFwParentContext {
 
 If your integration has no concept for a particular field, return a sentinel: `false` for booleans, `''` for `testId`, `undefined` for the optional strategies. Composables that read parent context use `inject(NGX_FW_PARENT_CONTEXT, { optional: true, skipSelf: true })`, so top-level entries (no enclosing group) get `null` and behave correctly. The `skipSelf` matters because a group directive that provides itself must look up the parent above its own provided context.
 
-### Provider pattern
+### Provider Pattern
 
 How `@ngx-formbar/reactive-forms` wires the two tokens:
 
@@ -285,7 +278,7 @@ How `@ngx-formbar/reactive-forms` wires the two tokens:
     },
   ],
 })
-export class NgxfbFormComponent { /* ... */ }
+export class NgxFbFormComponent { /* ... */ }
 
 // A group directive implements NgxFwParentContext and provides itself.
 @Directive({
@@ -319,21 +312,23 @@ A pure-state integration (no `@angular/forms`) might look like this instead:
     },
   ],
 })
-export class MyFormComponent { /* ... */ }
+export class MyFormComponent {
+  /* ... */
+}
 ```
 
-### What you still have to build
+### What You Still Have to Build
 
 Core does not own the form-model side. Your integration is responsible for:
 
 - **Where form values actually live** and how user input writes back to that store. Core only reads. It never writes form values.
-- **Applying state.** When the resolved `isDisabled` flips to `true`, *something* in your integration has to disable the underlying input. Same for readonly, hidden DOM presence, value strategy on hide/show.
+- **Applying state.** When the resolved `isDisabled` flips to `true`, _something_ in your integration has to disable the underlying input. Same for readonly, hidden DOM presence, value strategy on hide/show.
 - **Validation.** Core evaluates `validators: string[]` keys from the configuration into your validator type, but you decide how to register and run validators.
 - **Form lifecycle.** Reset behaviour, dirty tracking, and error surfacing are all integration-specific.
 
 `@ngx-formbar/reactive-forms` handles these via a thin layer of effects (`disabledEffect`, `setComputedValueEffect`, `hiddenEffects`) wrapped around the core composables, plus its own `withControlState`/`withFormParent` helpers. The pattern is reusable as a template.
 
-### Minimal integration sketch
+### Minimal Integration Sketch
 
 A directive that uses the configuration to resolve hidden/disabled state, mounts the registered component, and lets your form-state source handle everything else:
 

@@ -5,7 +5,7 @@ const AiUsagePage: NgDocPage = {
   title: 'AI Usage',
   mdFile: './index.md',
   category: AboutCategory,
-  order: 4,
+  order: 5,
 };
 
 export default AiUsagePage;

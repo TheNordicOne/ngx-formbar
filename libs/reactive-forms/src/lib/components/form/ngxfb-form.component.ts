@@ -20,7 +20,7 @@ import {
   NgxFbForm,
   NgxFbItem,
 } from '@ngx-formbar/core';
-import { NgxfbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
+import { NgxFbControlOutlet } from '../control-outlet/ngxfb-control-outlet.component';
 import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
 
 /**
@@ -29,7 +29,7 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
  */
 @Component({
   selector: 'ngxfb-form',
-  imports: [NgxfbControlOutlet],
+  imports: [NgxFbControlOutlet],
   template: `<ngxfb-control-outlet />`,
   providers: [
     FormService,
@@ -51,11 +51,11 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
     controlContainerViewProviders,
     {
       provide: NGXFB_CONTROL_ENTRIES,
-      useFactory: () => inject(NgxfbFormComponent).formContent,
+      useFactory: () => inject(NgxFbFormComponent).formContent,
     },
   ],
 })
-export class NgxfbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
+export class NgxFbFormComponent<T extends NgxFbBaseContent = NgxFbItem> {
   private readonly injector = inject(Injector);
   private readonly loader = inject(FormLoaderService);
 

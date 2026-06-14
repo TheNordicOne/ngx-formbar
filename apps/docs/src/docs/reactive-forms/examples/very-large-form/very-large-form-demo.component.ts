@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbForm } from '@ngx-formbar/core';
-import { NgxfbFormComponent } from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
 import {
   maintenanceFormLarge,
   highlyComputedForm,
@@ -10,7 +10,7 @@ import {
 
 @Component({
   selector: 'docs-very-large-form-demo',
-  imports: [NgxfbFormComponent, ReactiveFormsModule],
+  imports: [NgxFbFormComponent, ReactiveFormsModule],
   templateUrl: './very-large-form-demo.component.html',
 
   changeDetection: ChangeDetectionStrategy.OnPush,

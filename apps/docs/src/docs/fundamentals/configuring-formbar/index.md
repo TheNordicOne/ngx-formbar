@@ -1,17 +1,17 @@
-This page explains how to configure _ngx-formbar_ itself. It covers the provider setup, the registration system, and the global options that tell _ngx-formbar_ how to operate. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines what a form looks like.
+How to configure ngx-formbar itself: provider setup, the registration system, and global options. This is separate from [Configuring a Form](/fundamentals/configuration), which describes the object structure that defines a form.
 
 ## Overview
- 
-Configuration in _ngx-formbar_ is split into two categories:
+
+Configuration in ngx-formbar is split into two categories:
 
 - **Runtime configuration**: Sets up component registrations, global options, and default behavior. This is what your application needs to run.
 - **Schematics configuration**: Default values for CLI generators stored in `formbar-schematic.config.json`. This file is only used at build time and has no effect at runtime. See [Generators](/fundamentals/generators) and [Register](/fundamentals/register) for details.
 
-The rest of this page covers runtime configuration. Integration packages like `@ngx-formbar/reactive-forms` add their own configuration options on top of what is described here. See your integration package's guide for those details.
- 
+The rest of this page covers runtime configuration. Integration packages like `@ngx-formbar/reactive-forms` add their own configuration options on top of those described here. See your integration package's guide for those details.
+
 ## How Configuration Flows
 
-The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services that components consume.
+The diagram below shows how configuration reaches ngx-formbar at runtime. It starts with the files you write, flows through injection tokens with their defaults, merges where needed, and ends at the services components consume.
 
 ```
 ┌─ Your Files ─────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@ The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It s
 ┌─ Injection Tokens ───────────────────────────────────────────┐
 │                                                              │
 │  NGX_FW_COMPONENT_REGISTRATIONS    default: empty Map        │
-│  NGX_FW_CONFIG                     default: {}    (multi)    │
+│  NGX_FW_CONFIG                     default: []    (multi)    │
 │                                                              │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │    Integration packages add their own tokens here            │
@@ -61,7 +61,7 @@ The diagram below shows how configuration reaches _ngx-formbar_ at runtime. It s
 
 ## Component Registrations
 
-Maps a string type name to a component. When a form control has `type: 'text'`, _ngx-formbar_ looks up `'text'` in this map to determine which component to render.
+Maps a string type name to a component. When a form control has `type: 'text'`, ngx-formbar looks up `'text'` in this map to determine which component to render.
 
 Each entry can be **static** (eagerly imported) or **lazy** (loaded on demand):
 
@@ -74,8 +74,8 @@ componentRegistrations: {
 
 Each entry also accepts optional behavior flags:
 
-| Option             | Values                | Description                                                        |
-|--------------------|-----------------------|--------------------------------------------------------------------|
+| Option             | Values               | Description                                                        |
+| ------------------ | -------------------- | ------------------------------------------------------------------ |
 | `hiddenHandling`   | `'auto' \| 'manual'` | Whether the framework manages visibility or the component does     |
 | `disabledHandling` | `'auto' \| 'manual'` | Whether the framework manages disabled state or the component does |
 
@@ -83,8 +83,8 @@ Each entry also accepts optional behavior flags:
 
 Options that apply to all controls, groups, and blocks. Provided through the `globalConfig` property or the `NGX_FW_CONFIG` token.
 
-| Property          | Type              | Description                                                                                    |
-|-------------------|-------------------|------------------------------------------------------------------------------------------------|
+| Property          | Type              | Description                                                                                     |
+| ----------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
 | `testIdBuilderFn` | `TestIdBuilderFn` | Function that builds test IDs for controls given the content, name, and optional parent test ID |
 
 ## Registration Types
@@ -93,12 +93,14 @@ There are two ways to register components: **config-based** and **token-based**.
 
 ### Config-Based Registration
 
-Pass registrations as properties of the configuration object to `provideFormbar()`. This is the simpler approach.
+Pass registrations as properties of the configuration object to `provideFormbar()`.
 
 ```typescript
 provideFormbar({
-  componentRegistrations: { /* ... */ },
-})
+  componentRegistrations: {
+    /* ... */
+  },
+});
 ```
 
 ### Token-Based Registration
@@ -110,9 +112,11 @@ providers: [
   provideFormbar(),
   {
     provide: NGX_FW_COMPONENT_REGISTRATIONS,
-    useValue: new Map([/* ... */]),
+    useValue: new Map([
+      /* ... */
+    ]),
   },
-]
+];
 ```
 
 > **Warning**
@@ -123,7 +127,7 @@ providers: [
 When multiple registrations are provided (via `multi: true` tokens or multiple calls), they are resolved as follows:
 
 | Concern       | Strategy                                                       |
-|---------------|----------------------------------------------------------------|
+| ------------- | -------------------------------------------------------------- |
 | Components    | Only the last provided map is used                             |
 | Global config | All configs are deeply merged, nested properties are preserved |
 

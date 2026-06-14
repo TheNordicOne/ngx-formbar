@@ -89,6 +89,38 @@ export function minLen(len: number): ValidatorFn {
 }
 
 // ---------------------------------------------------------------------------
+// File validators
+// ---------------------------------------------------------------------------
+export function maxFiles5(c: AbstractControl): ValidationErrors | null {
+  const files = toFiles(c.value);
+  if (files.length === 0) {
+    return null;
+  }
+  return files.length > 5 ? { maxFiles5: true } : null;
+}
+
+export function imagesOrPdf(c: AbstractControl): ValidationErrors | null {
+  const files = toFiles(c.value);
+  if (files.length === 0) {
+    return null;
+  }
+  const allValid = files.every(
+    (f) => f.type.startsWith('image/') || f.type === 'application/pdf',
+  );
+  return allValid ? null : { imagesOrPdf: true };
+}
+
+function toFiles(value: unknown): File[] {
+  if (isEmpty(value)) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((item): item is File => item instanceof File);
+}
+
+// ---------------------------------------------------------------------------
 // Pattern/format validators
 // ---------------------------------------------------------------------------
 export function floorPattern(c: AbstractControl): ValidationErrors | null {

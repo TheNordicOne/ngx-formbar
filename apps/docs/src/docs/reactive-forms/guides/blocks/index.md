@@ -1,4 +1,4 @@
-Sometimes you need additional information or functionality within a form. For example, you might want to add an information block, images, or anything else that does not contribute to the form's value.
+Sometimes you need additional information or functionality within a form, for example an information block, images, or anything else that does not contribute to the form's value.
 
 Blocks are non-control elements: they have no `FormControl`, are never disabled or readonly, and contribute nothing to the form's value.
 
@@ -16,7 +16,7 @@ See the [Generators page](/fundamentals/generators) for more details.
 
 ## Manual Setup
 
-Here is an example of a simple information block.
+Here is an example of an information block.
 
 First create an interface for your block by extending `NgxFbBlock`.
 
@@ -38,6 +38,7 @@ Then implement the component.
 The component implements the `FormbarBlock<T>` contract. The contract type accepts your block interface as its type parameter and exposes every custom property on it as an additional signal input. You declare the inputs yourself using `input()` or `input.required()`. Angular wires the configuration values into them at runtime.
 
 {% raw %}
+
 ```typescript group="info-block" name="info-block.component.ts" icon="angular"
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
@@ -62,6 +63,7 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 ```html group="info-block" name="info-block.component.html"
 <p>{{ message() }}</p>
 ```
+
 {% endraw %}
 
 > **Note**
@@ -83,9 +85,7 @@ export const appConfig: ApplicationConfig = {
         // Eagerly imported
         info: staticComponent(InfoBlockComponent),
         // Or lazily loaded
-        infoLazy: loadComponent(() =>
-          import('./info-block.component').then((m) => m.InfoBlockComponent),
-        ),
+        infoLazy: loadComponent(() => import('./info-block.component').then((m) => m.InfoBlockComponent)),
       },
     }),
   ],
@@ -94,7 +94,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Configuration
 
-Checkout the [Configuration guide](/fundamentals/configuration) for how to configure a block. A block only has access to the base properties from `NgxFbBlock`. There is no `name`, no `isDisabled`, no `isReadonly`, and no value strategies, because blocks have no form value.
+Check out the [Configuration guide](/fundamentals/configuration) for how to configure a block. A block only has access to the base properties from `NgxFbBlock`. There is no `name`, no `isDisabled`, no `isReadonly`, and no value strategies, because blocks have no form value.
 
 ## Hidden
 
@@ -106,6 +106,7 @@ Checkout the [Configuration guide](/fundamentals/configuration) for how to confi
 To take over visibility yourself, register the block with `hiddenHandling: 'manual'` and read the `isHidden` signal in your template.
 
 {% raw %}
+
 ```typescript group="hidden-block" name="info-block.component.ts" icon="angular"
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
@@ -126,9 +127,10 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 
 ```html group="hidden-block" name="info-block.component.html"
 @if (!isHidden()) {
-  <p>{{ message() }}</p>
+<p>{{ message() }}</p>
 }
 ```
+
 {% endraw %}
 
 ```typescript name="app.config.ts"
@@ -144,6 +146,7 @@ provideFormbar({
 {% include "../../../shared/test-id.md" %}
 
 {% raw %}
+
 ```typescript group="test-id-block" name="info-block.component.ts" icon="angular"
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
@@ -163,8 +166,9 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 ```
 
 ```html group="test-id-block" name="info-block.component.html"
-<p [attr.data-testId]="testId()">{{ message() }}</p>
+<p [attr.data-testid]="testId()">{{ message() }}</p>
 ```
+
 {% endraw %}
 
 ## Component Contract Reference
@@ -172,7 +176,7 @@ export class InfoBlockComponent implements FormbarBlock<InfoBlock> {
 The `FormbarBlock<T>` contract type accepts your block interface as its type parameter and combines a small set of base inputs with the custom properties declared on `T`.
 
 | Input      | Type                   | Description                                                                                  |
-|------------|------------------------|----------------------------------------------------------------------------------------------|
+| ---------- | ---------------------- | -------------------------------------------------------------------------------------------- |
 | `isHidden` | `SignalInput<boolean>` | The resolved hidden state for the block. Optional on the contract; declare when you need it. |
 | `testId`   | `SignalInput<string>`  | The computed test ID for the block. Optional on the contract; declare when you need it.      |
 

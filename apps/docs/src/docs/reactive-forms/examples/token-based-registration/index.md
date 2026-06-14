@@ -1,11 +1,10 @@
-
-
-Registering components and validators via Angular DI tokens: the most explicit, provider-based approach.
+Registering components and validators via Angular DI tokens: the explicit, provider-based approach.
 
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
 ```typescript file="./../../../../../../../libs/examples/src/lib/forms/maintenance-form.ts"
+
 ```
 
 </details>

@@ -1,3 +1,9 @@
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--form-spacing-sm);
+}
+
 .navbar-right {
   --gap: var(--form-spacing-lg);
   display: flex;

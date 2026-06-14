@@ -1,15 +1,15 @@
 ## Overview
 
-Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library *directives* and instead *implement an interface*. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
+Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library _directives_ and instead _implement an interface_. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
 
 **New package structure:**
 
-| Package                       | Purpose                                                                                                                                                     |
-|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependency is `@angular/core` only; `@angular/forms` and `@angular/cdk` are no longer required by core. |
-| `@ngx-formbar/reactive-forms` | Form component, provider setup, validators, composables, the interface contracts.                                                                           |
-| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `register` generators.                                                                                                      |
-| `@ngx-formbar/setup`          | Internal helper for the schematics (installed automatically as a dep).                                                                                      |
+| Package                       | Purpose                                                                                                                                                              |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependencies are `@angular/core` and `rxjs`; `@angular/forms` and `@angular/cdk` are no longer required by core. |
+| `@ngx-formbar/reactive-forms` | Form component, provider setup, validators, composables, the interface contracts.                                                                                    |
+| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `register` generators.                                                                                                               |
+| `@ngx-formbar/setup`          | Internal helper for the schematics (installed automatically as a dep).                                                                                               |
 
 ## Prerequisites
 
@@ -65,33 +65,13 @@ The form component, `provideFormbar`, `defineFormbarConfig`, and validator types
 **Before:**
 
 ```typescript
-import {
-  NgxfbFormComponent,
-  provideFormbar,
-  defineFormbarConfig,
-  ValidatorConfig,
-  AsyncValidatorConfig,
-  RegistrationRecord,
-  NGX_FW_VALIDATOR_REGISTRATIONS,
-  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  NGX_VALIDATOR_RESOLVER,
-} from '@ngx-formbar/core';
+import { NgxFbFormComponent, provideFormbar, defineFormbarConfig, ValidatorConfig, AsyncValidatorConfig, RegistrationRecord, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/core';
 ```
 
 **After:**
 
 ```typescript
-import {
-  NgxfbFormComponent,
-  provideFormbar,
-  defineFormbarConfig,
-  ValidatorConfig,
-  AsyncValidatorConfig,
-  RegistrationRecord,
-  NGX_FW_VALIDATOR_REGISTRATIONS,
-  NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
-  NGX_VALIDATOR_RESOLVER,
-} from '@ngx-formbar/reactive-forms';
+import { NgxFbFormComponent, provideFormbar, defineFormbarConfig, ValidatorConfig, AsyncValidatorConfig, RegistrationRecord, NGX_FW_VALIDATOR_REGISTRATIONS, NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS, NGX_VALIDATOR_RESOLVER } from '@ngx-formbar/reactive-forms';
 ```
 
 Pure type and token imports (`Expression`, `NgxFbControl`, `ExpressionService`, `NGX_FW_COMPONENT_REGISTRATIONS`, etc.) stay on `@ngx-formbar/core`. See [What stays in core](#what-stays-in-ngx-formbarcore).
@@ -125,9 +105,7 @@ import { TextControlComponent } from './text-control.component';
 provideFormbar({
   componentRegistrations: {
     text: staticComponent(TextControlComponent),
-    group: loadComponent(() =>
-      import('./group.component').then((m) => m.GroupComponent),
-    ),
+    group: loadComponent(() => import('./group.component').then((m) => m.GroupComponent)),
   },
 });
 ```
@@ -139,8 +117,7 @@ provideFormbar({
   componentRegistrations: {
     text: { component: TextControlComponent },
     group: {
-      loadComponent: () =>
-        import('./group.component').then((m) => m.GroupComponent),
+      loadComponent: () => import('./group.component').then((m) => m.GroupComponent),
     },
   },
 });
@@ -152,15 +129,15 @@ If you have a custom `ComponentResolver`, change its `registrations` signal type
 
 ## Step 6: Refactor consumer components to the interface contract
 
-This is the biggest change. In v1 your components attached library directives via `hostDirectives` and pulled state out by injecting them. In v2 your component declares signal inputs and *implements* one of the formbar contracts. The library writes those inputs when it mounts the component.
+This is the biggest change. In v1 your components attached library directives via `hostDirectives` and pulled state out by injecting them. In v2 your component declares signal inputs and _implements_ one of the formbar contracts. The library writes those inputs when it mounts the component.
 
 The three contracts live in `@ngx-formbar/reactive-forms`:
 
-| Contract                      | Use for                                | `T extends`        |
-|-------------------------------|----------------------------------------|--------------------|
-| `ReactiveFormbarControl<T>`   | Leaf form controls (input, select, …)  | `NgxFbControl`     |
-| `ReactiveFormbarGroup<T>`     | Container nodes that hold children     | `NgxFbFormGroup`   |
-| `FormbarBlock<T>`             | Non-control content (notes, dividers)  | `NgxFbBlock`       |
+| Contract                    | Use for                               | `T extends`      |
+| --------------------------- | ------------------------------------- | ---------------- |
+| `ReactiveFormbarControl<T>` | Leaf form controls (input, select, …) | `NgxFbControl`   |
+| `ReactiveFormbarGroup<T>`   | Container nodes that hold children    | `NgxFbFormGroup` |
+| `FormbarBlock<T>`           | Non-control content (notes, dividers) | `NgxFbBlock`     |
 
 Custom properties on `T` beyond the base interface automatically become signal inputs on the component contract. Required properties must be declared; optional ones (`?`) can be omitted.
 
@@ -186,12 +163,7 @@ import { NgxfbControlDirective } from '@ngx-formbar/core';
   ],
   template: `
     <label [htmlFor]="name()">{{ control.label() }}</label>
-    <input
-      type="text"
-      [id]="name()"
-      [formControlName]="name()"
-      [placeholder]="control.content().placeholder ?? ''"
-    />
+    <input type="text" [id]="name()" [formControlName]="name()" [placeholder]="control.content().placeholder ?? ''" />
   `,
 })
 export class TextControlComponent {
@@ -218,13 +190,7 @@ interface TextControl extends NgxFbControl {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <label [htmlFor]="name()">{{ labelText() }}</label>
-    <input
-      type="text"
-      [id]="name()"
-      [formControlName]="name()"
-      [placeholder]="placeholder() ?? ''"
-      [attr.readonly]="isReadonly() || null"
-    />
+    <input type="text" [id]="name()" [formControlName]="name()" [placeholder]="placeholder() ?? ''" [attr.readonly]="isReadonly() || null" />
   `,
 })
 export class TextControlComponent implements ReactiveFormbarControl<TextControl> {
@@ -245,7 +211,7 @@ There are no `hostDirectives`, no `inject(NgxfbControlDirective)`, and the schem
 
 ### 6b. Refactor a group
 
-Groups receive their children through `<ngxfb-control-outlet />` (component `NgxfbControlOutlet` from `@ngx-formbar/reactive-forms`). The outlet picks up the registered child entries automatically via injection. You no longer iterate `content` with `ngxfbAbstractControl`.
+Groups receive their children through `<ngxfb-control-outlet />` (component `NgxFbControlOutlet` from `@ngx-formbar/reactive-forms`). The outlet picks up the registered child entries automatically via injection. You no longer iterate `content` with `ngxfbAbstractControl`.
 
 **Before:**
 
@@ -282,14 +248,11 @@ export class GroupComponent {
 ```typescript
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  NgxfbControlOutlet,
-  ReactiveFormbarGroup,
-} from '@ngx-formbar/reactive-forms';
+import { NgxFbControlOutlet, ReactiveFormbarGroup } from '@ngx-formbar/reactive-forms';
 
 @Component({
   selector: 'app-group',
-  imports: [ReactiveFormsModule, NgxfbControlOutlet],
+  imports: [ReactiveFormsModule, NgxFbControlOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <fieldset [formGroupName]="name()" [attr.data-testid]="testId()">
@@ -317,20 +280,20 @@ Blocks have no `FormControl`. They never receive `isDisabled` or `isReadonly`, o
 
 ```typescript
 import { Component, inject, input } from '@angular/core';
-import { NgxfbBlockDirective } from '@ngx-formbar/core';
+import { NgxFbBlockDirective } from '@ngx-formbar/core';
 
 @Component({
   selector: 'app-note',
   hostDirectives: [
     {
-      directive: NgxfbBlockDirective,
+      directive: NgxFbBlockDirective,
       inputs: ['content', 'name'],
     },
   ],
   template: `<p>{{ block.content().message }}</p>`,
 })
 export class NoteComponent {
-  protected readonly block = inject(NgxfbBlockDirective);
+  protected readonly block = inject(NgxFbBlockDirective);
   readonly name = input.required<string>();
 }
 ```
@@ -379,10 +342,10 @@ The v1 `visibilityHandling` registration option has been renamed to `hiddenHandl
 
 Two registration options replace any in-component lifecycle wiring you may have done in v1:
 
-| Option                | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
-|-----------------------|----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hiddenHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
-| `disabledHandling`    | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
+| Option             | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
+| ------------------ | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hiddenHandling`   | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
+| `disabledHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
 
 Pass them as the second argument to `staticComponent()` / `loadComponent()`, or inline on the entry object.
 
@@ -396,10 +359,7 @@ provideFormbar({
       hiddenHandling: 'manual',
       disabledHandling: 'manual',
     }),
-    lazyChart: loadComponent(
-      () => import('./chart.component').then((m) => m.ChartComponent),
-      { hiddenHandling: 'manual' },
-    ),
+    lazyChart: loadComponent(() => import('./chart.component').then((m) => m.ChartComponent), { hiddenHandling: 'manual' }),
   },
 });
 ```
@@ -410,8 +370,8 @@ The defaults match v1's behavior, so most registrations need no options at all.
 
 The two `hideStrategy` values keep their meaning, but the way the library implements them in v2 is uniform. With `hiddenHandling: 'auto'` (the default), the consumer component is destroyed when the resolved hidden state becomes true. It is recreated when the state becomes false again, regardless of `hideStrategy`. The strategies still differ in what happens to the form control:
 
-- `'keep'` (default): the form control stays attached to the parent group while the component is hidden. The configured `valueStrategy` is applied to the existing form control.
-- `'remove'`: the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).
+- `'keep'`: the form control stays attached to the parent group while the component is hidden. The configured `valueStrategy` is applied to the existing form control.
+- `'remove'` (default): the form control is removed from the parent group on hide and reattached on show. On reattach, the value is determined by the `valueStrategy` (with `'last'` restored from the form-level lifecycle cache).
 
 If your v1 code relied on the keep strategy keeping the component itself mounted (for example, to preserve an internal component-only state across hide/show cycles), move that state into the form model. Alternatively, wrap the relevant subtree in your own `@if`.
 
@@ -425,12 +385,12 @@ The parser has also been switched from `acorn` to an in-tree allow-list parser a
 
 Loose equality coercion is no longer applied. `==` behaves identically to `===` and `!=` identically to `!==`. The following return `false` in v2.0.0:
 
-| Expression | v1 | v2.0.0 |
-|---|---|---|
-| `age == "18"` (when `age` is a number) | `true` | `false` |
-| `value != null` (when `value` is `undefined`) | `false` | `true` |
-| `"" == 0` | `true` | `false` |
-| `null == undefined` | `true` | `false` |
+| Expression                                    | v1      | v2.0.0  |
+| --------------------------------------------- | ------- | ------- |
+| `age == "18"` (when `age` is a number)        | `true`  | `false` |
+| `value != null` (when `value` is `undefined`) | `false` | `true`  |
+| `"" == 0`                                     | `true`  | `false` |
+| `null == undefined`                           | `true`  | `false` |
 
 If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `String(age) == "18"`).
 
@@ -518,26 +478,26 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 ## Quick reference
 
 | Symbol                                                           | v1                                                | v2.0.0                                                          |
-|------------------------------------------------------------------|---------------------------------------------------|-----------------------------------------------------------------|
-| `NgxfbFormComponent`                                             | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------- |
+| `NgxFbFormComponent`                                             | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `provideFormbar`                                                 | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `ValidatorConfig`, `AsyncValidatorConfig`                        | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `NGX_FW_VALIDATOR_REGISTRATIONS`                                 | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | `NGX_VALIDATOR_RESOLVER`                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock` | *did not exist*                                   | `@ngx-formbar/reactive-forms`                                   |
-| `NgxfbControlOutlet`                                             | *did not exist*                                   | `@ngx-formbar/reactive-forms`                                   |
-| `staticComponent`, `loadComponent`, `ComponentRegistrationEntry` | *did not exist*                                   | `@ngx-formbar/core`                                             |
+| `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock` | _did not exist_                                   | `@ngx-formbar/reactive-forms`                                   |
+| `NgxFbControlOutlet`                                             | _did not exist_                                   | `@ngx-formbar/reactive-forms`                                   |
+| `staticComponent`, `loadComponent`, `ComponentRegistrationEntry` | _did not exist_                                   | `@ngx-formbar/core`                                             |
 | `Expression`, `NgxFbForm`, `NgxFbControl`, etc.                  | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |
 | `ExpressionService`, `NGX_FW_COMPONENT_REGISTRATIONS`            | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |
 | Component registration shape                                     | `Type<unknown>`                                   | `ComponentRegistrationEntry`                                    |
 | Consumer component contract                                      | `hostDirectives` + `inject(...)`                  | `implements ReactiveFormbarControl` / `…Group` / `FormbarBlock` |
 | Group child template                                             | `ngxfbAbstractControl`                            | `<ngxfb-control-outlet />`                                      |
-| Registration visibility option                                   | `visibilityHandling`                              | `hiddenHandling`                                           |
+| Registration visibility option                                   | `visibilityHandling`                              | `hiddenHandling`                                                |
 | Content union type                                               | `NgxFbContent`                                    | `NgxFbItem`                                                     |
-| Minimum Angular version                                          | 19.2.0                                            | 20.0.0                                                          |
-| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core` only                                            |
+| Minimum Angular version                                          | 19.2.1                                            | 20.0.0                                                          |
+| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core`, `rxjs`                                         |
 | `ng add`                                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
 | Code generators                                                  | `@ngx-formbar/core:*`                             | `@ngx-formbar/schematics:*`                                     |
 | Expression parser                                                | `acorn` (runtime dep)                             | in-tree adaptation of `jsep`, no runtime dep                    |

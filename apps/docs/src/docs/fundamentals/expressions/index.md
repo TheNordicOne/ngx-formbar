@@ -22,12 +22,13 @@ The parser produces only the following AST node types:
 - `ConditionalExpression` (ternary)
 - `ObjectExpression` (with optional spread)
 - `TemplateLiteral` with `${expr}` placeholders (one expression per placeholder)
-- `CallExpression` for safe method calls only
+- `CallExpression` for safe method calls only (arguments may use spread, e.g. `s.concat(...rest)`)
 - `ArrowFunctionExpression` for higher-order array methods (e.g. `items.map(x => x * 2)`)
 
 `SequenceExpression`, `SpreadElement` (outside of containers), `ThisExpression`, `BlockStatement`, `AssignmentExpression`, `UpdateExpression`, `NewExpression`, `YieldExpression`, `AwaitExpression`, `ImportExpression`, `ClassExpression`, `FunctionExpression`, `TaggedTemplateExpression`, `PrivateIdentifier`, and `Super` are all rejected at parse time.
 
 ## Supported Operators
+
 - **Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`, `\*\*` (exponentiation, right-associative). Division and modulo by zero throw, diverging from JS which returns `Infinity`/`NaN`.
 - **Comparison Operators:** `<`, `>`, `<=`, `>=` (both operands must be same primitive type, number or string).
 - **Equality Operators:** `==`, `!=`, `===`, `!==`. **In this DSL, `==` is equivalent to `===` and `!=` to `!==`.** Loose-equality coercion (`0 == ""`, `null == undefined`, etc.) is intentionally rejected.
@@ -52,25 +53,26 @@ The parser produces only the following AST node types:
 - **Cross-group `computedValue` references:**
   String expressions in `computedValue` that reference fields inside sibling groups (e.g., `'groupA.fieldA + groupB.fieldB'`) do not resolve on initial render ([#83](https://github.com/TheNordicOne/ngx-formbar/issues/83)). This affects only `computedValue`; other expression properties (`hidden`, `disabled`, `readonly`, `dynamicLabel`, `dynamicTitle`) work correctly with cross-group references. Use optional chaining as a workaround: `'groupA?.fieldA + " " + groupB?.fieldB'`.
 
-## Threat boundary
+## Threat Boundary
 
-The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
+The sandbox protects **access** (no read of host state outside the supplied context) and **integrity** (no mutation of values passed in as context). Object literals and object spreads skip `__proto__` keys, so `{__proto__: x}` cannot reset the prototype of the returned object. It does **not** protect **availability**. A sufficiently pathological expression can hang the host tab. Examples include catastrophic-backtracking regex, deeply nested operations, and huge string allocations via `"x".repeat(1e9)`. Authors who supply expressions are responsible for not writing such code. Integrators who run expressions during server-side rendering must reject untrusted expression sources.
 
-## Function-based Expressions
+## Function-Based Expressions
 
-In addition to string-based expressions, you can also provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This offers a more flexible and type-safe way to define dynamic behavior.
+In addition to string-based expressions, you can provide a JavaScript function directly for properties that support expressions (e.g., `hidden`, `disabled`, `readonly`, `computedValue`, `dynamicLabel`, `dynamicTitle`). This is type-safe and can use any TypeScript logic.
 
 ### Signature
 
-These functions receive the current `formValue` (an object representing the entire form's data) as their single argument and are expected to return a value of the type appropriate for the property they are controlling.
+These functions receive the current `formValue` (an object representing the entire form's data) as their single argument and return a value of the type appropriate for the property they control.
 
 The general signature is:
 
 ```typescript
-(formValue: FormContext) => T
+(formValue: FormContext) => T;
 ```
 
 Where:
+
 - `formValue: FormContext`: An object where keys are the ids of your form controls and values are their current values. FormContext is an alias for `Record<string, unknown>`.
 - `T`: The expected return type, which varies depending on the property.
   - hidden: `boolean`
@@ -80,17 +82,17 @@ Where:
   - dynamicLabel: `string | null`
   - dynamicTitle: `string | null`
 
-
 ### Advantages
+
 - Type Safety: When using TypeScript, function-based expressions provide better type checking for both the formValue and the return type.
 - Complex Logic: You can implement more complex logic directly within the function, without the limitations of the string-based expression parser.
 - No Parsing Overhead: Since it's already a function, there's no need for AST parsing.
-- Access to Outer Scope: These functions can use any other function from your app, allowing for more flexible and reusable logic.
+- Access to Outer Scope: These functions can call any other function from your app.
 
 ### Disadvantages
+
 - Non-Serializable: Function-based Expressions are not serializable to JSON and therefore should only be used if the form configuration is not stored in a database.
 - Can be verbose: For very simple expressions (e.g.: `!termsAgreed`, `username === 'admin'`) using a function-based expression may be overkill and decrease readability.
-
 
 ### Example
 

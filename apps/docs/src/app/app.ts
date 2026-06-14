@@ -8,6 +8,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { VersionBadge } from './components/version-badge/version-badge';
 import { GithubLink } from './components/github-link/github-link';
+import { Logo } from './components/logo/logo';
 
 @Component({
   selector: 'docs-root',
@@ -19,6 +20,7 @@ import { GithubLink } from './components/github-link/github-link';
     NgDocThemeToggleComponent,
     VersionBadge,
     GithubLink,
+    Logo,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

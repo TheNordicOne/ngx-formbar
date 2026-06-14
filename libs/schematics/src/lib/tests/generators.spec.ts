@@ -15,7 +15,14 @@ import {
   provideTokenNoSplit,
   setupWorkspace,
 } from './workspace-setup';
-import { app, exists, hasDynamicImportOf, read, src, writeJson } from './helper';
+import {
+  app,
+  exists,
+  hasDynamicImportOf,
+  read,
+  src,
+  writeJson,
+} from './helper';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import {
   appConfigProvidersComponentRegistrationsMapHasIdentifier,
@@ -59,8 +66,8 @@ describe('control schematic', () => {
   const viewProviderHelperPathOption = `${viewProviderHelperPath}/${viewProviderHelper}`;
 
   const defaultComponentOutputPath = app('test/test-control.component.ts');
-  const groupComponentOutputPath = app('test/test-control.component.ts');
-  const blockComponentOutputPath = app('test/test-control.component.ts');
+  const groupComponentOutputPath = app('test/test-group.component.ts');
+  const blockComponentOutputPath = app('test/test-block.component.ts');
   const appConfigPath = app(appConfigPathRaw);
 
   async function runSchematic(
@@ -336,13 +343,13 @@ describe('control schematic', () => {
         expect(importsInputFromCore).toBe(true);
       });
 
-      it('group implements ReactiveFormbarGroup and imports NgxfbControlOutlet', async () => {
+      it('group implements ReactiveFormbarGroup and imports NgxFbControlOutlet', async () => {
         const tree = await runSchematic('group');
         const sf = parseTS(read(tree, groupComponentOutputPath));
 
         const implementsGroup = classImplementsInterface(
           sf,
-          'TestControlComponent',
+          'TestGroupComponent',
           'ReactiveFormbarGroup',
         );
 
@@ -355,7 +362,7 @@ describe('control schematic', () => {
         const importsControlOutlet = hasNamedImport(
           sf,
           REACTIVE_FORMS_PACKAGE_NAME,
-          'NgxfbControlOutlet',
+          'NgxFbControlOutlet',
         );
 
         const hasHostDirectivesInDecorator = decoratorHasProp(
@@ -372,7 +379,7 @@ describe('control schematic', () => {
 
       it('group template uses ngxfb-control-outlet', async () => {
         const tree = await runSchematic('group');
-        const html = read(tree, app('test/test-control.component.html'));
+        const html = read(tree, app('test/test-group.component.html'));
         expect(html).toContain('<ngxfb-control-outlet');
       });
 
@@ -382,7 +389,7 @@ describe('control schematic', () => {
 
         const implementsBlock = classImplementsInterface(
           sf,
-          'TestControlComponent',
+          'TestBlockComponent',
           'FormbarBlock',
         );
 
@@ -408,6 +415,21 @@ describe('control schematic', () => {
         expect(importsFormbarBlock).toBe(true);
         expect(hasViewProviders).toBe(false);
         expect(hasHostDirectives).toBe(false);
+      });
+
+      it('defaults the control suffix to "Control"', async () => {
+        const tree = await runSchematic('control');
+        expect(exists(tree, app('test/test-control.component.ts'))).toBe(true);
+      });
+
+      it('defaults the group suffix to "Group"', async () => {
+        const tree = await runSchematic('group');
+        expect(exists(tree, app('test/test-group.component.ts'))).toBe(true);
+      });
+
+      it('defaults the block suffix to "Block"', async () => {
+        const tree = await runSchematic('block');
+        expect(exists(tree, app('test/test-block.component.ts'))).toBe(true);
       });
     });
   });

@@ -12,7 +12,7 @@ export const NGXFB_CONTROL_ENTRIES = new InjectionToken<
  * operations. The live `FormArray` remains the source of truth; `rows`
  * notifies on structural changes so templates re-render.
  */
-export interface NgxfbArrayContext {
+export interface NgxFbArrayContext {
   readonly rowControl: Signal<NgxFbItem>;
   readonly rows: Signal<AbstractControl[]>;
   add(): void;
@@ -22,6 +22,6 @@ export interface NgxfbArrayContext {
   move(from: number, to: number): void;
 }
 
-export const NGXFB_ARRAY_CONTROL = new InjectionToken<NgxfbArrayContext>(
+export const NGXFB_ARRAY_CONTROL = new InjectionToken<NgxFbArrayContext>(
   'ngxfb-array-control',
 );

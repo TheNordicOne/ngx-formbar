@@ -1,10 +1,10 @@
-**Formbar** supports native Angular validators and async validators. That means all custom validators are fully supported.
+ngx-formbar supports native Angular validators and async validators, including custom ones.
 
-To make validators available to **formbar**, you need to register them. You can also combine multiple validators under one key, which is useful when you frequently use certain combinations.
+To make validators available to ngx-formbar, you need to register them. You can also combine multiple validators under one key, which is useful when you frequently use certain combinations.
 
 > **Warning**
 > You can not combine synchronous validators with async ones!
-> Angular itself differentiates between those, so **formbar** does too.
+> Angular itself differentiates between those, so ngx-formbar does too.
 
 ## Registration
 
@@ -21,21 +21,21 @@ export const appConfig: ApplicationConfig = {
         // Custom validator
         'forbidden-letter-a': [forbiddenLetterAValidator],
         // Validators with argument
-        'min-chars': [Validators.minLength(3)]
+        'min-chars': [Validators.minLength(3)],
       },
       // Async Validators
       asyncValidatorRegistrations: {
         // Custom async validator
-        someAsync: [asyncValidator]
+        someAsync: [asyncValidator],
       },
-    })
-  ]
+    }),
+  ],
 };
 ```
 
 ### Combining Validators
 
-Combining validators is as easy as adding them in the same array. This is also possible for async validators.
+To combine validators, add them to the same array. This is also possible for async validators.
 
 > **Note**
 > You can use an existing validator registration by referring to it via its key. Sibling key references are type-checked against the keys you have declared, so misspellings raise a TS error and your IDE auto-completes valid references.
@@ -50,8 +50,8 @@ export const appConfig: ApplicationConfig = {
         'min-chars': [Validators.minLength(3)],
         letter: [letterValidator],
         combined: ['min-chars', Validators.required, 'letter'],
-      }
-    })
+      },
+    }),
   ],
 };
 ```
@@ -85,12 +85,12 @@ export const appConfig: ApplicationConfig = {
     provideFormbar({
       validatorRegistrations,
       asyncValidatorRegistrations,
-    })
+    }),
   ],
 };
 ```
 
-## Using a validator
+## Using a Validator
 
 When writing your form configuration, you can add multiple validators for your control. Remember that you need to differentiate between `sync` and `async` validators.
 
@@ -105,18 +105,19 @@ export const exampleForm: NgxFbForm = {
       defaultValue: 'UsernameSuggestion123',
       validators: ['min5Characters', 'required', 'blacklist'],
       asyncValidators: ['usernameIsFreeValidator'],
-    }
-  }
+    },
+  },
 };
 ```
 
 ## Default Validators
 
-For convenience some static validators, that are built into Angular, are registered by default. Built-in functions that return a validator, like `Validators.minLength` cannot be provided by default, as they require an argument.
+Some static validators built into Angular are registered by default. Built-in functions that return a validator, like `Validators.minLength`, cannot be provided by default because they require an argument.
 
-Checkout the [Validators Documentation on angular.dev](https://angular.dev/api/forms/Validators) to see how these work.
+Check out the [Validators Documentation on angular.dev](https://angular.dev/api/forms/Validators) to see how these work.
 
 The following validators are registered by default:
+
 - Validators.required
 - Validators.requiredTrue
 - Validators.email
@@ -124,17 +125,14 @@ The following validators are registered by default:
 
 ## Adding Custom Validators
 
-_ngx-formbar_ uses the standard Angular validator functions. Writing your own is exactly the same as in Angular itself. See ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
-
+ngx-formbar uses the standard Angular validator functions. Writing your own is exactly the same as in Angular itself. See ["Defining a custom validator" on the official docs](https://angular.dev/guide/forms/form-validation#defining-custom-validators).
 
 ### Validator
 
 This example uses a forbidden letter validator that ensures the letter "A" is not used.
 
 ```typescript name="forbidden-letter.validator.ts"
-export function forbiddenLetterAValidator(
-  control: AbstractControl<unknown>,
-): ValidationErrors | null {
+export function forbiddenLetterAValidator(control: AbstractControl<unknown>): ValidationErrors | null {
   const value = control.value;
   if (!value) {
     return null;
@@ -151,14 +149,16 @@ export function forbiddenLetterAValidator(
 ```
 
 You can then register this validator under any name you want.
+
 ```typescript name="app.config.ts"
 validatorRegistrations: {
   'forbidden-letter-a': [forbiddenLetterAValidator]
 }
 ```
+
 ### Async Validator
 
-Async validators work pretty much the same as synchronous ones.
+Async validators work much the same as synchronous ones.
 
 This example uses a validator that ensures the text contains the word "async".
 
@@ -167,9 +167,7 @@ This example uses a validator that ensures the text contains the word "async".
 > For this example, we only pretend to do so by creating a dummy observable.
 
 ```typescript name="async.validator.ts"
-export function asyncValidator(
-  control: AbstractControl<string | undefined | null>,
-): Observable<ValidationErrors | null> {
+export function asyncValidator(control: AbstractControl<string | undefined | null>): Observable<ValidationErrors | null> {
   const value = control.value;
   if (containsText(value, 'async')) {
     return of(null);
@@ -179,8 +177,9 @@ export function asyncValidator(
 ```
 
 You can then register this validator under any name you want
+
 ```typescript name="app.config.ts"
 asyncValidatorRegistrations: {
-  async: [asyncValidator]
+  async: [asyncValidator];
 }
 ```

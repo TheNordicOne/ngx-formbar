@@ -1,11 +1,10 @@
-
-
 Swapping components at runtime using a custom `ComponentResolver`: the urgency control switches between radio buttons and a dropdown.
 
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
 ```typescript file="./../../../../../../../libs/examples/src/lib/forms/maintenance-form.ts"
+
 ```
 
 </details>

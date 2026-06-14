@@ -1,11 +1,10 @@
-
-
 Registering components, validators, and async validators through a single `defineFormbarConfig()` object: the recommended, type-safe approach.
 
 <details>
 <summary>Form Configuration (click to expand)</summary>
 
 ```typescript file="./../../../../../../../libs/examples/src/lib/forms/maintenance-form.ts"
+
 ```
 
 </details>

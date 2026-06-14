@@ -1,11 +1,11 @@
 import { NgDocPage } from '@ng-doc/core';
-import ReactiveFormsExamplesCategory from '../ng-doc.category';
+import ReactiveFormsInteractiveCategory from '../interactive/ng-doc.category';
 
-const NotesPage: NgDocPage = {
-  title: 'Notes',
+const InteractiveOverviewPage: NgDocPage = {
+  title: 'Overview',
   mdFile: './index.md',
-  category: ReactiveFormsExamplesCategory,
+  category: ReactiveFormsInteractiveCategory,
   order: 1,
 };
 
-export default NotesPage;
+export default InteractiveOverviewPage;

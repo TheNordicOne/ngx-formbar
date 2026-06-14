@@ -1,16 +1,16 @@
 ## Compatibility
 
-At this time this package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
+This package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
 
 ## Primary Installation via ng-add
 
-Running the following command will install _ngx-formbar_.
+This command installs ngx-formbar.
 
 ```shell
 ng add @ngx-formbar/reactive-forms
 ```
 
-By default, the following things will be done.
+By default, this does the following.
 
 - Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
 - Install `@ngx-formbar/schematics` as a dev dependency (for component generators)
@@ -24,7 +24,7 @@ By default, the following things will be done.
   - barrel export
   - control container view provider
 - Create a schematics configuration file
-- Provide formbar in your `app.config.ts`
+- Provide ngx-formbar in your `app.config.ts`
 - Install dependencies
 
 > **Note**
@@ -35,24 +35,23 @@ By default, the following things will be done.
 
 ## Options
 
-| Option                    | Type                | Required | Default                   | Description                                                                                                                                                                                                              |
-|---------------------------|---------------------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --project                 | string              | No       | workspace default project | Angular project to add ngx-formbar to.                                                                                                                                                                                   |
-| --registrationStyle       | `token` \| `config` | No       | `token`                   | The registration style to be used.                                                                                                                                                                                       |
-| --provideInline           | boolean             | No       | `false`                   | Put the provider configuration object of `provideFormbar` inline, instead of putting it in a separate file.                                                                                                              |
-| --providerConfigPath      | string              | No       | `app`                     | Where the provider configuration file should be placed, relative to the project root.                                                                                                                                    |
-| --providerConfigFileName  | string              | No       | `formbar.config.ts`       | Name of the provider configuration file.                                                                                                                                                                                 |
-| --includeSyncValidators   | boolean             | No       | `true`                    | Whether to include the setup for validators.                                                                                                                                                                             |
-| --includeAsyncValidators  | boolean             | No       | `true`                    | Whether to include the setup for async validators.                                                                                                                                                                       |
-| --useHelper               | boolean             | No       | `true`                    | Include helper files for the view provider used by control and group components.                                                                                                                                         |
-| --helperPath              | string              | No       | `app/shared/helper`       | Where helper files should be placed, relative to the project root.                                                                                                                                                       |
-| --splitRegistrations      | boolean             | No       | `true`                    | Whether to split the registrations into a separate file. If false, registrations will happen directly in the `formbar.config.ts` or `app.config.ts`, depending on the registration style and the `provideInline` option. |
-| --registrationsPath       | string              | No       | `app/registrations`       | Where registration files should be placed, relative to the project root.                                                                                                                                                 |
-| --useSchematicConfig      | boolean             | No       | `true`                    | Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in `angular.json`.                                                                   |
-| --schematicsConfigPath    | string              | No       | `app`                     | Where the schematics config should be placed, relative to the project root.                                                                                                                                              |
-| --schematicConfigFileName | string              | No       | `formbar-schematic.config.json`     | Name of the schematic config file.                                                                                                                                                                                       |
-| --installSchematics       | boolean             | No       | `true`                    | Whether to install `@ngx-formbar/schematics` as a dev dependency for component generators (control, group, block).                                                                                                       |
-
+| Option                    | Type                | Required | Default                         | Description                                                                                                                                                                                                              |
+| ------------------------- | ------------------- | -------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --project                 | string              | No       | workspace default project       | Angular project to add ngx-formbar to.                                                                                                                                                                                   |
+| --registrationStyle       | `token` \| `config` | No       | `token`                         | The registration style to be used.                                                                                                                                                                                       |
+| --provideInline           | boolean             | No       | `false`                         | Put the provider configuration object of `provideFormbar` inline, instead of putting it in a separate file.                                                                                                              |
+| --providerConfigPath      | string              | No       | `app`                           | Where the provider configuration file should be placed, relative to the project root.                                                                                                                                    |
+| --providerConfigFileName  | string              | No       | `formbar.config.ts`             | Name of the provider configuration file.                                                                                                                                                                                 |
+| --includeSyncValidators   | boolean             | No       | `true`                          | Whether to include the setup for validators.                                                                                                                                                                             |
+| --includeAsyncValidators  | boolean             | No       | `true`                          | Whether to include the setup for async validators.                                                                                                                                                                       |
+| --useHelper               | boolean             | No       | `true`                          | Include helper files for the view provider used by control and group components.                                                                                                                                         |
+| --helperPath              | string              | No       | `app/shared/helper`             | Where helper files should be placed, relative to the project root.                                                                                                                                                       |
+| --splitRegistrations      | boolean             | No       | `true`                          | Whether to split the registrations into a separate file. If false, registrations will happen directly in the `formbar.config.ts` or `app.config.ts`, depending on the registration style and the `provideInline` option. |
+| --registrationsPath       | string              | No       | `app/registrations`             | Where registration files should be placed, relative to the project root.                                                                                                                                                 |
+| --useSchematicConfig      | boolean             | No       | `true`                          | Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in `angular.json`.                                                                   |
+| --schematicsConfigPath    | string              | No       | `app`                           | Where the schematics config should be placed, relative to the project root.                                                                                                                                              |
+| --schematicConfigFileName | string              | No       | `formbar-schematic.config.json` | Name of the schematic config file.                                                                                                                                                                                       |
+| --installSchematics       | boolean             | No       | `true`                          | Whether to install `@ngx-formbar/schematics` as a dev dependency for component generators (control, group, block).                                                                                                       |
 
 ## Manual Installation
 

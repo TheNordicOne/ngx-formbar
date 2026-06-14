@@ -9,11 +9,13 @@ export { CheckboxControlComponent } from './lib/components/checkbox/checkbox-con
 export { RadioControlComponent } from './lib/components/radio/radio-control.component';
 export { DropdownControlComponent } from './lib/components/dropdown/dropdown-control.component';
 export { GroupControlComponent } from './lib/components/group/group-control.component';
+export { FormbarGroupControlComponent } from './lib/components/formbar-group/formbar-group-control.component';
 export { NoteControlComponent } from './lib/components/note/note-control.component';
 export { TextareaControlComponent } from './lib/components/textarea/textarea-control.component';
 export { DateControlComponent } from './lib/components/date/date-control.component';
 export { FileControlComponent } from './lib/components/file/file-control.component';
 export { ArrayControlComponent } from './lib/components/array/array-control.component';
+export { FormbarArrayControlComponent } from './lib/components/formbar-array/formbar-array-control.component';
 
 // Provider
 export { provideReactiveFormsExamples } from './lib/provide-reactive-forms-examples';
@@ -32,6 +34,8 @@ export {
   range1to10,
   range1to480,
   minLen,
+  maxFiles5,
+  imagesOrPdf,
   floorPattern,
   alnumDash,
   circuitPattern,
@@ -50,6 +54,7 @@ export {
   roomExists,
   unitKnownAtLocation,
   approverActive,
+  totalSizeUnder10mb,
   asyncValidator,
   asyncGroupValidator,
 } from './lib/validation/async.validators';

@@ -13,7 +13,7 @@ import { FormbarBlock } from '../types/control-component.type';
 @Directive({
   selector: '[ngxfbBlock]',
 })
-export class NgxfbBlockDirective {
+export class NgxFbBlockDirective {
   readonly config = input.required<FormConfigEntry<NgxFbBlock>>({
     alias: 'ngxfbBlock',
   });

@@ -21,6 +21,7 @@ import { ValidationErrorsComponent } from '../validation-errors/validation-error
 export class TextControlComponent
   implements ReactiveFormbarControl<TextControl>
 {
+  // Contract inputs. Formbar resolves these for you.
   readonly name = input.required<string>();
   readonly isDisabled = input(false);
   readonly isReadonly = input(false);
@@ -28,10 +29,12 @@ export class TextControlComponent
   readonly labelText = input<string | undefined>('');
   readonly dynamicLabel = input<string | null>();
   readonly testId = input('');
-  readonly hint = input<string>();
-  readonly placeHolder = input<string>();
   readonly errors = input<ValidationErrors | null>(null);
   readonly isDirty = input(false);
+
+  // Custom inputs. Formbar passes these straight from your config.
+  readonly hint = input<string>();
+  readonly placeHolder = input<string>();
 
   readonly displayLabel = computed(() => {
     const dynamic = this.dynamicLabel();

@@ -4,6 +4,7 @@ import {
   NgDocDefaultSearchEngine,
   provideMainPageProcessor,
   provideNgDocApp,
+  providePageProcessor,
   providePageSkeleton,
   provideSearchEngine,
 } from '@ng-doc/app';
@@ -20,6 +21,7 @@ import {
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideReactiveFormsExamples } from '@ngx-formbar/examples/reactive-forms';
 import { appRoutes } from './app.routes';
+import { componentExampleProcessor } from './component-example/component-example.processor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,6 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideSearchEngine(NgDocDefaultSearchEngine),
     providePageSkeleton(NG_DOC_DEFAULT_PAGE_SKELETON),
     provideMainPageProcessor(NG_DOC_DEFAULT_PAGE_PROCESSORS),
+    providePageProcessor(componentExampleProcessor),
     provideReactiveFormsExamples(),
   ],
 };

@@ -5,9 +5,11 @@ import {
   circuitPattern,
   floorPattern,
   forbiddenLetterAValidator,
+  imagesOrPdf,
   integer,
   isoDate,
   letterValidator,
+  maxFiles5,
   min0,
   minLen,
   minRows,
@@ -28,12 +30,19 @@ export const validatorRegistrations = defineValidatorRegistrations({
   // Length
   min2Characters: [minLen(2)],
   min20Characters: [minLen(20)],
+  minLength5: [minLen(5)],
 
   // Numeric
   integer: [integer],
   min0: [min0],
+  min1: [Validators.min(1)],
+  max100: [Validators.max(100)],
   range1to10: [range1to10],
   range1to480: [range1to480],
+
+  // Files
+  maxFiles5: [maxFiles5],
+  imagesOrPdf: [imagesOrPdf],
 
   // Patterns / formats
   floorPattern: [floorPattern],
