@@ -62,7 +62,7 @@ ng generate @ngx-formbar/schematics:control --key <control-key> [--name <Compone
 This will:
 
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbControl`.
-- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `ReactiveFormbarControl<...>` with signal `input()` fields.
+- Generate component files (`.component.ts`, `.html`) implementing `ReactiveFormbarControl<...>` with signal `input()` fields.
 - Register the new control in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Controls](/reactive-forms/guides/controls) guide.
@@ -78,7 +78,7 @@ ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentNa
 This will:
 
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbFormGroup`.
-- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `ReactiveFormbarGroup<...>` with signal `input()` fields, and a template that renders child controls via `<ngxfb-control-outlet />`.
+- Generate component files (`.component.ts`, `.html`) implementing `ReactiveFormbarGroup<...>` with signal `input()` fields, and a template that renders child controls via `<ngxfb-control-outlet />`.
 - Register the new group in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Groups](/reactive-forms/guides/groups) guide.
@@ -94,7 +94,7 @@ ng generate @ngx-formbar/schematics:block --key <block-key> [--name <ComponentNa
 This will:
 
 - Scaffold an interface `<name><interfaceSuffix>.ts` extending `NgxFbBlock`.
-- Generate component files (`.component.ts`, `.html`, `.scss`, `.spec.ts`) implementing `FormbarBlock<...>` with signal `input()` fields.
+- Generate component files (`.component.ts`, `.html`) implementing `FormbarBlock<...>` with signal `input()` fields.
 - Register the new block in your Formbar configuration under `componentRegistrations` with the given key.
 
 For implementation details and advanced usage, see the [Blocks](/reactive-forms/guides/blocks) guide.
