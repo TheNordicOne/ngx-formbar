@@ -6,6 +6,16 @@ The `FormArray` is the source of truth for the rows. You own the template: the r
 
 Arrays are plain Angular components that implement the `ReactiveFormbarArray<T>` contract, the same way controls and groups work. The library writes its state into your component through signal inputs.
 
+## Scaffolding via Schematics
+
+Run the Angular schematic to scaffold a new array and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarArray<T>`, with a minimal template that renders rows through `<ngxfb-form-array-outlet />`. You add the row markup and the add and remove controls:
+
+```bash
+ng generate @ngx-formbar/schematics:array --key <array-key> [--name <ComponentName>]
+```
+
+See the [Generators page](/fundamentals/generators) for more details.
+
 ## Configuration
 
 An array node sets `type` to your registered key and a `rowControl` describing one row:

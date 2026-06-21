@@ -9,11 +9,12 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - `control` generator: scaffolds a control component implementing `ReactiveFormbarControl<T>`, with signal `input()` bindings, and registers itself automatically.
 - `group` generator: scaffolds a group component implementing `ReactiveFormbarGroup<T>` using `<ngxfb-control-outlet />`, and registers itself automatically.
 - `block` generator: scaffolds a block component implementing `FormbarBlock<T>`, and registers itself automatically.
+- `array` generator: scaffolds an array component implementing `ReactiveFormbarArray<T>` with a minimal `<ngxfb-form-array-outlet />` row template, and registers itself automatically.
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 
 ### Changed
 
-- Generated control, group, and block components now implement the corresponding `@ngx-formbar/reactive-forms` interface and expose inputs as signals.
+- Generated control, group, block, and array components now implement the corresponding `@ngx-formbar/reactive-forms` interface and expose inputs as signals.
 - Group templates render children through `<ngxfb-control-outlet />`.
 - Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`staticComponent()` / `loadComponent()`).
 
