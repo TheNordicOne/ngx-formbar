@@ -15,6 +15,7 @@
           "libs/schematics/src/lib/control/index.ts",
           "libs/schematics/src/lib/group/index.ts",
           "libs/schematics/src/lib/block/index.ts",
+          "libs/schematics/src/lib/array/index.ts",
           "libs/schematics/src/lib/register/index.ts"
         ],
         "tsConfig": "libs/schematics/tsconfig.lib.json",

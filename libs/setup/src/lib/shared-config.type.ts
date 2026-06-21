@@ -19,4 +19,5 @@ export interface NgxFormbarAutomationConfig {
   control?: BaseGenerateSchematicConfig;
   group?: BaseGenerateSchematicConfig;
   block?: BaseGenerateSchematicConfig;
+  array?: BaseGenerateSchematicConfig;
 }

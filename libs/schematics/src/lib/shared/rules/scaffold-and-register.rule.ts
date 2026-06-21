@@ -24,7 +24,7 @@ import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
 export function scaffoldAndRegister(
   options: Schema,
-  type: 'control' | 'group' | 'block',
+  type: 'control' | 'group' | 'block' | 'array',
 ): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const project = await getProject(tree, options.project);
@@ -37,7 +37,7 @@ export function scaffoldAndRegister(
 
 function mergeOptions(
   options: Schema,
-  type: 'control' | 'group' | 'block',
+  type: 'control' | 'group' | 'block' | 'array',
   project: ProjectDefinition,
   tree: Tree,
   context: SchematicContext,

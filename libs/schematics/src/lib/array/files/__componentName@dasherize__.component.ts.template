@@ -1,0 +1,26 @@
+import { Component, inject, input } from '@angular/core';
+<% if (!hasViewProviderHelper) { %>import { ControlContainer, ReactiveFormsModule } from '@angular/forms';
+<% } else { %>import { ReactiveFormsModule } from '@angular/forms';
+<% } %>import {
+  NgxFbFormArrayOutlet,
+  NGXFB_ARRAY_CONTROL,
+  ReactiveFormbarArray,
+} from '@ngx-formbar/reactive-forms';
+import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
+import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %>
+
+@Component({
+  selector: 'app-<%= dasherize(componentName) %>',
+  imports: [ReactiveFormsModule, NgxFbFormArrayOutlet],
+  templateUrl: './<%= dasherize(componentName) %>.component.html',
+  viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
+    {
+      provide: ControlContainer,
+      useFactory: () => inject(ControlContainer, { skipSelf: true }),
+    }
+  ]<% } %>,
+})
+export class <%= classify(componentClassName) %> implements ReactiveFormbarArray<<%= classify(interfaceName) %>> {
+  readonly name = input.required<string>();
+  protected readonly array = inject(NGXFB_ARRAY_CONTROL);
+}

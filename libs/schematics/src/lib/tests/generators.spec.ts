@@ -68,10 +68,11 @@ describe('control schematic', () => {
   const defaultComponentOutputPath = app('test/test-control.component.ts');
   const groupComponentOutputPath = app('test/test-group.component.ts');
   const blockComponentOutputPath = app('test/test-block.component.ts');
+  const arrayComponentOutputPath = app('test/test-array.component.ts');
   const appConfigPath = app(appConfigPathRaw);
 
   async function runSchematic(
-    schematicName: 'control' | 'group' | 'block',
+    schematicName: 'control' | 'group' | 'block' | 'array',
     options: Partial<GenerateOptions> = {},
   ) {
     return runner.runSchematic(
@@ -383,6 +384,74 @@ describe('control schematic', () => {
         expect(html).toContain('<ngxfb-control-outlet');
       });
 
+      it('array implements ReactiveFormbarArray and imports the array outlet and context token', async () => {
+        const tree = await runSchematic('array');
+        const sf = parseTS(read(tree, arrayComponentOutputPath));
+
+        const implementsArray = classImplementsInterface(
+          sf,
+          'TestArrayComponent',
+          'ReactiveFormbarArray',
+        );
+
+        const importsReactiveFormbarArray = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'ReactiveFormbarArray',
+        );
+
+        const importsArrayOutlet = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'NgxFbFormArrayOutlet',
+        );
+
+        const importsArrayContextToken = hasNamedImport(
+          sf,
+          REACTIVE_FORMS_PACKAGE_NAME,
+          'NGXFB_ARRAY_CONTROL',
+        );
+
+        const hasHostDirectivesInDecorator = decoratorHasProp(
+          sf,
+          'Component',
+          'hostDirectives',
+        );
+
+        expect(implementsArray).toBe(true);
+        expect(importsReactiveFormbarArray).toBe(true);
+        expect(importsArrayOutlet).toBe(true);
+        expect(importsArrayContextToken).toBe(true);
+        expect(hasHostDirectivesInDecorator).toBe(false);
+      });
+
+      it('array falls back to inline view providers', async () => {
+        const tree = await runSchematic('array');
+        const sf = parseTS(read(tree, arrayComponentOutputPath));
+
+        const importsControlContainerFromAngular = hasNamedImport(
+          sf,
+          '@angular/forms',
+          'ControlContainer',
+        );
+
+        const hasViewProvidersInDecorator = decoratorHasProp(
+          sf,
+          'Component',
+          'viewProviders',
+        );
+
+        expect(importsControlContainerFromAngular).toBe(true);
+        expect(hasViewProvidersInDecorator).toBe(true);
+      });
+
+      it('array template renders rows through the form array outlet', async () => {
+        const tree = await runSchematic('array');
+        const html = read(tree, app('test/test-array.component.html'));
+        expect(html).toContain('[formArrayName]="name()"');
+        expect(html).toContain('<ngxfb-form-array-outlet [index]="$index"');
+      });
+
       it('block implements FormbarBlock with no viewProviders or hostDirectives', async () => {
         const tree = await runSchematic('block');
         const sf = parseTS(read(tree, blockComponentOutputPath));
@@ -430,6 +499,17 @@ describe('control schematic', () => {
       it('defaults the block suffix to "Block"', async () => {
         const tree = await runSchematic('block');
         expect(exists(tree, app('test/test-block.component.ts'))).toBe(true);
+      });
+
+      it('defaults the array suffix to "Array"', async () => {
+        const tree = await runSchematic('array');
+        expect(exists(tree, app('test/test-array.component.ts'))).toBe(true);
+      });
+
+      it('array interface extends NgxFbArray with the key as type', async () => {
+        const tree = await runSchematic('array');
+        const typeSf = parseTS(read(tree, app('test/test-array.type.ts')));
+        expect(interfaceHasTypeLiteral(typeSf, 'TestArray', 'test')).toBe(true);
       });
     });
   });
