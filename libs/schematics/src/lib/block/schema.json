@@ -30,13 +30,17 @@
     },
     "interfaceSuffix": {
       "type": "string",
-      "description": "The suffix of the interface. Defaults to 'Block'",
-      "default": "Block"
+      "description": "The suffix of the interface. Defaults to 'BlockConfig'",
+      "default": "BlockConfig"
     },
     "componentSuffix": {
       "type": "string",
       "description": "The suffix of the component. Defaults to 'Block'",
       "default": "Block"
+    },
+    "interfaceFileSuffix": {
+      "type": "string",
+      "description": "Segment before '.ts' in the interface file name (e.g. 'type' -> name.type.ts). Defaults to 'type' only when the component has a type suffix."
     },
     "skipRegistration": {
       "type": "boolean",

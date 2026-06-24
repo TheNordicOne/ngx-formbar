@@ -8,44 +8,116 @@ import { strings } from '@angular-devkit/core';
 
 import { ScaffoldContext, Schema } from '../schema';
 import {
+  AngularComponentNaming,
+  DEFAULT_REGISTRATION_TYPE,
   findConfigPath,
   findSchematicsConfig,
-  readFile,
-  getProject,
-  DEFAULT_REGISTRATION_TYPE,
+  getAngularComponentNaming,
+  getProjectDefinition,
   NgxFormbarAutomationConfig,
+  readFile,
 } from '@ngx-formbar/setup';
-import { DEFAULT_VIEW_PROVIDER_HELPER } from '../constants';
-const { classify } = strings;
+import {
+  DEFAULT_INTERFACE_FILE_SUFFIX,
+  DEFAULT_VIEW_PROVIDER_HELPER,
+} from '../constants';
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
-import { ProjectDefinition } from '@schematics/angular/utility/workspace';
+import {
+  getWorkspace,
+  ProjectDefinition,
+} from '@schematics/angular/utility/workspace';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
-export function scaffoldAndRegister(
-  options: Schema,
-  type: 'control' | 'group' | 'block' | 'array',
-): Rule {
-  return async (tree: Tree, context: SchematicContext) => {
-    const project = await getProject(tree, options.project);
+type ScaffoldType = 'control' | 'group' | 'block' | 'array';
 
-    const ruleContext = mergeOptions(options, type, project, tree, context);
+const { classify, dasherize } = strings;
+
+export function scaffoldAndRegister(options: Schema, type: ScaffoldType): Rule {
+  return async (tree: Tree, context: SchematicContext) => {
+    const workspace = await getWorkspace(tree);
+    const project = getProjectDefinition(workspace, options.project);
+    const componentNaming = getAngularComponentNaming(workspace, project);
+
+    const ruleContext = buildScaffoldContext(
+      options,
+      type,
+      project,
+      componentNaming,
+      tree,
+      context,
+    );
 
     return chain([createComponent(ruleContext), registerControl(ruleContext)]);
   };
 }
 
-function mergeOptions(
+function buildScaffoldContext(
   options: Schema,
-  type: 'control' | 'group' | 'block' | 'array',
+  type: ScaffoldType,
   project: ProjectDefinition,
+  componentNaming: AngularComponentNaming,
   tree: Tree,
   context: SchematicContext,
 ) {
   const projectRoot = project.sourceRoot ?? project.root;
 
+  const { automationConfig, mergedConfig } = loadMergedConfig(
+    options,
+    type,
+    tree,
+    projectRoot,
+  );
+
+  const resolvedName = mergedConfig.name ?? mergedConfig.key;
+  const names = deriveNames(resolvedName, mergedConfig, componentNaming);
+
+  const { componentPath, componentFilePath } = buildComponentPath(
+    mergedConfig,
+    projectRoot,
+    resolvedName,
+    names.componentFileName,
+  );
+
+  const viewProvider = resolveViewProvider(
+    tree,
+    projectRoot,
+    automationConfig,
+    mergedConfig,
+    componentFilePath,
+  );
+
+  const controlRegistrationsPath = findControlRegistrationsPath(
+    tree,
+    projectRoot,
+    automationConfig,
+    context,
+  );
+
+  const ruleContext: ScaffoldContext = {
+    ...mergedConfig,
+    ...names,
+    ...viewProvider,
+    registrationType:
+      automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
+    resolvedName,
+    componentPath,
+    componentFilePath,
+    projectRoot,
+    controlRegistrationsPath,
+  };
+
+  return ruleContext;
+}
+
+function loadMergedConfig(
+  options: Schema,
+  type: ScaffoldType,
+  tree: Tree,
+  projectRoot: string,
+) {
   const automationConfigPath = options.schematicsConfig
-    ? `${projectRoot}/${options.schematicsConfig ?? ''}`
+    ? `${projectRoot}/${options.schematicsConfig}`
     : findSchematicsConfig(tree);
 
   const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
@@ -54,39 +126,98 @@ function mergeOptions(
   );
   const controlTypeConfig = automationConfig ? automationConfig[type] : {};
 
-  const mergedConfig: Schema = {
-    ...options,
-    ...controlTypeConfig,
-    viewProviderHelperPath:
-      automationConfig?.viewProviderHelperPath ??
-      options.viewProviderHelperPath,
+  const mergedConfig: Schema = { ...options, ...controlTypeConfig };
+
+  return { automationConfig, mergedConfig };
+}
+
+function deriveNames(
+  resolvedName: string,
+  config: Schema,
+  componentNaming: AngularComponentNaming,
+) {
+  const componentName = `${resolvedName}${config.componentSuffix ?? ''}`;
+  const interfaceName = classify(
+    `${resolvedName}${config.interfaceSuffix ?? ''}`,
+  );
+
+  const interfaceFileSegment =
+    config.interfaceFileSuffix ??
+    (componentNaming.type ? DEFAULT_INTERFACE_FILE_SUFFIX : '');
+
+  return {
+    componentName,
+    componentFileName: buildFileName(componentName, componentNaming.type),
+    componentClassName: buildClassName(componentName, componentNaming),
+    interfaceName,
+    interfaceFileName: buildFileName(interfaceName, interfaceFileSegment),
   };
+}
 
-  const resolvedName = mergedConfig.name ?? mergedConfig.key;
-  const componentName = `${resolvedName}${mergedConfig.componentSuffix ?? ''}`;
+function buildFileName(name: string, segment: string) {
+  const normalizedSegment = segment.replace(/^\.+/, '');
+  const baseName = dasherize(name);
 
-  const resolvedPathOption = mergedConfig.path ?? 'app';
-  const includesProjectRoot = resolvedPathOption.startsWith(projectRoot);
-  const resolvedRootPath = !includesProjectRoot ? projectRoot : '';
+  return normalizedSegment
+    ? `${baseName}.${dasherize(normalizedSegment)}`
+    : baseName;
+}
 
-  const componentPath = `${resolvedRootPath}/${resolvedPathOption}/${resolvedName}`;
-  const componentFilePath = `/${componentPath}/${strings.dasherize(componentName)}.component`;
+function buildClassName(name: string, componentNaming: AngularComponentNaming) {
+  const { addTypeToClassName, type } = componentNaming;
+  const typeSuffix = addTypeToClassName && type ? classify(type) : '';
 
-  const viewProviderHelperPathOption =
-    automationConfig?.viewProviderHelperPath ??
-    mergedConfig.viewProviderHelperPath;
+  return `${classify(name)}${typeSuffix}`;
+}
+
+function buildComponentPath(
+  config: Schema,
+  projectRoot: string,
+  resolvedName: string,
+  componentFileName: string,
+) {
+  const pathOption = config.path ?? 'app';
+  const rootPath = pathOption.startsWith(projectRoot) ? '' : projectRoot;
+  const componentPath = `${rootPath}/${pathOption}/${resolvedName}`;
+
+  return {
+    componentPath,
+    componentFilePath: `/${componentPath}/${componentFileName}`,
+  };
+}
+
+function resolveViewProvider(
+  tree: Tree,
+  projectRoot: string,
+  automationConfig: NgxFormbarAutomationConfig | null,
+  config: Schema,
+  componentFilePath: string,
+) {
+  const pathOption =
+    automationConfig?.viewProviderHelperPath ?? config.viewProviderHelperPath;
 
   const [viewProviderHelperPath, viewProviderIdentifier] =
     resolveImportPathAndIdentifier(
       tree,
       projectRoot,
       componentFilePath,
-      viewProviderHelperPathOption,
+      pathOption,
       DEFAULT_VIEW_PROVIDER_HELPER,
     );
 
-  const hasViewProviderHelper = !!viewProviderHelperPath;
+  return {
+    viewProviderHelperPath,
+    viewProviderIdentifier,
+    hasViewProviderHelper: !!viewProviderHelperPath,
+  };
+}
 
+function findControlRegistrationsPath(
+  tree: Tree,
+  projectRoot: string,
+  automationConfig: NgxFormbarAutomationConfig | null,
+  context: SchematicContext,
+) {
   const controlRegistrationsPath = automationConfig?.controlRegistrationsPath
     ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
     : findConfigPath(tree, projectRoot);
@@ -97,26 +228,7 @@ function mergeOptions(
     );
   }
 
-  const ruleContext: ScaffoldContext = {
-    ...mergedConfig,
-    registrationType:
-      automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
-    resolvedName,
-    interfaceName: classify(
-      `${mergedConfig.name ?? mergedConfig.key}${controlTypeConfig?.interfaceSuffix ?? mergedConfig.interfaceSuffix ?? ''}`,
-    ),
-    componentName,
-    componentClassName: classify(`${componentName}Component`),
-    componentPath,
-    componentFilePath,
-    projectRoot,
-    viewProviderHelperPath,
-    viewProviderIdentifier,
-    controlRegistrationsPath,
-    hasViewProviderHelper,
-  };
-
-  return ruleContext;
+  return controlRegistrationsPath;
 }
 
 function resolveImportPathAndIdentifier(
@@ -164,9 +276,11 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
   const defaultPathParts = splitPath(defaultParts.left);
 
   const directory = inputPathParts.directory;
+
   const fileName = (
     inputPathParts.fileName || defaultPathParts.fileName
   ).replace('.ts', '');
+
   const identifier = inputParts.exportName || defaultParts.exportName;
 
   return { directory, fileName, identifier };

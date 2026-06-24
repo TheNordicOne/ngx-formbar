@@ -3,6 +3,7 @@ export type RegistrationType = 'token' | 'config';
 export interface BaseGenerateSchematicConfig {
   interfaceSuffix?: string;
   componentSuffix?: string;
+  interfaceFileSuffix?: string;
   skipRegistration?: boolean;
 }
 

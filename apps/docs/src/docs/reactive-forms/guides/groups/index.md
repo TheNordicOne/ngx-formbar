@@ -8,7 +8,7 @@ Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, groups are plain Angular 
 
 ## Scaffolding via Schematics
 
-Run the Angular schematic to scaffold a new group and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarGroup<T>`:
+Run the Angular schematic to scaffold a new group and register it. The schematic produces a component that already implements `ReactiveFormbarGroup<T>`:
 
 ```bash
 ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentName>]

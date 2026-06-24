@@ -11,3 +11,5 @@ export const NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS =
   'NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS';
 
 export const DEFAULT_REGISTRATION_TYPE = 'token';
+
+export const COMPONENT_SCHEMATIC = '@schematics/angular:component';

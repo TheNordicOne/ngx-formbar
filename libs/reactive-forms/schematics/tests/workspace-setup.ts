@@ -4,15 +4,12 @@ import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
-import { join } from 'path';
 import { app, src, writeTs } from '@ngx-formbar/schematics/testing';
-import { classify } from '@angular-devkit/core/src/utils/strings';
-import { CORE_PACKAGE_NAME, REACTIVE_FORMS_PACKAGE_NAME } from '../shared/constants';
-
-export const COLLECTION_PATH = join(
-  __dirname,
-  '../../../../dist/libs/reactive-forms/schematics/collection.json',
-);
+import { strings } from '@angular-devkit/core';
+import {
+  CORE_PACKAGE_NAME,
+  REACTIVE_FORMS_PACKAGE_NAME,
+} from '../shared/constants';
 
 export async function setupWorkspace(
   runner: SchematicTestRunner,
@@ -270,7 +267,7 @@ export function createControlComponent(
   providersAndImports: [string, string],
   className: string,
 ): string {
-  const classifiedName = classify(name);
+  const classifiedName = strings.classify(name);
 
   const [providers, imports] = providersAndImports;
 

@@ -30,13 +30,17 @@
     },
     "interfaceSuffix": {
       "type": "string",
-      "description": "The suffix of the interface. Defaults to 'Group'",
-      "default": "Group"
+      "description": "The suffix of the interface. Defaults to 'GroupConfig'",
+      "default": "GroupConfig"
     },
     "componentSuffix": {
       "type": "string",
       "description": "The suffix of the component. Defaults to 'Group'",
       "default": "Group"
+    },
+    "interfaceFileSuffix": {
+      "type": "string",
+      "description": "Segment before '.ts' in the interface file name (e.g. 'type' -> name.type.ts). Defaults to 'type' only when the component has a type suffix."
     },
     "skipRegistration": {
       "type": "boolean",

@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
-import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';
+import { <%= classify(interfaceName) %> } from './<%= interfaceFileName %>';
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
   imports: [],
-  templateUrl: './<%= dasherize(componentName) %>.component.html',
+  templateUrl: './<%= componentFileName %>.html',
 })
 export class <%= classify(componentClassName) %> implements FormbarBlock<<%= classify(interfaceName) %>> {}

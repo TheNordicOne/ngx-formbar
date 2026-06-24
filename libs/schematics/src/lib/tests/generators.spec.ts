@@ -13,6 +13,7 @@ import {
   provideMapNoSplit,
   provideToken,
   provideTokenNoSplit,
+  setComponentTypeConfig,
   setupWorkspace,
 } from './workspace-setup';
 import {
@@ -65,10 +66,10 @@ describe('control schematic', () => {
     'control-container.view-provider.ts#controlContainterViewProviders';
   const viewProviderHelperPathOption = `${viewProviderHelperPath}/${viewProviderHelper}`;
 
-  const defaultComponentOutputPath = app('test/test-control.component.ts');
-  const groupComponentOutputPath = app('test/test-group.component.ts');
-  const blockComponentOutputPath = app('test/test-block.component.ts');
-  const arrayComponentOutputPath = app('test/test-array.component.ts');
+  const defaultComponentOutputPath = app('test/test-control.ts');
+  const groupComponentOutputPath = app('test/test-group.ts');
+  const blockComponentOutputPath = app('test/test-block.ts');
+  const arrayComponentOutputPath = app('test/test-array.ts');
   const appConfigPath = app(appConfigPathRaw);
 
   async function runSchematic(
@@ -323,7 +324,7 @@ describe('control schematic', () => {
 
         const implementsControl = classImplementsInterface(
           sf,
-          'TestControlComponent',
+          'TestControl',
           'ReactiveFormbarControl',
         );
 
@@ -350,7 +351,7 @@ describe('control schematic', () => {
 
         const implementsGroup = classImplementsInterface(
           sf,
-          'TestGroupComponent',
+          'TestGroup',
           'ReactiveFormbarGroup',
         );
 
@@ -380,7 +381,7 @@ describe('control schematic', () => {
 
       it('group template uses ngxfb-control-outlet', async () => {
         const tree = await runSchematic('group');
-        const html = read(tree, app('test/test-group.component.html'));
+        const html = read(tree, app('test/test-group.html'));
         expect(html).toContain('<ngxfb-control-outlet');
       });
 
@@ -390,7 +391,7 @@ describe('control schematic', () => {
 
         const implementsArray = classImplementsInterface(
           sf,
-          'TestArrayComponent',
+          'TestArray',
           'ReactiveFormbarArray',
         );
 
@@ -447,7 +448,7 @@ describe('control schematic', () => {
 
       it('array template renders rows through the form array outlet', async () => {
         const tree = await runSchematic('array');
-        const html = read(tree, app('test/test-array.component.html'));
+        const html = read(tree, app('test/test-array.html'));
         expect(html).toContain('[formArrayName]="name()"');
         expect(html).toContain('<ngxfb-form-array-outlet [index]="$index"');
       });
@@ -458,7 +459,7 @@ describe('control schematic', () => {
 
         const implementsBlock = classImplementsInterface(
           sf,
-          'TestBlockComponent',
+          'TestBlock',
           'FormbarBlock',
         );
 
@@ -488,28 +489,111 @@ describe('control schematic', () => {
 
       it('defaults the control suffix to "Control"', async () => {
         const tree = await runSchematic('control');
-        expect(exists(tree, app('test/test-control.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-control.ts'))).toBe(true);
       });
 
       it('defaults the group suffix to "Group"', async () => {
         const tree = await runSchematic('group');
-        expect(exists(tree, app('test/test-group.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-group.ts'))).toBe(true);
       });
 
       it('defaults the block suffix to "Block"', async () => {
         const tree = await runSchematic('block');
-        expect(exists(tree, app('test/test-block.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-block.ts'))).toBe(true);
       });
 
       it('defaults the array suffix to "Array"', async () => {
         const tree = await runSchematic('array');
-        expect(exists(tree, app('test/test-array.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-array.ts'))).toBe(true);
       });
 
       it('array interface extends NgxFbArray with the key as type', async () => {
         const tree = await runSchematic('array');
-        const typeSf = parseTS(read(tree, app('test/test-array.type.ts')));
-        expect(interfaceHasTypeLiteral(typeSf, 'TestArray', 'test')).toBe(true);
+        const typeSf = parseTS(read(tree, app('test/test-array-config.ts')));
+        expect(interfaceHasTypeLiteral(typeSf, 'TestArrayConfig', 'test')).toBe(
+          true,
+        );
+      });
+    });
+
+    describe('component and interface file naming', () => {
+      it('defaults to no component file suffix and a Config interface in its own file', async () => {
+        const tree = await runSchematic('control');
+
+        expect(exists(tree, app('test/test-control.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-control-config.ts'))).toBe(true);
+
+        const componentSf = parseTS(read(tree, app('test/test-control.ts')));
+        const hasBareClass = classDeclarationExists(componentSf, 'TestControl');
+        const importsConfigWithCorrectPath =
+          importForSymbolUsesCorrectRelativePath(
+            componentSf,
+            app('test/test-control.ts'),
+            'TestControlConfig',
+            app('test/test-control-config.ts'),
+          );
+
+        const typeSf = parseTS(read(tree, app('test/test-control-config.ts')));
+        const interfaceHasType = interfaceHasTypeLiteral(
+          typeSf,
+          'TestControlConfig',
+          'test',
+        );
+
+        expect(hasBareClass).toBe(true);
+        expect(importsConfigWithCorrectPath).toBe(true);
+        expect(interfaceHasType).toBe(true);
+      });
+
+      it('applies the Angular component type to the file and class and uses ".type" for the interface file', async () => {
+        setComponentTypeConfig(appTree, { type: 'component' });
+        const tree = await runSchematic('control');
+
+        expect(exists(tree, app('test/test-control.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-control.component.html'))).toBe(true);
+        expect(exists(tree, app('test/test-control-config.type.ts'))).toBe(true);
+
+        const componentSf = parseTS(
+          read(tree, app('test/test-control.component.ts')),
+        );
+        expect(classDeclarationExists(componentSf, 'TestControlComponent')).toBe(
+          true,
+        );
+      });
+
+      it('reads the Angular component type from the workspace level', async () => {
+        setComponentTypeConfig(appTree, { type: 'component' }, 'workspace');
+        const tree = await runSchematic('control');
+
+        expect(exists(tree, app('test/test-control.component.ts'))).toBe(true);
+        expect(exists(tree, app('test/test-control-config.type.ts'))).toBe(true);
+      });
+
+      it('keeps the class bare when addTypeToClassName is false', async () => {
+        setComponentTypeConfig(appTree, {
+          type: 'component',
+          addTypeToClassName: false,
+        });
+        const tree = await runSchematic('control');
+
+        const componentSf = parseTS(
+          read(tree, app('test/test-control.component.ts')),
+        );
+        expect(classDeclarationExists(componentSf, 'TestControl')).toBe(true);
+        expect(classDeclarationExists(componentSf, 'TestControlComponent')).toBe(
+          false,
+        );
+      });
+
+      it('applies an explicit interfaceFileSuffix even without a component suffix', async () => {
+        const tree = await runSchematic('control', {
+          interfaceFileSuffix: 'model',
+        });
+
+        expect(exists(tree, app('test/test-control-config.model.ts'))).toBe(
+          true,
+        );
+        expect(exists(tree, app('test/test-control-config.ts'))).toBe(false);
       });
     });
   });
@@ -529,16 +613,16 @@ describe('control schematic', () => {
       const tree = await runSchematic('control', options);
 
       const baseDir = app('features/account/profile');
-      const componentFilePath = `${baseDir}/profile-widget.component.ts`;
+      const componentFilePath = `${baseDir}/profile-widget.ts`;
 
-      const typeFilePath = `${baseDir}/profile-field.type.ts`;
+      const typeFilePath = `${baseDir}/profile-field.ts`;
 
       const componentSf = parseTS(read(tree, componentFilePath));
       const typeSf = parseTS(read(tree, typeFilePath));
 
       const hasClass = classDeclarationExists(
         componentSf,
-        'ProfileWidgetComponent',
+        'ProfileWidget',
       );
       const hasSelector = componentSelectorEquals(
         componentSf,
@@ -574,13 +658,13 @@ describe('control schematic', () => {
 
       const importsComponent = hasDynamicImportOf(
         componentRegistrationsSf,
-        'TestControlComponent',
+        'TestControl',
       );
 
       const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
         componentRegistrationsSf,
         'test',
-        'TestControlComponent',
+        'TestControl',
       );
 
       expect(importsComponent).toBe(true);
@@ -594,14 +678,14 @@ describe('control schematic', () => {
 
       const importsComponent = hasDynamicImportOf(
         appConfigSf,
-        'TestControlComponent',
+        'TestControl',
       );
 
       const hasRegistration =
         appConfigProvidersComponentRegistrationsMapHasIdentifier(
           appConfigSf,
           'test',
-          'TestControlComponent',
+          'TestControl',
         );
 
       expect(importsComponent).toBe(true);
@@ -628,15 +712,15 @@ describe('control schematic', () => {
       });
 
       const baseDir = app('features/account/profile');
-      const componentFilePath = `${baseDir}/profile-widget.component.ts`;
-      const typeFilePath = `${baseDir}/profile-field.type.ts`;
+      const componentFilePath = `${baseDir}/profile-widget.ts`;
+      const typeFilePath = `${baseDir}/profile-field.ts`;
 
       const componentSf = parseTS(read(tree, componentFilePath));
       const typeSf = parseTS(read(tree, typeFilePath));
 
       const hasClass = classDeclarationExists(
         componentSf,
-        'ProfileWidgetComponent',
+        'ProfileWidget',
       );
       const hasSelector = componentSelectorEquals(
         componentSf,
@@ -676,13 +760,13 @@ describe('control schematic', () => {
 
       const importsComponent = hasDynamicImportOf(
         componentRegistrationsSf,
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
         componentRegistrationsSf,
         'user',
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       expect(importsComponent).toBe(true);
@@ -712,13 +796,13 @@ describe('control schematic', () => {
 
       const importsComponent = hasDynamicImportOf(
         registrationsSf,
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       const hasRegistration = componentRegistrationsMapProviderHasIdentifier(
         registrationsSf,
         'email',
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       expect(importsComponent).toBe(true);
@@ -744,13 +828,13 @@ describe('control schematic', () => {
 
       const importsComponent = hasDynamicImportOf(
         registrationsSf,
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       const hasRegistration = provideFormbarComponentRegistrationsHasIdentifier(
         registrationsSf,
         'email',
-        'EmailControlComponent',
+        'EmailControl',
       );
 
       expect(importsComponent).toBe(false);
@@ -774,7 +858,7 @@ describe('control schematic', () => {
         schematicsConfig: schematicsConfigPath,
       });
 
-      const componentPath = app('email/email-control.component.ts');
+      const componentPath = app('email/email-control.ts');
       expect(exists(tree, componentPath)).toBe(true);
 
       expect(
@@ -797,14 +881,14 @@ describe('control schematic', () => {
 
         const importsComponent = hasDynamicImportOf(
           appConfigSf,
-          'TestControlComponent',
+          'TestControl',
         );
 
         const hasRegistration =
           provideFormbarComponentRegistrationsHasIdentifier(
             appConfigSf,
             'test',
-            'TestControlComponent',
+            'TestControl',
           );
 
         expect(importsComponent).toBe(true);
@@ -818,14 +902,14 @@ describe('control schematic', () => {
 
         const importsComponent = hasDynamicImportOf(
           formbarConfigSf,
-          'TestControlComponent',
+          'TestControl',
         );
 
         const hasRegistration =
           defineFormbarConfigComponentRegistrationsHasIdentifier(
             formbarConfigSf,
             'test',
-            'TestControlComponent',
+            'TestControl',
           );
 
         expect(importsComponent).toBe(true);
@@ -844,13 +928,13 @@ describe('control schematic', () => {
 
         const importsComponent = hasDynamicImportOf(
           registrationsSf,
-          'TestControlComponent',
+          'TestControl',
         );
 
         const hasRegistration = directComponentRegistrationsHasIdentifier(
           registrationsSf,
           'test',
-          'TestControlComponent',
+          'TestControl',
         );
 
         expect(importsComponent).toBe(true);
@@ -882,14 +966,14 @@ describe('control schematic', () => {
 
         const importsComponent = hasDynamicImportOf(
           formbarConfigSf,
-          'EmailControlComponent',
+          'EmailControl',
         );
 
         const hasRegistration =
           provideFormbarComponentRegistrationsHasIdentifier(
             formbarConfigSf,
             'email',
-            'EmailControlComponent',
+            'EmailControl',
           );
 
         expect(importsComponent).toBe(false);
@@ -915,7 +999,7 @@ describe('control schematic', () => {
           schematicsConfig: schematicsConfigPath,
         });
 
-        const componentPath = app('email/email-control.component.ts');
+        const componentPath = app('email/email-control.ts');
         expect(exists(tree, componentPath)).toBe(true);
 
         expect(

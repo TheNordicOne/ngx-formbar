@@ -8,7 +8,7 @@ Arrays are plain Angular components that implement the `ReactiveFormbarArray<T>`
 
 ## Scaffolding via Schematics
 
-Run the Angular schematic to scaffold a new array and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarArray<T>`, with a minimal template that renders rows through `<ngxfb-form-array-outlet />`. You add the row markup and the add and remove controls:
+Run the Angular schematic to scaffold a new array and register it. The schematic produces a component that already implements `ReactiveFormbarArray<T>`, with a minimal template that renders rows through `<ngxfb-form-array-outlet />`. You add the row markup and the add and remove controls:
 
 ```bash
 ng generate @ngx-formbar/schematics:array --key <array-key> [--name <ComponentName>]

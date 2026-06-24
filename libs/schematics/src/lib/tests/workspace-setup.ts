@@ -6,6 +6,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { app, src, writeTs } from './helper';
+import { COMPONENT_SCHEMATIC } from '@ngx-formbar/setup';
 import { strings } from '@angular-devkit/core';
 const { classify } = strings;
 import {
@@ -44,6 +45,36 @@ export async function setupWorkspace(
     appOptions,
     workspaceTree,
   );
+}
+
+interface AngularJson {
+  projects: Record<
+    string,
+    { schematics?: Record<string, Record<string, unknown>> }
+  >;
+  schematics?: Record<string, Record<string, unknown>>;
+}
+
+export function setComponentTypeConfig(
+  appTree: UnitTestTree,
+  config: { type?: string; addTypeToClassName?: boolean },
+  scope: 'project' | 'workspace' = 'project',
+): void {
+  const angularJson = JSON.parse(
+    appTree.readContent('/angular.json'),
+  ) as AngularJson;
+
+  const container =
+    scope === 'project'
+      ? (angularJson.projects['test-app'].schematics ??= {})
+      : (angularJson.schematics ??= {});
+
+  container[COMPONENT_SCHEMATIC] = {
+    ...container[COMPONENT_SCHEMATIC],
+    ...config,
+  };
+
+  appTree.overwrite('/angular.json', JSON.stringify(angularJson, null, 2));
 }
 
 export function provideToken(
