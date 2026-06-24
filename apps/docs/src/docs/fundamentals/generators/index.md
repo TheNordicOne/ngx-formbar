@@ -52,17 +52,22 @@ If an `index.ts` exists, it will use this for the import. Otherwise, it falls ba
 
 ## Naming
 
-The generated **component** follows Angular's own component naming. By default (Angular v20+) there is no file or class suffix:
+The generated **component** follows Angular's own component naming. The generators read Angular's `@schematics/angular:component` settings from `angular.json`, so you configure this the same way you configure `ng generate component`. The `type` value is the file and class suffix, `addTypeToClassName` gates whether the class gets it, and a project-level entry takes precedence over a workspace-level one. For `generate control --key text`:
 
-- `generate control --key text` creates `text-control.ts` with class `TextControl`.
+| `angular.json` `type`        | `addTypeToClassName` | File                        | Class                  |
+|------------------------------|----------------------|-----------------------------|------------------------|
+| unset (Angular v20+ default) | —                    | `text-control.ts`           | `TextControl`          |
+| `"component"`                | `true` (default)     | `text-control.component.ts` | `TextControlComponent` |
+| `"component"`                | `false`              | `text-control.component.ts` | `TextControl`          |
 
-The generators read Angular's `@schematics/angular:component` settings from `angular.json`, so you configure this the same way you configure `ng generate component`. With `{ "type": "component" }`, the same command creates `text-control.component.ts` with class `TextControlComponent`; that `component` value is the component's type suffix. A project-level entry takes precedence over a workspace-level one, and `addTypeToClassName` is honored.
+The generated **config interface** is named after the control with a `Config` suffix (`TextControlConfig`) and lives in its own file. The file gets a matching type segment, defaulting to `type` but applied only when the component has a type suffix:
 
-The generated **config interface** is named after the control with a `Config` suffix and lives in its own file:
+| Angular `type` set? | Interface file (`interfaceFileSuffix` unset) |
+|---------------------|----------------------------------------------|
+| no                  | `text-control-config.ts`                     |
+| yes                 | `text-control-config.type.ts`                |
 
-- `TextControlConfig` in `text-control-config.ts`.
-
-The interface file gets a matching segment (the part between the name and `.ts`). It defaults to `type`, but is only applied when the component has a type suffix. So with no Angular `type` the file is `text-control-config.ts`; with `type: component` it is `text-control-config.type.ts`. Override it with `interfaceFileSuffix` (set it to an empty string to drop the segment).
+Override the segment with `interfaceFileSuffix` (set it to an empty string to drop the segment).
 
 ## Examples
 
