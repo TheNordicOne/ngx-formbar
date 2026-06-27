@@ -25,6 +25,11 @@ import { NGXFB_CONTROL_ENTRIES } from '../../tokens/control-entries';
     NgxFbBlockDirective,
   ],
   templateUrl: './ngxfb-control-outlet.component.html',
+  styles: `
+    :host {
+      display: contents;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgxFbControlOutlet {

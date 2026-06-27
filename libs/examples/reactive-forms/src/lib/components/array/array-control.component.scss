@@ -35,10 +35,6 @@
   row-gap: 2rem;
 }
 
-ngxfb-form-array-outlet {
-  display: contents;
-}
-
 .row {
   display: grid;
   grid-template-columns: fit-content(14rem) minmax(0, 1fr);

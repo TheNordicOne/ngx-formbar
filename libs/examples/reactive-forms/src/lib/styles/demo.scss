@@ -50,10 +50,6 @@
   row-gap: var(--form-field-gap);
 }
 
-ngxfb-control-outlet {
-  display: contents;
-}
-
 .form-actions {
   display: flex;
   gap: var(--form-spacing-lg);
