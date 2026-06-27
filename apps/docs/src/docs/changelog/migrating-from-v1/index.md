@@ -53,10 +53,13 @@ ng generate @ngx-formbar/core:block
 ng generate @ngx-formbar/schematics:control
 ng generate @ngx-formbar/schematics:group
 ng generate @ngx-formbar/schematics:block
+ng generate @ngx-formbar/schematics:array
 ng generate @ngx-formbar/schematics:register
 ```
 
 The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
+
+Generated file and class names now follow Angular's `@schematics/angular:component` config, so by default there is no `.component`/`Component` suffix. The config interface is named with a `Config` suffix. See [Naming](/fundamentals/generators#naming) for the full behavior.
 
 ## Step 4: Move runtime imports to `@ngx-formbar/reactive-forms`
 
@@ -134,7 +137,7 @@ This is the biggest change. In v1 your components attached library directives vi
 The three contracts live in `@ngx-formbar/reactive-forms`:
 
 | Contract                    | Use for                               | `T extends`      |
-| --------------------------- | ------------------------------------- | ---------------- |
+|-----------------------------|---------------------------------------|------------------|
 | `ReactiveFormbarControl<T>` | Leaf form controls (input, select, …) | `NgxFbControl`   |
 | `ReactiveFormbarGroup<T>`   | Container nodes that hold children    | `NgxFbFormGroup` |
 | `FormbarBlock<T>`           | Non-control content (notes, dividers) | `NgxFbBlock`     |
@@ -343,7 +346,7 @@ The v1 `visibilityHandling` registration option has been renamed to `hiddenHandl
 Two registration options replace any in-component lifecycle wiring you may have done in v1:
 
 | Option             | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
-| ------------------ | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|--------------------|----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `hiddenHandling`   | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
 | `disabledHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
 
@@ -386,7 +389,7 @@ The parser has also been switched from `acorn` to an in-tree allow-list parser a
 Loose equality coercion is no longer applied. `==` behaves identically to `===` and `!=` identically to `!==`. The following return `false` in v2.0.0:
 
 | Expression                                    | v1      | v2.0.0  |
-| --------------------------------------------- | ------- | ------- |
+|-----------------------------------------------|---------|---------|
 | `age == "18"` (when `age` is a number)        | `true`  | `false` |
 | `value != null` (when `value` is `undefined`) | `false` | `true`  |
 | `"" == 0`                                     | `true`  | `false` |
@@ -477,34 +480,36 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 
 ## Quick reference
 
-| Symbol                                                           | v1                                                | v2.0.0                                                          |
-| ---------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------- |
-| `NgxFbFormComponent`                                             | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `provideFormbar`                                                 | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `ValidatorConfig`, `AsyncValidatorConfig`                        | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `NGX_FW_VALIDATOR_REGISTRATIONS`                                 | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`                           | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `NGX_VALIDATOR_RESOLVER`                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock` | _did not exist_                                   | `@ngx-formbar/reactive-forms`                                   |
-| `NgxFbControlOutlet`                                             | _did not exist_                                   | `@ngx-formbar/reactive-forms`                                   |
-| `staticComponent`, `loadComponent`, `ComponentRegistrationEntry` | _did not exist_                                   | `@ngx-formbar/core`                                             |
-| `Expression`, `NgxFbForm`, `NgxFbControl`, etc.                  | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |
-| `ExpressionService`, `NGX_FW_COMPONENT_REGISTRATIONS`            | `@ngx-formbar/core`                               | `@ngx-formbar/core` (unchanged)                                 |
-| Component registration shape                                     | `Type<unknown>`                                   | `ComponentRegistrationEntry`                                    |
-| Consumer component contract                                      | `hostDirectives` + `inject(...)`                  | `implements ReactiveFormbarControl` / `…Group` / `FormbarBlock` |
-| Group child template                                             | `ngxfbAbstractControl`                            | `<ngxfb-control-outlet />`                                      |
-| Registration visibility option                                   | `visibilityHandling`                              | `hiddenHandling`                                                |
-| Content union type                                               | `NgxFbContent`                                    | `NgxFbItem`                                                     |
-| Minimum Angular version                                          | 19.2.1                                            | 20.0.0                                                          |
-| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk` | `@angular/core`, `rxjs`                                         |
-| `ng add`                                                         | `@ngx-formbar/core`                               | `@ngx-formbar/reactive-forms`                                   |
-| Code generators                                                  | `@ngx-formbar/core:*`                             | `@ngx-formbar/schematics:*`                                     |
-| Expression parser                                                | `acorn` (runtime dep)                             | in-tree adaptation of `jsep`, no runtime dep                    |
-| `==` / `!=` semantics                                            | loose (JS coercion)                               | strict (equivalent to `===` / `!==`)                            |
-| Array mutator methods in expressions                             | reachable (`arr.push(x)`, `arr.sort()`, etc.)     | throw                                                           |
-| Plain-object / `Date` / `Map` / `Set` method calls               | reachable                                         | throw                                                           |
-| Division / modulo by zero                                        | `Infinity` / `NaN`                                | throws                                                          |
-| Multi-statement and top-level comma sequences                    | silently dropped trailing input                   | parse error                                                     |
-| `dynamicLabel` / `dynamicTitle` input type                       | `string \| undefined`                             | `string \| null \| undefined`                                   |
-| `evaluateExpression` signature                                   | `(ast, ctx): unknown`                             | `<T = unknown>(ast, ctx): T \| null`                            |
+| Symbol                                                           | v1                                                   | v2.0.0                                                          |
+|------------------------------------------------------------------|------------------------------------------------------|-----------------------------------------------------------------|
+| `NgxFbFormComponent`                                             | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `provideFormbar`                                                 | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `ValidatorConfig`, `AsyncValidatorConfig`                        | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `NGX_FW_VALIDATOR_REGISTRATIONS`                                 | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS`                           | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `NGX_VALIDATOR_RESOLVER`                                         | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock` | _did not exist_                                      | `@ngx-formbar/reactive-forms`                                   |
+| `NgxFbControlOutlet`                                             | _did not exist_                                      | `@ngx-formbar/reactive-forms`                                   |
+| `staticComponent`, `loadComponent`, `ComponentRegistrationEntry` | _did not exist_                                      | `@ngx-formbar/core`                                             |
+| `Expression`, `NgxFbForm`, `NgxFbControl`, etc.                  | `@ngx-formbar/core`                                  | `@ngx-formbar/core` (unchanged)                                 |
+| `ExpressionService`, `NGX_FW_COMPONENT_REGISTRATIONS`            | `@ngx-formbar/core`                                  | `@ngx-formbar/core` (unchanged)                                 |
+| Component registration shape                                     | `Type<unknown>`                                      | `ComponentRegistrationEntry`                                    |
+| Consumer component contract                                      | `hostDirectives` + `inject(...)`                     | `implements ReactiveFormbarControl` / `…Group` / `FormbarBlock` |
+| Group child template                                             | `ngxfbAbstractControl`                               | `<ngxfb-control-outlet />`                                      |
+| Registration visibility option                                   | `visibilityHandling`                                 | `hiddenHandling`                                                |
+| Content union type                                               | `NgxFbContent`                                       | `NgxFbItem`                                                     |
+| Minimum Angular version                                          | 19.2.1                                               | 20.0.0                                                          |
+| Core peer dependencies                                           | `@angular/core`, `@angular/forms`, `@angular/cdk`    | `@angular/core`, `rxjs`                                         |
+| `ng add`                                                         | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
+| Code generators                                                  | `@ngx-formbar/core:*`                                | `@ngx-formbar/schematics:*`                                     |
+| Generated file & class naming                                    | `text-control.component.ts` / `TextControlComponent` | follows Angular `type` config; no suffix by default             |
+| Config interface name                                            | `TextControl`                                        | `TextControlConfig`                                             |
+| Expression parser                                                | `acorn` (runtime dep)                                | in-tree adaptation of `jsep`, no runtime dep                    |
+| `==` / `!=` semantics                                            | loose (JS coercion)                                  | strict (equivalent to `===` / `!==`)                            |
+| Array mutator methods in expressions                             | reachable (`arr.push(x)`, `arr.sort()`, etc.)        | throw                                                           |
+| Plain-object / `Date` / `Map` / `Set` method calls               | reachable                                            | throw                                                           |
+| Division / modulo by zero                                        | `Infinity` / `NaN`                                   | throws                                                          |
+| Multi-statement and top-level comma sequences                    | silently dropped trailing input                      | parse error                                                     |
+| `dynamicLabel` / `dynamicTitle` input type                       | `string \| undefined`                                | `string \| null \| undefined`                                   |
+| `evaluateExpression` signature                                   | `(ast, ctx): unknown`                                | `<T = unknown>(ast, ctx): T \| null`                            |

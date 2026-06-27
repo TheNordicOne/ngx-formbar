@@ -16,6 +16,11 @@
       "factory": "./block/index.cjs#block",
       "schema": "./block/schema.json"
     },
+    "array": {
+      "description": "Scaffolds a new array and registers it.",
+      "factory": "./array/index.cjs#array",
+      "schema": "./array/schema.json"
+    },
     "register": {
       "description": "Searches for all components and registers them",
       "factory": "./register/index.cjs#register",

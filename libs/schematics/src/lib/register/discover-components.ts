@@ -15,8 +15,7 @@ import {
   ScriptTarget,
   SourceFile,
 } from 'typescript';
-import { JsonObject } from '@angular-devkit/core';
-import { dasherize } from '@angular-devkit/core/src/utils/strings';
+import { JsonObject, strings } from '@angular-devkit/core';
 import { FormbarComponentInfo } from './component-info.type';
 
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
@@ -357,7 +356,7 @@ function extractComponentInfo(
   }
 
   const keyBase = stripComponentSuffix(className);
-  const key = dasherize(keyBase);
+  const key = strings.dasherize(keyBase);
 
   return {
     componentFilePath: filePath,

@@ -1,0 +1,5 @@
+import { NgxFbArray } from '@ngx-formbar/core';
+
+export interface <%= classify(interfaceName) %> extends NgxFbArray {
+  type: '<%= key %>';
+}

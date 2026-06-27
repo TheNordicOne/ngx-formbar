@@ -3,6 +3,7 @@ export type RegistrationType = 'token' | 'config';
 export interface BaseGenerateSchematicConfig {
   interfaceSuffix?: string;
   componentSuffix?: string;
+  interfaceFileSuffix?: string;
   skipRegistration?: boolean;
 }
 
@@ -19,4 +20,5 @@ export interface NgxFormbarAutomationConfig {
   control?: BaseGenerateSchematicConfig;
   group?: BaseGenerateSchematicConfig;
   block?: BaseGenerateSchematicConfig;
+  array?: BaseGenerateSchematicConfig;
 }

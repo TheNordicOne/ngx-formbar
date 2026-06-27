@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NgxFormbarBlock",
-  "title": "Scaffold Block",
+  "$id": "NgxFormbarArray",
+  "title": "Scaffold Array",
   "type": "object",
   "properties": {
     "name": {
@@ -30,13 +30,13 @@
     },
     "interfaceSuffix": {
       "type": "string",
-      "description": "The suffix of the interface. Defaults to 'BlockConfig'",
-      "default": "BlockConfig"
+      "description": "The suffix of the interface. Defaults to 'ArrayConfig'",
+      "default": "ArrayConfig"
     },
     "componentSuffix": {
       "type": "string",
-      "description": "The suffix of the component. Defaults to 'Block'",
-      "default": "Block"
+      "description": "The suffix of the component. Defaults to 'Array'",
+      "default": "Array"
     },
     "interfaceFileSuffix": {
       "type": "string",
@@ -55,8 +55,5 @@
       "description": "Path of the configuration that is to be used by this schematic"
     }
   },
-  "required": [
-    "key"
-  ]
+  "required": ["key"]
 }
-

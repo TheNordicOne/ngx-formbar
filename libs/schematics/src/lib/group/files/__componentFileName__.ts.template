@@ -6,13 +6,13 @@ import { ReactiveFormsModule } from '@angular/forms';
   NgxFbControlOutlet,
   ReactiveFormbarGroup,
 } from '@ngx-formbar/reactive-forms';
-import { <%= classify(interfaceName) %> } from './<%= dasherize(interfaceName) %>.type';<% if (hasViewProviderHelper) { %>
+import { <%= classify(interfaceName) %> } from './<%= interfaceFileName %>';<% if (hasViewProviderHelper) { %>
 import { <%= viewProviderIdentifier %> } from '<%= viewProviderHelperPath %>';<% } %>
 
 @Component({
   selector: 'app-<%= dasherize(componentName) %>',
   imports: [ReactiveFormsModule, NgxFbControlOutlet],
-  templateUrl: './<%= dasherize(componentName) %>.component.html',
+  templateUrl: './<%= componentFileName %>.html',
   viewProviders: <% if (hasViewProviderHelper) { %><%= viewProviderIdentifier %><% } else { %>[
     {
       provide: ControlContainer,

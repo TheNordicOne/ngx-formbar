@@ -6,7 +6,7 @@ Starting with v2.0.0 of `@ngx-formbar/reactive-forms`, controls are plain Angula
 
 ## Scaffolding via Schematics
 
-Run the Angular schematic to scaffold a new control and register it. The schematic produces an interface-based component that already implements `ReactiveFormbarControl<T>`:
+Run the Angular schematic to scaffold a new control and register it. The schematic produces a component that already implements `ReactiveFormbarControl<T>`:
 
 ```bash
 ng generate @ngx-formbar/schematics:control --key <control-key> [--name <ComponentName>]

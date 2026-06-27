@@ -16,8 +16,10 @@ export interface ScaffoldContext extends Schema {
   registrationType: RegistrationType;
   resolvedName: string;
   interfaceName: string;
+  interfaceFileName: string;
   componentName: string;
   componentClassName: string;
+  componentFileName: string;
   componentPath: string;
   componentFilePath: string;
   projectRoot: string;
