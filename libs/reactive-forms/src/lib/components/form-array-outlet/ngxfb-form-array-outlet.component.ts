@@ -30,6 +30,11 @@ import { ReactiveFormsModule } from '@angular/forms';
     ReactiveFormsModule,
   ],
   templateUrl: './ngxfb-form-array-outlet.component.html',
+  styles: `
+    :host {
+      display: contents;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgxFbFormArrayOutlet {
