@@ -14,6 +14,7 @@ import { NoteControl } from '@ngx-formbar/examples';
   styleUrl: './note-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
+    '[attr.data-testid]': 'testId()',
     '[style.--color]': 'color()',
     '[style.--background]': 'background()',
   },
