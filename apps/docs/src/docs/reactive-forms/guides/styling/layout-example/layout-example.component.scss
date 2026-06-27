@@ -1,0 +1,50 @@
+.layout-example {
+  display: grid;
+  gap: var(--form-spacing-lg);
+}
+
+.code-snippet {
+  margin: 0;
+}
+
+.layout-example__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--form-spacing-sm);
+}
+
+.layout-example__presets button {
+  padding: var(--form-spacing-sm) var(--form-spacing-md);
+  font-size: var(--form-input-font-size);
+  font-family: inherit;
+  color: var(--form-text);
+  background-color: var(--form-surface);
+  border: var(--form-input-border-width) solid var(--form-border);
+  border-radius: var(--form-input-border-radius);
+  cursor: pointer;
+}
+
+.layout-example__presets button.active {
+  color: var(--form-on-primary);
+  background-color: var(--form-primary);
+  border-color: var(--form-primary);
+}
+
+.stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 1.5rem;
+}
+

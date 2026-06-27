@@ -1,0 +1,29 @@
+:host {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+label {
+  font-size: var(--form-label-font-size);
+  font-weight: 500;
+  color: var(--form-text);
+}
+
+input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  box-sizing: border-box;
+  padding: var(--form-input-padding);
+  font-size: var(--form-input-font-size);
+  font-family: inherit;
+  color: var(--form-text);
+  background-color: var(--form-surface);
+  border: var(--form-input-border-width) solid var(--form-border);
+  border-radius: var(--form-input-border-radius);
+}
+
+input:focus-visible {
+  outline: 2px solid var(--form-focus-ring);
+  outline-offset: 1px;
+}

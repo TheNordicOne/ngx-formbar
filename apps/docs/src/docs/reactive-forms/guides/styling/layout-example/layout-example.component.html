@@ -1,0 +1,22 @@
+<div class="layout-example">
+  <div class="layout-example__presets" role="group" aria-label="Form layout">
+    @for (preset of presets; track preset.label) {
+      <button
+        type="button"
+        [class.active]="selected() === preset"
+        [attr.aria-pressed]="selected() === preset"
+        (click)="selected.set(preset)"
+      >
+        {{ preset.label }}
+      </button>
+    }
+  </div>
+
+  <ng-doc-code class="code-snippet" [html]="markup()"/>
+
+  <ng-doc-code class="code-snippet" [html]="css()"/>
+
+  <form class="demo-form" [formGroup]="form">
+    <ngxfb-form [class]="selected().className" [formConfig]="formContent" />
+  </form>
+</div>
