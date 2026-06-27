@@ -1,0 +1,8 @@
+<label>
+  {{ labelText() }}
+  <input
+    type="text"
+    [placeholder]="placeHolder() ?? ''"
+    [formControlName]="name()"
+  />
+</label>

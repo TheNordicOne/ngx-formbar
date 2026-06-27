@@ -18,14 +18,7 @@ export interface LayoutField extends NgxFbControl {
 @Component({
   selector: 'docs-styling-field',
   imports: [ReactiveFormsModule],
-  template: `
-    <label>{{ labelText() }}</label>
-    <input
-      type="text"
-      [placeholder]="placeHolder() ?? ''"
-      [formControlName]="name()"
-    />
-  `,
+  templateUrl: './layout-field.component.html',
   styleUrl: './layout-field.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: controlContainerViewProviders,
