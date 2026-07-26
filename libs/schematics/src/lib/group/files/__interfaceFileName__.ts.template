@@ -1,5 +1,5 @@
-import { NgxFbFormGroup } from '@ngx-formbar/core';
+import { NgxFbBaseContent, NgxFbFormGroup, NgxFbItem } from '@ngx-formbar/core';
 
-export interface <%= classify(interfaceName) %> extends NgxFbFormGroup {
+export interface <%= classify(interfaceName) %><T extends NgxFbBaseContent = NgxFbItem> extends NgxFbFormGroup<T> {
   type: '<%= key %>';
 }

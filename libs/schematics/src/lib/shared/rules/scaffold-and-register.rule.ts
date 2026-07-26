@@ -6,7 +6,7 @@ import {
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
 
-import { ScaffoldContext, Schema } from '../schema';
+import { ScaffoldContext, ScaffoldType, Schema } from '../schema';
 import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
@@ -23,13 +23,12 @@ import {
 } from '../constants';
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
+import { registerUnion } from './register-union.rule';
 import {
   getWorkspace,
   ProjectDefinition,
 } from '@schematics/angular/utility/workspace';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-
-type ScaffoldType = 'control' | 'group' | 'block' | 'array';
 
 const { classify, dasherize } = strings;
 
@@ -48,7 +47,11 @@ export function scaffoldAndRegister(options: Schema, type: ScaffoldType): Rule {
       context,
     );
 
-    return chain([createComponent(ruleContext), registerControl(ruleContext)]);
+    return chain([
+      createComponent(ruleContext),
+      registerControl(ruleContext),
+      registerUnion(ruleContext),
+    ]);
   };
 }
 
@@ -100,6 +103,8 @@ function buildScaffoldContext(
     ...viewProvider,
     registrationType:
       automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
+    registrationKind: type,
+    contentTypeReference: automationConfig?.schema?.type,
     resolvedName,
     componentPath,
     componentFilePath,
