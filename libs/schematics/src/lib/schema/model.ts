@@ -36,7 +36,10 @@ export type TypeNode =
   | { k: 'string' | 'number' | 'boolean' | 'null' | 'unknown' | 'any' }
   | { k: 'literal'; value: string | number | boolean }
   | { k: 'array'; items: TypeNode }
-  | { k: 'object'; properties: Property[]; index?: TypeNode }
+  /** `name` is set when the shape was declared, absent for an inline type literal. */
+  | { k: 'object'; name?: string; properties: Property[]; index?: TypeNode }
   | { k: 'union'; members: TypeNode[] }
   | { k: 'function' }
-  | { k: 'ref'; node: string };
+  | { k: 'ref'; node: string }
+  /** A back-reference to the enclosing `{ k: 'object' }` of the same name. */
+  | { k: 'cycle'; name: string };

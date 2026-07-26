@@ -34,6 +34,8 @@ interface Builder {
   docs: boolean;
   /** A Map, not a Record, so a miss is typed as `undefined` while building. */
   nodes: Map<string, FormNode>;
+  /** Every name that will become a node, collected before any node is built. */
+  nodeNames: Set<string>;
 }
 
 export function buildModel(
@@ -42,14 +44,49 @@ export function buildModel(
   coreRoot: string,
   docs: boolean,
 ): FormModel {
-  const builder: Builder = { checker, coreRoot, docs, nodes: new Map() };
-  const root = toTypeRef(type, checker, null);
+  const builder: Builder = {
+    checker,
+    coreRoot,
+    docs,
+    nodes: new Map(),
+    nodeNames: new Set(),
+  };
+  const root = toTypeRef(type, checker);
+
+  // Names are collected up front so a property referencing another node emits a
+  // reference no matter where that node sits in the union.
+  for (const member of unionMembers(type)) {
+    collectNodeName(member, builder);
+  }
 
   for (const member of unionMembers(type)) {
     addNode(member, builder);
   }
 
   return { root, nodes: Object.fromEntries(builder.nodes) };
+}
+
+function collectNodeName(type: Type, builder: Builder) {
+  const name = nodeName(type, builder.checker);
+
+  if (builder.nodeNames.has(name)) {
+    return;
+  }
+
+  builder.nodeNames.add(name);
+
+  const structural = STRUCTURAL_PROPERTIES[resolveKind(type, builder)];
+  const itemType = structural
+    ? structuralItemType(type, structural, builder)
+    : undefined;
+
+  if (!itemType) {
+    return;
+  }
+
+  for (const member of unionMembers(itemType)) {
+    collectNodeName(member, builder);
+  }
 }
 
 function addNode(type: Type, builder: Builder) {
@@ -79,7 +116,7 @@ function addNode(type: Type, builder: Builder) {
     .getProperties()
     .filter((symbol) => symbol.getName() !== 'type')
     .filter((symbol) => symbol.getName() !== structural)
-    .map((symbol) => toProperty(symbol, builder));
+    .map((symbol) => toProperty(symbol, builder, new Map()));
 }
 
 /**
@@ -171,6 +208,21 @@ function readChildren(
     return undefined;
   }
 
+  const itemType = structuralItemType(type, structural, builder);
+
+  if (!itemType) {
+    return undefined;
+  }
+
+  for (const member of unionMembers(itemType)) {
+    addNode(member, builder);
+  }
+
+  return toTypeRef(itemType, builder.checker);
+}
+
+/** A group holds its children behind an index signature, an array holds one row type. */
+function structuralItemType(type: Type, structural: string, builder: Builder) {
   const property = type.getProperty(structural);
 
   if (!property) {
@@ -178,28 +230,25 @@ function readChildren(
   }
 
   const propertyType = builder.checker.getTypeOfSymbol(property);
-  const itemType =
-    structural === 'controls'
-      ? (indexedValueType(propertyType, builder.checker) ?? propertyType)
-      : propertyType;
 
-  for (const member of unionMembers(itemType)) {
-    addNode(member, builder);
-  }
-
-  return toTypeRef(itemType, builder.checker, aliasName(itemType));
+  return structural === 'controls'
+    ? (indexedValueType(propertyType, builder.checker) ?? propertyType)
+    : propertyType;
 }
 
-function toProperty(symbol: TsSymbol, builder: Builder) {
+function toProperty(symbol: TsSymbol, builder: Builder, open: OpenTypes) {
   return {
     name: symbol.getName(),
     optional: (symbol.flags & SymbolFlags.Optional) !== 0,
     doc: builder.docs ? docOf(symbol, builder.checker) : undefined,
-    type: toTypeNode(builder.checker.getTypeOfSymbol(symbol), builder),
+    type: toTypeNode(builder.checker.getTypeOfSymbol(symbol), builder, open),
   };
 }
 
-function toTypeNode(type: Type, builder: Builder): TypeNode {
+/** Declared object types currently being expanded, mapped to the name a cycle reports. */
+type OpenTypes = ReadonlyMap<Type, string>;
+
+function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
   const { checker } = builder;
 
   // The intrinsic `boolean` is itself a `true | false` union, so it has to be
@@ -214,7 +263,7 @@ function toTypeNode(type: Type, builder: Builder): TypeNode {
       members: collapseBooleanArms(
         type.types
           .filter((member) => (member.flags & TypeFlags.Undefined) === 0)
-          .map((member) => toTypeNode(member, builder)),
+          .map((member) => toTypeNode(member, builder, open)),
       ),
     };
   }
@@ -258,23 +307,42 @@ function toTypeNode(type: Type, builder: Builder): TypeNode {
   if (checker.isArrayType(type)) {
     const items = checker.getIndexTypeOfType(type, IndexKind.Number);
     return items
-      ? { k: 'array', items: toTypeNode(items, builder) }
+      ? { k: 'array', items: toTypeNode(items, builder, open) }
       : { k: 'array', items: { k: 'unknown' } };
   }
 
-  const name = nodeName(type, checker);
+  const referenced = nodeName(type, checker);
 
-  if (builder.nodes.has(name)) {
-    return { k: 'ref', node: name };
+  if (builder.nodeNames.has(referenced)) {
+    return { k: 'ref', node: referenced };
   }
+
+  const cycled = open.get(type);
+
+  if (cycled !== undefined) {
+    return { k: 'cycle', name: cycled };
+  }
+
+  const name = declaredName(type, checker);
+  const nested = name === undefined ? open : new Map(open).set(type, name);
 
   return {
     k: 'object',
+    name,
     properties: type
       .getProperties()
-      .map((symbol) => toProperty(symbol, builder)),
-    index: indexSignatureType(type, checker, builder),
+      .map((symbol) => toProperty(symbol, builder, nested)),
+    index: indexSignatureType(type, checker, builder, nested),
   };
+}
+
+/** Inline type literals report the synthetic `__type`, so only declared shapes get a name. */
+function declaredName(type: Type, checker: TypeChecker) {
+  const symbolName = (type.aliasSymbol ?? type.getSymbol())?.getName();
+
+  return symbolName !== undefined && !symbolName.startsWith('__')
+    ? checker.typeToString(type)
+    : undefined;
 }
 
 /**
@@ -299,9 +367,9 @@ function isBooleanLiteralNode(node: TypeNode) {
   return node.k === 'literal' && typeof node.value === 'boolean';
 }
 
-function toTypeRef(type: Type, checker: TypeChecker, name: string | null) {
+function toTypeRef(type: Type, checker: TypeChecker) {
   return {
-    name: name ?? aliasName(type),
+    name: aliasName(type),
     members: unionMembers(type).map((member) => nodeName(member, checker)),
   };
 }
@@ -311,7 +379,7 @@ function nodeName(type: Type, checker: TypeChecker) {
   return checker.typeToString(type).replace(/<.*>$/, '');
 }
 
-function unionMembers(type: Type): Type[] {
+function unionMembers(type: Type) {
   return type.isUnion() ? type.types : [type];
 }
 
@@ -338,14 +406,14 @@ function indexSignatureType(
   type: Type,
   checker: TypeChecker,
   builder: Builder,
+  open: OpenTypes,
 ) {
   const valueType = indexedValueType(type, checker);
-  return valueType ? toTypeNode(valueType, builder) : undefined;
+  return valueType ? toTypeNode(valueType, builder, open) : undefined;
 }
 
 function indexedValueType(type: Type, checker: TypeChecker) {
-  const infos = checker.getIndexInfosOfType(type);
-  return infos.length > 0 ? infos[0].type : undefined;
+  return checker.getIndexInfosOfType(type).at(0)?.type;
 }
 
 function docOf(symbol: TsSymbol | undefined, checker: TypeChecker) {
