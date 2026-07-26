@@ -1,9 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
 import { Emitter, EmitPaths } from './define-emitter';
 import { loadFromPackage, loadFromPath } from './load';
+import { draft07Emitter, draft202012Emitter } from './json-schema/dialects';
 
-/** Task 6 appends the two built-in JSON Schema emitters here. */
-const BUILT_INS: Emitter[] = [];
+const BUILT_INS: Emitter[] = [draft202012Emitter, draft07Emitter];
 
 export function resolveEmitter(
   spec: string,

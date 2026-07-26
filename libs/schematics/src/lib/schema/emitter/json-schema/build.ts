@@ -1,0 +1,295 @@
+import { SchematicsException } from '@angular-devkit/schematics';
+import { FormModel, FormNode, Property, TypeNode, TypeRef } from '../../model';
+import { toJsonTypes } from '../../json-types';
+import { EmitOptions } from '../define-emitter';
+
+export interface Dialect {
+  id: string;
+  defsKeyword: '$defs' | 'definitions';
+}
+
+export const DRAFT_2020_12: Dialect = {
+  id: 'https://json-schema.org/draft/2020-12/schema',
+  defsKeyword: '$defs',
+};
+
+export const DRAFT_07: Dialect = {
+  id: 'http://json-schema.org/draft-07/schema#',
+  defsKeyword: 'definitions',
+};
+
+/** A schema is an object or, since draft-06, a bare boolean. */
+type JsonSchema = object | boolean;
+
+/** A declared object being expanded, and the definition name it was hoisted under. */
+interface Scope {
+  typeName: string;
+  defName: string;
+}
+
+/**
+ * Carries the definitions table so a recursive declared object can be hoisted
+ * into the definitions and referenced, rather than inlined forever.
+ */
+interface BuildContext {
+  dialect: Dialect;
+  options: EmitOptions;
+  defs: Record<string, JsonSchema>;
+  /** Outermost first: the declared objects currently being expanded. */
+  enclosing: Scope[];
+}
+
+export function buildJsonSchema(
+  model: FormModel,
+  dialect: Dialect,
+  options: EmitOptions,
+): object {
+  const defs: Record<string, JsonSchema> = {};
+  const ctx: BuildContext = { dialect, options, defs, enclosing: [] };
+  const rootName = model.root.name ?? 'FormContent';
+  const unions = collectUnions(model, rootName);
+
+  // Every name is claimed before any node is built, so a declared object inside
+  // one node cannot take a name a later node or a union still needs.
+  for (const node of Object.values(model.nodes)) {
+    defs[node.name] = {};
+  }
+
+  for (const name of Object.keys(unions)) {
+    defs[name] = {};
+  }
+
+  for (const [name, ref] of Object.entries(unions)) {
+    defs[name] = buildRef(ref, dialect);
+  }
+
+  for (const node of Object.values(model.nodes)) {
+    defs[node.name] = buildNode(node, ctx);
+  }
+
+  return {
+    $schema: dialect.id,
+    type: 'object',
+    properties: {
+      content: {
+        type: 'object',
+        additionalProperties: { $ref: refPath(rootName, dialect) },
+      },
+    },
+    required: ['content'],
+    additionalProperties: false,
+    [dialect.defsKeyword]: defs,
+  };
+}
+
+function buildNode(node: FormNode, ctx: BuildContext) {
+  const properties: Record<string, JsonSchema> = {
+    type:
+      node.typeLiteral === null
+        ? { type: 'string' }
+        : { const: node.typeLiteral },
+  };
+  const required = ['type'];
+
+  for (const property of node.properties) {
+    properties[property.name] = buildProperty(property, ctx);
+
+    if (!property.optional) {
+      required.push(property.name);
+    }
+  }
+
+  if (node.children) {
+    const childSchema = { $ref: refPath(childRefName(node), ctx.dialect) };
+
+    if (node.kind === 'group') {
+      properties['controls'] = {
+        type: 'object',
+        additionalProperties: childSchema,
+      };
+      required.push('controls');
+    }
+
+    if (node.kind === 'array') {
+      properties['rowControl'] = childSchema;
+      required.push('rowControl');
+    }
+  }
+
+  return withDoc(
+    {
+      type: 'object',
+      properties,
+      required,
+      additionalProperties: node.open,
+    },
+    node.doc,
+    ctx.options,
+  );
+}
+
+/**
+ * The root union plus every child union a group or an array points at. Each one
+ * needs a definition of its own, or the `$ref` `buildNode` emits dangles.
+ */
+function collectUnions(model: FormModel, rootName: string) {
+  const unions: Record<string, TypeRef> = { [rootName]: model.root };
+
+  for (const node of Object.values(model.nodes)) {
+    if (node.children) {
+      unions[childRefName(node)] = node.children;
+    }
+  }
+
+  return unions;
+}
+
+/** A named child union gets its own definition; an inline one is emitted under the node's name. */
+function childRefName(node: FormNode) {
+  return node.children?.name ?? `${node.name}Children`;
+}
+
+function buildRef(ref: TypeRef, dialect: Dialect) {
+  return {
+    anyOf: ref.members.map((member) => ({ $ref: refPath(member, dialect) })),
+  };
+}
+
+function buildProperty(property: Property, ctx: BuildContext) {
+  const projected = toJsonTypes(property.type);
+  // No JSON value satisfies a type that projects away entirely, so nothing is valid here.
+  const schema = projected === null ? false : buildType(projected, ctx);
+
+  return withDoc(schema, property.doc, ctx.options);
+}
+
+/**
+ * Every `TypeNode` variant is listed. Adding one must break the build here
+ * rather than fall through to a permissive `{}` that silently accepts anything.
+ */
+function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
+  switch (type.k) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'null':
+      return { type: type.k };
+    case 'literal':
+      return { const: type.value };
+    case 'array':
+      return { type: 'array', items: buildType(type.items, ctx) };
+    case 'union':
+      return { anyOf: type.members.map((member) => buildType(member, ctx)) };
+    case 'ref':
+      return { $ref: refPath(type.node, ctx.dialect) };
+    case 'cycle':
+      return { $ref: refPath(cycleDefName(type.name, ctx), ctx.dialect) };
+    case 'object':
+      return buildObject(type, ctx);
+    case 'function':
+      // `toJsonTypes` drops these, so only a hand-built model reaches this arm.
+      return false;
+    case 'unknown':
+    case 'any':
+      return {};
+  }
+}
+
+/**
+ * A declared object is hoisted into the definitions table and referenced, so a
+ * `{ k: 'cycle' }` pointing back at it resolves. The name is claimed before
+ * recursing, otherwise a self-referential shape would recurse forever.
+ *
+ * `name` comes from `checker.typeToString`, so it is not unique: two same-named
+ * interfaces in different files both print as `Options`, and `Record<string, X>`
+ * gets a name too. Each occurrence therefore gets its own definition, and a
+ * `cycle` binds to the lexically enclosing object rather than to whatever the
+ * flat table happens to hold under that name.
+ */
+function buildObject(
+  type: Extract<TypeNode, { k: 'object' }>,
+  ctx: BuildContext,
+) {
+  const { name } = type;
+
+  if (name === undefined) {
+    return buildObjectBody(type, ctx);
+  }
+
+  const defName = claimDefName(name, ctx);
+
+  ctx.enclosing.push({ typeName: name, defName });
+  ctx.defs[defName] = buildObjectBody(type, ctx);
+  ctx.enclosing.pop();
+
+  return { $ref: refPath(defName, ctx.dialect) };
+}
+
+function buildObjectBody(
+  type: Extract<TypeNode, { k: 'object' }>,
+  ctx: BuildContext,
+) {
+  const properties: Record<string, JsonSchema> = {};
+  const required: string[] = [];
+
+  for (const property of type.properties) {
+    properties[property.name] = buildProperty(property, ctx);
+
+    if (!property.optional) {
+      required.push(property.name);
+    }
+  }
+
+  return {
+    type: 'object',
+    properties,
+    required,
+    // An index signature that projects to nothing leaves no valid extra property.
+    additionalProperties: type.index ? buildType(type.index, ctx) : false,
+  };
+}
+
+/** The innermost match wins, so a nested shape reusing a name shadows the outer one. */
+function cycleDefName(name: string, ctx: BuildContext) {
+  const scope = [...ctx.enclosing]
+    .reverse()
+    .find((entry) => entry.typeName === name);
+
+  if (!scope) {
+    throw new SchematicsException(
+      `The type ${name} is referenced as a cycle but no enclosing shape of that name is being expanded.`,
+    );
+  }
+
+  return scope.defName;
+}
+
+function claimDefName(preferred: string, ctx: BuildContext) {
+  let name = preferred;
+  let suffix = 2;
+
+  while (name in ctx.defs) {
+    name = `${preferred}${String(suffix)}`;
+    suffix += 1;
+  }
+
+  ctx.defs[name] = {};
+
+  return name;
+}
+
+function withDoc(
+  schema: JsonSchema,
+  doc: string | undefined,
+  options: EmitOptions,
+) {
+  if (!options.docs || doc === undefined || typeof schema !== 'object') {
+    return schema;
+  }
+
+  return { ...schema, description: doc };
+}
+
+function refPath(name: string, dialect: Dialect) {
+  return `#/${dialect.defsKeyword}/${name}`;
+}

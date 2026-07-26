@@ -100,6 +100,15 @@ export default defineEmitter({
     expect(tree.readContent('/out.txt')).toBe('text,group');
   });
 
+  it('resolves each built-in by name', () => {
+    expect(resolveEmitter('json-schema-2020-12', tree, PATHS).name).toBe(
+      'json-schema-2020-12',
+    );
+    expect(resolveEmitter('json-schema-draft-07', tree, PATHS).name).toBe(
+      'json-schema-draft-07',
+    );
+  });
+
   it('throws for an unknown specifier', () => {
     expect(() => resolveEmitter('nope', tree, PATHS)).toThrow(/nope/);
   });
