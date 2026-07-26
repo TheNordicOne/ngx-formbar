@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NgxFormbarSchema",
+  "title": "Generate Schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": { "$source": "projectName" }
+    },
+    "schematicsConfig": {
+      "type": "string",
+      "description": "Path of the configuration that is to be used by this schematic"
+    },
+    "type": {
+      "type": "string",
+      "description": "Reference to the content union type, as 'path/to/file.ts#ExportName', relative to the project source root."
+    },
+    "emitter": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Run only the configured emitter entries whose 'use' matches one of these values."
+    },
+    "output": {
+      "type": "string",
+      "description": "Override the output path of a single configured emitter entry."
+    }
+  }
+}
