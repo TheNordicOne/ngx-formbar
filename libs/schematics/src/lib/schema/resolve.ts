@@ -1,5 +1,5 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
-import { SourceFile, Type, TypeChecker } from 'typescript';
+import { SourceFile, Type, TypeChecker, TypeFlags } from 'typescript';
 import { createTreeProgram } from './program';
 import { SchemaContext } from './schema';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
@@ -25,11 +25,34 @@ export function resolveContentType(
     throw new SchematicsException(`Could not parse ${absolutePath}`);
   }
 
+  const type = findExportedType(checker, sourceFile, exportName, absolutePath);
+
+  assertNonEmptyUnion(type, exportName, filePath);
+
   return {
-    type: findExportedType(checker, sourceFile, exportName, absolutePath),
+    type,
     checker,
     coreRoot: resolveCoreRoot(program.getSourceFiles()),
   };
+}
+
+/**
+ * A freshly-seeded content union (`export type AppContent = never;`) has no
+ * members yet, and an untouched union imports nothing from
+ * `@ngx-formbar/core`, so core never enters the program and
+ * `resolveCoreRoot` below would fail first with an unrelated "is it
+ * installed?" message. Checking for `never` here, before that lookup runs,
+ * is what lets a fresh consumer see a message that actually names their
+ * problem instead of one about a missing dependency they do have.
+ */
+function assertNonEmptyUnion(type: Type, exportName: string, filePath: string) {
+  if ((type.flags & TypeFlags.Never) === 0) {
+    return;
+  }
+
+  throw new SchematicsException(
+    `"${exportName}" in ${filePath} has no members yet, so there is nothing to build a schema from. Scaffold a control, group, block, or array to add to the union, or add members to it by hand.`,
+  );
 }
 
 function findExportedType(

@@ -14,8 +14,9 @@ import {
 } from '../../shared/constants';
 
 /**
- * Seeds an empty content union so the `schema` schematic and the scaffolds
- * from Task 8 have somewhere to read from and write to out of the box.
+ * Seeds an empty content union so the `control`/`group`/`block`/`array`
+ * scaffolds have somewhere to add each generated config interface, and the
+ * `schema` schematic has somewhere to read the union from, out of the box.
  */
 export function createContentTypeFile(ruleContext: RuleContext): Rule {
   return (_, context) => {
