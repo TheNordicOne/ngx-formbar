@@ -13,6 +13,11 @@ import {
   DEFAULT_REGISTRATIONS_PATH,
   NgxFormbarAutomationConfig,
 } from '@ngx-formbar/setup';
+import {
+  DEFAULT_CONTENT_TYPE_EXPORT_NAME,
+  DEFAULT_CONTENT_TYPE_FILE_NAME,
+  DEFAULT_CONTENT_TYPE_PATH,
+} from '../../shared/constants';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (_, context) => {
@@ -46,6 +51,12 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     if (useHelper) {
       schematicConfig.viewProviderHelperPath = helperPath;
     }
+
+    schematicConfig.schema = {
+      type: `${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
+      docs: true,
+      emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+    };
 
     return mergeWith(
       apply(url('./ng-add/files/schematics-config'), [

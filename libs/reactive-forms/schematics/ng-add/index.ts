@@ -28,6 +28,7 @@ import { createTokenRegistrationFiles } from './rules/create-token-registration-
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
 import { createFormbarRegistrationsConfig } from './rules/create-formbar-registration-config.rule';
+import { createContentTypeFile } from './rules/create-content-type-file.rule';
 
 // noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {
@@ -88,6 +89,7 @@ export function ngAdd(options: Schema): Rule {
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),
       createHelperFiles(ruleContext),
+      createContentTypeFile(ruleContext),
       createSchematicsConfig(ruleContext),
       updateSchematicsConfig(ruleContext),
       updateAppConfig(ruleContext),

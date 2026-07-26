@@ -709,4 +709,25 @@ describe('ng-add schematic', () => {
       });
     });
   });
+
+  it('seeds an empty content union and the schema config', async () => {
+    const result = await runner.runSchematic('ng-add', { project: 'test-app' }, appTree);
+
+    expect(result.exists('/projects/test-app/src/app/types/content.type.ts')).toBe(true);
+    expect(
+      result.readText('/projects/test-app/src/app/types/content.type.ts'),
+    ).toContain('export type AppContent = never;');
+
+    const config = JSON.parse(
+      result.readText('/projects/test-app/src/app/formbar-schematic.config.json'),
+    ) as NgxFormbarAutomationConfig;
+
+    expect(config.schema).toEqual({
+      type: 'app/types/content.type.ts#AppContent',
+      docs: true,
+      emitters: [
+        { use: 'json-schema-2020-12', output: 'form.schema.json' },
+      ],
+    });
+  });
 });
