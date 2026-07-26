@@ -7,7 +7,11 @@ export interface EmitPaths {
   workspaceRoot: string;
   /** Tree-relative project source root, e.g. `projects/app/src`. */
   projectRoot: string;
-  /** Output path configured for this entry, or null when the entry sets none. */
+  /**
+   * Tree path to write to, already resolved against the project root, or
+   * null when the entry sets none. An emitter writes here as-is; it must not
+   * re-apply the project-relative convention itself.
+   */
   output: string | null;
 }
 

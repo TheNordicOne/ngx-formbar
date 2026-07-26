@@ -26,7 +26,12 @@ const MODEL: FormModel = {
       open: false,
       doc: 'A text input.',
       properties: [
-        { name: 'label', optional: true, type: { k: 'string' } },
+        {
+          name: 'label',
+          optional: true,
+          doc: 'The visible label.',
+          type: { k: 'string' },
+        },
         {
           name: 'hidden',
           optional: true,
@@ -90,6 +95,16 @@ describe('buildJsonSchema', () => {
     expect(validate(INVALID)).toBe(false);
   });
 
+  it('accepts a config carrying $schema and rejects an unknown root key', () => {
+    const ajv = new Ajv2020({ strict: false });
+    const validate = ajv.compile(
+      buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate({ $schema: './form.schema.json', ...VALID })).toBe(true);
+    expect(validate({ ...VALID, extra: 'nope' })).toBe(false);
+  });
+
   it('uses the dialect keywords', () => {
     const modern = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true });
     const legacy = buildJsonSchema(MODEL, DRAFT_07, { docs: true });
@@ -119,10 +134,38 @@ describe('buildJsonSchema', () => {
     );
   });
 
+  it('describes a node and a documented property when docs are enabled', () => {
+    const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true });
+
+    expect(at(document, '$defs', 'TextControl', 'description')).toBe(
+      'A text input.',
+    );
+    expect(
+      at(
+        document,
+        '$defs',
+        'TextControl',
+        'properties',
+        'label',
+        'description',
+      ),
+    ).toBe('The visible label.');
+  });
+
   it('omits descriptions when docs are disabled', () => {
     const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: false });
 
     expect(at(document, '$defs', 'TextControl', 'description')).toBeUndefined();
+    expect(
+      at(
+        document,
+        '$defs',
+        'TextControl',
+        'properties',
+        'label',
+        'description',
+      ),
+    ).toBeUndefined();
   });
 
   it('hoists a recursive declared object into $defs and validates nesting', () => {
@@ -180,6 +223,11 @@ describe('buildJsonSchema', () => {
         },
       }),
     ).toBe(false);
+    expect(
+      validate({
+        content: { rows: { type: 'array', rowControl: { type: 'nope' } } },
+      }),
+    ).toBe(false);
   });
 
   it('keeps two same-named shapes apart', () => {
@@ -228,6 +276,33 @@ describe('buildJsonSchema', () => {
         },
       }),
     ).toBe(false);
+  });
+
+  it('throws when a union alias collides with a node name', () => {
+    const colliding: FormModel = {
+      root: { name: 'AppContent', members: ['Section', 'Rows'] },
+      nodes: {
+        Section: {
+          name: 'Section',
+          kind: 'group',
+          typeLiteral: 'group',
+          open: false,
+          properties: [],
+          children: { name: 'Rows', members: ['Rows'] },
+        },
+        Rows: {
+          name: 'Rows',
+          kind: 'control',
+          typeLiteral: 'rows',
+          open: false,
+          properties: [],
+        },
+      },
+    };
+
+    expect(() =>
+      buildJsonSchema(colliding, DRAFT_2020_12, { docs: true }),
+    ).toThrow(/Rows/);
   });
 
   it('rejects a cycle that has no enclosing shape', () => {
@@ -280,6 +355,16 @@ describe('the built-in emitters', () => {
       buildJsonSchema(MODEL, DRAFT_07, { docs: true }),
     );
   });
+
+  it('forwards the emit options instead of hardcoding them', async () => {
+    const tree = new UnitTestTree(new EmptyTree());
+
+    await draft202012Emitter.emit(MODEL, context(tree, PATHS, { docs: false }));
+
+    expect(
+      JSON.parse(tree.readContent('projects/test-app/src/form.schema.json')),
+    ).toEqual(buildJsonSchema(MODEL, DRAFT_2020_12, { docs: false }));
+  });
 });
 
 /** Walks the emitted document, which is deliberately typed only as an object. */
@@ -298,10 +383,14 @@ function at(value: unknown, ...path: string[]): unknown {
   return current;
 }
 
-function context(tree: UnitTestTree, paths: EmitPaths): EmitContext {
+function context(
+  tree: UnitTestTree,
+  paths: EmitPaths,
+  options: EmitContext['options'] = { docs: true },
+): EmitContext {
   return {
     tree,
-    options: { docs: true },
+    options,
     logger: new logging.NullLogger(),
     paths,
   };
