@@ -150,6 +150,38 @@ export type AppContent = TextControl;
     ).rejects.toThrow(/--emitter/);
   });
 
+  it('applies --output to the emitter selected by --emitter', async () => {
+    addCoreStub(tree);
+    tree.create(
+      app('types/content.type.ts'),
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+    );
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: {
+        type: 'app/types/content.type.ts#AppContent',
+        emitters: [
+          { use: 'json-schema-2020-12', output: 'form.schema.json' },
+          { use: 'json-schema-draft-07', output: 'form.draft-07.json' },
+        ],
+      },
+    });
+
+    const result = await runner.runSchematic(
+      'schema',
+      {
+        project: 'test-app',
+        emitter: ['json-schema-2020-12'],
+        output: 'custom.json',
+      },
+      tree,
+    );
+
+    expect(result.exists('/projects/test-app/src/custom.json')).toBe(true);
+  });
+
   it('runs only the emitters named by --emitter', async () => {
     addCoreStub(tree);
     tree.create(
