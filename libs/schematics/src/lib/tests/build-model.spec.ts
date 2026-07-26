@@ -248,6 +248,32 @@ export type AppContent = MetaControl;
     });
   });
 
+  it('rejects a cycle that closes on an anonymous intersection', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface Marker { tag: string; }
+export interface Inter { self: Inter & Marker; }
+export interface HolderControl extends NgxFbControl { type: 'holder'; a: Inter & Marker; }
+export type AppContent = HolderControl;
+`,
+      ),
+    ).rejects.toThrow('Property "self" cycles through the anonymous type');
+  });
+
+  it('rejects a named type whose cycle closes on an anonymous type', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface Marker { tag: string; }
+export interface Inter { self: Inter & Marker; }
+export interface HolderControl extends NgxFbControl { type: 'holder'; c: Inter; }
+export type AppContent = HolderControl;
+`,
+      ),
+    ).rejects.toThrow('Property "self" cycles through the anonymous type');
+  });
+
   it('rejects a union member that extends no core base type', async () => {
     await expect(
       modelFor(
