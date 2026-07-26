@@ -1,20 +1,50 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
+import { join, posix, resolve } from 'node:path';
 import { runInThisContext } from 'node:vm';
-import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
+import {
+  flattenDiagnosticMessageText,
+  ModuleKind,
+  ScriptTarget,
+  transpileModule,
+} from 'typescript';
 import { SCHEMATICS_PACKAGE_NAME } from '../../shared/constants';
 import { toJsonTypes } from '../json-types';
 import { defineEmitter, Emitter } from './define-emitter';
 
 const RELATIVE_CANDIDATES = ['', '.ts', '.js', '/index.ts', '/index.js'];
 
+/** Names CommonJS interop probes on every module it requires; their absence is the answer. */
+const INTEROP_KEYS = ['__esModule', 'default'];
+
 /**
  * The runtime surface an emitter imports from this package. Serving it from the
  * running process keeps `defineEmitter` a single instance whatever the consumer's
  * install layout resolves to, so anything emitters may call must be listed here.
+ * `emitter-exports.spec.ts` fails when a new runtime export is neither listed here
+ * nor explicitly withheld.
  */
-const OWN_EXPORTS: Record<string, unknown> = { defineEmitter, toJsonTypes };
+export const OWN_EXPORTS = { defineEmitter, toJsonTypes };
+
+/**
+ * Narrowing the package down to `OWN_EXPORTS` is otherwise silent: an unlisted
+ * import would be `undefined` and fail somewhere unrelated. The trap names it.
+ */
+const SERVED_EXPORTS = new Proxy<Record<string, unknown>>(OWN_EXPORTS, {
+  get(target, key) {
+    if (typeof key === 'symbol' || INTEROP_KEYS.includes(key)) {
+      return undefined;
+    }
+
+    if (key in target) {
+      return target[key];
+    }
+
+    throw new SchematicsException(
+      `"${key}" is exported by ${SCHEMATICS_PACKAGE_NAME} but is not available to emitters.`,
+    );
+  },
+});
 
 /**
  * The two path spaces an emitter is loaded across: emitter sources are read from the
@@ -25,17 +55,34 @@ export interface LoadHost {
   workspaceRoot: string;
 }
 
+/** Node's module record, reduced to the part the CommonJS wrapper is handed. */
+interface ModuleRecord {
+  exports: unknown;
+}
+
+interface LoadContext {
+  host: LoadHost;
+  /**
+   * Node's module cache, per load. Without it a module imported from two emitter
+   * files is instantiated twice, and a cycle between two files recurses forever
+   * instead of seeing the partial exports Node would hand it.
+   */
+  modules: Map<string, ModuleRecord>;
+}
+
 type ModuleWrapper = (
   exports: unknown,
   require: (specifier: string) => unknown,
-  module: { exports: unknown },
+  module: ModuleRecord,
   filename: string,
   directory: string,
 ) => void;
 
 /** Loads a `.ts` emitter by transpiling it with the peer TypeScript, then evaluating it. */
 export function loadFromPath(host: LoadHost, absolutePath: string): Emitter {
-  return toEmitter(loadModule(host, absolutePath), absolutePath);
+  const context: LoadContext = { host, modules: new Map() };
+
+  return toEmitter(loadModule(context, absolutePath), absolutePath);
 }
 
 export function loadFromPackage(
@@ -43,69 +90,108 @@ export function loadFromPackage(
   workspaceRoot: string,
 ): Emitter {
   const [packageName, exportName] = specifier.split('#');
-  const loaded: unknown = requireFrom(workspaceRoot)(packageName);
+  const nodeRequire = createRequire(resolve(workspaceRoot, 'package.json'));
+  const loaded: unknown = nodeRequire(packageName);
 
   return toEmitter(exportName ? pick(loaded, exportName) : loaded, specifier);
 }
 
-function loadModule(host: LoadHost, absolutePath: string): unknown {
-  const source = host.tree.read(absolutePath);
+function loadModule(context: LoadContext, absolutePath: string) {
+  const cached = context.modules.get(absolutePath);
+
+  if (cached) {
+    return cached.exports;
+  }
+
+  const source = context.host.tree.read(absolutePath);
 
   if (!source) {
     throw new SchematicsException(`Emitter file not found: ${absolutePath}`);
   }
 
-  const text = source.toString('utf-8');
-  const javaScript = absolutePath.endsWith('.ts')
-    ? transpileModule(text, {
-        compilerOptions: {
-          module: ModuleKind.CommonJS,
-          target: ScriptTarget.ES2022,
-        },
-        fileName: absolutePath,
-      }).outputText
-    : text;
+  const javaScript = compile(source.toString('utf-8'), absolutePath);
+  const record: ModuleRecord = { exports: {} };
 
-  return evaluate(host, javaScript, absolutePath);
+  // Cached before evaluation so a cyclic import resolves to the partial exports.
+  context.modules.set(absolutePath, record);
+  evaluate(context, record, javaScript, absolutePath);
+
+  return record.exports;
+}
+
+/**
+ * `.js` siblings are already CommonJS and pass through untouched. `esModuleInterop`
+ * matches what the generated workspace tsconfig implies, so a default import that
+ * type-checks in the consumer's editor is not `undefined` at emit time.
+ */
+function compile(text: string, absolutePath: string) {
+  if (!absolutePath.endsWith('.ts')) {
+    return text;
+  }
+
+  const { outputText, diagnostics } = transpileModule(text, {
+    compilerOptions: {
+      module: ModuleKind.CommonJS,
+      target: ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+    fileName: absolutePath,
+    reportDiagnostics: true,
+  });
+
+  const failure = diagnostics?.at(0);
+
+  if (failure) {
+    throw new SchematicsException(
+      `Emitter ${absolutePath} failed to compile: ${flattenDiagnosticMessageText(failure.messageText, ' ')}`,
+    );
+  }
+
+  return outputText;
 }
 
 /**
  * Wraps the transpiled source the way Node wraps a CommonJS module and runs it.
  * Relative specifiers are served from the Tree, so a multi-file emitter works and
  * sees files a chained schematic has written but not yet flushed to disk. Bare
- * specifiers fall through to Node resolution from the workspace root, because the
- * emitter's own path exists only in the Tree and resolves nothing on disk.
+ * specifiers fall through to Node resolution on disk, because the emitter's own
+ * path exists only in the Tree and resolves nothing there.
  */
-function evaluate(host: LoadHost, javaScript: string, filename: string) {
-  const shim: { exports: unknown } = { exports: {} };
-  const nodeRequire = requireFrom(host.workspaceRoot);
-
-  const localRequire = (specifier: string): unknown => {
+function evaluate(
+  context: LoadContext,
+  record: ModuleRecord,
+  javaScript: string,
+  filename: string,
+) {
+  function localRequire(specifier: string) {
     if (specifier === SCHEMATICS_PACKAGE_NAME) {
-      return OWN_EXPORTS;
+      return SERVED_EXPORTS;
     }
 
-    if (!specifier.startsWith('.')) {
-      const resolved: unknown = nodeRequire(specifier);
-      return resolved;
+    if (specifier.startsWith('.')) {
+      const path = resolveInTree(context.host.tree, filename, specifier);
+      return loadModule(context, path);
     }
 
-    return loadModule(host, resolveInTree(host.tree, filename, specifier));
-  };
+    // Two steps on purpose: a `require` from `createRequire` returns `any`, which
+    // `@typescript-eslint/no-unsafe-return` rejects when returned directly.
+    const resolved: unknown = requireFrom(context.host, filename)(specifier);
+    return resolved;
+  }
 
   // `runInThisContext` is untyped; the signature is fixed by the wrapper compiled here.
-  const wrapped = runInThisContext(
+  const wrapped: unknown = runInThisContext(
     `(function (exports, require, module, __filename, __dirname) {${javaScript}\n})`,
     { filename },
-  ) as ModuleWrapper;
+  );
+  const run = wrapped as ModuleWrapper;
 
-  wrapped(shim.exports, localRequire, shim, filename, dirname(filename));
-
-  return shim.exports;
+  run(record.exports, localRequire, record, filename, posix.dirname(filename));
 }
 
+/** Tree paths are virtual and '/'-rooted on every platform, so `posix` walks them. */
 function resolveInTree(tree: Tree, filename: string, specifier: string) {
-  const base = resolve(dirname(filename), specifier);
+  const base = posix.resolve(posix.dirname(filename), specifier);
   const found = RELATIVE_CANDIDATES.map((suffix) => `${base}${suffix}`).find(
     (candidate) => tree.exists(candidate),
   );
@@ -119,8 +205,14 @@ function resolveInTree(tree: Tree, filename: string, specifier: string) {
   return found;
 }
 
-function requireFrom(workspaceRoot: string) {
-  return createRequire(resolve(workspaceRoot, 'package.json'));
+/**
+ * Tree paths are '/'-rooted at `workspaceRoot`, so joining the two maps the emitter's
+ * directory into real-path space. Anchoring resolution there lets a project-local
+ * `node_modules` win, instead of only what a monorepo happened to hoist to the root.
+ * `createRequire` never checks that the anchor exists.
+ */
+function requireFrom(host: LoadHost, filename: string) {
+  return createRequire(join(host.workspaceRoot, filename));
 }
 
 function pick(loaded: unknown, exportName: string) {
