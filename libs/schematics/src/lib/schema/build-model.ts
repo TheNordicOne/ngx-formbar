@@ -413,7 +413,29 @@ function nodeName(type: Type, checker: TypeChecker) {
 }
 
 function unionMembers(type: Type) {
-  return type.isUnion() ? type.types : [type];
+  return (type.isUnion() ? type.types : [type]).map(toDeclaredNode);
+}
+
+/**
+ * `NgxFbArray` narrows its row as `T & { hideStrategy?: 'keep' }`, so every
+ * member of an array's row union arrives as an intersection: no symbol of its
+ * own, no declaration, and a name that prints the whole intersection. The
+ * declared interface in it is the node; the narrowing rides on a property that
+ * node already declares. An intersection of two declared interfaces is left
+ * alone, so `resolveKind` reports it rather than picking one arm silently.
+ */
+function toDeclaredNode(type: Type) {
+  if (!type.isIntersection()) {
+    return type;
+  }
+
+  const declared = type.types.filter(isDeclaredInterface);
+
+  return declared.length === 1 ? declared[0] : type;
+}
+
+function isDeclaredInterface(type: Type) {
+  return type.getSymbol()?.declarations?.some(isInterfaceDeclaration) === true;
 }
 
 function aliasName(type: Type) {

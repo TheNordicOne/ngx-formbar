@@ -145,6 +145,16 @@ describe('buildModel', () => {
       );
     });
 
+    it('resolves an array row through the narrowing core applies to it', () => {
+      // `NgxFbArray` types its row as `T & { hideStrategy?: 'keep' }`, so every
+      // member of the row union arrives as an intersection with no declaration
+      // of its own.
+      expect(model.nodes['RowArray'].children?.members).toEqual(
+        model.root.members,
+      );
+      expect(Object.keys(model.nodes)).toEqual(model.root.members);
+    });
+
     it('excludes structural and discriminant properties', () => {
       const names = model.nodes['GroupControl'].properties.map((p) => p.name);
 
@@ -284,5 +294,17 @@ export type AppContent = TextControl | Rogue;
 `,
       ),
     ).rejects.toThrow('Rogue does not extend a @ngx-formbar/core base type.');
+  });
+
+  it('rejects a union member built from two declared interfaces', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface Extra { extra?: string; }
+export type AppContent = TextControl & Extra;
+`,
+      ),
+    ).rejects.toThrow('does not extend a @ngx-formbar/core base type.');
   });
 });

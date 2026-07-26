@@ -59,10 +59,11 @@ export interface NgxFbBaseContent { type: string; hidden?: Expression<boolean> |
 export interface NgxFbAbstractControl extends NgxFbBaseContent {
   validators?: string[];
   disabled?: Expression<boolean> | boolean;
+  hideStrategy?: 'keep' | 'remove';
 }
 export interface NgxFbControl extends NgxFbAbstractControl { label?: string; defaultValue?: unknown; }
 export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { controls: Record<string, T>; }
-export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { rowControl: T; }
+export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { rowControl: T & { hideStrategy?: 'keep' }; }
 export interface NgxFbBlock extends NgxFbBaseContent { isControl: false; [key: string]: unknown; }
 export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
 export interface NgxFbForm<C extends NgxFbBaseContent = NgxFbItem> { content: Record<string, C>; }
