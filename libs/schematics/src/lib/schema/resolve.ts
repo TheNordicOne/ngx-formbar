@@ -1,23 +1,9 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import { SourceFile, Type, TypeChecker } from 'typescript';
-import { createTreeProgram, normalizePath } from './program';
+import { createTreeProgram } from './program';
 import { SchemaContext } from './schema';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
-
-export function parseTypeReference(reference: string): {
-  filePath: string;
-  exportName: string;
-} {
-  const [filePath, exportName] = reference.split('#');
-
-  if (!filePath || !exportName) {
-    throw new SchematicsException(
-      `Invalid type reference "${reference}". Expected "path/to/file.ts#ExportName".`,
-    );
-  }
-
-  return { filePath, exportName };
-}
+import { normalizePath, parseTypeReference } from '../shared/type-reference';
 
 export function resolveContentType(
   tree: Tree,
