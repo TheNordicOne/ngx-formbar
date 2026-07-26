@@ -36,6 +36,24 @@ describe('schema schematic', () => {
     ).rejects.toThrow(/No content type configured/);
   });
 
+  it('fails with a helpful message when the content union is empty', async () => {
+    addCoreStub(tree);
+    tree.create(
+      app('types/content.type.ts'),
+      'export type AppContent = never;\n',
+    );
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: {
+        type: 'app/types/content.type.ts#AppContent',
+        emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+      },
+    });
+
+    await expect(
+      runner.runSchematic('schema', { project: 'test-app' }, tree),
+    ).rejects.toThrow(/"AppContent".*no members.*scaffold/is);
+  });
+
   it('writes one file per configured emitter', async () => {
     addCoreStub(tree);
     tree.create(
