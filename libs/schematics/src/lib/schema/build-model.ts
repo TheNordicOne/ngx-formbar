@@ -237,18 +237,37 @@ function structuralItemType(type: Type, structural: string, builder: Builder) {
 }
 
 function toProperty(symbol: TsSymbol, builder: Builder, open: OpenTypes) {
+  const name = symbol.getName();
+
   return {
-    name: symbol.getName(),
+    name,
     optional: (symbol.flags & SymbolFlags.Optional) !== 0,
     doc: builder.docs ? docOf(symbol, builder.checker) : undefined,
-    type: toTypeNode(builder.checker.getTypeOfSymbol(symbol), builder, open),
+    type: toTypeNode(builder.checker.getTypeOfSymbol(symbol), builder, {
+      open,
+      property: name,
+    }),
   };
 }
 
-/** Declared object types currently being expanded, mapped to the name a cycle reports. */
-type OpenTypes = ReadonlyMap<Type, string>;
+/**
+ * Every object type currently being expanded, mapped to the name a cycle reports.
+ * Anonymous types map to `undefined`: they still have to be tracked, or a loop that
+ * closes on one never terminates, but they cannot be named in the model.
+ */
+type OpenTypes = ReadonlyMap<Type, string | undefined>;
 
-function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
+interface Expansion {
+  open: OpenTypes;
+  /** The property whose type is being expanded, named in cycle diagnostics. */
+  property: string;
+}
+
+function toTypeNode(
+  type: Type,
+  builder: Builder,
+  expansion: Expansion,
+): TypeNode {
   const { checker } = builder;
 
   // The intrinsic `boolean` is itself a `true | false` union, so it has to be
@@ -263,7 +282,7 @@ function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
       members: collapseBooleanArms(
         type.types
           .filter((member) => (member.flags & TypeFlags.Undefined) === 0)
-          .map((member) => toTypeNode(member, builder, open)),
+          .map((member) => toTypeNode(member, builder, expansion)),
       ),
     };
   }
@@ -307,7 +326,7 @@ function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
   if (checker.isArrayType(type)) {
     const items = checker.getIndexTypeOfType(type, IndexKind.Number);
     return items
-      ? { k: 'array', items: toTypeNode(items, builder, open) }
+      ? { k: 'array', items: toTypeNode(items, builder, expansion) }
       : { k: 'array', items: { k: 'unknown' } };
   }
 
@@ -317,14 +336,12 @@ function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
     return { k: 'ref', node: referenced };
   }
 
-  const cycled = open.get(type);
-
-  if (cycled !== undefined) {
-    return { k: 'cycle', name: cycled };
+  if (expansion.open.has(type)) {
+    return cycleNode(type, expansion, checker);
   }
 
   const name = declaredName(type, checker);
-  const nested = name === undefined ? open : new Map(open).set(type, name);
+  const nested = new Map(expansion.open).set(type, name);
 
   return {
     k: 'object',
@@ -332,8 +349,24 @@ function toTypeNode(type: Type, builder: Builder, open: OpenTypes): TypeNode {
     properties: type
       .getProperties()
       .map((symbol) => toProperty(symbol, builder, nested)),
-    index: indexSignatureType(type, checker, builder, nested),
+    index: indexSignatureType(type, checker, builder, {
+      ...expansion,
+      open: nested,
+    }),
   };
+}
+
+/** An anonymous shape has no name to point back at, so the cycle cannot be expressed. */
+function cycleNode(type: Type, expansion: Expansion, checker: TypeChecker) {
+  const name = expansion.open.get(type);
+
+  if (name === undefined) {
+    throw new SchematicsException(
+      `Property "${expansion.property}" cycles through the anonymous type ${checker.typeToString(type)}. Extract it into a named interface or type alias so the schema can reference it.`,
+    );
+  }
+
+  return { k: 'cycle', name } satisfies TypeNode;
 }
 
 /** Inline type literals report the synthetic `__type`, so only declared shapes get a name. */
@@ -406,10 +439,10 @@ function indexSignatureType(
   type: Type,
   checker: TypeChecker,
   builder: Builder,
-  open: OpenTypes,
+  expansion: Expansion,
 ) {
   const valueType = indexedValueType(type, checker);
-  return valueType ? toTypeNode(valueType, builder, open) : undefined;
+  return valueType ? toTypeNode(valueType, builder, expansion) : undefined;
 }
 
 function indexedValueType(type: Type, checker: TypeChecker) {
