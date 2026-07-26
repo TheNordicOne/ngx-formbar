@@ -1,7 +1,8 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import { SourceFile, Type, TypeChecker } from 'typescript';
-import { createTreeProgram } from './program';
+import { createTreeProgram, normalizePath } from './program';
 import { SchemaContext } from './schema';
+import { CORE_PACKAGE_NAME } from '../shared/constants';
 
 export function parseTypeReference(reference: string): {
   filePath: string;
@@ -23,7 +24,7 @@ export function resolveContentType(
   ctx: SchemaContext,
 ): { type: Type; checker: TypeChecker; coreRoot: string } {
   const { filePath, exportName } = parseTypeReference(ctx.typeReference);
-  const absolutePath = `/${ctx.projectRoot}/${filePath}`;
+  const absolutePath = normalizePath(`${ctx.projectRoot}/${filePath}`);
 
   if (!tree.exists(absolutePath)) {
     throw new SchematicsException(`Type file not found: ${absolutePath}`);
@@ -72,7 +73,7 @@ function findExportedType(
 
 /** Directory of the consumer's installed @ngx-formbar/core, used to anchor base-type checks. */
 function resolveCoreRoot(sourceFiles: readonly SourceFile[]) {
-  const marker = '/@ngx-formbar/core/';
+  const marker = `/${CORE_PACKAGE_NAME}/`;
   const coreFile = sourceFiles.find((file) => file.fileName.includes(marker));
 
   if (!coreFile) {
