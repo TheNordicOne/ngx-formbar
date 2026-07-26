@@ -100,4 +100,45 @@ describe('toJsonTypes', () => {
       index: undefined,
     });
   });
+
+  it('recurses into an index signature that is JSON-representable', () => {
+    expect(
+      toJsonTypes({
+        k: 'object',
+        properties: [],
+        index: { k: 'union', members: [{ k: 'string' }, { k: 'function' }] },
+      }),
+    ).toEqual({
+      k: 'object',
+      properties: [],
+      index: { k: 'string' },
+    });
+  });
+
+  it('drops an index signature that projects to nothing', () => {
+    expect(
+      toJsonTypes({
+        k: 'object',
+        properties: [],
+        index: { k: 'function' },
+      }),
+    ).toEqual({
+      k: 'object',
+      properties: [],
+      index: undefined,
+    });
+  });
+
+  it('leaves index absent when the object has no index signature', () => {
+    expect(
+      toJsonTypes({
+        k: 'object',
+        properties: [{ name: 'a', optional: false, type: { k: 'string' } }],
+      }),
+    ).toEqual({
+      k: 'object',
+      properties: [{ name: 'a', optional: false, type: { k: 'string' } }],
+      index: undefined,
+    });
+  });
 });
