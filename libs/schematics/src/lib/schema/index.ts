@@ -10,8 +10,14 @@ import {
   getProjectDefinition,
   NgxFormbarAutomationConfig,
   readFile,
+  SchemaEmitterEntry,
 } from '@ngx-formbar/setup';
 import { Schema } from './schema';
+import { resolveContentType } from './resolve';
+import { buildModel } from './build-model';
+import { toJsonTypes } from './json-types';
+import { resolveEmitter } from './emitter/registry';
+import { FormModel } from './model';
 
 export function schema(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
@@ -20,10 +26,92 @@ export function schema(options: Schema): Rule {
       await getWorkspace(tree),
       tree,
     );
-    context.logger.info(
-      `Generating schema from ${schemaContext.typeReference}`,
-    );
+    const entries = selectEntries(schemaContext.entries, options);
+
+    if (entries.length === 0) {
+      throw new SchematicsException(
+        'No emitters configured. Add entries to "schema.emitters" in formbar-schematic.config.json.',
+      );
+    }
+
+    const { type, checker, coreRoot } = resolveContentType(tree, schemaContext);
+    const model = buildModel(type, checker, coreRoot, schemaContext.docs);
+
+    warnUnsatisfiableNodes(model, context);
+
+    for (const entry of entries) {
+      const paths = {
+        workspaceRoot: schemaContext.workspaceRoot,
+        projectRoot: schemaContext.projectRoot,
+        output: resolveOutput(
+          options.output ?? entry.output,
+          schemaContext.projectRoot,
+        ),
+      };
+      const emitter = resolveEmitter(entry.use, tree, paths);
+
+      await emitter.emit(model, {
+        tree,
+        options: { docs: schemaContext.docs, ...entry.options },
+        logger: context.logger,
+        paths,
+      });
+
+      context.logger.info(`Emitted with "${emitter.name}"`);
+    }
   };
+}
+
+/**
+ * An omitted `--emitter` arrives here as `[]`, not `undefined` — the schematics
+ * workflow's option-schema validation defaults an array-typed option that way.
+ * `[]` is truthy, so a plain `options.emitter ? ... : entries` check would treat
+ * every unfiltered run as "run nothing". Checking `length` instead treats both
+ * "not passed" and "passed empty" as "no filter".
+ */
+function selectEntries(entries: SchemaEmitterEntry[], options: Schema) {
+  return options.emitter?.length
+    ? entries.filter((entry) => options.emitter?.includes(entry.use))
+    : entries;
+}
+
+/**
+ * A required property with no JSON form makes its node unsatisfiable: the
+ * property emits the `false` schema and stays in `required`, so nothing can
+ * ever match. That is faithful — a control requiring a function-valued
+ * property genuinely cannot be written in JSON — but a validator will only
+ * say "must match a schema in anyOf", with no clue why. Name it at generation
+ * time instead. Every function-capable property in core's base types is
+ * optional, so this is only reachable from a consumer's own declaration.
+ */
+function warnUnsatisfiableNodes(model: FormModel, context: SchematicContext) {
+  for (const node of Object.values(model.nodes)) {
+    for (const property of node.properties) {
+      const unsatisfiable =
+        !property.optional && toJsonTypes(property.type) === null;
+
+      if (unsatisfiable) {
+        context.logger.warn(
+          `"${node.name}.${property.name}" is required but has no JSON representation, so no config can satisfy "${node.name}".`,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Output paths are project-relative, matching how `use` and the `type`
+ * reference already resolve. A leading `/` means workspace-absolute, for the
+ * consumer who genuinely wants to write outside their project. Resolving here
+ * rather than in each emitter keeps every emitter — ours and a consumer's —
+ * from having to know the convention.
+ */
+function resolveOutput(output: string | undefined, projectRoot: string) {
+  if (!output) {
+    return null;
+  }
+
+  return output.startsWith('/') ? output : `/${projectRoot}/${output}`;
 }
 
 function buildSchemaContext(
