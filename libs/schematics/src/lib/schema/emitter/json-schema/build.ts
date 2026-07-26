@@ -50,13 +50,15 @@ export function buildJsonSchema(
   const unions = collectUnions(model, rootName);
 
   // Every name is claimed before any node is built, so a declared object inside
-  // one node cannot take a name a later node or a union still needs.
+  // one node cannot take a name a later node or a union still needs. A node
+  // name and a union alias reserving the same slot is a genuine authoring
+  // collision, not something to paper over with a suffix.
   for (const node of Object.values(model.nodes)) {
-    defs[node.name] = {};
+    reserveDefName(node.name, defs);
   }
 
   for (const name of Object.keys(unions)) {
-    defs[name] = {};
+    reserveDefName(name, defs);
   }
 
   for (const [name, ref] of Object.entries(unions)) {
@@ -71,6 +73,9 @@ export function buildJsonSchema(
     $schema: dialect.id,
     type: 'object',
     properties: {
+      // A form document normally carries `$schema` to bind an editor to this
+      // file; the library itself only ever reads `content`.
+      $schema: { type: 'string' },
       content: {
         type: 'object',
         additionalProperties: { $ref: refPath(rootName, dialect) },
@@ -142,6 +147,16 @@ function collectUnions(model: FormModel, rootName: string) {
   }
 
   return unions;
+}
+
+function reserveDefName(name: string, defs: Record<string, JsonSchema>) {
+  if (name in defs) {
+    throw new SchematicsException(
+      `A union alias and a node both claim the definition name "${name}".`,
+    );
+  }
+
+  defs[name] = {};
 }
 
 /** A named child union gets its own definition; an inline one is emitted under the node's name. */
