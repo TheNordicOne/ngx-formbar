@@ -47,6 +47,29 @@ export async function setupWorkspace(
   );
 }
 
+export function addCoreStub(tree: UnitTestTree): void {
+  tree.create(
+    '/node_modules/@ngx-formbar/core/package.json',
+    JSON.stringify({ name: '@ngx-formbar/core', types: './index.d.ts' }),
+  );
+  tree.create(
+    '/node_modules/@ngx-formbar/core/index.d.ts',
+    `export type Expression<T> = string | ((formValue: Record<string, unknown>) => T);
+export interface NgxFbBaseContent { type: string; hidden?: Expression<boolean> | boolean; }
+export interface NgxFbAbstractControl extends NgxFbBaseContent {
+  validators?: string[];
+  disabled?: Expression<boolean> | boolean;
+}
+export interface NgxFbControl extends NgxFbAbstractControl { label?: string; defaultValue?: unknown; }
+export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { controls: Record<string, T>; }
+export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { rowControl: T; }
+export interface NgxFbBlock extends NgxFbBaseContent { isControl: false; [key: string]: unknown; }
+export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
+export interface NgxFbForm<C extends NgxFbBaseContent = NgxFbItem> { content: Record<string, C>; }
+`,
+  );
+}
+
 interface AngularJson {
   projects: Record<
     string,
