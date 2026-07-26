@@ -9,7 +9,7 @@ import {
   setupWorkspace,
 } from './workspace-setup';
 import { app } from './helper';
-import { resolveContentType } from '../schema/resolve';
+import { parseTypeReference, resolveContentType } from '../schema/resolve';
 import { SchemaContext } from '../schema/schema';
 
 function context(overrides: Partial<SchemaContext> = {}): SchemaContext {
@@ -43,7 +43,7 @@ export type AppContent = TextControl | NoteBlock;
   });
 
   it('resolves the referenced export to a union type', () => {
-    const { type, checker } = resolveContentType(tree, context());
+    const { type, checker, coreRoot } = resolveContentType(tree, context());
 
     expect(type.isUnion()).toBe(true);
     if (!type.isUnion()) {
@@ -52,6 +52,7 @@ export type AppContent = TextControl | NoteBlock;
 
     const names = type.types.map((member) => checker.typeToString(member));
     expect(names).toEqual(['TextControl', 'NoteBlock']);
+    expect(coreRoot).toBe('/node_modules/@ngx-formbar/core/');
   });
 
   it('throws when the export does not exist', () => {
@@ -61,5 +62,20 @@ export type AppContent = TextControl | NoteBlock;
         context({ typeReference: 'app/types/content.type.ts#Missing' }),
       ),
     ).toThrow(/Missing/);
+  });
+});
+
+describe('parseTypeReference', () => {
+  it('parses a valid reference into a file path and export name', () => {
+    expect(parseTypeReference('app/types/content.type.ts#AppContent')).toEqual({
+      filePath: 'app/types/content.type.ts',
+      exportName: 'AppContent',
+    });
+  });
+
+  it('throws when the reference has no "#"', () => {
+    expect(() => parseTypeReference('app/types/content.type.ts')).toThrow(
+      'Invalid type reference "app/types/content.type.ts". Expected "path/to/file.ts#ExportName".',
+    );
   });
 });

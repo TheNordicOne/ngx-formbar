@@ -57,6 +57,7 @@ export function readCompilerOptions(
 
   const configPath = normalizePath(tsConfigPath);
   const raw = tree.read(configPath);
+
   if (!raw) {
     return fallback;
   }
@@ -73,14 +74,14 @@ export function readCompilerOptions(
 
 /** Resolves "extends" chains against the Tree, so a virtual tsconfig never
  * falls through to an unrelated real tsconfig on disk. */
-function createTreeParseConfigHost(tree: Tree): ParseConfigHost {
+function createTreeParseConfigHost(tree: Tree) {
   return {
     useCaseSensitiveFileNames: true,
     readDirectory: () => [],
     fileExists: (fileName) =>
       tree.exists(normalizePath(fileName)) || existsSync(fileName),
     readFile: (fileName) => readTreeOrDisk(tree, fileName),
-  };
+  } satisfies ParseConfigHost;
 }
 
 export function createTreeProgram(
@@ -98,6 +99,11 @@ export function createTreeProgram(
   return { program, checker: program.getTypeChecker() };
 }
 
+/** Tree is consulted first, disk is a fallback. `getCurrentDirectory()` is
+ * '/', so most paths reaching these helpers are virtual Tree paths, but
+ * TypeScript's own lib files legitimately arrive here as real absolute
+ * paths through the same functions — the two path spaces overlap by
+ * design because TS lib files must resolve from disk. */
 function readTreeOrDisk(tree: Tree, fileName: string) {
   const fromTree = tree.read(normalizePath(fileName));
   return fromTree ? fromTree.toString('utf-8') : readFromDisk(fileName);
@@ -130,6 +136,6 @@ function readFromDisk(fileName: string) {
 /** Collapses "." and ".." segments so TypeScript's directory-walking module
  * resolution (which probes paths like "/a/../..") never reaches the Tree
  * with a path its normalizer rejects. */
-function normalizePath(fileName: string) {
+export function normalizePath(fileName: string): string {
   return posix.resolve('/', fileName);
 }
