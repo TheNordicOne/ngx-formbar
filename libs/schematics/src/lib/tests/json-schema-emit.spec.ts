@@ -74,6 +74,18 @@ const PATHS: EmitPaths = {
   output: null,
 };
 
+describe('dialect identifiers', () => {
+  it('pins the 2020-12 draft URI', () => {
+    expect(DRAFT_2020_12.id).toBe(
+      'https://json-schema.org/draft/2020-12/schema',
+    );
+  });
+
+  it('pins the draft-07 URI', () => {
+    expect(DRAFT_07.id).toBe('http://json-schema.org/draft-07/schema#');
+  });
+});
+
 describe('buildJsonSchema', () => {
   it('accepts a valid config and rejects an unknown property (2020-12)', () => {
     const ajv = new Ajv2020({ strict: false });
