@@ -51,8 +51,8 @@ describe('resolveEmitter', () => {
   });
 
   afterEach(() => {
-    while (tempRoots.length > 0) {
-      rmSync(tempRoots.pop() ?? '', { recursive: true, force: true });
+    for (const root of tempRoots.splice(0)) {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -201,6 +201,27 @@ module.exports = formbar.default.defineEmitter({
     expect(resolveEmitter('./tools/direct-default.js', tree, PATHS).name).toBe(
       'direct-default',
     );
+  });
+
+  it('serves the package to an emitter that reaches it via a dynamic import', async () => {
+    tree.create(
+      src('tools/dynamic-import-emitter.ts'),
+      `export default {
+  name: 'dynamic-import',
+  async emit(model, ctx) {
+    const { defineEmitter } = await import('@ngx-formbar/schematics');
+    ctx.tree.create('out.txt', typeof defineEmitter);
+  },
+};
+`,
+    );
+
+    await resolveEmitter('./tools/dynamic-import-emitter.ts', tree, PATHS).emit(
+      MODEL,
+      emitContext(tree, PATHS),
+    );
+
+    expect(tree.readContent('/out.txt')).toBe('function');
   });
 
   it('serves toJsonTypes to an emitter', async () => {

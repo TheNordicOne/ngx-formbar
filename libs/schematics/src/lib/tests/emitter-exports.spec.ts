@@ -19,7 +19,8 @@ describe('the runtime surface served to emitters', () => {
   it('accounts for every runtime export of the package', () => {
     const unaccounted = runtimeExportNames().filter(
       (name) =>
-        !(name in OWN_EXPORTS) && !NOT_EXPOSED_TO_EMITTERS.includes(name),
+        !Object.prototype.hasOwnProperty.call(OWN_EXPORTS, name) &&
+        !NOT_EXPOSED_TO_EMITTERS.includes(name),
     );
 
     expect(unaccounted).toEqual([]);
@@ -35,7 +36,5 @@ describe('the runtime surface served to emitters', () => {
 });
 
 function runtimeExportNames(): string[] {
-  return Object.entries(index)
-    .filter(([, value]) => typeof value === 'function')
-    .map(([name]) => name);
+  return Object.keys(index);
 }
