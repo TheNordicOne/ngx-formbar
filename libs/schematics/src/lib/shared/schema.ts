@@ -12,8 +12,12 @@ export interface Schema extends BaseGenerateSchematicConfig {
   schematicsConfig?: string;
 }
 
+export type ScaffoldType = 'control' | 'group' | 'block' | 'array';
+
 export interface ScaffoldContext extends Schema {
   registrationType: RegistrationType;
+  registrationKind: ScaffoldType;
+  contentTypeReference?: string;
   resolvedName: string;
   interfaceName: string;
   interfaceFileName: string;
