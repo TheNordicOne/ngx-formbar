@@ -9,7 +9,7 @@ import {
   setupWorkspace,
 } from './workspace-setup';
 import { app } from './helper';
-import { parseTypeReference, resolveContentType } from '../schema/resolve';
+import { resolveContentType } from '../schema/resolve';
 import { SchemaContext } from '../schema/schema';
 
 function context(overrides: Partial<SchemaContext> = {}): SchemaContext {
@@ -62,20 +62,5 @@ export type AppContent = TextControl | NoteBlock;
         context({ typeReference: 'app/types/content.type.ts#Missing' }),
       ),
     ).toThrow(/Missing/);
-  });
-});
-
-describe('parseTypeReference', () => {
-  it('parses a valid reference into a file path and export name', () => {
-    expect(parseTypeReference('app/types/content.type.ts#AppContent')).toEqual({
-      filePath: 'app/types/content.type.ts',
-      exportName: 'AppContent',
-    });
-  });
-
-  it('throws when the reference has no "#"', () => {
-    expect(() => parseTypeReference('app/types/content.type.ts')).toThrow(
-      'Invalid type reference "app/types/content.type.ts". Expected "path/to/file.ts#ExportName".',
-    );
   });
 });

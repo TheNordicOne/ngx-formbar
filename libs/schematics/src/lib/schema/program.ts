@@ -17,6 +17,7 @@ import {
   sys,
   TypeChecker,
 } from 'typescript';
+import { normalizePath } from '../shared/type-reference';
 
 /** Reads workspace files from the Tree and everything else from disk. */
 export function createTreeCompilerHost(tree: Tree): CompilerHost {
@@ -131,11 +132,4 @@ function treeDirectories(tree: Tree, directoryName: string) {
 
 function readFromDisk(fileName: string) {
   return existsSync(fileName) ? readFileSync(fileName, 'utf-8') : undefined;
-}
-
-/** Collapses "." and ".." segments so TypeScript's directory-walking module
- * resolution (which probes paths like "/a/../..") never reaches the Tree
- * with a path its normalizer rejects. */
-export function normalizePath(fileName: string): string {
-  return posix.resolve('/', fileName);
 }

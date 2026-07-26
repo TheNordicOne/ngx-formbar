@@ -38,6 +38,7 @@ import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
   interfaceHasTypeLiteral,
+  interfaceHasTypeParameters,
   NgxFormbarAutomationConfig,
   parseTS,
   provideFormbarComponentRegistrationsHasIdentifier,
@@ -511,6 +512,20 @@ describe('control schematic', () => {
         const tree = await runSchematic('array');
         const typeSf = parseTS(read(tree, app('test/test-array-config.ts')));
         expect(interfaceHasTypeLiteral(typeSf, 'TestArrayConfig', 'test')).toBe(
+          true,
+        );
+        expect(interfaceHasTypeParameters(typeSf, 'TestArrayConfig')).toBe(
+          true,
+        );
+      });
+
+      it('group interface extends NgxFbFormGroup with the key as type', async () => {
+        const tree = await runSchematic('group');
+        const typeSf = parseTS(read(tree, app('test/test-group-config.ts')));
+        expect(interfaceHasTypeLiteral(typeSf, 'TestGroupConfig', 'test')).toBe(
+          true,
+        );
+        expect(interfaceHasTypeParameters(typeSf, 'TestGroupConfig')).toBe(
           true,
         );
       });
