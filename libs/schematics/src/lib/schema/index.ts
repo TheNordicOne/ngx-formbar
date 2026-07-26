@@ -34,6 +34,12 @@ export function schema(options: Schema): Rule {
       );
     }
 
+    if (options.output && entries.length > 1) {
+      throw new SchematicsException(
+        '"--output" overrides a single configured emitter entry. Narrow the run with "--emitter" first.',
+      );
+    }
+
     const { type, checker, coreRoot } = resolveContentType(tree, schemaContext);
     const model = buildModel(type, checker, coreRoot, schemaContext.docs);
 
@@ -57,7 +63,9 @@ export function schema(options: Schema): Rule {
         paths,
       });
 
-      context.logger.info(`Emitted with "${emitter.name}"`);
+      context.logger.info(
+        `Emitted with "${emitter.name}" to "${paths.output ?? '(emitter default)'}"`,
+      );
     }
   };
 }
