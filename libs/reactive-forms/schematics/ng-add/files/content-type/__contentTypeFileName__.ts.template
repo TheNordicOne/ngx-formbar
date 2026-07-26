@@ -1,0 +1,5 @@
+/**
+ * Every form node type this app supports.
+ * The `schema` schematic reads this union; scaffolding a control adds to it.
+ */
+export type AppContent = never;

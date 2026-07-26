@@ -7,3 +7,7 @@ export const DEFAULT_PROVIDER_CONFIG_FILE_NAME = 'formbar.config.ts';
 
 export const DEFAULT_HELPER_PATH = 'app/shared/helper';
 export const DEFAULT_VIEW_PROVIDER_HELPER = 'view-provider.ts#viewProviders';
+
+export const DEFAULT_CONTENT_TYPE_PATH = 'app/types';
+export const DEFAULT_CONTENT_TYPE_FILE_NAME = 'content.type';
+export const DEFAULT_CONTENT_TYPE_EXPORT_NAME = 'AppContent';
