@@ -155,6 +155,54 @@ export default defineEmitter({ name: 'unserved', emit() {} });
     );
   });
 
+  it('serves the package to an emitter that default-imports it', () => {
+    tree.create(
+      src('tools/default-import-emitter.ts'),
+      `import formbar from '@ngx-formbar/schematics';
+
+export default formbar.defineEmitter({ name: 'default-import', emit() {} });
+`,
+    );
+
+    expect(
+      resolveEmitter('./tools/default-import-emitter.ts', tree, PATHS).name,
+    ).toBe('default-import');
+  });
+
+  it('serves the package to an emitter that namespace-imports it', () => {
+    tree.create(
+      src('tools/namespace-import-emitter.ts'),
+      `import * as formbar from '@ngx-formbar/schematics';
+
+export default formbar.defineEmitter({
+  name: 'namespace-import',
+  emit() {},
+});
+`,
+    );
+
+    expect(
+      resolveEmitter('./tools/namespace-import-emitter.ts', tree, PATHS).name,
+    ).toBe('namespace-import');
+  });
+
+  it('serves the package under a direct `default` access', () => {
+    tree.create(
+      src('tools/direct-default.js'),
+      `const formbar = require('@ngx-formbar/schematics');
+
+module.exports = formbar.default.defineEmitter({
+  name: 'direct-default',
+  emit() {},
+});
+`,
+    );
+
+    expect(resolveEmitter('./tools/direct-default.js', tree, PATHS).name).toBe(
+      'direct-default',
+    );
+  });
+
   it('serves toJsonTypes to an emitter', async () => {
     tree.create(
       src('tools/projecting-emitter.ts'),

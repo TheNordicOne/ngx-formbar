@@ -14,9 +14,6 @@ import { defineEmitter, Emitter } from './define-emitter';
 
 const RELATIVE_CANDIDATES = ['', '.ts', '.js', '/index.ts', '/index.js'];
 
-/** Names CommonJS interop probes on every module it requires; their absence is the answer. */
-const INTEROP_KEYS = ['__esModule', 'default'];
-
 /**
  * The runtime surface an emitter imports from this package. Serving it from the
  * running process keeps `defineEmitter` a single instance whatever the consumer's
@@ -29,11 +26,24 @@ export const OWN_EXPORTS = { defineEmitter, toJsonTypes };
 /**
  * Narrowing the package down to `OWN_EXPORTS` is otherwise silent: an unlisted
  * import would be `undefined` and fail somewhere unrelated. The trap names it.
+ *
+ * `__esModule` and `default` answer the CommonJS interop probes rather than falling
+ * through to the trap. The package has no default export, so `default` serves the
+ * object itself, which is what `esModuleInterop` synthesises in the consumer's editor:
+ * every import form then reaches the same instance a named import does.
  */
 const SERVED_EXPORTS = new Proxy<Record<string, unknown>>(OWN_EXPORTS, {
   get(target, key) {
-    if (typeof key === 'symbol' || INTEROP_KEYS.includes(key)) {
+    if (typeof key === 'symbol') {
       return undefined;
+    }
+
+    if (key === '__esModule') {
+      return true;
+    }
+
+    if (key === 'default') {
+      return SERVED_EXPORTS;
     }
 
     if (key in target) {
