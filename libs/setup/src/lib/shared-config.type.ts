@@ -21,4 +21,17 @@ export interface NgxFormbarAutomationConfig {
   group?: BaseGenerateSchematicConfig;
   block?: BaseGenerateSchematicConfig;
   array?: BaseGenerateSchematicConfig;
+  schema?: SchemaConfig;
+}
+
+export interface SchemaEmitterEntry {
+  use: string;
+  output?: string;
+  options?: Record<string, unknown>;
+}
+
+export interface SchemaConfig {
+  type?: string;
+  docs?: boolean;
+  emitters?: SchemaEmitterEntry[];
 }
