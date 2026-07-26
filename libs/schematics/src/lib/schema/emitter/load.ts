@@ -31,6 +31,12 @@ export const OWN_EXPORTS = { defineEmitter, toJsonTypes };
  * through to the trap. The package has no default export, so `default` serves the
  * object itself, which is what `esModuleInterop` synthesises in the consumer's editor:
  * every import form then reaches the same instance a named import does.
+ *
+ * `then` answers `undefined` rather than trapping: an emitter awaiting a dynamic
+ * `import()` has that transpile to a promise chain whose resolution value is this
+ * proxy, and resolving a promise with a value probes `.then` on it to decide whether
+ * to assimilate it as a thenable. Trapping that probe would break the awaited form
+ * for every emitter, not just ones that actually import a `then` export.
  */
 const SERVED_EXPORTS = new Proxy<Record<string, unknown>>(OWN_EXPORTS, {
   get(target, key) {
@@ -46,12 +52,16 @@ const SERVED_EXPORTS = new Proxy<Record<string, unknown>>(OWN_EXPORTS, {
       return SERVED_EXPORTS;
     }
 
-    if (key in target) {
+    if (key === 'then') {
+      return undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(target, key)) {
       return target[key];
     }
 
     throw new SchematicsException(
-      `"${key}" is exported by ${SCHEMATICS_PACKAGE_NAME} but is not available to emitters.`,
+      `"${key}" is not available to emitters from ${SCHEMATICS_PACKAGE_NAME}.`,
     );
   },
 });
