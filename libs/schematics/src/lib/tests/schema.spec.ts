@@ -113,6 +113,33 @@ export type AppContent = TextControl;
     ).toBe(true);
   });
 
+  it('names the core it resolved', async () => {
+    addCoreStub(tree);
+    tree.create(
+      app('types/content.type.ts'),
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+    );
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: {
+        type: 'app/types/content.type.ts#AppContent',
+        emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+      },
+    });
+
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    await runner.runSchematic('schema', { project: 'test-app' }, tree);
+
+    // Which copy answered is otherwise invisible, and it decides every kind.
+    expect(messages).toContain(
+      'Resolved @ngx-formbar/core at "/node_modules/@ngx-formbar/core/"',
+    );
+  });
+
   it('writes to a workspace-absolute output path', async () => {
     addCoreStub(tree);
     tree.create(

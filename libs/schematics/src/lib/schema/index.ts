@@ -18,6 +18,7 @@ import { buildModel } from './build-model';
 import { toJsonTypes } from './json-types';
 import { resolveEmitter } from './emitter/registry';
 import { FormModel } from './model';
+import { CORE_PACKAGE_NAME } from '../shared/constants';
 
 export function schema(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
@@ -41,6 +42,11 @@ export function schema(options: Schema): Rule {
     }
 
     const { type, checker, coreRoot } = resolveContentType(tree, schemaContext);
+
+    // Which copy of core answered decides every node's kind, and a wrong answer
+    // shows up as an unrelated "does not extend a base type" further down.
+    context.logger.info(`Resolved ${CORE_PACKAGE_NAME} at "${coreRoot}"`);
+
     const model = buildModel(type, checker, coreRoot, schemaContext.docs);
 
     warnUnsatisfiableNodes(model, context);
