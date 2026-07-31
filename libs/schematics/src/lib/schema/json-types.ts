@@ -3,6 +3,9 @@ import { TypeNode } from './model';
 /**
  * Projects a type onto the part of it that can exist in JSON.
  * Returns null when no JSON value satisfies the type.
+ *
+ * Listing every variant instead of a `default` is deliberate: a new `TypeNode`
+ * kind must fail to compile here rather than silently fall through unprojected.
  */
 export function toJsonTypes(type: TypeNode): TypeNode | null {
   switch (type.k) {
@@ -27,10 +30,6 @@ export function toJsonTypes(type: TypeNode): TypeNode | null {
   }
 }
 
-/**
- * Listing every variant instead of a `default` is deliberate: a new `TypeNode`
- * kind must fail to compile here rather than silently fall through unprojected.
- */
 function projectObject(type: Extract<TypeNode, { k: 'object' }>): TypeNode {
   const properties = type.properties.flatMap((property) => {
     const projected = toJsonTypes(property.type);
@@ -38,8 +37,8 @@ function projectObject(type: Extract<TypeNode, { k: 'object' }>): TypeNode {
   });
 
   return {
-    // `name` must survive: a `{ k: 'cycle' }` elsewhere in the tree refers to it.
     k: 'object',
+    // `name` must survive: a `{ k: 'cycle' }` elsewhere in the tree refers to it.
     name: type.name,
     properties,
     index: type.index ? (toJsonTypes(type.index) ?? undefined) : undefined,
