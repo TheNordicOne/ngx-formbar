@@ -454,18 +454,9 @@ function isUniform(narrowings: Property[][]) {
 
 /** Everything the intersection adds beyond the declared interface that names the node. */
 function narrowingOf(type: Type, builder: Builder) {
-  if (!type.isIntersection()) {
-    return [];
-  }
+  const narrowing = splitIntersection(type)?.narrowing ?? [];
 
-  const declared = type.types.filter(isDeclaredInterface);
-
-  if (declared.length !== 1) {
-    return [];
-  }
-
-  return type.types
-    .filter((member) => member !== declared[0])
+  return narrowing
     .flatMap((member) => member.getProperties())
     .map((symbol) => toProperty(symbol, builder, new Map()));
 }
@@ -483,18 +474,29 @@ function unionMembers(type: Type) {
  * `NgxFbArray` narrows its row as `T & { hideStrategy?: 'keep' }`, so every
  * member of an array's row union arrives as an intersection: no symbol of its
  * own, no declaration, and a name that prints the whole intersection. The
- * declared interface in it is the node; the narrowing rides on a property that
- * node already declares. An intersection of two declared interfaces is left
- * alone, so `resolveKind` reports it rather than picking one arm silently.
+ * declared interface in it is the node; everything else narrows that node.
+ * An intersection of two declared interfaces names no single node and is left
+ * whole, so `resolveKind` reports it rather than picking one arm silently.
+ *
+ * Which arm is the node and which arms narrow it are decided here together.
+ * Deciding them apart would let a narrowing be attributed to a node that was
+ * never picked.
  */
-function toDeclaredNode(type: Type) {
+function splitIntersection(type: Type) {
   if (!type.isIntersection()) {
-    return type;
+    return undefined;
   }
 
   const declared = type.types.filter(isDeclaredInterface);
+  const [node] = declared;
 
-  return declared.length === 1 ? declared[0] : type;
+  return declared.length === 1
+    ? { node, narrowing: type.types.filter((member) => member !== node) }
+    : undefined;
+}
+
+function toDeclaredNode(type: Type) {
+  return splitIntersection(type)?.node ?? type;
 }
 
 function isDeclaredInterface(type: Type) {
