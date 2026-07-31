@@ -28,6 +28,7 @@ import {
   ProjectDefinition,
 } from '@schematics/angular/utility/workspace';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { splitHashReference } from '../type-reference';
 
 const { classify, dasherize } = strings;
 
@@ -270,11 +271,11 @@ function resolveImportPathAndIdentifier(
 const EXT_REGEX = /\.ts$/i;
 
 function extractFromPath(inputSpec: string, defaultSpec: string) {
-  const inputParts = splitHash(inputSpec);
-  const defaultParts = splitHash(defaultSpec);
+  const inputParts = splitHashReference(inputSpec);
+  const defaultParts = splitHashReference(defaultSpec);
 
-  const inputPathParts = splitPath(inputParts.left);
-  const defaultPathParts = splitPath(defaultParts.left);
+  const inputPathParts = splitPath(inputParts.path);
+  const defaultPathParts = splitPath(defaultParts.path);
 
   const directory = inputPathParts.directory;
 
@@ -285,20 +286,6 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
   const identifier = inputParts.exportName || defaultParts.exportName;
 
   return { directory, fileName, identifier };
-}
-
-function splitHash(rawSpec: string) {
-  const trimmedSpec = rawSpec.trim();
-  const hashIndex = trimmedSpec.indexOf('#');
-
-  if (hashIndex < 0) {
-    return { left: trimmedSpec, exportName: '' };
-  }
-
-  return {
-    left: trimmedSpec.slice(0, hashIndex),
-    exportName: trimmedSpec.slice(hashIndex + 1),
-  };
 }
 
 function splitPath(pathPart: string) {
