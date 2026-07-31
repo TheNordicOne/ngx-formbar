@@ -22,8 +22,7 @@ import { normalizePath } from '../shared/type-reference';
 /** Reads workspace files from the Tree and everything else from disk. */
 export function createTreeCompilerHost(tree: Tree): CompilerHost {
   return {
-    fileExists: (fileName) =>
-      tree.exists(normalizePath(fileName)) || existsSync(fileName),
+    fileExists: (fileName) => tree.exists(fileName) || existsSync(fileName),
     readFile: (fileName) => readTreeOrDisk(tree, fileName),
     getSourceFile: (fileName, languageVersion) => {
       const content = readTreeOrDisk(tree, fileName);
@@ -79,8 +78,7 @@ function createTreeParseConfigHost(tree: Tree) {
   return {
     useCaseSensitiveFileNames: true,
     readDirectory: () => [],
-    fileExists: (fileName) =>
-      tree.exists(normalizePath(fileName)) || existsSync(fileName),
+    fileExists: (fileName) => tree.exists(fileName) || existsSync(fileName),
     readFile: (fileName) => readTreeOrDisk(tree, fileName),
   } satisfies ParseConfigHost;
 }
@@ -106,14 +104,14 @@ export function createTreeProgram(
  * paths through the same functions — the two path spaces overlap by
  * design because TS lib files must resolve from disk. */
 function readTreeOrDisk(tree: Tree, fileName: string) {
-  const fromTree = tree.read(normalizePath(fileName));
+  const fromTree = tree.read(fileName);
   return fromTree ? fromTree.toString('utf-8') : readFromDisk(fileName);
 }
 
 /** A Tree directory "exists" once it has any child file or subdirectory;
  * `getDir` never throws for unknown paths, it just comes back empty. */
 function treeDirectoryExists(tree: Tree, directoryName: string) {
-  const dir = tree.getDir(normalizePath(directoryName));
+  const dir = tree.getDir(directoryName);
   return (
     dir.subfiles.length > 0 ||
     dir.subdirs.length > 0 ||
