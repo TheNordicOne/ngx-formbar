@@ -333,6 +333,20 @@ export type AppContent = TextControl & { required: true };
     expect(narrowed.root.memberConstraints).toBeUndefined();
   });
 
+  it('takes the declared interface as the node and every other arm as a constraint', async () => {
+    const narrowed = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; a?: string; b?: number; }
+export type AppContent = TextControl & { a: string } & { b: number };
+`,
+    );
+
+    expect(narrowed.root.members).toEqual(['TextControl']);
+    expect(
+      narrowed.root.constraints?.map((property) => property.name).sort(),
+    ).toEqual(['a', 'b']);
+  });
+
   it('carries a narrowing written on one arm on that member alone', async () => {
     const narrowed = await modelFor(
       `import { NgxFbControl, NgxFbBlock } from '@ngx-formbar/core';
