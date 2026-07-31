@@ -6,6 +6,8 @@ export interface TypeRef {
   members: string[];
   /** Properties an intersection narrowed onto every member of this union. */
   constraints?: Property[];
+  /** Properties narrowed onto single members, keyed by the name in `members`. */
+  memberConstraints?: Record<string, Property[]>;
 }
 
 export interface Property {

@@ -163,6 +163,9 @@ describe('buildModel', () => {
           type: { k: 'union', members: [{ k: 'literal', value: 'keep' }] },
         },
       ]);
+      expect(
+        model.nodes['RowArray'].children?.memberConstraints,
+      ).toBeUndefined();
     });
 
     it('omits constraints from a union no intersection narrows', () => {
@@ -327,18 +330,55 @@ export type AppContent = TextControl & { required: true };
         type: { k: 'literal', value: true },
       },
     ]);
+    expect(narrowed.root.memberConstraints).toBeUndefined();
   });
 
-  it('rejects a union whose members carry different narrowings', async () => {
-    await expect(
-      modelFor(
-        `import { NgxFbControl, NgxFbBlock } from '@ngx-formbar/core';
+  it('carries a narrowing written on one arm on that member alone', async () => {
+    const narrowed = await modelFor(
+      `import { NgxFbControl, NgxFbBlock } from '@ngx-formbar/core';
 export interface TextControl extends NgxFbControl { type: 'text'; required?: boolean; }
 export interface NoteBlock extends NgxFbBlock { type: 'note'; message: string; }
 export type AppContent = (TextControl & { required: true }) | NoteBlock;
 `,
+    );
+
+    expect(narrowed.root.members).toEqual(['TextControl', 'NoteBlock']);
+    expect(narrowed.root.memberConstraints).toEqual({
+      TextControl: [
+        {
+          name: 'required',
+          optional: false,
+          type: { k: 'literal', value: true },
+        },
+      ],
+    });
+    expect(narrowed.root.constraints).toBeUndefined();
+  });
+
+  it('splits an array row per member when the union narrows one arm', async () => {
+    const narrowed = await modelFor(
+      `import { NgxFbControl, NgxFbBlock, NgxFbArray, NgxFbBaseContent, NgxFbItem } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; required?: boolean; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; message: string; }
+export interface RowArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbArray<T> { type: 'array'; }
+export type AppContent = (TextControl & { required: true }) | NoteBlock | RowArray<AppContent>;
+`,
+    );
+    const row = narrowed.nodes['RowArray'].children;
+
+    expect(row?.constraints).toBeUndefined();
+    expect(
+      Object.entries(row?.memberConstraints ?? {}).map(
+        ([member, properties]) => [
+          member,
+          properties.map((property) => property.name).sort(),
+        ],
       ),
-    ).rejects.toThrow('narrow');
+    ).toEqual([
+      ['TextControl', ['hideStrategy', 'required']],
+      ['NoteBlock', ['hideStrategy']],
+      ['RowArray', ['hideStrategy']],
+    ]);
   });
 
   it('rejects a union member built from two declared interfaces', async () => {

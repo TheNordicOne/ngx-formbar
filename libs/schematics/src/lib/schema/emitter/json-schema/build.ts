@@ -62,7 +62,7 @@ export function buildJsonSchema(
   }
 
   for (const [name, ref] of Object.entries(unions)) {
-    defs[name] = buildRef(ref, dialect);
+    defs[name] = buildRef(ref, ctx);
   }
 
   for (const node of Object.values(model.nodes)) {
@@ -78,7 +78,11 @@ export function buildJsonSchema(
       $schema: { type: 'string' },
       content: {
         type: 'object',
-        additionalProperties: { $ref: refPath(rootName, dialect) },
+        additionalProperties: withConstraints(
+          { $ref: refPath(rootName, dialect) },
+          model.root.constraints,
+          ctx,
+        ),
       },
     },
     required: ['content'],
@@ -107,7 +111,7 @@ function buildNode(node: FormNode, ctx: BuildContext) {
   if (node.children) {
     const childSchema = withConstraints(
       { $ref: refPath(childRefName(node), ctx.dialect) },
-      node.children,
+      node.children.constraints,
       ctx,
     );
 
@@ -138,10 +142,8 @@ function buildNode(node: FormNode, ctx: BuildContext) {
 }
 
 /**
- * The narrowing belongs to this use of the union, not to the definition the
- * union shares with every other use, so it is applied here. A `$ref` suppresses
- * its siblings in draft-07, which is why the narrowing needs an `allOf` arm of
- * its own rather than sitting next to the reference.
+ * A `$ref` suppresses its siblings in draft-07, so a narrowing needs an `allOf`
+ * arm of its own rather than sitting next to the reference.
  *
  * That arm carries `properties` and `required` only. `additionalProperties`
  * would be read against the arm alone, where every property the referenced node
@@ -149,14 +151,14 @@ function buildNode(node: FormNode, ctx: BuildContext) {
  */
 function withConstraints(
   schema: { $ref: string },
-  ref: TypeRef,
+  constraints: Property[] | undefined,
   ctx: BuildContext,
 ) {
-  if (!ref.constraints?.length) {
+  if (!constraints?.length) {
     return schema;
   }
 
-  const { properties, required } = buildProperties(ref.constraints, ctx);
+  const { properties, required } = buildProperties(constraints, ctx);
 
   return {
     allOf: [
@@ -197,9 +199,20 @@ function childRefName(node: FormNode) {
   return node.children?.name ?? `${node.name}Children`;
 }
 
-function buildRef(ref: TypeRef, dialect: Dialect) {
+/**
+ * A narrowing written on a single arm belongs to the union itself, so it travels
+ * with the definition to every use. One applied to the whole union belongs to
+ * the use that applied it and stays out of here, or it would leak.
+ */
+function buildRef(ref: TypeRef, ctx: BuildContext) {
   return {
-    anyOf: ref.members.map((member) => ({ $ref: refPath(member, dialect) })),
+    anyOf: ref.members.map((member) =>
+      withConstraints(
+        { $ref: refPath(member, ctx.dialect) },
+        ref.memberConstraints?.[member],
+        ctx,
+      ),
+    ),
   };
 }
 

@@ -348,6 +348,98 @@ describe('buildJsonSchema', () => {
     expect(validate(rowForm('remove'))).toBe(false);
   });
 
+  it('constrains the narrowed arm of a union definition (2020-12)', () => {
+    const document = buildJsonSchema(memberNarrowedModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(at(document, '$defs', 'AppContent')).toEqual({
+      anyOf: [
+        {
+          allOf: [
+            { $ref: '#/$defs/TextControl' },
+            {
+              properties: { required: { const: true } },
+              required: ['required'],
+            },
+          ],
+        },
+        { $ref: '#/$defs/NoteBlock' },
+      ],
+    });
+  });
+
+  it('constrains the narrowed arm of a union definition (draft-07)', () => {
+    const document = buildJsonSchema(memberNarrowedModel(), DRAFT_07, {
+      docs: true,
+    });
+
+    expect(at(document, 'definitions', 'AppContent')).toEqual({
+      anyOf: [
+        {
+          allOf: [
+            { $ref: '#/definitions/TextControl' },
+            {
+              properties: { required: { const: true } },
+              required: ['required'],
+            },
+          ],
+        },
+        { $ref: '#/definitions/NoteBlock' },
+      ],
+    });
+  });
+
+  it('validates a narrowing written on one arm (2020-12)', () => {
+    const ajv = new Ajv2020({ strict: false });
+    const validate = ajv.compile(
+      buildJsonSchema(memberNarrowedModel(), DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate(unionForm({ type: 'text', required: true }))).toBe(true);
+    expect(validate(unionForm({ type: 'text' }))).toBe(false);
+    expect(validate(unionForm({ type: 'note', message: 'hi' }))).toBe(true);
+  });
+
+  it('validates a narrowing written on one arm (draft-07)', () => {
+    const ajv = new Ajv({ strict: false });
+    const validate = ajv.compile(
+      buildJsonSchema(memberNarrowedModel(), DRAFT_07, { docs: true }),
+    );
+
+    expect(validate(unionForm({ type: 'text', required: true }))).toBe(true);
+    expect(validate(unionForm({ type: 'text' }))).toBe(false);
+    expect(validate(unionForm({ type: 'note', message: 'hi' }))).toBe(true);
+  });
+
+  it('applies a whole-union narrowing where the root union is used', () => {
+    const model = memberNarrowedModel();
+    const document = buildJsonSchema(
+      {
+        ...model,
+        root: {
+          name: 'AppContent',
+          members: model.root.members,
+          constraints: REQUIRED,
+        },
+      },
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(
+      at(document, 'properties', 'content', 'additionalProperties'),
+    ).toEqual({
+      allOf: [
+        { $ref: '#/$defs/AppContent' },
+        { properties: { required: { const: true } }, required: ['required'] },
+      ],
+    });
+    expect(at(document, '$defs', 'AppContent')).toEqual({
+      anyOf: [{ $ref: '#/$defs/TextControl' }, { $ref: '#/$defs/NoteBlock' }],
+    });
+  });
+
   it('keeps two same-named shapes apart', () => {
     const ajv = new Ajv2020({ strict: false });
     const validate = ajv.compile(
@@ -592,6 +684,45 @@ const KEEP_ONLY: Property[] = [
     type: { k: 'literal', value: 'keep' },
   },
 ];
+
+const REQUIRED: Property[] = [
+  { name: 'required', optional: false, type: { k: 'literal', value: true } },
+];
+
+function unionForm(value: object) {
+  return { content: { only: value } };
+}
+
+/** Only the `TextControl` arm of the union is narrowed, by the union itself. */
+function memberNarrowedModel(): FormModel {
+  return {
+    root: {
+      name: 'AppContent',
+      members: ['TextControl', 'NoteBlock'],
+      memberConstraints: { TextControl: REQUIRED },
+    },
+    nodes: {
+      TextControl: {
+        name: 'TextControl',
+        kind: 'control',
+        typeLiteral: 'text',
+        open: false,
+        properties: [
+          { name: 'required', optional: true, type: { k: 'boolean' } },
+        ],
+      },
+      NoteBlock: {
+        name: 'NoteBlock',
+        kind: 'block',
+        typeLiteral: 'note',
+        open: true,
+        properties: [
+          { name: 'message', optional: false, type: { k: 'string' } },
+        ],
+      },
+    },
+  };
+}
 
 function rowForm(hideStrategy?: string) {
   const rowControl =

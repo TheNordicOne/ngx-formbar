@@ -12,7 +12,14 @@ import {
   TypeChecker,
   TypeFlags,
 } from 'typescript';
-import { FormModel, FormNode, NodeKind, TypeNode, TypeRef } from './model';
+import {
+  FormModel,
+  FormNode,
+  NodeKind,
+  Property,
+  TypeNode,
+  TypeRef,
+} from './model';
 
 const CORE_BASES: Record<string, NodeKind> = {
   NgxFbControl: 'control',
@@ -401,45 +408,48 @@ function isBooleanLiteralNode(node: TypeNode) {
   return node.k === 'literal' && typeof node.value === 'boolean';
 }
 
-function toTypeRef(type: Type, builder: Builder) {
-  const ref: TypeRef = {
+function toTypeRef(type: Type, builder: Builder): TypeRef {
+  const constituents = type.isUnion() ? type.types : [type];
+  const members = constituents.map((constituent) =>
+    nodeName(toDeclaredNode(constituent), builder.checker),
+  );
+
+  return {
     name: aliasName(type),
-    members: unionMembers(type).map((member) =>
-      nodeName(member, builder.checker),
+    members,
+    ...narrowingFields(
+      members,
+      constituents.map((constituent) => narrowingOf(constituent, builder)),
     ),
   };
-  const constraints = narrowingProperties(type, builder);
-
-  if (constraints.length > 0) {
-    ref.constraints = constraints;
-  }
-
-  return ref;
 }
 
 /**
  * The narrowing `toDeclaredNode` drops has to travel with the reference, or the
- * schema accepts what the type rejects. TypeScript distributes the intersection
- * over the union, so the same narrowing rides on every member and belongs to the
- * union as a whole. A union that narrows only some of its members cannot be
- * expressed here, and guessing which members it binds to would be worse.
+ * schema accepts what the type rejects. Where it travels depends on how it was
+ * written. An intersection applied to the whole union reaches every member alike
+ * and belongs to the use that applied it, as `NgxFbArray` does to its row. One
+ * written on a single arm belongs to the union itself and travels with it.
  */
-function narrowingProperties(type: Type, builder: Builder) {
-  const perMember = (type.isUnion() ? type.types : [type]).map((member) =>
-    narrowingOf(member, builder),
-  );
-  const [first = [], ...rest] = perMember;
-  const expected = JSON.stringify(first);
+function narrowingFields(members: string[], narrowings: Property[][]) {
+  const named = members
+    .map((member, index) => [member, narrowings[index]] as const)
+    .filter(([, narrowing]) => narrowing.length > 0);
 
-  for (const other of rest) {
-    if (JSON.stringify(other) !== expected) {
-      throw new SchematicsException(
-        `The union ${builder.checker.typeToString(type)} does not narrow every member the same way. Apply the same intersection to each member, or drop it.`,
-      );
-    }
+  if (named.length === 0) {
+    return {};
   }
 
-  return first;
+  return isUniform(narrowings)
+    ? { constraints: narrowings[0] }
+    : { memberConstraints: Object.fromEntries(named) };
+}
+
+function isUniform(narrowings: Property[][]) {
+  const [first, ...rest] = narrowings;
+  const expected = JSON.stringify(first);
+
+  return rest.every((narrowing) => JSON.stringify(narrowing) === expected);
 }
 
 /** Everything the intersection adds beyond the declared interface that names the node. */
