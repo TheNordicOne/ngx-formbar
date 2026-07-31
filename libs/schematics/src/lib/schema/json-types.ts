@@ -3,9 +3,6 @@ import { TypeNode } from './model';
 /**
  * Projects a type onto the part of it that can exist in JSON.
  * Returns null when no JSON value satisfies the type.
- *
- * Listing every variant instead of a `default` is deliberate: a new `TypeNode`
- * kind must fail to compile here rather than silently fall through unprojected.
  */
 export function toJsonTypes(type: TypeNode): TypeNode | null {
   switch (type.k) {

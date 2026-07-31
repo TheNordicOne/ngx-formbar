@@ -251,10 +251,6 @@ function buildProperty(property: Property, ctx: BuildContext) {
   return withDoc(schema, property.doc, ctx.options);
 }
 
-/**
- * Every `TypeNode` variant is listed. Adding one must break the build here
- * rather than fall through to a permissive `{}` that silently accepts anything.
- */
 function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
   switch (type.k) {
     case 'string':
