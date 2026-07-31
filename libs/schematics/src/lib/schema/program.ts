@@ -54,6 +54,8 @@ export function readCompilerOptions(
     skipLibCheck: true,
   };
 
+  // Sets the basePath that `baseUrl`, `paths` and `typeRoots` resolve against,
+  // and `tsConfigPath` arrives unrooted. The Tree read alone would not need it.
   const configPath = normalizePath(tsConfigPath);
   const raw = tree.read(configPath);
 
@@ -118,6 +120,8 @@ function treeDirectoryExists(tree: Tree, directoryName: string) {
   );
 }
 
+// Neither suite reaches this: TypeScript never asked the host for directories
+// on these programs, so the `normalizePath` here is unverified, not known-needed.
 function treeDirectories(tree: Tree, directoryName: string) {
   const dir = tree.getDir(normalizePath(directoryName));
   const diskDirs = sys.directoryExists(directoryName)

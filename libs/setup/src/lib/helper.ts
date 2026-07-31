@@ -14,7 +14,6 @@ export async function getProject(
   return getProjectDefinition(await getWorkspace(tree), projectName);
 }
 
-/** Falls back to the workspace default when no project is named. */
 export function resolveProjectName(
   workspace: WorkspaceDefinition,
   projectName?: string,

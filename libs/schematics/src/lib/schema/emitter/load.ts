@@ -109,6 +109,8 @@ export function loadFromPackage(
   workspaceRoot: string,
 ): Emitter {
   const [packageName, exportName] = specifier.split('#');
+  // `resolve`, not `join`: it anchors absolutely even if `workspaceRoot` is not.
+  // `requireFrom` needs the opposite for its '/'-rooted Tree path — see there.
   const nodeRequire = createRequire(resolve(workspaceRoot, 'package.json'));
   const loaded: unknown = nodeRequire(packageName);
 
