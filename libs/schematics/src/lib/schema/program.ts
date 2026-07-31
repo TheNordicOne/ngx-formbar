@@ -54,8 +54,7 @@ export function readCompilerOptions(
     skipLibCheck: true,
   };
 
-  // Sets the basePath that `baseUrl`, `paths` and `typeRoots` resolve against,
-  // and `tsConfigPath` arrives unrooted. The Tree read alone would not need it.
+  // `baseUrl`, `paths` and `typeRoots` resolve against this, unrooted otherwise.
   const configPath = normalizePath(tsConfigPath);
   const raw = tree.read(configPath);
 
