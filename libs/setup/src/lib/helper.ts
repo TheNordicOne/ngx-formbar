@@ -14,10 +14,11 @@ export async function getProject(
   return getProjectDefinition(await getWorkspace(tree), projectName);
 }
 
-export function getProjectDefinition(
+/** Falls back to the workspace default when no project is named. */
+export function resolveProjectName(
   workspace: WorkspaceDefinition,
   projectName?: string,
-): ProjectDefinition {
+): string {
   projectName ??= workspace.extensions['defaultProject'] as string;
 
   if (!projectName) {
@@ -26,11 +27,19 @@ export function getProjectDefinition(
     );
   }
 
-  const project = workspace.projects.get(projectName);
+  return projectName;
+}
+
+export function getProjectDefinition(
+  workspace: WorkspaceDefinition,
+  projectName?: string,
+): ProjectDefinition {
+  const resolvedName = resolveProjectName(workspace, projectName);
+  const project = workspace.projects.get(resolvedName);
 
   if (!project) {
     throw new SchematicsException(
-      `Project "${projectName}" not found in workspace.`,
+      `Project "${resolvedName}" not found in workspace.`,
     );
   }
 

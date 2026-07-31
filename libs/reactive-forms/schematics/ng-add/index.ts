@@ -2,7 +2,6 @@ import {
   chain,
   Rule,
   SchematicContext,
-  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
@@ -23,6 +22,8 @@ import {
   DEFAULT_REGISTRATIONS_PATH,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
+  getProjectDefinition,
+  resolveProjectName,
 } from '@ngx-formbar/setup';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
@@ -34,22 +35,8 @@ import { createContentTypeFile } from './rules/create-content-type-file.rule';
 export function ngAdd(options: Schema): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
-    const projectName =
-      options.project ?? (workspace.extensions.defaultProject as string);
-
-    if (!projectName) {
-      throw new SchematicsException(
-        'No project specified and no default project found.',
-      );
-    }
-
-    const project = workspace.projects.get(projectName);
-
-    if (!project) {
-      throw new SchematicsException(
-        `Project "${projectName}" not found in workspace.`,
-      );
-    }
+    const projectName = resolveProjectName(workspace, options.project);
+    const project = getProjectDefinition(workspace, projectName);
 
     const projectRoot = project.sourceRoot ?? project.root;
 
