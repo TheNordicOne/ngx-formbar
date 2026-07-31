@@ -155,6 +155,21 @@ describe('buildModel', () => {
       expect(Object.keys(model.nodes)).toEqual(model.root.members);
     });
 
+    it("carries core's row narrowing on the array's children reference", () => {
+      expect(model.nodes['RowArray'].children?.constraints).toEqual([
+        {
+          name: 'hideStrategy',
+          optional: true,
+          type: { k: 'union', members: [{ k: 'literal', value: 'keep' }] },
+        },
+      ]);
+    });
+
+    it('omits constraints from a union no intersection narrows', () => {
+      expect(model.root.constraints).toBeUndefined();
+      expect(model.nodes['GroupControl'].children?.constraints).toBeUndefined();
+    });
+
     it('excludes structural and discriminant properties', () => {
       const names = model.nodes['GroupControl'].properties.map((p) => p.name);
 
@@ -294,6 +309,36 @@ export type AppContent = TextControl | Rogue;
 `,
       ),
     ).rejects.toThrow('Rogue does not extend a @ngx-formbar/core base type.');
+  });
+
+  it('carries a consumer-authored intersection as a constraint', async () => {
+    const narrowed = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; required?: boolean; }
+export type AppContent = TextControl & { required: true };
+`,
+    );
+
+    expect(narrowed.root.members).toEqual(['TextControl']);
+    expect(narrowed.root.constraints).toEqual([
+      {
+        name: 'required',
+        optional: false,
+        type: { k: 'literal', value: true },
+      },
+    ]);
+  });
+
+  it('rejects a union whose members carry different narrowings', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl, NgxFbBlock } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; required?: boolean; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; message: string; }
+export type AppContent = (TextControl & { required: true }) | NoteBlock;
+`,
+      ),
+    ).rejects.toThrow('narrow');
   });
 
   it('rejects a union member built from two declared interfaces', async () => {

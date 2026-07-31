@@ -4,6 +4,8 @@ export interface TypeRef {
   /** Name of the union alias, or null when the union was written inline. */
   name: string | null;
   members: string[];
+  /** Properties an intersection narrowed onto every member of this union. */
+  constraints?: Property[];
 }
 
 export interface Property {

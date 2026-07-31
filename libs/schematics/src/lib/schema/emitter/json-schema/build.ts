@@ -105,7 +105,11 @@ function buildNode(node: FormNode, ctx: BuildContext) {
   }
 
   if (node.children) {
-    const childSchema = { $ref: refPath(childRefName(node), ctx.dialect) };
+    const childSchema = withConstraints(
+      { $ref: refPath(childRefName(node), ctx.dialect) },
+      node.children,
+      ctx,
+    );
 
     if (node.kind === 'group') {
       properties['controls'] = {
@@ -131,6 +135,35 @@ function buildNode(node: FormNode, ctx: BuildContext) {
     node.doc,
     ctx.options,
   );
+}
+
+/**
+ * The narrowing belongs to this use of the union, not to the definition the
+ * union shares with every other use, so it is applied here. A `$ref` suppresses
+ * its siblings in draft-07, which is why the narrowing needs an `allOf` arm of
+ * its own rather than sitting next to the reference.
+ *
+ * That arm carries `properties` and `required` only. `additionalProperties`
+ * would be read against the arm alone, where every property the referenced node
+ * contributes is unknown, and would reject all of them.
+ */
+function withConstraints(
+  schema: { $ref: string },
+  ref: TypeRef,
+  ctx: BuildContext,
+) {
+  if (!ref.constraints?.length) {
+    return schema;
+  }
+
+  const { properties, required } = buildProperties(ref.constraints, ctx);
+
+  return {
+    allOf: [
+      schema,
+      required.length > 0 ? { properties, required } : { properties },
+    ],
+  };
 }
 
 /**
@@ -168,6 +201,21 @@ function buildRef(ref: TypeRef, dialect: Dialect) {
   return {
     anyOf: ref.members.map((member) => ({ $ref: refPath(member, dialect) })),
   };
+}
+
+function buildProperties(source: Property[], ctx: BuildContext) {
+  const properties: Record<string, JsonSchema> = {};
+  const required: string[] = [];
+
+  for (const property of source) {
+    properties[property.name] = buildProperty(property, ctx);
+
+    if (!property.optional) {
+      required.push(property.name);
+    }
+  }
+
+  return { properties, required };
 }
 
 function buildProperty(property: Property, ctx: BuildContext) {
@@ -244,16 +292,7 @@ function buildObjectBody(
   type: Extract<TypeNode, { k: 'object' }>,
   ctx: BuildContext,
 ) {
-  const properties: Record<string, JsonSchema> = {};
-  const required: string[] = [];
-
-  for (const property of type.properties) {
-    properties[property.name] = buildProperty(property, ctx);
-
-    if (!property.optional) {
-      required.push(property.name);
-    }
-  }
+  const { properties, required } = buildProperties(type.properties, ctx);
 
   return {
     type: 'object',
