@@ -1,4 +1,5 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
+import { posix } from 'node:path';
 import { SourceFile, Type, TypeChecker, TypeFlags } from 'typescript';
 import { createTreeProgram } from './program';
 import { SchemaContext } from './schema';
@@ -13,7 +14,9 @@ export function resolveContentType(
   const absolutePath = `${ctx.projectRoot}/${filePath}`;
 
   if (!tree.exists(absolutePath)) {
-    throw new SchematicsException(`Type file not found: ${absolutePath}`);
+    throw new SchematicsException(
+      `Type file not found: ${posix.normalize(absolutePath)}`,
+    );
   }
 
   const { program, checker } = createTreeProgram(tree, ctx.tsConfigPath, [
