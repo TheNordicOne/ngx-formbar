@@ -11,11 +11,10 @@ import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
   findConfigPath,
-  findSchematicsConfig,
   getAngularComponentNaming,
   getProjectDefinition,
+  loadAutomationConfig,
   NgxFormbarAutomationConfig,
-  readFile,
 } from '@ngx-formbar/setup';
 import {
   DEFAULT_INTERFACE_FILE_SUFFIX,
@@ -121,13 +120,10 @@ function loadMergedConfig(
   tree: Tree,
   projectRoot: string,
 ) {
-  const automationConfigPath = options.schematicsConfig
-    ? `${projectRoot}/${options.schematicsConfig}`
-    : findSchematicsConfig(tree);
-
-  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
+  const automationConfig = loadAutomationConfig(
     tree,
-    automationConfigPath,
+    projectRoot,
+    options.schematicsConfig,
   );
   const controlTypeConfig = automationConfig ? automationConfig[type] : {};
 

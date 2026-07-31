@@ -6,10 +6,8 @@ import {
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
 import {
-  findSchematicsConfig,
   getProjectDefinition,
-  NgxFormbarAutomationConfig,
-  readFile,
+  loadAutomationConfig,
   SchemaEmitterEntry,
 } from '@ngx-formbar/setup';
 import { Schema } from './schema';
@@ -136,13 +134,10 @@ function buildSchemaContext(
   const project = getProjectDefinition(workspace, options.project);
   const projectRoot = project.sourceRoot ?? project.root;
 
-  const configPath = options.schematicsConfig
-    ? `${projectRoot}/${options.schematicsConfig}`
-    : findSchematicsConfig(tree);
-
-  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
+  const automationConfig = loadAutomationConfig(
     tree,
-    configPath,
+    projectRoot,
+    options.schematicsConfig,
   );
 
   const typeReference = options.type ?? automationConfig?.schema?.type;

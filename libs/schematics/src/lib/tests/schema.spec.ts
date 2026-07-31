@@ -140,6 +140,35 @@ export type AppContent = TextControl;
     );
   });
 
+  it('reads the automation config named by --schematicsConfig', async () => {
+    addCoreStub(tree);
+    tree.create(
+      app('types/content.type.ts'),
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+    );
+    // Deliberately not the discoverable name, so only the option can find it.
+    writeJson(tree, app('custom-schema.config.json'), {
+      schema: {
+        type: 'app/types/content.type.ts#AppContent',
+        emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+      },
+    });
+
+    const result = await runner.runSchematic(
+      'schema',
+      {
+        project: 'test-app',
+        schematicsConfig: 'app/custom-schema.config.json',
+      },
+      tree,
+    );
+
+    expect(result.exists('/projects/test-app/src/form.schema.json')).toBe(true);
+  });
+
   it('writes to a workspace-absolute output path', async () => {
     addCoreStub(tree);
     tree.create(

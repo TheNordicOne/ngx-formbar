@@ -5,6 +5,7 @@ import {
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
 } from './constants';
+import { NgxFormbarAutomationConfig } from './shared-config.type';
 
 export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
   const candidates = [
@@ -60,6 +61,22 @@ export function findSchematicsConfig(tree: Tree): string | null {
   };
 
   return searchInDirectory('');
+}
+
+/**
+ * Reads `formbar-schematic.config.json`. An explicit `--schematicsConfig` is
+ * project-relative; without one the file is discovered anywhere in the tree.
+ */
+export function loadAutomationConfig(
+  tree: Tree,
+  projectRoot: string,
+  configOption?: string,
+): NgxFormbarAutomationConfig | null {
+  const configPath = configOption
+    ? `/${projectRoot}/${configOption}`
+    : findSchematicsConfig(tree);
+
+  return readFile<NgxFormbarAutomationConfig | null>(tree, configPath);
 }
 
 export function readFile<T>(tree: Tree, path?: string | null): T | null {
