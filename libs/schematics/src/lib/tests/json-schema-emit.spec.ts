@@ -14,7 +14,7 @@ import {
   draft202012Emitter,
 } from '../schema/emitter/json-schema/dialects';
 import { EmitContext, EmitPaths } from '../schema/emitter/define-emitter';
-import { FormModel } from '../schema/model';
+import { FormModel, Property } from '../schema/model';
 
 const MODEL: FormModel = {
   root: { name: 'AppContent', members: ['TextControl', 'NoteBlock'] },
@@ -240,6 +240,112 @@ describe('buildJsonSchema', () => {
         content: { rows: { type: 'array', rowControl: { type: 'nope' } } },
       }),
     ).toBe(false);
+  });
+
+  it('applies a constrained reference as an allOf pair (2020-12)', () => {
+    const document = buildJsonSchema(
+      narrowedRowModel(KEEP_ONLY),
+      DRAFT_2020_12,
+      {
+        docs: true,
+      },
+    );
+
+    expect(at(document, '$defs', 'Rows', 'properties', 'rowControl')).toEqual({
+      allOf: [
+        { $ref: '#/$defs/AppItem' },
+        { properties: { hideStrategy: { const: 'keep' } } },
+      ],
+    });
+  });
+
+  it('applies a constrained reference as an allOf pair (draft-07)', () => {
+    const document = buildJsonSchema(narrowedRowModel(KEEP_ONLY), DRAFT_07, {
+      docs: true,
+    });
+
+    expect(
+      at(document, 'definitions', 'Rows', 'properties', 'rowControl'),
+    ).toEqual({
+      allOf: [
+        { $ref: '#/definitions/AppItem' },
+        { properties: { hideStrategy: { const: 'keep' } } },
+      ],
+    });
+  });
+
+  it('requires a constraint the model does not mark optional', () => {
+    const document = buildJsonSchema(
+      narrowedRowModel([
+        {
+          name: 'required',
+          optional: false,
+          type: { k: 'literal', value: true },
+        },
+      ]),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'Rows', 'properties', 'rowControl')).toEqual({
+      allOf: [
+        { $ref: '#/$defs/AppItem' },
+        { properties: { required: { const: true } }, required: ['required'] },
+      ],
+    });
+  });
+
+  it('leaves the shared union definition unconstrained', () => {
+    const document = buildJsonSchema(
+      narrowedRowModel(KEEP_ONLY),
+      DRAFT_2020_12,
+      {
+        docs: true,
+      },
+    );
+
+    expect(at(document, '$defs', 'AppItem')).toEqual({
+      anyOf: [{ $ref: '#/$defs/TextControl' }],
+    });
+    expect(at(document, '$defs', 'Section', 'properties', 'controls')).toEqual({
+      type: 'object',
+      additionalProperties: { $ref: '#/$defs/AppItem' },
+    });
+  });
+
+  it('validates the narrowing on the row without losing the referenced node (2020-12)', () => {
+    const ajv = new Ajv2020({ strict: false });
+    const validate = ajv.compile(
+      buildJsonSchema(narrowedRowModel(KEEP_ONLY), DRAFT_2020_12, {
+        docs: true,
+      }),
+    );
+
+    expect(validate(rowForm('keep'))).toBe(true);
+    expect(validate(rowForm())).toBe(true);
+    expect(validate(rowForm('remove'))).toBe(false);
+    // The same union used by the group keeps the strategy it declares.
+    expect(
+      validate({
+        content: {
+          section: {
+            type: 'section',
+            controls: { first: { type: 'text', hideStrategy: 'remove' } },
+          },
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it('validates the narrowing on the row without losing the referenced node (draft-07)', () => {
+    const ajv = new Ajv({ strict: false });
+    const validate = ajv.compile(
+      buildJsonSchema(narrowedRowModel(KEEP_ONLY), DRAFT_07, { docs: true }),
+    );
+
+    expect(validate(rowForm('keep'))).toBe(true);
+    expect(validate(rowForm())).toBe(true);
+    expect(validate(rowForm('remove'))).toBe(false);
   });
 
   it('keeps two same-named shapes apart', () => {
@@ -474,6 +580,71 @@ function nestingModel(): FormModel {
         open: false,
         properties: [],
         children: { name: null, members: ['TextControl'] },
+      },
+    },
+  };
+}
+
+const KEEP_ONLY: Property[] = [
+  {
+    name: 'hideStrategy',
+    optional: true,
+    type: { k: 'literal', value: 'keep' },
+  },
+];
+
+function rowForm(hideStrategy?: string) {
+  const rowControl =
+    hideStrategy === undefined
+      ? { type: 'text' }
+      : { type: 'text', hideStrategy };
+
+  return { content: { rows: { type: 'array', rowControl } } };
+}
+
+/**
+ * A group and an array point at the same named child union, and only the array's
+ * row is narrowed. `hideStrategy` is declared on the node so the narrowing has
+ * something wider to cut down.
+ */
+function narrowedRowModel(constraints: Property[]): FormModel {
+  return {
+    root: { name: 'AppContent', members: ['TextControl', 'Section', 'Rows'] },
+    nodes: {
+      TextControl: {
+        name: 'TextControl',
+        kind: 'control',
+        typeLiteral: 'text',
+        open: false,
+        properties: [
+          {
+            name: 'hideStrategy',
+            optional: true,
+            type: {
+              k: 'union',
+              members: [
+                { k: 'literal', value: 'keep' },
+                { k: 'literal', value: 'remove' },
+              ],
+            },
+          },
+        ],
+      },
+      Section: {
+        name: 'Section',
+        kind: 'group',
+        typeLiteral: 'section',
+        open: false,
+        properties: [],
+        children: { name: 'AppItem', members: ['TextControl'] },
+      },
+      Rows: {
+        name: 'Rows',
+        kind: 'array',
+        typeLiteral: 'array',
+        open: false,
+        properties: [],
+        children: { name: 'AppItem', members: ['TextControl'], constraints },
       },
     },
   };

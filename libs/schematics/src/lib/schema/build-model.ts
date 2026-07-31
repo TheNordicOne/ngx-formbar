@@ -51,13 +51,14 @@ export function buildModel(
     nodes: new Map(),
     nodeNames: new Set(),
   };
-  const root = toTypeRef(type, checker);
 
   // Names are collected up front so a property referencing another node emits a
   // reference no matter where that node sits in the union.
   for (const member of unionMembers(type)) {
     collectNodeName(member, builder);
   }
+
+  const root = toTypeRef(type, builder);
 
   for (const member of unionMembers(type)) {
     addNode(member, builder);
@@ -218,7 +219,7 @@ function readChildren(
     addNode(member, builder);
   }
 
-  return toTypeRef(itemType, builder.checker);
+  return toTypeRef(itemType, builder);
 }
 
 /** A group holds its children behind an index signature, an array holds one row type. */
@@ -400,11 +401,63 @@ function isBooleanLiteralNode(node: TypeNode) {
   return node.k === 'literal' && typeof node.value === 'boolean';
 }
 
-function toTypeRef(type: Type, checker: TypeChecker) {
-  return {
+function toTypeRef(type: Type, builder: Builder) {
+  const ref: TypeRef = {
     name: aliasName(type),
-    members: unionMembers(type).map((member) => nodeName(member, checker)),
+    members: unionMembers(type).map((member) =>
+      nodeName(member, builder.checker),
+    ),
   };
+  const constraints = narrowingProperties(type, builder);
+
+  if (constraints.length > 0) {
+    ref.constraints = constraints;
+  }
+
+  return ref;
+}
+
+/**
+ * The narrowing `toDeclaredNode` drops has to travel with the reference, or the
+ * schema accepts what the type rejects. TypeScript distributes the intersection
+ * over the union, so the same narrowing rides on every member and belongs to the
+ * union as a whole. A union that narrows only some of its members cannot be
+ * expressed here, and guessing which members it binds to would be worse.
+ */
+function narrowingProperties(type: Type, builder: Builder) {
+  const perMember = (type.isUnion() ? type.types : [type]).map((member) =>
+    narrowingOf(member, builder),
+  );
+  const [first = [], ...rest] = perMember;
+  const expected = JSON.stringify(first);
+
+  for (const other of rest) {
+    if (JSON.stringify(other) !== expected) {
+      throw new SchematicsException(
+        `The union ${builder.checker.typeToString(type)} does not narrow every member the same way. Apply the same intersection to each member, or drop it.`,
+      );
+    }
+  }
+
+  return first;
+}
+
+/** Everything the intersection adds beyond the declared interface that names the node. */
+function narrowingOf(type: Type, builder: Builder) {
+  if (!type.isIntersection()) {
+    return [];
+  }
+
+  const declared = type.types.filter(isDeclaredInterface);
+
+  if (declared.length !== 1) {
+    return [];
+  }
+
+  return type.types
+    .filter((member) => member !== declared[0])
+    .flatMap((member) => member.getProperties())
+    .map((symbol) => toProperty(symbol, builder, new Map()));
 }
 
 /** Node names are the bare interface name; instantiated generics print their arguments. */

@@ -140,12 +140,14 @@ const VALID_FORM = {
       type: 'section',
       controls: {
         intro: { type: 'note', isControl: false, text: 'Tell us about you.' },
-        nickname: { type: 'text', label: 'Nickname' },
+        // A control nested in a group keeps the full `hideStrategy`, so the row
+        // narrowing must not have leaked into the union both of them reference.
+        nickname: { type: 'text', label: 'Nickname', hideStrategy: 'remove' },
       },
     },
     aliases: {
       type: 'repeat',
-      rowControl: { type: 'text', label: 'Alias' },
+      rowControl: { type: 'text', label: 'Alias', hideStrategy: 'keep' },
     },
   },
 };
@@ -153,6 +155,16 @@ const VALID_FORM = {
 const INVALID_FORM = {
   content: {
     name: { type: 'text', label: 'Name', notAProperty: true },
+  },
+};
+
+/** `NgxFbArray` types its row as `T & { hideStrategy?: 'keep' }`. */
+const NARROWED_ROW_FORM = {
+  content: {
+    aliases: {
+      type: 'repeat',
+      rowControl: { type: 'text', hideStrategy: 'remove' },
+    },
   },
 };
 
@@ -296,6 +308,10 @@ function validateWith(ajv, document, dialect) {
   check(
     validate(INVALID_FORM) === false,
     `${dialect} rejects a control carrying an unknown property`,
+  );
+  check(
+    validate(NARROWED_ROW_FORM) === false,
+    `${dialect} rejects a row top using hideStrategy 'remove'`,
   );
 }
 
@@ -468,6 +484,10 @@ function main() {
       modern.$defs?.TextControl?.properties?.maxLength?.description ===
         'Longest value the input accepts.',
       'a property declared by the consumer carries its doc comment',
+    );
+    check(
+      Array.isArray(modern.$defs?.RepeatArray?.properties?.rowControl?.allOf),
+      "the array row applies core's hideStrategy narrowing at the reference",
     );
 
     validateWith(new Ajv2020({ strict: false }), modern, 'draft 2020-12');
