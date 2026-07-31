@@ -11,11 +11,9 @@ import { registerComponents } from './register-components';
 import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import {
   findConfigPath,
-  findSchematicsConfig,
-  readFile,
+  loadAutomationConfig,
   DEFAULT_REGISTRATION_TYPE,
   getProject,
-  NgxFormbarAutomationConfig,
 } from '@ngx-formbar/setup';
 
 export function register(options: DiscoverOptions): Rule {
@@ -46,13 +44,10 @@ function mergeOptions(
 ) {
   const projectRoot = project.sourceRoot ?? project.root;
 
-  const automationConfigPath = options.schematicsConfig
-    ? `/${projectRoot}/${options.schematicsConfig}`
-    : findSchematicsConfig(tree);
-
-  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
+  const automationConfig = loadAutomationConfig(
     tree,
-    automationConfigPath,
+    projectRoot,
+    options.schematicsConfig,
   );
 
   const discoverConfig = automationConfig ? automationConfig.discovery : {};
