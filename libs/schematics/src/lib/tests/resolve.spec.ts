@@ -70,6 +70,17 @@ export type AppContent = TextControl | NoteBlock;
     expect(names).toEqual(['TextControl', 'NoteBlock']);
   });
 
+  it('names a missing "./"-prefixed file without a "/./" in the path', () => {
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: './app/types/absent.type.ts#AppContent' }),
+      ),
+    ).toThrow(
+      'Type file not found: projects/test-app/src/app/types/absent.type.ts',
+    );
+  });
+
   it('throws when the export does not exist', () => {
     expect(() =>
       resolveContentType(
