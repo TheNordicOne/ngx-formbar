@@ -188,7 +188,6 @@ function reserveDefName(name: string, defs: Record<string, JsonSchema>) {
   defs[name] = {};
 }
 
-/** A named child union gets its own definition; an inline one is emitted under the node's name. */
 function childRefName(node: FormNode) {
   return node.children?.name ?? `${node.name}Children`;
 }
