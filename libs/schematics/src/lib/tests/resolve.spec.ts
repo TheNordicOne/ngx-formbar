@@ -55,6 +55,21 @@ export type AppContent = TextControl | NoteBlock;
     expect(coreRoot).toBe('/node_modules/@ngx-formbar/core/');
   });
 
+  it('resolves a reference written with a leading "./"', () => {
+    const { type, checker } = resolveContentType(
+      tree,
+      context({ typeReference: './app/types/content.type.ts#AppContent' }),
+    );
+
+    expect(type.isUnion()).toBe(true);
+    if (!type.isUnion()) {
+      throw new Error('expected a union type');
+    }
+
+    const names = type.types.map((member) => checker.typeToString(member));
+    expect(names).toEqual(['TextControl', 'NoteBlock']);
+  });
+
   it('throws when the export does not exist', () => {
     expect(() =>
       resolveContentType(

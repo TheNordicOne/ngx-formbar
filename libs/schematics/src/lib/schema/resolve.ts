@@ -3,14 +3,14 @@ import { SourceFile, Type, TypeChecker, TypeFlags } from 'typescript';
 import { createTreeProgram } from './program';
 import { SchemaContext } from './schema';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
-import { normalizePath, parseTypeReference } from '../shared/type-reference';
+import { parseTypeReference } from '../shared/type-reference';
 
 export function resolveContentType(
   tree: Tree,
   ctx: SchemaContext,
 ): { type: Type; checker: TypeChecker; coreRoot: string } {
   const { filePath, exportName } = parseTypeReference(ctx.typeReference);
-  const absolutePath = normalizePath(`${ctx.projectRoot}/${filePath}`);
+  const absolutePath = `${ctx.projectRoot}/${filePath}`;
 
   if (!tree.exists(absolutePath)) {
     throw new SchematicsException(`Type file not found: ${absolutePath}`);
