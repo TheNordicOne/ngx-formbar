@@ -15,6 +15,7 @@ import { resolveContentType } from './resolve';
 import { buildModel } from './build-model';
 import { toJsonTypes } from './json-types';
 import { resolveEmitter } from './emitter/registry';
+import { resolveProjectPath } from './project-path';
 import { FormModel } from './model';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
 
@@ -50,13 +51,13 @@ export function schema(options: Schema): Rule {
     warnUnsatisfiableNodes(model, context);
 
     for (const entry of entries) {
+      const output = options.output ?? entry.output;
       const paths = {
         workspaceRoot: schemaContext.workspaceRoot,
         projectRoot: schemaContext.projectRoot,
-        output: resolveOutput(
-          options.output ?? entry.output,
-          schemaContext.projectRoot,
-        ),
+        output: output
+          ? resolveProjectPath(output, schemaContext.projectRoot)
+          : null,
       };
       const emitter = resolveEmitter(entry.use, tree, paths);
 
@@ -109,21 +110,6 @@ function warnUnsatisfiableNodes(model: FormModel, context: SchematicContext) {
       }
     }
   }
-}
-
-/**
- * Output paths are project-relative, matching how `use` and the `type`
- * reference already resolve. A leading `/` means workspace-absolute, for the
- * consumer who genuinely wants to write outside their project. Resolving here
- * rather than in each emitter keeps every emitter — ours and a consumer's —
- * from having to know the convention.
- */
-function resolveOutput(output: string | undefined, projectRoot: string) {
-  if (!output) {
-    return null;
-  }
-
-  return output.startsWith('/') ? output : `/${projectRoot}/${output}`;
 }
 
 function buildSchemaContext(

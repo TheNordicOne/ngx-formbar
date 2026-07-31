@@ -169,6 +169,41 @@ export type AppContent = TextControl;
     expect(result.exists('/projects/test-app/src/form.schema.json')).toBe(true);
   });
 
+  it('resolves a "./"-prefixed output the same way a "./"-prefixed emitter is resolved', async () => {
+    addCoreStub(tree);
+    tree.create(
+      app('types/content.type.ts'),
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+    );
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: {
+        type: 'app/types/content.type.ts#AppContent',
+        emitters: [
+          { use: 'json-schema-2020-12', output: './form.schema.json' },
+        ],
+      },
+    });
+
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    const result = await runner.runSchematic(
+      'schema',
+      { project: 'test-app' },
+      tree,
+    );
+
+    expect(result.exists('/projects/test-app/src/form.schema.json')).toBe(true);
+    // The path handed to the emitter and logged back is the canonical one, not
+    // one carrying the config's "./" through.
+    expect(messages).toContain(
+      'Emitted with "json-schema-2020-12" to "/projects/test-app/src/form.schema.json"',
+    );
+  });
+
   it('writes to a workspace-absolute output path', async () => {
     addCoreStub(tree);
     tree.create(

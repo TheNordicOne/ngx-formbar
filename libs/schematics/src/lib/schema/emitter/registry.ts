@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { Emitter, EmitPaths } from './define-emitter';
 import { loadFromPackage, loadFromPath } from './load';
 import { draft07Emitter, draft202012Emitter } from './json-schema/dialects';
+import { resolveProjectPath } from '../project-path';
 
 const BUILT_INS: Emitter[] = [draft202012Emitter, draft07Emitter];
 
@@ -21,12 +22,7 @@ export function resolveEmitter(
   return isPath
     ? loadFromPath(
         { tree, workspaceRoot: paths.workspaceRoot },
-        normalise(spec, paths.projectRoot),
+        resolveProjectPath(spec, paths.projectRoot),
       )
     : loadFromPackage(spec, paths.workspaceRoot);
-}
-
-function normalise(spec: string, projectRoot: string) {
-  const withoutPrefix = spec.replace(/^\.\//, '');
-  return spec.startsWith('/') ? spec : `/${projectRoot}/${withoutPrefix}`;
 }
