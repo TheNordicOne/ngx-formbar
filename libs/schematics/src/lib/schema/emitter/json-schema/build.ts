@@ -210,12 +210,15 @@ function buildRef(ref: TypeRef, ctx: BuildContext) {
   };
 }
 
-function buildProperties(source: Property[], ctx: BuildContext) {
+function assembleProperties(
+  source: Property[],
+  toSchema: (property: Property) => JsonSchema,
+) {
   const properties: Record<string, JsonSchema> = {};
   const required: string[] = [];
 
   for (const property of source) {
-    properties[property.name] = buildProperty(property, ctx);
+    properties[property.name] = toSchema(property);
 
     if (!property.optional) {
       required.push(property.name);
@@ -223,6 +226,22 @@ function buildProperties(source: Property[], ctx: BuildContext) {
   }
 
   return { properties, required };
+}
+
+/** Properties straight off the model, projected onto their JSON part on the way in. */
+function buildProperties(source: Property[], ctx: BuildContext) {
+  return assembleProperties(source, (property) => buildProperty(property, ctx));
+}
+
+/**
+ * `toJsonTypes` recurses the whole subtree, so everything below `buildType` was
+ * projected by the `buildProperty` call that started the descent. Projecting
+ * again here would repeat that walk once per level of nesting.
+ */
+function buildProjectedProperties(source: Property[], ctx: BuildContext) {
+  return assembleProperties(source, (property) =>
+    withDoc(buildType(property.type, ctx), property.doc, ctx.options),
+  );
 }
 
 function buildProperty(property: Property, ctx: BuildContext) {
@@ -299,7 +318,10 @@ function buildObjectBody(
   type: Extract<TypeNode, { k: 'object' }>,
   ctx: BuildContext,
 ) {
-  const { properties, required } = buildProperties(type.properties, ctx);
+  const { properties, required } = buildProjectedProperties(
+    type.properties,
+    ctx,
+  );
 
   return {
     type: 'object',
