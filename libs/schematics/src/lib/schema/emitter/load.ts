@@ -98,7 +98,6 @@ type ModuleWrapper = (
   directory: string,
 ) => void;
 
-/** Loads a `.ts` emitter by transpiling it with the peer TypeScript, then evaluating it. */
 export function loadFromPath(host: LoadHost, absolutePath: string): Emitter {
   const context: LoadContext = { host, modules: new Map() };
 

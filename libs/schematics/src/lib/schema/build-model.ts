@@ -41,7 +41,6 @@ interface Builder {
   docs: boolean;
   /** A Map, not a Record, so a miss is typed as `undefined` while building. */
   nodes: Map<string, FormNode>;
-  /** Every name that will become a node, collected before any node is built. */
   nodeNames: Set<string>;
 }
 
@@ -452,7 +451,6 @@ function isUniform(narrowings: Property[][]) {
   return rest.every((narrowing) => JSON.stringify(narrowing) === expected);
 }
 
-/** Everything the intersection adds beyond the declared interface that names the node. */
 function narrowingOf(type: Type, builder: Builder) {
   const narrowing = splitIntersection(type)?.narrowing ?? [];
 

@@ -19,7 +19,6 @@ import {
 } from 'typescript';
 import { normalizePath } from '../shared/type-reference';
 
-/** Reads workspace files from the Tree and everything else from disk. */
 export function createTreeCompilerHost(tree: Tree): CompilerHost {
   return {
     fileExists: (fileName) => tree.exists(fileName) || existsSync(fileName),
