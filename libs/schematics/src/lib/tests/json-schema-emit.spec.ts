@@ -146,6 +146,38 @@ describe('buildJsonSchema', () => {
     );
   });
 
+  it('emits the discriminant ahead of the declared properties', () => {
+    // The document is read by people as well as validators, and `type` is what
+    // tells them which node they are looking at.
+    const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true });
+
+    expect(keysAt(document, '$defs', 'NoteBlock', 'properties')).toEqual([
+      'type',
+      'isControl',
+      'message',
+    ]);
+    expect(at(document, '$defs', 'NoteBlock', 'required')).toEqual([
+      'type',
+      'isControl',
+      'message',
+    ]);
+  });
+
+  it('emits the discriminant ahead of the structural child property', () => {
+    const document = buildJsonSchema(nestingModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(keysAt(document, '$defs', 'Section', 'properties')).toEqual([
+      'type',
+      'controls',
+    ]);
+    expect(at(document, '$defs', 'Rows', 'required')).toEqual([
+      'type',
+      'rowControl',
+    ]);
+  });
+
   it('describes a node and a documented property when docs are enabled', () => {
     const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true });
 
@@ -591,6 +623,14 @@ function at(value: unknown, ...path: string[]): unknown {
   }
 
   return current;
+}
+
+function keysAt(value: unknown, ...path: string[]) {
+  const target = at(value, ...path);
+
+  return typeof target === 'object' && target !== null
+    ? Object.keys(target)
+    : null;
 }
 
 function context(

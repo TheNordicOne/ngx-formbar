@@ -92,21 +92,7 @@ export function buildJsonSchema(
 }
 
 function buildNode(node: FormNode, ctx: BuildContext) {
-  const properties: Record<string, JsonSchema> = {
-    type:
-      node.typeLiteral === null
-        ? { type: 'string' }
-        : { const: node.typeLiteral },
-  };
-  const required = ['type'];
-
-  for (const property of node.properties) {
-    properties[property.name] = buildProperty(property, ctx);
-
-    if (!property.optional) {
-      required.push(property.name);
-    }
-  }
+  const { properties, required } = buildProperties(node.properties, ctx);
 
   if (node.children) {
     const childSchema = withConstraints(
@@ -129,16 +115,24 @@ function buildNode(node: FormNode, ctx: BuildContext) {
     }
   }
 
+  // `type` leads, so a reader of the document sees which node it identifies
+  // before the properties that node declares.
   return withDoc(
     {
       type: 'object',
-      properties,
-      required,
+      properties: { type: discriminant(node), ...properties },
+      required: ['type', ...required],
       additionalProperties: node.open,
     },
     node.doc,
     ctx.options,
   );
+}
+
+function discriminant(node: FormNode) {
+  return node.typeLiteral === null
+    ? { type: 'string' }
+    : { const: node.typeLiteral };
 }
 
 /**
