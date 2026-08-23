@@ -7,7 +7,7 @@ const EVERY_KIND: TypeNode = {
   k: 'object',
   name: 'Outer',
   properties: [
-    { name: 'gone', optional: false, type: { k: 'function' } },
+    { name: 'gone', optional: true, type: { k: 'function' } },
     { name: 'text', optional: true, type: { k: 'string' } },
     { name: 'count', optional: false, type: { k: 'number' } },
     { name: 'flag', optional: false, type: { k: 'boolean' } },
@@ -35,7 +35,7 @@ const EVERY_KIND: TypeNode = {
         items: {
           k: 'object',
           properties: [
-            { name: 'dropped', optional: false, type: { k: 'function' } },
+            { name: 'dropped', optional: true, type: { k: 'function' } },
             { name: 'kept', optional: true, type: { k: 'string' } },
           ],
           index: { k: 'function' },
@@ -78,12 +78,28 @@ describe('toJsonTypes', () => {
     expect(toJsonTypes({ k: 'function' })).toBeNull();
   });
 
+  it('returns null when a required property has no JSON representation', () => {
+    expect(
+      toJsonTypes({
+        k: 'object',
+        properties: [
+          { name: 'id', optional: false, type: { k: 'string' } },
+          { name: 'transform', optional: false, type: { k: 'function' } },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('projects the never node to null', () => {
+    expect(toJsonTypes({ k: 'never' })).toBeNull();
+  });
+
   it('recurses into arrays and objects', () => {
     expect(
       toJsonTypes({
         k: 'object',
         properties: [
-          { name: 'a', optional: false, type: { k: 'function' } },
+          { name: 'a', optional: true, type: { k: 'function' } },
           {
             name: 'b',
             optional: false,

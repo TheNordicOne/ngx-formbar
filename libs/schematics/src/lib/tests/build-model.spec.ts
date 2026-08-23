@@ -12,6 +12,11 @@ import { app } from './helper';
 import { resolveContentType } from '../schema/resolve';
 import { buildModel } from '../schema/build-model';
 import { FormModel } from '../schema/model';
+import Ajv2020 from 'ajv/dist/2020';
+import {
+  buildJsonSchema,
+  DRAFT_2020_12,
+} from '../schema/emitter/json-schema/build';
 
 const CONTENT = `import { NgxFbControl, NgxFbFormGroup, NgxFbArray, NgxFbBlock, NgxFbBaseContent, NgxFbItem } from '@ngx-formbar/core';
 
@@ -85,7 +90,7 @@ describe('buildModel', () => {
     });
 
     it('reads the narrowed type literal', () => {
-      expect(model.nodes['TextControl'].typeLiteral).toBe('text');
+      expect(model.nodes['TextControl'].typeLiteral).toEqual(['text']);
     });
 
     it('marks a node with an index signature as open', () => {
@@ -213,6 +218,55 @@ export type AppContent = LooseControl;
     );
 
     expect(loose.nodes['LooseControl'].typeLiteral).toBeNull();
+  });
+
+  it('rejects a type outside the narrowed discriminant literals', async () => {
+    const model = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface SelectControl extends NgxFbControl { type: 'select' | 'multiselect'; }
+export type AppContent = SelectControl;
+`,
+    );
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(model, DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate({ content: { pick: { type: 'select' } } })).toBe(true);
+    expect(validate({ content: { pick: { type: 'multiselect' } } })).toBe(true);
+    expect(validate({ content: { pick: { type: 'text' } } })).toBe(false);
+  });
+
+  it('rejects an object missing a required function-valued property', async () => {
+    const model = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface Options { id: string; transform: (value: unknown) => unknown; }
+export interface SelectControl extends NgxFbControl { type: 'select'; options: Options; }
+export type AppContent = SelectControl;
+`,
+    );
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(model, DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(
+      validate({
+        content: { pick: { type: 'select', options: { id: 'a' } } },
+      }),
+    ).toBe(false);
+  });
+
+  it('maps a non-JSON primitive to the never node', async () => {
+    const model = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface BigControl extends NgxFbControl { type: 'big'; amount: bigint; }
+export type AppContent = BigControl;
+`,
+    );
+    const amount = model.nodes['BigControl'].properties.find(
+      (property) => property.name === 'amount',
+    );
+
+    expect(amount?.type).toEqual({ k: 'never' });
   });
 
   it('references a peer union member instead of inlining it', async () => {

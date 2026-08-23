@@ -130,9 +130,13 @@ function buildNode(node: FormNode, ctx: BuildContext) {
 }
 
 function discriminant(node: FormNode) {
-  return node.typeLiteral === null
-    ? { type: 'string' }
-    : { const: node.typeLiteral };
+  const literals = node.typeLiteral;
+
+  if (literals === null) {
+    return { type: 'string' };
+  }
+
+  return literals.length === 1 ? { const: literals[0] } : { enum: literals };
 }
 
 /**
@@ -271,6 +275,7 @@ function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
     case 'object':
       return buildObject(type, ctx);
     case 'function':
+    case 'never':
       // `toJsonTypes` drops these, so only a hand-built model reaches this arm.
       return false;
     case 'unknown':

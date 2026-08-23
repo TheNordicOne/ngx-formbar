@@ -26,14 +26,14 @@ const MODEL: FormModel = {
     text: {
       name: 'text',
       kind: 'control',
-      typeLiteral: 'text',
+      typeLiteral: ['text'],
       open: false,
       properties: [],
     },
     group: {
       name: 'group',
       kind: 'group',
-      typeLiteral: 'group',
+      typeLiteral: ['group'],
       open: false,
       properties: [],
     },

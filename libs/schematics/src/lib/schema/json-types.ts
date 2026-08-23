@@ -1,4 +1,4 @@
-import { TypeNode } from './model';
+import { Property, TypeNode } from './model';
 
 /**
  * Projects a type onto the part of it that can exist in JSON.
@@ -7,6 +7,7 @@ import { TypeNode } from './model';
 export function toJsonTypes(type: TypeNode): TypeNode | null {
   switch (type.k) {
     case 'function':
+    case 'never':
       return null;
     case 'union':
       return projectUnion(type.members);
@@ -27,15 +28,31 @@ export function toJsonTypes(type: TypeNode): TypeNode | null {
   }
 }
 
-function projectObject(type: Extract<TypeNode, { k: 'object' }>): TypeNode {
-  const properties = type.properties.flatMap((property) => {
+function projectObject(
+  type: Extract<TypeNode, { k: 'object' }>,
+): TypeNode | null {
+  const properties: Property[] = [];
+
+  for (const property of type.properties) {
     const projected = toJsonTypes(property.type);
-    return projected ? [{ ...property, type: projected }] : [];
-  });
+
+    if (projected === null) {
+      // An optional property with no JSON form can simply be left out. A
+      // required one cannot: no JSON value satisfies the object, so the object
+      // projects to nothing, just as a node's own required function-valued
+      // property does.
+      if (!property.optional) {
+        return null;
+      }
+
+      continue;
+    }
+
+    properties.push({ ...property, type: projected });
+  }
 
   return {
     k: 'object',
-    // `name` must survive: a `{ k: 'cycle' }` elsewhere in the tree refers to it.
     name: type.name,
     properties,
     index: type.index ? (toJsonTypes(type.index) ?? undefined) : undefined,
