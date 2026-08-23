@@ -35,6 +35,16 @@ const STRUCTURAL_PROPERTIES: Record<NodeKind, string | null> = {
   array: 'rowControl',
 };
 
+/** Primitives that have no JSON value, so the schema can never satisfy them. */
+const NON_JSON_FLAGS =
+  TypeFlags.BigInt |
+  TypeFlags.BigIntLiteral |
+  TypeFlags.ESSymbol |
+  TypeFlags.UniqueESSymbol |
+  TypeFlags.Void |
+  TypeFlags.Undefined |
+  TypeFlags.Never;
+
 interface Builder {
   checker: TypeChecker;
   coreRoot: string;
@@ -117,7 +127,7 @@ function addNode(type: Type, builder: Builder) {
   };
   builder.nodes.set(name, node);
 
-  node.typeLiteral = readTypeLiteral(type, builder.checker);
+  node.typeLiteral = readTypeLiterals(type, builder.checker);
   node.children = readChildren(type, structural, builder);
   node.properties = type
     .getProperties()
@@ -326,6 +336,10 @@ function toTypeNode(
     return { k: 'any' };
   }
 
+  if ((type.flags & NON_JSON_FLAGS) !== 0) {
+    return { k: 'never' };
+  }
+
   if (type.getCallSignatures().length > 0) {
     return { k: 'function' };
   }
@@ -505,17 +519,30 @@ function aliasName(type: Type) {
   return type.aliasSymbol?.getName() ?? null;
 }
 
-function readTypeLiteral(type: Type, checker: TypeChecker) {
+function readTypeLiterals(type: Type, checker: TypeChecker): string[] | null {
   const property = type.getProperty('type');
 
   if (!property) {
     return null;
   }
 
+  // An open `string` arm collapses the result to null — any string is allowed,
+  // so the schema must not pin literals.
+  const literals: string[] = [];
   const propertyType = checker.getTypeOfSymbol(property);
-  return propertyType.isStringLiteral() ? propertyType.value : null;
-}
 
+  for (const member of propertyType.isUnion()
+    ? propertyType.types
+    : [propertyType]) {
+    if (member.isStringLiteral()) {
+      literals.push(member.value);
+    } else if ((member.flags & TypeFlags.String) !== 0) {
+      return null;
+    }
+  }
+
+  return literals.length > 0 ? literals : null;
+}
 function hasIndexSignature(type: Type, checker: TypeChecker) {
   return checker.getIndexInfosOfType(type).length > 0;
 }

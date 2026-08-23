@@ -20,8 +20,12 @@ export interface Property {
 export interface FormNode {
   name: string;
   kind: NodeKind;
-  /** The narrowed `type` literal, or null when the member leaves `type` as string. */
-  typeLiteral: string | null;
+  /**
+   * The `type` literal or literals the member narrows to, or null when the
+   * member leaves `type` as an open string. A single literal is still a
+   * one-element list, so the emitter has one shape to handle.
+   */
+  typeLiteral: string[] | null;
   doc?: string;
   /** True when the node carries an index signature, as NgxFbBlock does. */
   open: boolean;
@@ -44,6 +48,8 @@ export type TypeNode =
   | { k: 'object'; name?: string; properties: Property[]; index?: TypeNode }
   | { k: 'union'; members: TypeNode[] }
   | { k: 'function' }
+  /** No JSON value satisfies the type — a non-JSON primitive such as bigint or symbol. */
+  | { k: 'never' }
   | { k: 'ref'; node: string }
   /** A back-reference to the enclosing `{ k: 'object' }` of the same name. */
   | { k: 'cycle'; name: string };

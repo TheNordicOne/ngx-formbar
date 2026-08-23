@@ -22,7 +22,7 @@ const MODEL: FormModel = {
     TextControl: {
       name: 'TextControl',
       kind: 'control',
-      typeLiteral: 'text',
+      typeLiteral: ['text'],
       open: false,
       doc: 'A text input.',
       properties: [
@@ -45,7 +45,7 @@ const MODEL: FormModel = {
     NoteBlock: {
       name: 'NoteBlock',
       kind: 'block',
-      typeLiteral: 'note',
+      typeLiteral: ['note'],
       open: true,
       properties: [
         {
@@ -527,7 +527,7 @@ describe('buildJsonSchema', () => {
         Section: {
           name: 'Section',
           kind: 'group',
-          typeLiteral: 'group',
+          typeLiteral: ['group'],
           open: false,
           properties: [],
           children: { name: 'Rows', members: ['Rows'] },
@@ -535,7 +535,7 @@ describe('buildJsonSchema', () => {
         Rows: {
           name: 'Rows',
           kind: 'control',
-          typeLiteral: 'rows',
+          typeLiteral: ['rows'],
           open: false,
           properties: [],
         },
@@ -554,7 +554,7 @@ describe('buildJsonSchema', () => {
         Control: {
           name: 'Control',
           kind: 'control',
-          typeLiteral: 'dangling',
+          typeLiteral: ['dangling'],
           open: false,
           properties: [
             {
@@ -654,7 +654,7 @@ function recursiveModel(): FormModel {
       SelectControl: {
         name: 'SelectControl',
         kind: 'control',
-        typeLiteral: 'select',
+        typeLiteral: ['select'],
         open: false,
         properties: [
           {
@@ -693,14 +693,14 @@ function nestingModel(): FormModel {
       TextControl: {
         name: 'TextControl',
         kind: 'control',
-        typeLiteral: 'text',
+        typeLiteral: ['text'],
         open: false,
         properties: [],
       },
       Section: {
         name: 'Section',
         kind: 'group',
-        typeLiteral: 'group',
+        typeLiteral: ['group'],
         open: false,
         properties: [],
         children: { name: 'SectionItem', members: ['TextControl'] },
@@ -708,7 +708,7 @@ function nestingModel(): FormModel {
       Rows: {
         name: 'Rows',
         kind: 'array',
-        typeLiteral: 'array',
+        typeLiteral: ['array'],
         open: false,
         properties: [],
         children: { name: null, members: ['TextControl'] },
@@ -745,7 +745,7 @@ function memberNarrowedModel(): FormModel {
       TextControl: {
         name: 'TextControl',
         kind: 'control',
-        typeLiteral: 'text',
+        typeLiteral: ['text'],
         open: false,
         properties: [
           { name: 'required', optional: true, type: { k: 'boolean' } },
@@ -754,7 +754,7 @@ function memberNarrowedModel(): FormModel {
       NoteBlock: {
         name: 'NoteBlock',
         kind: 'block',
-        typeLiteral: 'note',
+        typeLiteral: ['note'],
         open: true,
         properties: [
           { name: 'message', optional: false, type: { k: 'string' } },
@@ -785,7 +785,7 @@ function narrowedRowModel(constraints: Property[]): FormModel {
       TextControl: {
         name: 'TextControl',
         kind: 'control',
-        typeLiteral: 'text',
+        typeLiteral: ['text'],
         open: false,
         properties: [
           {
@@ -804,7 +804,7 @@ function narrowedRowModel(constraints: Property[]): FormModel {
       Section: {
         name: 'Section',
         kind: 'group',
-        typeLiteral: 'section',
+        typeLiteral: ['section'],
         open: false,
         properties: [],
         children: { name: 'AppItem', members: ['TextControl'] },
@@ -812,7 +812,7 @@ function narrowedRowModel(constraints: Property[]): FormModel {
       Rows: {
         name: 'Rows',
         kind: 'array',
-        typeLiteral: 'array',
+        typeLiteral: ['array'],
         open: false,
         properties: [],
         children: { name: 'AppItem', members: ['TextControl'], constraints },
@@ -829,7 +829,7 @@ function sameNameModel(): FormModel {
       PairControl: {
         name: 'PairControl',
         kind: 'control',
-        typeLiteral: 'pair',
+        typeLiteral: ['pair'],
         open: false,
         properties: [
           {
@@ -868,7 +868,7 @@ function shadowedCycleModel(): FormModel {
       TreeControl: {
         name: 'TreeControl',
         kind: 'control',
-        typeLiteral: 'tree',
+        typeLiteral: ['tree'],
         open: false,
         properties: [
           {
