@@ -13,7 +13,7 @@ ng add @ngx-formbar/reactive-forms
 By default, this does the following.
 
 - Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
-- Install `@ngx-formbar/schematics` as a dev dependency (for component generators)
+- Install `@ngx-formbar/schematics` as a dev dependency (for the control, group, block, and schema generators)
 - Create a registration configuration file
 - Setup token-based registration including
   - barrel export
@@ -24,6 +24,7 @@ By default, this does the following.
   - barrel export
   - control container view provider
 - Create a schematics configuration file
+- Create a content union file (`content.type.ts` with an `AppContent` type)
 - Provide ngx-formbar in your `app.config.ts`
 - Install dependencies
 
@@ -51,7 +52,7 @@ By default, this does the following.
 | --useSchematicConfig      | boolean             | No       | `true`                          | Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in `angular.json`.                                                                   |
 | --schematicsConfigPath    | string              | No       | `app`                           | Where the schematics config should be placed, relative to the project root.                                                                                                                                              |
 | --schematicConfigFileName | string              | No       | `formbar-schematic.config.json` | Name of the schematic config file.                                                                                                                                                                                       |
-| --installSchematics       | boolean             | No       | `true`                          | Whether to install `@ngx-formbar/schematics` as a dev dependency for component generators (control, group, block).                                                                                                       |
+| --installSchematics       | boolean             | No       | `true`                          | Whether to install `@ngx-formbar/schematics` as a dev dependency for the control, group, block, and schema generators.                                                                                                   |
 
 ## Manual Installation
 

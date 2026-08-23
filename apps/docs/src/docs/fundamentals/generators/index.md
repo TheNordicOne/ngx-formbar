@@ -1,4 +1,4 @@
-ngx-formbar includes four generator schematics that scaffold and register a new control, group, block, or array.
+ngx-formbar includes four generator schematics that scaffold and register a new control, group, block, or array, plus a [`schema` generator](/fundamentals/schema) that runs pluggable emitters over your content union.
 
 ## Options
 
