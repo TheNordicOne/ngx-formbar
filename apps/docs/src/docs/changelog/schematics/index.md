@@ -38,7 +38,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Removed
 
-- `--hostDirectiveHelperPath` CLI option from the `control`, `group`, and `block` generators. The `--viewProviderHelperPath` option applies to `control`, `group` and `array`.
+- `--hostDirectiveHelperPath` CLI option from the `control`, `group`, and `block` generators.
 - `--viewProviderHelperPath` from the `block` generator.
 - Generated components no longer reference `hostDirectives` or `inject(NgxfbControlDirective)`.
 
