@@ -1,5 +1,33 @@
 The `schema` generator produces documents from your [content union](/fundamentals/configuration#type-generic). The two built-in emitters write JSON Schema. You can write your own emitter to produce any other output.
 
+## Quick Start
+
+1. Add _ngx-formbar_:
+
+   ```bash
+   ng add @ngx-formbar/reactive-forms
+   ```
+
+2. Scaffold a control. The schema needs at least one, because the union `ng add` creates is empty:
+
+   ```bash
+   ng generate @ngx-formbar/schematics:control --key phoneNumber
+   ```
+
+3. Generate the schema. This writes `src/form.schema.json`:
+
+   ```bash
+   ng generate @ngx-formbar/schematics:schema
+   ```
+
+4. Reference the schema in your form JSON. The path is relative to the form file:
+
+   ```json name="src/form.json"
+   { "$schema": "./form.schema.json", "content": { ... } }
+   ```
+
+   Your editor now autocompletes and validates the config.
+
 ## Configuration
 
 The `schema` section of `formbar-schematic.config.json` configures the generator:
@@ -13,7 +41,7 @@ The `schema` section of `formbar-schematic.config.json` configures the generator
 }
 ```
 
-| Name     | Type   | Required | Description                                                                      |
+| Key      | Type   | Required | Description                                                                      |
 | -------- | ------ | -------- | -------------------------------------------------------------------------------- |
 | type     | string | Yes      | The content union, as `path/to/file.ts#ExportName`. See [Paths](#paths).         |
 | emitters | array  | No       | Emitter entries to run, in order. Without entries, the generator writes nothing. |
@@ -40,29 +68,26 @@ The content union is compiled with the `tsConfig` of the project's `build` targe
 
 ## Options
 
-| Option             | Type   | Required | Default                   | Description                                                                                                                                                      |
-| ------------------ | ------ | -------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --project          | string | No       | workspace default project | Angular project name where files are generated.                                                                                                                  |
-| --schematicsConfig | string | No       | -                         | The schematics configuration file, relative to the source root. Without it, the generator searches the workspace for `formbar-schematic.config.json`.            |
-| --type             | string | No       | -                         | The content union, as `path/to/file.ts#ExportName`. Overrides `schema.type`. See [Paths](#paths).                                                                |
-| --emitter          | array  | No       | -                         | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one. Fails when a value matches no configured entry. |
-| --output           | string | No       | -                         | Override the output path of a single configured emitter entry. Narrow the run with `--emitter` first. See [Paths](#paths).                                       |
+| Option             | Type   | Required | Default                   | Description                                                                                                                                           |
+| ------------------ | ------ | -------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --project          | string | No       | workspace default project | Angular project name where files are generated.                                                                                                       |
+| --schematicsConfig | string | No       | -                         | The schematics configuration file, relative to the source root. Without it, the generator searches the workspace for `formbar-schematic.config.json`. |
+| --type             | string | No       | -                         | The content union, as `path/to/file.ts#ExportName`. Overrides `schema.type`. See [Paths](#paths).                                                     |
+| --emitter          | array  | No       | -                         | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                                      |
+| --output           | string | No       | -                         | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.                                 |
 
 ## Paths
 
-`type`, `output` and a local `use` path are relative to the project's source root. A leading `/` means the workspace root. `--type` and `--output` work the same way.
+Paths are relative to the source root. A leading `/` makes them relative to the workspace root.
 
-With a source root of `src`:
+| With source root `src`, you write | The file is               |
+| --------------------------------- | ------------------------- |
+| `app/form.json`                   | `src/app/form.json`       |
+| `src/app/form.json`               | `src/app/form.json`       |
+| `/schemas/form.json`              | `schemas/form.json`       |
+| `./tools/my-emitter.ts`           | `src/tools/my-emitter.ts` |
 
-| Key      | Value                                  | Resolves to                     |
-| -------- | -------------------------------------- | ------------------------------- |
-| `type`   | `app/types/content.type.ts#AppContent` | `src/app/types/content.type.ts` |
-| `output` | `form.schema.json`                     | `src/form.schema.json`          |
-| `output` | `/dist/form.schema.json`               | `dist/form.schema.json`         |
-| `use`    | `./tools/my-emitter.ts`                | `src/tools/my-emitter.ts`       |
-| `use`    | `/tools/my-emitter.ts`                 | `tools/my-emitter.ts`           |
-
-A local `use` path must start with `./` or `/`. Anything else is read as a built-in name or a package name.
+A local `use` path must start with `./`, `../` or `/`. Anything else is read as a built-in name or a package name.
 
 ## Built-in Emitters
 
@@ -81,7 +106,7 @@ The default output is relative to the source root.
 | ------ | --------- | ------- | ------------------------------- |
 | `docs` | `boolean` | `true`  | Renders JSDoc as `description`. |
 
-Both describe `NgxFbForm.content`. Each union member becomes a definition. The `type` you narrowed is enforced. Add a `$schema` key to your form config that references the generated file. Your editor then autocompletes and validates the config. You can do the same in CI.
+The generated schema checks that every entry in a form's `content` matches a member of your content union, including its `type`.
 
 ## Third-Party Emitters
 
@@ -108,7 +133,7 @@ An emitter is the module's default export: an object with a string `name` and an
 
 Save the emitter in your project. This one writes a Markdown reference of every node and its properties:
 
-```typescript name="tools/content-overview-emitter.ts"
+```typescript name="src/tools/content-overview-emitter.ts"
 import { defineEmitter } from '@ngx-formbar/schematics';
 
 export default defineEmitter({
@@ -193,12 +218,18 @@ Template literal types, `Uppercase<string>` and branded primitives such as `stri
 | options | `EmitOptions` | `entry.options`, or `{}` without one.                                                                                                                      |
 | logger  | `LoggerApi`   | The schematic logger, e.g. `ctx.logger.info('...')`.                                                                                                       |
 
-`workspaceRoot` is the absolute on-disk path of the workspace, used to resolve package specifiers from `node_modules`. `projectRoot` is the project's source root (its root when it has none) exactly as `angular.json` declares it, relative to the workspace and without a leading `/` (for example `projects/<project>/src`). `output` is a `/`-rooted path in `ctx.tree` (for example `/projects/<project>/src/form.schema.json`), already resolved against the source root. It is `null` when the entry sets no `output`. Fall back to your own default, as the example does with `??`.
+`ctx.paths` holds three values:
+
+| Key             | Description                                                                                                                      | Example                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `workspaceRoot` | The workspace's absolute path on disk. Use it to resolve packages from `node_modules`.                                           | `/home/me/my-workspace`                    |
+| `projectRoot`   | The project's source root, or its root when it has none. Relative to the workspace, with no leading `/`.                         | `projects/<project>/src`                   |
+| `output`        | The file to write, as a `/`-rooted path in `ctx.tree`. `null` when the entry sets no `output`, so fall back to your own default. | `/projects/<project>/src/form.schema.json` |
 
 `toJsonTypes(type)` projects a `TypeNode` onto its JSON part, dropping `function` arms and collapsing one-arm unions. It returns `null` when no JSON value satisfies the type. Use it when producing JSON-shaped output.
 
 > **Note**
-> Emitters run inside the schematic transaction. A throw aborts the whole run and nothing is written, not this emitter's output, not the earlier emitters'. Only writes through `ctx.tree` appear in `--dry-run`. The Angular CLI does not expose a dry-run flag to schematics, so the generator has none of its own.
+> Emitters run inside the schematic transaction. A throw aborts the whole run and nothing is written, not this emitter's output, not the earlier emitters'. `--dry-run` covers only writes through `ctx.tree`.
 
 ### Sharing an Emitter as a Package
 
