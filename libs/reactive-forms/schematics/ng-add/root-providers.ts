@@ -43,7 +43,23 @@ import {
 
 const ANGULAR_CORE = '@angular/core';
 const MERGE_FUNCTION = 'mergeApplicationConfig';
-const EMPTY_PROVIDERS = '{\n  providers: []\n}';
+
+interface TextLayout {
+  newLine: string;
+  indentUnit: string;
+}
+
+/** How a file breaks lines and indents, for what gets inserted into it. */
+export function textLayout(text: string): TextLayout {
+  return {
+    newLine: text.includes('\r\n') ? '\r\n' : '\n',
+    indentUnit: /^([ \t]+)[^ \t*\r\n]/m.exec(text)?.[1] ?? '  ',
+  };
+}
+
+function emptyProviders({ newLine, indentUnit }: TextLayout) {
+  return `{${newLine}${indentUnit}providers: []${newLine}}`;
+}
 
 /** The object whose `providers` array holds the root providers. */
 export function findProvidersOwner(
@@ -120,13 +136,19 @@ export function addMissingProviders(
   rootConfig: RootConfig,
 ): void {
   const recorder = tree.beginUpdate(rootConfig.filePath);
+  const layout = textLayout(sourceFile.text);
 
   applyToUpdateRecorder(
     recorder,
     rootConfig.holder === 'module'
-      ? moduleChanges(sourceFile, rootConfig.filePath, rootConfig.className)
+      ? moduleChanges(
+          sourceFile,
+          rootConfig.filePath,
+          rootConfig.className,
+          layout,
+        )
       : rootConfig.holder === 'bootstrap'
-        ? bootstrapChanges(sourceFile, rootConfig.filePath)
+        ? bootstrapChanges(sourceFile, rootConfig.filePath, layout)
         : [],
   );
   tree.commitUpdate(recorder);
@@ -136,6 +158,7 @@ function moduleChanges(
   sourceFile: SourceFile,
   filePath: string,
   className: string,
+  layout: TextLayout,
 ) {
   const owner = moduleMetadata(sourceFile, className);
 
@@ -158,7 +181,7 @@ function moduleChanges(
   }
 
   return !providers
-    ? insertIntoObject(owner, filePath)
+    ? insertIntoObject(owner, filePath, layout)
     : isPropertyAssignment(providers)
       ? [
           new InsertChange(filePath, providers.initializer.getStart(), '['),
@@ -167,19 +190,23 @@ function moduleChanges(
       : [new InsertChange(filePath, providers.getEnd(), ': [providers]')];
 }
 
-function bootstrapChanges(sourceFile: SourceFile, filePath: string) {
+function bootstrapChanges(
+  sourceFile: SourceFile,
+  filePath: string,
+  layout: TextLayout,
+) {
   const call = bootstrapApplicationCall(sourceFile);
   const config = call?.arguments.at(1);
 
   return !call || bootstrapConfigObject(call)
     ? []
     : !config
-      ? insertAsArgument(call, filePath)
+      ? insertAsArgument(call, filePath, layout)
       : isMergeCall(config)
-        ? insertAsArgument(config, filePath)
+        ? insertAsArgument(config, filePath, layout)
         : isObjectLiteralExpression(config) && acceptsProviders(config)
-          ? insertIntoObject(config, filePath)
-          : wrapInMergeCall(sourceFile, config, filePath);
+          ? insertIntoObject(config, filePath, layout)
+          : wrapInMergeCall(sourceFile, config, filePath, layout);
 }
 
 /** A spread further down would replace an array added at the top. */
@@ -190,18 +217,26 @@ function acceptsProviders(object: ObjectLiteralExpression) {
   );
 }
 
-function insertIntoObject(owner: ObjectLiteralExpression, filePath: string) {
+function insertIntoObject(
+  owner: ObjectLiteralExpression,
+  filePath: string,
+  { newLine, indentUnit }: TextLayout,
+) {
   return [
     new InsertChange(
       filePath,
       owner.getStart() + 1,
-      `\n  providers: []${owner.properties.length > 0 ? ',' : '\n'}`,
+      `${newLine}${indentUnit}providers: []${owner.properties.length > 0 ? ',' : newLine}`,
     ),
   ];
 }
 
 /** After the last argument, as the call may end in a trailing comma. */
-function insertAsArgument(call: CallExpression, filePath: string) {
+function insertAsArgument(
+  call: CallExpression,
+  filePath: string,
+  layout: TextLayout,
+) {
   const lastArgument = call.arguments.at(-1);
 
   return [
@@ -209,9 +244,9 @@ function insertAsArgument(call: CallExpression, filePath: string) {
       ? new InsertChange(
           filePath,
           lastArgument.getEnd(),
-          `, ${EMPTY_PROVIDERS}`,
+          `, ${emptyProviders(layout)}`,
         )
-      : new InsertChange(filePath, call.getEnd() - 1, EMPTY_PROVIDERS),
+      : new InsertChange(filePath, call.getEnd() - 1, emptyProviders(layout)),
   ];
 }
 
@@ -219,6 +254,7 @@ function wrapInMergeCall(
   sourceFile: SourceFile,
   config: Expression,
   filePath: string,
+  layout: TextLayout,
 ) {
   const imported = importBindings(sourceFile, ANGULAR_CORE).find(
     (binding) =>
@@ -234,7 +270,7 @@ function wrapInMergeCall(
           insertNamedImport(sourceFile, filePath, MERGE_FUNCTION, ANGULAR_CORE),
         ]),
     new InsertChange(filePath, config.getStart(), `${mergeFunction}(`),
-    new InsertChange(filePath, config.getEnd(), `, ${EMPTY_PROVIDERS})`),
+    new InsertChange(filePath, config.getEnd(), `, ${emptyProviders(layout)})`),
   ];
 }
 
@@ -256,7 +292,7 @@ export function insertNamedImport(
     ? new InsertChange(
         filePath,
         namespace.parent.parent.getEnd(),
-        `\nimport { ${symbol} } from '${packageName}';`,
+        `${textLayout(sourceFile.text).newLine}import { ${symbol} } from '${packageName}';`,
       )
     : insertImport(sourceFile, filePath, symbol, packageName);
 }

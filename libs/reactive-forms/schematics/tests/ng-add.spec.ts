@@ -720,6 +720,124 @@ describe('ng-add schematic', () => {
       expect(edited).not.toMatch(/(?<!\r)\n/);
     });
 
+    it.each<[string, string, string]>([
+      [
+        'LF around the array under a CRLF header',
+        '// header\r\nexport const appConfig = {\n  providers: [\n    provideRouter(routes),\n  ],\n};\n',
+        '    provideRouter(routes),\n    provideFormbar(formbarConfig),\n',
+      ],
+      [
+        'CRLF around the array under an LF header',
+        '// header\nexport const appConfig = {\r\n  providers: [\r\n    provideRouter(routes),\r\n  ],\r\n};\r\n',
+        '    provideRouter(routes),\r\n    provideFormbar(formbarConfig),\r\n',
+      ],
+      [
+        'an array on one line under a CRLF header',
+        '// header\r\nexport const appConfig = {\n  providers: [provideRouter(routes)],\n};\n',
+        '  providers: [provideRouter(routes),\n    provideFormbar(formbarConfig),',
+      ],
+    ])('adds to %s', async (_, config, expected) => {
+      appTree.overwrite(appConfigPath, config);
+
+      const edited = (await runAdd()).readText(appConfigPath);
+
+      expect(edited).toContain(expected);
+      expect(edited).toContain('// header');
+      expect(syntaxErrors(edited)).toEqual([]);
+    });
+
+    describe('with no providers array yet', () => {
+      const mainFile = src('main.ts');
+      const bootstrapImports =
+        "import { bootstrapApplication } from '@angular/platform-browser';\nimport { App } from './app/app';\n";
+
+      async function editedMain(main: string) {
+        appTree.overwrite(mainFile, main);
+
+        return (await runAdd()).readText(mainFile);
+      }
+
+      it.each<[string, string]>([
+        ['a call without a config', 'bootstrapApplication(App);\n'],
+        [
+          'a config object',
+          'bootstrapApplication(App, {\n  deferBlockBehavior: 1,\n});\n',
+        ],
+        [
+          'a config from a call',
+          'function make() {\n  return { providers: [] };\n}\nbootstrapApplication(App, make());\n',
+        ],
+      ])('keeps CRLF line endings with %s', async (_, call) => {
+        const edited = await editedMain(
+          `${bootstrapImports}${call}`.replace(/\n/g, '\r\n'),
+        );
+
+        expect(edited).toContain('provideFormbar');
+        expect(edited).not.toMatch(/(?<!\r)\n/);
+        expect(syntaxErrors(edited)).toEqual([]);
+      });
+
+      it('keeps CRLF line endings with a namespace import of core', async () => {
+        const edited = await editedMain(
+          `import * as ng from '@angular/core';\n${bootstrapImports}function make() {\n  return ng.isDevMode() ? {} : {};\n}\nbootstrapApplication(App, make());\n`.replace(
+            /\n/g,
+            '\r\n',
+          ),
+        );
+
+        expect(edited).toContain('mergeApplicationConfig(make()');
+        expect(edited).not.toMatch(/(?<!\r)\n/);
+      });
+
+      it.each<[string, string]>([
+        ['four spaces', '    '],
+        ['tabs', '\t'],
+      ])('follows a file indented with %s', async (_, unit) => {
+        const call = `bootstrapApplication(App);\nfunction unused() {\n${unit}return 1;\n}\n`;
+
+        expect(await editedMain(`${bootstrapImports}${call}`)).toContain(
+          `App, {\n${unit}providers: [\n${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+
+      it.each<[string, string]>([
+        ['four spaces', '    '],
+        ['tabs', '\t'],
+      ])('indents into a config object with %s', async (_, unit) => {
+        const edited = await editedMain(
+          `${bootstrapImports}bootstrapApplication(App, {\n${unit}deferBlockBehavior: 1,\n});\n`,
+        );
+
+        expect(edited).toContain(
+          `App, {\n${unit}providers: [\n${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+
+      it.each<[string, string, string]>([
+        ['four spaces and LF', '    ', '\n'],
+        ['tabs and LF', '\t', '\n'],
+        ['two spaces and CRLF', '  ', '\r\n'],
+      ])('indents an NgModule with %s', async (_, unit, newLine) => {
+        const modulePath = app('app.module.ts');
+
+        appTree.create(
+          modulePath,
+          `import { NgModule } from '@angular/core';\n@NgModule({\n${unit}declarations: [],\n})\nexport class AppModule {}\n`.replace(
+            /\n/g,
+            newLine,
+          ),
+        );
+        appTree.overwrite(
+          mainFile,
+          "import { platformBrowser } from '@angular/platform-browser';\nimport { AppModule } from './app/app.module';\nplatformBrowser().bootstrapModule(AppModule);\n",
+        );
+
+        expect((await runAdd()).readText(modulePath)).toContain(
+          `@NgModule({${newLine}${unit}providers: [${newLine}${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+    });
+
     it('adds no whitespace-only line to an array holding only a comment', async () => {
       const edited = await editedConfig('  providers: [\n    // todo\n  ],');
 

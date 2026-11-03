@@ -35,7 +35,7 @@ import {
   REACTIVE_FORMS_PACKAGE_NAME,
   SCHEMATICS_PACKAGE_NAME,
 } from '../shared/constants';
-import { insertNamedImport } from './root-providers';
+import { insertNamedImport, textLayout } from './root-providers';
 import { RuleContext } from './schema';
 import {
   ProjectDefinition,
@@ -353,8 +353,15 @@ export function appendToArray(
   const { elements: existing } = array;
   const text = sourceFile.text;
   const closing = array.getEnd() - 1;
-  const newLine = text.includes('\r\n') ? '\r\n' : '\n';
-  const indentUnit = /^([ \t]+)[^ \t*\r\n]/m.exec(text)?.[1] ?? '  ';
+  const layout = textLayout(text);
+  const { indentUnit } = layout;
+  const lastLineFeed = text.lastIndexOf('\n', closing);
+  const closingLineBreak =
+    text[lastLineFeed - 1] === '\r' ? lastLineFeed - 1 : lastLineFeed;
+  const newLine =
+    lastLineFeed === -1
+      ? layout.newLine
+      : text.slice(closingLineBreak, lastLineFeed + 1);
   const indent = lineIndent(text, array.getStart(sourceFile));
   const inner = text.slice(existing.end, closing);
   const last = existing.at(-1);
@@ -383,7 +390,6 @@ export function appendToArray(
     .map((printed) => `${newLine}${elementIndent}${printed}`)
     .join(',');
   const trailingComma = existing.hasTrailingComma ? ',' : '';
-  const closingLineBreak = text.lastIndexOf(newLine, closing);
 
   return [
     ...(last && !existing.hasTrailingComma
