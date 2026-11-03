@@ -55,6 +55,12 @@ This page lists what ngx-formbar supports today, what is planned, and what is st
 - Configurable update strategy (`change`, `blur`, `submit`) at the form level, with per-control overrides and parent-group inheritance.
 - Resetting the form re-evaluates all conditional state, computed values, and dynamic labels in one pass.
 
+## Schema Generation
+
+- Generate a JSON Schema from your own types, including your custom controls and their properties.
+- Supports JSON Schema drafts 2020-12 and 07.
+- Write your own emitters to produce any other output from the same model.
+
 ## Testing
 
 - Automatic test ID generation per control. The attribute name and the value pattern are configurable, and you can plug in your own builder function for full control over the result.
