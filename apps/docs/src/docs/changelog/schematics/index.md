@@ -51,4 +51,4 @@ Install as a dev dependency to replace the generators previously in `@ngx-formba
 npm install -D @ngx-formbar/schematics
 ```
 
-Update any scripts using `@ngx-formbar/core:<generator>` to `@ngx-formbar/schematics:<generator>`, and drop the `--hostDirectiveHelperPath` flag, and `--viewProviderHelperPath` from `block`. Existing v1-generated components continue to work; see [Migrating from v1](/changelog/migrating-from-v1) to convert them.
+Replace `@ngx-formbar/core:control` with `@ngx-formbar/schematics:control`, and the same for the other generators. Drop the `--hostDirectiveHelperPath` flag, and `--viewProviderHelperPath` from `block`. Existing v1-generated components continue to work; see [Migrating from v1](/changelog/migrating-from-v1) to convert them.
