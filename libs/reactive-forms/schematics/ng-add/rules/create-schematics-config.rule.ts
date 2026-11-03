@@ -54,7 +54,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
 
     schematicConfig.schema = {
       type: `${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
-      docs: true,
       emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
     };
 

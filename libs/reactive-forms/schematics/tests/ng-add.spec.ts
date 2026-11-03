@@ -46,6 +46,7 @@ describe('ng-add schematic', () => {
   const formbarConfigPath = app('formbar.config.ts');
   const formbarConfigImportPath = formbarConfigPath.split('.ts')[0];
   const schematicsConfigPath = app('formbar-schematic.config.json');
+  const contentTypePath = app('types/content.type.ts');
 
   async function runAdd(options: Schema = {}) {
     return runner.runSchematic(
@@ -750,8 +751,29 @@ describe('ng-add schematic', () => {
 
     expect(config.schema).toEqual({
       type: 'app/types/content.type.ts#AppContent',
-      docs: true,
       emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
     });
+  });
+
+  it('does not seed a content union no config points at', async () => {
+    const tree = await runAdd({ useSchematicConfig: false });
+
+    expect(exists(tree, contentTypePath)).toBe(false);
+  });
+
+  it('does not seed a content union when no config is written for an empty config path', async () => {
+    const tree = await runAdd({ schematicsConfigPath: '' });
+
+    expect(exists(tree, schematicsConfigPath)).toBe(false);
+    expect(exists(tree, contentTypePath)).toBe(false);
+  });
+
+  it('keeps an existing content union file untouched', async () => {
+    const existing = 'export type AppContent = { type: "custom" };\n';
+    appTree.create(contentTypePath, existing);
+
+    const result = await runAdd();
+
+    expect(read(result, contentTypePath)).toBe(existing);
   });
 });
