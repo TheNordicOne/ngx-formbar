@@ -38,6 +38,7 @@ import {
   hasNamedImport,
   importForSymbolUsesCorrectRelativePath,
   interfaceHasTypeLiteral,
+  interfaceHasTypeParameters,
   NgxFormbarAutomationConfig,
   parseTS,
   provideFormbarComponentRegistrationsHasIdentifier,
@@ -513,6 +514,20 @@ describe('control schematic', () => {
         expect(interfaceHasTypeLiteral(typeSf, 'TestArrayConfig', 'test')).toBe(
           true,
         );
+        expect(interfaceHasTypeParameters(typeSf, 'TestArrayConfig')).toBe(
+          true,
+        );
+      });
+
+      it('group interface extends NgxFbFormGroup with the key as type', async () => {
+        const tree = await runSchematic('group');
+        const typeSf = parseTS(read(tree, app('test/test-group-config.ts')));
+        expect(interfaceHasTypeLiteral(typeSf, 'TestGroupConfig', 'test')).toBe(
+          true,
+        );
+        expect(interfaceHasTypeParameters(typeSf, 'TestGroupConfig')).toBe(
+          true,
+        );
       });
     });
 
@@ -669,6 +684,15 @@ describe('control schematic', () => {
 
       expect(importsComponent).toBe(true);
       expect(hasRegistration).toBe(true);
+    });
+
+    it('registers a camelCase key from the dasherized directory it is written to', async () => {
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+      const tree = await runSchematic('control', { key: 'phoneNumber' });
+
+      expect(read(tree, src(registrationsPath))).toContain(
+        'import("../phone-number/phone-number-control")',
+      );
     });
 
     it('registers the created control with the token provider if registrations are not split', async () => {

@@ -34,6 +34,9 @@ jobs:
       - name: Lint, test, and build
         run: npx nx run-many -t lint test test-schematics build
 
+      - name: Schematics e2e
+        run: npx nx run @ngx-formbar/schematics:e2e
+
       - name: Build Storybook
         run: npx nx run storybook:build-storybook:ci
 

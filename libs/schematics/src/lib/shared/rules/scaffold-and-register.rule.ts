@@ -6,16 +6,15 @@ import {
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
 
-import { ScaffoldContext, Schema } from '../schema';
+import { ScaffoldContext, ScaffoldType, Schema } from '../schema';
 import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
   findConfigPath,
-  findSchematicsConfig,
   getAngularComponentNaming,
   getProjectDefinition,
+  loadAutomationConfig,
   NgxFormbarAutomationConfig,
-  readFile,
 } from '@ngx-formbar/setup';
 import {
   DEFAULT_INTERFACE_FILE_SUFFIX,
@@ -23,13 +22,13 @@ import {
 } from '../constants';
 import { createComponent } from './create-component.rule';
 import { registerControl } from './register-control.rule';
+import { registerUnion } from './register-union.rule';
 import {
   getWorkspace,
   ProjectDefinition,
 } from '@schematics/angular/utility/workspace';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-
-type ScaffoldType = 'control' | 'group' | 'block' | 'array';
+import { splitHashReference } from '../type-reference';
 
 const { classify, dasherize } = strings;
 
@@ -48,7 +47,11 @@ export function scaffoldAndRegister(options: Schema, type: ScaffoldType): Rule {
       context,
     );
 
-    return chain([createComponent(ruleContext), registerControl(ruleContext)]);
+    return chain([
+      createComponent(ruleContext),
+      registerControl(ruleContext),
+      registerUnion(ruleContext),
+    ]);
   };
 }
 
@@ -100,6 +103,8 @@ function buildScaffoldContext(
     ...viewProvider,
     registrationType:
       automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
+    registrationKind: type,
+    contentTypeReference: automationConfig?.schema?.type,
     resolvedName,
     componentPath,
     componentFilePath,
@@ -116,13 +121,10 @@ function loadMergedConfig(
   tree: Tree,
   projectRoot: string,
 ) {
-  const automationConfigPath = options.schematicsConfig
-    ? `${projectRoot}/${options.schematicsConfig}`
-    : findSchematicsConfig(tree);
-
-  const automationConfig = readFile<NgxFormbarAutomationConfig | null>(
+  const automationConfig = loadAutomationConfig(
     tree,
-    automationConfigPath,
+    projectRoot,
+    options.schematicsConfig,
   );
   const controlTypeConfig = automationConfig ? automationConfig[type] : {};
 
@@ -178,7 +180,7 @@ function buildComponentPath(
 ) {
   const pathOption = config.path ?? 'app';
   const rootPath = pathOption.startsWith(projectRoot) ? '' : projectRoot;
-  const componentPath = `${rootPath}/${pathOption}/${resolvedName}`;
+  const componentPath = `${rootPath}/${pathOption}/${dasherize(resolvedName)}`;
 
   return {
     componentPath,
@@ -269,11 +271,11 @@ function resolveImportPathAndIdentifier(
 const EXT_REGEX = /\.ts$/i;
 
 function extractFromPath(inputSpec: string, defaultSpec: string) {
-  const inputParts = splitHash(inputSpec);
-  const defaultParts = splitHash(defaultSpec);
+  const inputParts = splitHashReference(inputSpec);
+  const defaultParts = splitHashReference(defaultSpec);
 
-  const inputPathParts = splitPath(inputParts.left);
-  const defaultPathParts = splitPath(defaultParts.left);
+  const inputPathParts = splitPath(inputParts.path);
+  const defaultPathParts = splitPath(defaultParts.path);
 
   const directory = inputPathParts.directory;
 
@@ -284,20 +286,6 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
   const identifier = inputParts.exportName || defaultParts.exportName;
 
   return { directory, fileName, identifier };
-}
-
-function splitHash(rawSpec: string) {
-  const trimmedSpec = rawSpec.trim();
-  const hashIndex = trimmedSpec.indexOf('#');
-
-  if (hashIndex < 0) {
-    return { left: trimmedSpec, exportName: '' };
-  }
-
-  return {
-    left: trimmedSpec.slice(0, hashIndex),
-    exportName: trimmedSpec.slice(hashIndex + 1),
-  };
 }
 
 function splitPath(pathPart: string) {

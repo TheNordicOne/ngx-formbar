@@ -18,6 +18,7 @@ New package containing all reactive forms functionality previously in `@ngx-form
 - Helpers: `controlContainerViewProviders`.
 - Form-level lifecycle cache. Values from destroyed controls are restored when the control is recreated, and cleared on form reset.
 - Schematics: `ng-add` schematic for automated project setup.
+- `ng-add` sets up the schema generator. See [Schema Generation](/fundamentals/schema).
 - Form arrays. Repeating rows from a single `rowControl`, backed by a native `FormArray`. See [Arrays](/reactive-forms/guides/arrays).
 
 ### Changed

@@ -46,6 +46,7 @@ describe('ng-add schematic', () => {
   const formbarConfigPath = app('formbar.config.ts');
   const formbarConfigImportPath = formbarConfigPath.split('.ts')[0];
   const schematicsConfigPath = app('formbar-schematic.config.json');
+  const contentTypePath = app('types/content.type.ts');
 
   async function runAdd(options: Schema = {}) {
     return runner.runSchematic(
@@ -62,13 +63,29 @@ describe('ng-add schematic', () => {
     appTree = await setupWorkspace(runner);
   });
 
+  describe('project lookup', () => {
+    it('fails when the named project is not in the workspace', async () => {
+      await expect(runAdd({ project: 'does-not-exist' })).rejects.toThrow(
+        'Project "does-not-exist" not found in workspace.',
+      );
+    });
+
+    it('fails when no project is named and the workspace has no default', async () => {
+      await expect(runner.runSchematic('ng-add', {}, appTree)).rejects.toThrow(
+        'No project specified and no default project found.',
+      );
+    });
+  });
+
   it('is idempotent: no duplicate import or provider call on re-run', async () => {
     const once = await runAdd();
     const twice = await runner.runSchematic('ng-add', baseOptions, once);
 
     const sf = parseTS(read(twice, appConfigPath));
 
-    expect(countNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar')).toBe(1);
+    expect(
+      countNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar'),
+    ).toBe(1);
     expect(countCall(sf, 'provideFormbar')).toBe(1);
   });
 
@@ -78,7 +95,9 @@ describe('ng-add schematic', () => {
       expect(exists(tree, appConfigPath)).toBe(true);
 
       const sf = parseTS(read(tree, appConfigPath));
-      expect(hasNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar')).toBe(true);
+      expect(
+        hasNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar'),
+      ).toBe(true);
     });
 
     it('provides formbar and component registration providers in providers array', async () => {
@@ -708,5 +727,53 @@ describe('ng-add schematic', () => {
         ).toBe(true);
       });
     });
+  });
+
+  it('seeds an empty content union and the schema config', async () => {
+    const result = await runner.runSchematic(
+      'ng-add',
+      { project: 'test-app' },
+      appTree,
+    );
+
+    expect(
+      result.exists('/projects/test-app/src/app/types/content.type.ts'),
+    ).toBe(true);
+    expect(
+      result.readText('/projects/test-app/src/app/types/content.type.ts'),
+    ).toContain('export type AppContent = never;');
+
+    const config = JSON.parse(
+      result.readText(
+        '/projects/test-app/src/app/formbar-schematic.config.json',
+      ),
+    ) as NgxFormbarAutomationConfig;
+
+    expect(config.schema).toEqual({
+      type: 'app/types/content.type.ts#AppContent',
+      emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+    });
+  });
+
+  it('does not seed a content union no config points at', async () => {
+    const tree = await runAdd({ useSchematicConfig: false });
+
+    expect(exists(tree, contentTypePath)).toBe(false);
+  });
+
+  it('does not seed a content union when no config is written for an empty config path', async () => {
+    const tree = await runAdd({ schematicsConfigPath: '' });
+
+    expect(exists(tree, schematicsConfigPath)).toBe(false);
+    expect(exists(tree, contentTypePath)).toBe(false);
+  });
+
+  it('keeps an existing content union file untouched', async () => {
+    const existing = 'export type AppContent = { type: "custom" };\n';
+    appTree.create(contentTypePath, existing);
+
+    const result = await runAdd();
+
+    expect(read(result, contentTypePath)).toBe(existing);
   });
 });

@@ -76,6 +76,29 @@ export function classDeclarationExists(
   return found;
 }
 
+export function interfaceHasTypeParameters(
+  sf: SourceFile,
+  interfaceName: string,
+): boolean {
+  let found = false;
+
+  const visit = (node: Node): void => {
+    if (found) {
+      return;
+    }
+
+    if (isInterfaceDeclaration(node) && node.name.text === interfaceName) {
+      found = (node.typeParameters?.length ?? 0) > 0;
+      return;
+    }
+
+    node.forEachChild(visit);
+  };
+
+  sf.forEachChild(visit);
+  return found;
+}
+
 export function interfaceHasTypeLiteral(
   sf: SourceFile,
   interfaceName: string,
@@ -126,4 +149,3 @@ export function interfaceHasTypeLiteral(
   sf.forEachChild(visit);
   return ok;
 }
-

@@ -12,6 +12,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - `array` generator: scaffolds an array component implementing `ReactiveFormbarArray<T>` with a minimal `<ngxfb-form-array-outlet />` row template, and registers itself automatically.
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 - `interfaceFileSuffix` option to control the interface file's name segment.
+- `schema` generator: emits documents such as JSON Schema from the content union. See [Schema Generation](/fundamentals/schema).
 
 ### Changed
 

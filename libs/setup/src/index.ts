@@ -4,6 +4,7 @@ export * from './lib/ast/decorators';
 export * from './lib/ast/parse';
 export * from './lib/ast/registrations';
 export * from './lib/ast/types';
+export * from './lib/ast/unions';
 export * from './lib/constants';
 export * from './lib/file';
 export * from './lib/helper';

@@ -25,6 +25,11 @@
       "description": "Searches for all components and registers them",
       "factory": "./register/index.cjs#register",
       "schema": "./register/schema.json"
+    },
+    "schema": {
+      "description": "Generates schema documents from the configured content union type.",
+      "factory": "./schema/index.cjs#schema",
+      "schema": "./schema/schema.json"
     }
   }
 }
