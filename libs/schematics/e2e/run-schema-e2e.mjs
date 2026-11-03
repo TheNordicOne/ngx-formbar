@@ -308,38 +308,48 @@ function readJson(path) {
 }
 
 /**
- * `workspace:` ranges are rewritten at release time against the registry. Here
- * the sibling tarball takes that role for dependencies, and peer dependencies
- * get the caret range the release writes, so the manifest a consumer installs
- * is the built one and not a hand-assembled node_modules. The release gives all
- * packages one version, which `ng add` relies on for the range it saves.
+ * The release gives all packages one version, which `ng add` relies on for the
+ * range it saves, and then runs this script over the manifests. Staging does the
+ * same with the built packages, so a consumer installs what the release writes.
  */
-function stagePackage(name, stagingDir, tarballs, versions) {
-  const staged = join(stagingDir, name);
-  cpSync(join(WORKSPACE_ROOT, 'dist', 'libs', name), staged, {
-    recursive: true,
-  });
+function stagePackages(stagingDir) {
+  const { version } = readJson(
+    join(WORKSPACE_ROOT, 'dist', 'libs', 'reactive-forms', 'package.json'),
+  );
 
+  for (const name of PACKAGES) {
+    const staged = join(stagingDir, 'dist', 'libs', name);
+
+    cpSync(join(WORKSPACE_ROOT, 'dist', 'libs', name), staged, {
+      recursive: true,
+    });
+
+    const manifestPath = join(staged, 'package.json');
+
+    writeFileSync(
+      manifestPath,
+      `${JSON.stringify({ ...readJson(manifestPath), version }, null, 2)}\n`,
+    );
+  }
+
+  run(
+    'node',
+    [join(WORKSPACE_ROOT, 'scripts', 'resolve-workspace-protocols.mjs')],
+    stagingDir,
+  );
+
+  return version;
+}
+
+/** The sibling tarball stands in for the registry a resolved range points at. */
+function useSiblingTarballs(name, stagingDir, tarballs) {
+  const staged = join(stagingDir, 'dist', 'libs', name);
   const manifestPath = join(staged, 'package.json');
   const manifest = readJson(manifestPath);
 
-  manifest.version = readJson(
-    join(WORKSPACE_ROOT, 'dist', 'libs', 'reactive-forms', 'package.json'),
-  ).version;
-
-  for (const [dependency, range] of Object.entries(
-    manifest.dependencies ?? {},
-  )) {
-    if (typeof range === 'string' && range.startsWith('workspace:')) {
+  for (const dependency of Object.keys(manifest.dependencies ?? {})) {
+    if (tarballs.has(dependency)) {
       manifest.dependencies[dependency] = `file:${tarballs.get(dependency)}`;
-    }
-  }
-
-  for (const [dependency, range] of Object.entries(
-    manifest.peerDependencies ?? {},
-  )) {
-    if (typeof range === 'string' && range.startsWith('workspace:')) {
-      manifest.peerDependencies[dependency] = `^${versions.get(dependency)}`;
     }
   }
 
@@ -1292,13 +1302,14 @@ function runNgModuleFlow(appParent, tarballs) {
  * Without the schematics package in package.json, as a consumer starts out.
  * The dry run leaves node_modules alone, so package.json alone gets restored.
  */
-function runDevDependencyFlow(appDir) {
+function runDevDependencyFlow(appDir, version) {
   const project = 'dev-dependency-app';
   const manifestPath = join(appDir, 'package.json');
   const original = readFileSync(manifestPath, 'utf8');
   const withoutSchematics = JSON.parse(original);
 
   delete withoutSchematics.devDependencies[SCHEMATICS_PACKAGE_NAME];
+  delete withoutSchematics.dependencies[CORE_PACKAGE_NAME];
 
   run(
     'npx',
@@ -1319,8 +1330,12 @@ function runDevDependencyFlow(appDir) {
   console.log('dev dependency assertions:');
 
   check(
-    /^\^/.test(manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME] ?? ''),
-    'ng add saved the schematics package as a dev dependency',
+    manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME] === `^${version}`,
+    `ng add saved the schematics package as a dev dependency in ^${version}: ${manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME]}`,
+  );
+  check(
+    manifest.dependencies?.[CORE_PACKAGE_NAME] === `^${version}`,
+    `ng add saved core as a dependency in ^${version}: ${manifest.dependencies?.[CORE_PACKAGE_NAME]}`,
   );
   check(
     !manifest.dependencies?.[SCHEMATICS_PACKAGE_NAME],
@@ -1630,27 +1645,14 @@ function main() {
   );
 
   const tarballs = new Map();
-  const versions = new Map();
+  const version = stagePackages(stagingDir);
   let schematicsFiles = [];
 
   for (const name of PACKAGES) {
-    const { staged, manifest } = stagePackage(
-      name,
-      stagingDir,
-      tarballs,
-      versions,
-    );
+    const { staged, manifest } = useSiblingTarballs(name, stagingDir, tarballs);
     const { tarball, files } = packPackage(staged, stagingDir);
 
     tarballs.set(manifest.name, tarball);
-    versions.set(manifest.name, manifest.version);
-
-    if (manifest.name === REACTIVE_FORMS_PACKAGE_NAME) {
-      check(
-        /^\^\d/.test(manifest.peerDependencies[CORE_PACKAGE_NAME]),
-        `the staged manifest declares core in a caret range: ${manifest.peerDependencies[CORE_PACKAGE_NAME]}`,
-      );
-    }
 
     if (manifest.name === SCHEMATICS_PACKAGE_NAME) {
       schematicsFiles = files;
@@ -1744,7 +1746,7 @@ function main() {
   runRootConfigFlow(appDir);
   runKeptIndexFlow(appDir);
 
-  runDevDependencyFlow(appDir);
+  runDevDependencyFlow(appDir, version);
   runAngularJsonDefaultsFlow(appDir);
   runProjectPathFlow(appDir);
 
