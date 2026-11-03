@@ -61,6 +61,16 @@ describe('register schematic', () => {
     appTree = await setupWorkspace(runner);
   });
 
+  it('rejects a registration type other than token and config', async () => {
+    await expect(
+      runner.runSchematic(
+        'register',
+        { ...baseOptions, registrationType: 'tokens' },
+        appTree,
+      ),
+    ).rejects.toThrow(/registrationType/);
+  });
+
   it('treats a --controlRegistrations above the workspace root as a missing file', async () => {
     const warnings: string[] = [];
     runner.logger.subscribe((entry) => {

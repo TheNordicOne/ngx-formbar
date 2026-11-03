@@ -337,6 +337,16 @@ describe('ng-add schematic', () => {
     });
   });
 
+  it('rejects a registration style other than token and config', async () => {
+    await expect(
+      runner.runSchematic(
+        'ng-add',
+        { ...baseOptions, registrationStyle: 'tokens' },
+        appTree,
+      ),
+    ).rejects.toThrow(/registrationStyle/);
+  });
+
   describe('Registration Style Token', () => {
     it('generates config-based registration files and formbar.config.ts', async () => {
       const tree = await runAdd({ registrationStyle: 'token' });

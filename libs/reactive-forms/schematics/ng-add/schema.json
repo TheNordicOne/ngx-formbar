@@ -14,7 +14,8 @@
     },
     "registrationStyle": {
       "type": "string",
-      "description": "How components and validators will be registered. Possible values: token, config",
+      "enum": ["token", "config"],
+      "description": "How components and validators will be registered",
       "default": "token"
     },
     "provideInline": {

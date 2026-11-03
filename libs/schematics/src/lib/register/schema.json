@@ -13,7 +13,8 @@
     },
     "registrationType": {
       "type": "string",
-      "description": "How components will be registered. Possible values: token, config",
+      "enum": ["token", "config"],
+      "description": "How components will be registered",
       "default": "token"
     },
     "controlRegistrations": {
