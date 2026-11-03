@@ -2,25 +2,13 @@ The `schema` generator produces documents from your [content union](/fundamental
 
 ## Quick Start
 
-1. Add _ngx-formbar_:
-
-   ```bash
-   ng add @ngx-formbar/reactive-forms
-   ```
-
-2. Scaffold a control. The schema needs at least one, because the union `ng add` creates is empty:
-
-   ```bash
-   ng generate @ngx-formbar/schematics:control --key phoneNumber
-   ```
-
-3. Generate the schema. This writes `src/form.schema.json`:
+1. Generate the schema. This writes `src/form.schema.json`:
 
    ```bash
    ng generate @ngx-formbar/schematics:schema
    ```
 
-4. Reference the schema in your form JSON. The path is relative to the form file:
+2. Reference the schema in your form JSON. The path is relative to the form file:
 
    ```json name="src/form.json"
    { "$schema": "./form.schema.json", "content": { ... } }
