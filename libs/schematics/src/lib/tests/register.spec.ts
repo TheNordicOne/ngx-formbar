@@ -1600,6 +1600,11 @@ export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
           '',
         ],
         [
+          'Pick around the contract',
+          "implements Pick<ReactiveFormbarControl<RangeConfig>, 'name'>",
+          '',
+        ],
+        [
           'nested utility types',
           'implements Readonly<Partial<ReactiveFormbarControl<RangeConfig>>>',
           '',
@@ -1755,9 +1760,14 @@ export class RangeComponent extends MiddleControl {}
           'interface Holder<T> { readonly name: unknown; held?: T; }',
         ],
         [
-          'a contract only in a local generic named like a utility type',
-          'implements Partial<ReactiveFormbarControl<RangeConfig>>',
-          'interface Partial<T> { readonly name: unknown; held?: T; }',
+          'Required around the contract',
+          'implements Required<ReactiveFormbarControl<RangeConfig>>',
+          '',
+        ],
+        [
+          'NonNullable around the contract',
+          'implements NonNullable<ReactiveFormbarControl<RangeConfig>>',
+          '',
         ],
         [
           'interfaces extending each other',

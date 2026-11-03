@@ -43,14 +43,7 @@ const contracts = [
   'ReactiveFormbarArray',
   'FormbarBlock',
 ];
-const utilityTypes = [
-  'Partial',
-  'Required',
-  'Readonly',
-  'NonNullable',
-  'Pick',
-  'Omit',
-];
+const utilityTypes = ['Partial', 'Readonly', 'Pick', 'Omit'];
 
 export function discoverComponents(
   tree: Tree,
@@ -544,7 +537,7 @@ function withoutUtilityTypes(
 
   return wrapped &&
     isTypeReferenceNode(wrapped) &&
-    isUtilityType(originalSymbol(reference.name, checker), checker)
+    isUtilityType(originalSymbol(reference.name, checker))
     ? withoutUtilityTypes(
         { name: wrapped.typeName, typeArguments: wrapped.typeArguments },
         checker,
@@ -552,14 +545,8 @@ function withoutUtilityTypes(
     : reference;
 }
 
-/** A local generic of the same name could do anything with its argument. */
-function isUtilityType(symbol: TsSymbol | undefined, checker: TypeChecker) {
-  return (
-    !!symbol &&
-    utilityTypes.includes(symbol.name) &&
-    checker.resolveName(symbol.name, undefined, SymbolFlags.Type, false) ===
-      symbol
-  );
+function isUtilityType(symbol: TsSymbol | undefined) {
+  return !!symbol && utilityTypes.includes(symbol.name);
 }
 
 function originalSymbol(name: Node, checker: TypeChecker) {
