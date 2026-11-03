@@ -29,6 +29,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`staticComponent()` / `loadComponent()`).
 - `register` takes each key from the `type` of the component's config.
 - `register` only searches the source root.
+- `register` only registers components implementing a contract.
 
 ### Fixed
 

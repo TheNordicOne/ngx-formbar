@@ -59,7 +59,7 @@ ng generate @ngx-formbar/schematics:register
 ng generate @ngx-formbar/schematics:schema
 ```
 
-`register` now takes each key from the `type` of the component's config. It only searches the source root.
+`register` now takes each key from the `type` of the component's config. It only searches the source root. `register` only finds components implementing a contract, so run it after [Step 6](#step-6-refactor-consumer-components-to-the-interface-contract).
 
 The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
 
