@@ -2,13 +2,28 @@ The `schema` generator produces documents from your [content union](/fundamental
 
 ## Quick Start
 
-1. Generate the schema. This writes `src/form.schema.json`:
+This needs two things: a `schema` section in `formbar-schematic.config.json`, and a content union with at least one member. The examples use the source root `src`.
+
+`ng add` creates both, unless you passed `--useSchematicConfig=false`. The union it creates is empty until you [scaffold](/fundamentals/generators) a control, group, block or array.
+
+1. Check that your configuration has a `schema` section. Without `ng add`, create it and point `type` at the file and export of your union:
+
+   ```json name="src/app/formbar-schematic.config.json"
+   {
+     "schema": {
+       "type": "app/types/content.type.ts#AppContent",
+       "emitters": [{ "use": "json-schema-2020-12", "output": "form.schema.json" }]
+     }
+   }
+   ```
+
+2. Generate the schema. With this configuration, it writes `src/form.schema.json`:
 
    ```bash
    ng generate @ngx-formbar/schematics:schema
    ```
 
-2. Reference the schema in your form JSON. The path is relative to the form file:
+3. Reference the schema in your form JSON. The path is relative to the form file:
 
    ```json name="src/form.json"
    { "$schema": "./form.schema.json", "content": { ... } }
