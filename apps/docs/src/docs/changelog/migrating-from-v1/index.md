@@ -8,7 +8,7 @@ Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is sp
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependencies are `@angular/core` and `rxjs`; `@angular/forms` and `@angular/cdk` are no longer required by core. |
 | `@ngx-formbar/reactive-forms` | Form component, provider setup, validators, composables, the interface contracts.                                                                                    |
-| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `register` generators.                                                                                                               |
+| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `array` / `register` / `schema` generators.                                                                                          |
 | `@ngx-formbar/setup`          | Internal helper for the schematics (installed automatically as a dep).                                                                                               |
 
 ## Prerequisites
@@ -41,7 +41,7 @@ ng add @ngx-formbar/reactive-forms
 
 ## Step 3: Update generator commands
 
-Code generators now live in `@ngx-formbar/schematics` and there is a new `register` generator.
+Code generators now live in `@ngx-formbar/schematics` and there are new `array`, `register` and `schema` generators.
 
 ```shell
 # Before
@@ -55,6 +55,7 @@ ng generate @ngx-formbar/schematics:group
 ng generate @ngx-formbar/schematics:block
 ng generate @ngx-formbar/schematics:array
 ng generate @ngx-formbar/schematics:register
+ng generate @ngx-formbar/schematics:schema
 ```
 
 The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
