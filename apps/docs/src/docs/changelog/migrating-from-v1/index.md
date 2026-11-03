@@ -41,13 +41,14 @@ ng add @ngx-formbar/reactive-forms
 
 ## Step 3: Update generator commands
 
-Code generators now live in `@ngx-formbar/schematics` and there are new `array`, `register` and `schema` generators.
+Code generators now live in `@ngx-formbar/schematics` and there are new `array` and `schema` generators.
 
 ```shell
 # Before
 ng generate @ngx-formbar/core:control
 ng generate @ngx-formbar/core:group
 ng generate @ngx-formbar/core:block
+ng generate @ngx-formbar/core:register
 
 # After
 ng generate @ngx-formbar/schematics:control
@@ -57,6 +58,8 @@ ng generate @ngx-formbar/schematics:array
 ng generate @ngx-formbar/schematics:register
 ng generate @ngx-formbar/schematics:schema
 ```
+
+`register` now takes each key from the `type` of the component's config. It only searches the source root.
 
 The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
 
