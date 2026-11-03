@@ -22,6 +22,7 @@ import {
   isCallExpression,
   isClassDeclaration,
   isIdentifier,
+  isImportSpecifier,
   isNamespaceImport,
   isObjectLiteralExpression,
   isPropertyAssignment,
@@ -36,9 +37,11 @@ import {
   hasEditableProviders,
   importBindings,
   isBootstrapModuleCall,
+  refersToImport,
   RootConfig,
 } from './root-config';
 
+const ANGULAR_CORE = '@angular/core';
 const MERGE_FUNCTION = 'mergeApplicationConfig';
 const EMPTY_PROVIDERS = '{\n  providers: []\n}';
 
@@ -217,9 +220,20 @@ function wrapInMergeCall(
   config: Expression,
   filePath: string,
 ) {
+  const imported = importBindings(sourceFile, ANGULAR_CORE).find(
+    (binding) =>
+      isImportSpecifier(binding) &&
+      (binding.propertyName ?? binding.name).text === MERGE_FUNCTION,
+  );
+  const mergeFunction = imported?.name.text ?? MERGE_FUNCTION;
+
   return [
-    insertNamedImport(sourceFile, filePath, MERGE_FUNCTION, '@angular/core'),
-    new InsertChange(filePath, config.getStart(), `${MERGE_FUNCTION}(`),
+    ...(imported
+      ? []
+      : [
+          insertNamedImport(sourceFile, filePath, MERGE_FUNCTION, ANGULAR_CORE),
+        ]),
+    new InsertChange(filePath, config.getStart(), `${mergeFunction}(`),
     new InsertChange(filePath, config.getEnd(), `, ${EMPTY_PROVIDERS})`),
   ];
 }
@@ -260,5 +274,8 @@ function bootstrapConfigObject(call: CallExpression | null) {
 }
 
 function isMergeCall(node: Expression): node is CallExpression {
-  return isCallExpression(node) && isCallee(node.expression, MERGE_FUNCTION);
+  return (
+    isCallExpression(node) &&
+    refersToImport(node.expression, MERGE_FUNCTION, ANGULAR_CORE)
+  );
 }

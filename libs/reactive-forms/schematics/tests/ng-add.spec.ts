@@ -2648,6 +2648,48 @@ describe('ng-add schematic', () => {
         expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
       });
 
+      describe('mergeApplicationConfig under another name', () => {
+        const aliasedMerge = `import { bootstrapApplication } from '@angular/platform-browser';\nimport { mergeApplicationConfig as m } from '@angular/core';\n`;
+
+        it('adds to an object it already merges', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}bootstrapApplication(App, m({ providers: [] }, make()));\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toMatch(/m\(\{ providers: \[\s*provideFormbar\(/);
+        });
+
+        it('adds an object to a merge that has none', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}bootstrapApplication(App, m(make()));\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toContain('m(make(), {');
+          expect(main).toContain('provideFormbar(');
+        });
+
+        it('wraps a config with the name it goes by', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}m({ providers: [] }, {});\nbootstrapApplication(App, make());\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toContain('bootstrapApplication(App, m(make(), {');
+          expect(countNamedImport(parseTS(main), '@angular/core', 'm')).toBe(1);
+        });
+      });
+
       it('treats a config from a package as out of reach', async () => {
         const packageFile = '/node_modules/config-package/index.ts';
         const tree = await add(
