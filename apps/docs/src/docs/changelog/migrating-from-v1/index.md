@@ -236,10 +236,10 @@ export class TextControlComponent {
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { NgxFbControl, Expression } from '@ngx-formbar/core';
+import { NgxFbControl } from '@ngx-formbar/core';
 
 interface TextControl extends NgxFbControl {
-  placeholder?: Expression<string>;
+  placeholder?: string;
 }
 
 @Component({
@@ -361,11 +361,11 @@ export class NoteComponent {
 ```typescript
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
-import { NgxFbBlock, Expression } from '@ngx-formbar/core';
+import { NgxFbBlock } from '@ngx-formbar/core';
 
 interface NoteBlock extends NgxFbBlock {
-  message: Expression<string>;
-  severity?: Expression<'info' | 'warn' | 'danger'>;
+  message: string;
+  severity?: 'info' | 'warn' | 'danger';
 }
 
 @Component({

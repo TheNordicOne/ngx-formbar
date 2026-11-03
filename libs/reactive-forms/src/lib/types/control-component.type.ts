@@ -37,7 +37,7 @@ export interface ReactiveFormbarAbstractControl {
  * @example
  * ```ts
  * interface TextControl extends NgxFbControl {
- *   placeholder?: Expression<string>;
+ *   placeholder?: string;
  * }
  *
  * @Component({ ... })
@@ -122,7 +122,7 @@ export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> =
  * @example
  * ```ts
  * interface NoteBlock extends NgxFbBlock {
- *   text: Expression<string>;
+ *   text: string;
  * }
  *
  * @Component({ ... })
