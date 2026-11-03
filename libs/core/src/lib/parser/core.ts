@@ -283,7 +283,10 @@ export class Parser {
       const comparePrev = (prev: BinopInfo): boolean =>
         biopInfo.right_a && prev.right_a ? prec > prev.prec : prec <= prev.prec;
 
-      while (stack.length > 2 && comparePrev(stack[stack.length - 2] as BinopInfo)) {
+      while (
+        stack.length > 2 &&
+        comparePrev(stack[stack.length - 2] as BinopInfo)
+      ) {
         const right = stack.pop() as ParseResult;
         const op = (stack.pop() as BinopInfo).value;
         const left = stack.pop() as ParseResult;
@@ -291,9 +294,7 @@ export class Parser {
         // (the `=>` operand for `(a, b) => x`). The arrow plugin's
         // after-expression hook expands it; if we narrowed here we'd
         // reject before the hook runs. Survivors are rejected at parse().
-        stack.push(
-          makeBinaryNode(op, left as Expression, right as Expression),
-        );
+        stack.push(makeBinaryNode(op, left as Expression, right as Expression));
       }
 
       const node = this.gobbleToken();
@@ -515,7 +516,10 @@ export class Parser {
     const chCode = this.code();
     if (Parser.isIdentifierStart(chCode)) {
       this.throwError(
-        'Variable names cannot start with a number (' + number + this.char() + ')',
+        'Variable names cannot start with a number (' +
+          number +
+          this.char() +
+          ')',
       );
     } else if (
       chCode === Parser.PERIOD_CODE ||
@@ -623,7 +627,9 @@ export class Parser {
           separatorCount &&
           separatorCount >= args.length
         ) {
-          this.throwError('Unexpected token ' + String.fromCharCode(termination));
+          this.throwError(
+            'Unexpected token ' + String.fromCharCode(termination),
+          );
         }
         break;
       } else if (chI === Parser.COMMA_CODE) {
@@ -642,10 +648,7 @@ export class Parser {
             args.push(null);
           }
         }
-      } else if (
-        args.length !== separatorCount &&
-        separatorCount !== 0
-      ) {
+      } else if (args.length !== separatorCount && separatorCount !== 0) {
         this.throwError('Expected comma');
       } else {
         const node = this.gobbleExpression();

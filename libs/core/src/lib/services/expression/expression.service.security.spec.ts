@@ -253,9 +253,9 @@ describe('ExpressionService: sandbox boundary', () => {
 
     it('arrow parameters shadow outer context names', () => {
       // The outer x in the context is shadowed by the arrow's parameter x.
-      expect(
-        evaluate('arr.map(x => x)', { arr: [1, 2, 3], x: 999 }),
-      ).toEqual([1, 2, 3]);
+      expect(evaluate('arr.map(x => x)', { arr: [1, 2, 3], x: 999 })).toEqual([
+        1, 2, 3,
+      ]);
     });
 
     it('nested arrows resolve each level correctly', () => {
@@ -362,31 +362,35 @@ describe('ExpressionService: sandbox boundary', () => {
     }
 
     it('still allows map', () => {
-      expect(evaluate('items.map(x => x * 2)', { items: [1, 2, 3, 4, 5] })).toEqual([
-        2, 4, 6, 8, 10,
-      ]);
+      expect(
+        evaluate('items.map(x => x * 2)', { items: [1, 2, 3, 4, 5] }),
+      ).toEqual([2, 4, 6, 8, 10]);
     });
 
     it('still allows filter', () => {
-      expect(evaluate('items.filter(x => x > 2)', { items: [1, 2, 3, 4, 5] })).toEqual([
-        3, 4, 5,
-      ]);
+      expect(
+        evaluate('items.filter(x => x > 2)', { items: [1, 2, 3, 4, 5] }),
+      ).toEqual([3, 4, 5]);
     });
 
     it('still allows reduce', () => {
       expect(
-        evaluate('items.reduce((a, b) => a + b, 0)', { items: [1, 2, 3, 4, 5] }),
+        evaluate('items.reduce((a, b) => a + b, 0)', {
+          items: [1, 2, 3, 4, 5],
+        }),
       ).toBe(15);
     });
 
     it('still allows slice', () => {
-      expect(evaluate('items.slice(0, 2)', { items: [1, 2, 3, 4, 5] })).toEqual([
-        1, 2,
-      ]);
+      expect(evaluate('items.slice(0, 2)', { items: [1, 2, 3, 4, 5] })).toEqual(
+        [1, 2],
+      );
     });
 
     it('still allows includes', () => {
-      expect(evaluate('items.includes(3)', { items: [1, 2, 3, 4, 5] })).toBe(true);
+      expect(evaluate('items.includes(3)', { items: [1, 2, 3, 4, 5] })).toBe(
+        true,
+      );
     });
 
     it('still allows length member access', () => {
@@ -405,9 +409,9 @@ describe('ExpressionService: sandbox boundary', () => {
 
   describe('spread in call arguments', () => {
     it('flattens an array spread into positional args', () => {
-      expect(
-        evaluate('s.concat(...rest)', { s: 'a', rest: ['b', 'c'] }),
-      ).toBe('abc');
+      expect(evaluate('s.concat(...rest)', { s: 'a', rest: ['b', 'c'] })).toBe(
+        'abc',
+      );
     });
 
     it('rejects spreading a non-array', () => {
@@ -427,19 +431,23 @@ describe('ExpressionService: sandbox boundary', () => {
     it('rejects rest parameters in arrow functions', () => {
       // The rejection happens at parse time, when the lone SpreadElement
       // produced by `(...x)` reaches a position the grammar does not allow.
-      expect(() => evaluate('arr.map((...x) => x)', { arr: [1, 2, 3] })).toThrow();
+      expect(() =>
+        evaluate('arr.map((...x) => x)', { arr: [1, 2, 3] }),
+      ).toThrow();
     });
 
     it('rejects ternary with a comma-sequence test', () => {
-      expect(() => evaluate('arr.map(n => (1, 2) ? n : 0)', { arr: [1] })).toThrow();
+      expect(() =>
+        evaluate('arr.map(n => (1, 2) ? n : 0)', { arr: [1] }),
+      ).toThrow();
     });
   });
 
   describe('non-array object method gate', () => {
     it('rejects Date mutator setHours', () => {
-      expect(() => evaluate('d.setHours(12)', { d: new Date(2020, 0, 1) })).toThrow(
-        /Method \w+ is not supported/,
-      );
+      expect(() =>
+        evaluate('d.setHours(12)', { d: new Date(2020, 0, 1) }),
+      ).toThrow(/Method \w+ is not supported/);
     });
 
     it('rejects Map mutator set', () => {
@@ -461,9 +469,9 @@ describe('ExpressionService: sandbox boundary', () => {
     });
 
     it('rejects plain-object inherited hasOwnProperty', () => {
-      expect(() => evaluate('obj.hasOwnProperty("x")', { obj: { x: 1 } })).toThrow(
-        /Method \w+ is not supported/,
-      );
+      expect(() =>
+        evaluate('obj.hasOwnProperty("x")', { obj: { x: 1 } }),
+      ).toThrow(/Method \w+ is not supported/);
     });
   });
 });

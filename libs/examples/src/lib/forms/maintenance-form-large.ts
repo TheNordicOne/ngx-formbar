@@ -2,7 +2,6 @@ import { NgxFbForm } from '@ngx-formbar/core';
 import { ExampleControls } from '../types/form-controls.type';
 import { MaintenanceRequest } from './maintenance-request.type';
 
-
 export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
   content: {
     // ---------- Intro & Guidance ----------
@@ -32,7 +31,8 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
           label: 'Work email',
           validators: ['required', 'email'],
           updateOn: 'blur',
-          dynamicLabel: "'Work email' + (email && email.endsWith('@example.com') ? ' (internal)' : '')",
+          dynamicLabel:
+            "'Work email' + (email && email.endsWith('@example.com') ? ' (internal)' : '')",
         },
         department: {
           type: 'dropdown',
@@ -88,8 +88,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         room: {
           type: 'text',
           label: 'Room / Rack',
-          dynamicLabel:
-            "asset && asset.site === 'DC-01' ? 'Rack' : 'Room'",
+          dynamicLabel: "asset && asset.site === 'DC-01' ? 'Rack' : 'Room'",
         },
         assetType: {
           type: 'dropdown',
@@ -235,18 +234,34 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
 
             let uScore = 1;
             switch (u) {
-              case 'critical': uScore = 5; break;
-              case 'high': uScore = 4; break;
-              case 'medium': uScore = 3; break;
-              default: uScore = 1; break;
+              case 'critical':
+                uScore = 5;
+                break;
+              case 'high':
+                uScore = 4;
+                break;
+              case 'medium':
+                uScore = 3;
+                break;
+              default:
+                uScore = 1;
+                break;
             }
 
             let bScore = 0;
             switch (impact) {
-              case 'severe': bScore = 5; break;
-              case 'major': bScore = 3; break;
-              case 'minor': bScore = 1; break;
-              default: bScore = 0; break;
+              case 'severe':
+                bScore = 5;
+                break;
+              case 'major':
+                bScore = 3;
+                break;
+              case 'minor':
+                bScore = 1;
+                break;
+              default:
+                bScore = 0;
+                break;
             }
 
             const pScore = Math.min(5, Math.floor(people / 10));
@@ -261,7 +276,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
     plan: {
       type: 'group',
       legend: 'Work Plan',
-      hidden: "!details || !details.category",
+      hidden: '!details || !details.category',
       hideStrategy: 'keep',
       valueStrategy: 'last',
       controls: {
@@ -272,7 +287,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         downtimeMinutes: {
           type: 'number',
           label: 'Downtime (minutes)',
-          hidden: "!plan || !plan.requiresDowntime",
+          hidden: '!plan || !plan.requiresDowntime',
           validators: ['integer', 'min0'],
         },
         changeWindow: {
@@ -283,12 +298,12 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
             { id: 'cw-pm', value: 'PM', label: 'Afternoon (12:00–18:00)' },
             { id: 'cw-night', value: 'Night', label: 'Night (18:00–06:00)' },
           ],
-          disabled: "!plan || !plan.requiresDowntime",
+          disabled: '!plan || !plan.requiresDowntime',
         },
         rollbackReady: {
           type: 'checkbox',
           label: 'Rollback plan ready',
-          hidden: "!plan || !plan.requiresDowntime",
+          hidden: '!plan || !plan.requiresDowntime',
         },
 
         // Computed change complexity label
@@ -326,7 +341,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
     costs: {
       type: 'group',
       legend: 'Materials & Costs',
-      hidden: "!details",
+      hidden: '!details',
       controls: {
         materialCost: {
           type: 'number',
@@ -351,7 +366,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         discountPercent: {
           type: 'number',
           label: 'Discount %',
-          hidden: "!costs || !costs.discountEligible",
+          hidden: '!costs || !costs.discountEligible',
           validators: ['min0', 'max100'],
         },
 
@@ -413,15 +428,13 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         financeApprovalNeeded: {
           type: 'checkbox',
           label: 'Finance approval required',
-          hidden: "!costs || (+(costs.totalDue ?? 0) <= 5000)",
+          hidden: '!costs || (+(costs.totalDue ?? 0) <= 5000)',
         },
         financeApproved: {
           type: 'checkbox',
           label: 'Finance has approved',
-          hidden:
-            "!approvals || !approvals.financeApprovalNeeded",
-          disabled:
-            "!approvals || !approvals.financeApprovalNeeded",
+          hidden: '!approvals || !approvals.financeApprovalNeeded',
+          disabled: '!approvals || !approvals.financeApprovalNeeded',
         },
       },
     },
@@ -430,7 +443,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
     compliance: {
       type: 'group',
       legend: 'Risk & Compliance',
-      hidden: "!details",
+      hidden: '!details',
       controls: {
         dataSensitivity: {
           type: 'dropdown',
@@ -454,8 +467,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         securityOpsNotified: {
           type: 'checkbox',
           label: 'Security operations notified',
-          hidden:
-            "!details || details.category !== 'Security'",
+          hidden: "!details || details.category !== 'Security'",
         },
         exportRestricted: {
           type: 'checkbox',
@@ -471,7 +483,8 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
           computedValue: (v) => {
             const value = v as unknown as MaintenanceRequest;
             const sens = value.compliance?.dataSensitivity;
-            const sec = !!value.details && value.details.category === 'Security';
+            const sec =
+              !!value.details && value.details.category === 'Security';
             const pia = value.compliance?.privacyImpact === 'yes';
 
             if (sens === 'pii' || pia || sec) {
@@ -492,7 +505,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
     logistics: {
       type: 'group',
       legend: 'Logistics',
-      hidden: "!requester",
+      hidden: '!requester',
       controls: {
         accessRequired: {
           type: 'checkbox',
@@ -501,12 +514,12 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         escortRequired: {
           type: 'checkbox',
           label: 'Escort required',
-          hidden: "!logistics || !logistics.accessRequired",
+          hidden: '!logistics || !logistics.accessRequired',
         },
         siteContact: {
           type: 'text',
           label: 'On-site contact',
-          hidden: "!logistics || !logistics.accessRequired",
+          hidden: '!logistics || !logistics.accessRequired',
         },
         sparePartsAvailable: {
           type: 'checkbox',
@@ -519,13 +532,13 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         vendorName: {
           type: 'text',
           label: 'Vendor name',
-          hidden: "!logistics || !logistics.vendorInvolved",
+          hidden: '!logistics || !logistics.vendorInvolved',
         },
         vendorTicket: {
           type: 'text',
           label: 'Vendor ticket/reference',
-          hidden: "!logistics || !logistics.vendorInvolved",
-          readonly: "!logistics || !logistics.vendorInvolved",
+          hidden: '!logistics || !logistics.vendorInvolved',
+          readonly: '!logistics || !logistics.vendorInvolved',
         },
       },
     },
@@ -556,7 +569,11 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
             const name = value.requester?.fullName ?? 'Unknown';
             const score = value.details?.severityScore ?? '0';
             const cat = value.details?.category ?? 'GEN';
-            const clean = name.split(' ').map(s => s[0]).join('').toUpperCase();
+            const clean = name
+              .split(' ')
+              .map((s) => s[0])
+              .join('')
+              .toUpperCase();
             return `${clean}-${cat}-${score}`;
           },
         },
@@ -566,11 +583,14 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
           readonly: true,
           computedValue: (v) => {
             const value = v as unknown as MaintenanceRequest;
-            const reqOk = !!value.requester?.fullName && !!value.requester.email;
+            const reqOk =
+              !!value.requester?.fullName && !!value.requester.email;
             const detOk = !!value.details?.category && !!value.details.urgency;
             const apprNeed =
               !!value.approvals?.managerApprovalNeeded ||
-              (!!value.approvals && (value.details?.urgency === 'high' || value.details?.urgency === 'critical'));
+              (!!value.approvals &&
+                (value.details?.urgency === 'high' ||
+                  value.details?.urgency === 'critical'));
             const apprOk = apprNeed ? !!value.approvals?.managerApproved : true;
 
             if (!reqOk || !detOk) {
@@ -596,7 +616,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
         submitterNote: {
           type: 'note',
           isControl: false,
-          hidden: "!consent || !consent.acknowledgePolicies",
+          hidden: '!consent || !consent.acknowledgePolicies',
           hideStrategy: 'keep',
           message:
             'Once submitted, the request is routed automatically. Ensure contact details are accurate.',
@@ -616,7 +636,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
             const s = `${a}|${b}|${c}|${d}`;
             let acc = 0;
             for (let i = 0; i < s.length; i++) {
-              acc = ((acc << 5) - acc) + s.charCodeAt(i);
+              acc = (acc << 5) - acc + s.charCodeAt(i);
               acc |= 0;
             }
             const hex = Math.abs(acc).toString(16).padStart(8, '0');
