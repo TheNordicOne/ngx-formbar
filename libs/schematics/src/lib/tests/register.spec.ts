@@ -1103,6 +1103,50 @@ export class TagsInput implements ${contract}<TagsConfig> {
       },
     );
 
+    it.each([
+      'app/widgets',
+      'app/widgets/',
+      'projects/test-app/src/app/widgets',
+    ])('--include %s means everything in the folder', async (folder) => {
+      appTree.create(
+        app('widgets/nested/deep.ts'),
+        createControlComponent('deep', inlineProviders, 'DeepComponent'),
+      );
+
+      const registrations = await registered({ include: [folder] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).toContain('DeepComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it('--exclude with a folder skips everything in the folder', async () => {
+      const registrations = await registered({ exclude: ['app/widgets'] });
+
+      expect(registrations).not.toContain('InComponent');
+      expect(registrations).toContain('OutComponent');
+    });
+
+    it('--include with a file path still means that file', async () => {
+      const registrations = await registered({
+        include: ['app/widgets/in.ts'],
+      });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it('--include with a glob-free path does not reach a folder named alike', async () => {
+      appTree.create(
+        app('widgets-old/old.ts'),
+        createControlComponent('old', inlineProviders, 'OldComponent'),
+      );
+
+      const registrations = await registered({ include: ['app/widgets'] });
+
+      expect(registrations).not.toContain('OldComponent');
+    });
+
     it('matches a folder directly in the source root with a leading **', async () => {
       appTree.create(
         src('controls/top.ts'),

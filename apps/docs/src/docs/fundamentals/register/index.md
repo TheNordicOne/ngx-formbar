@@ -87,6 +87,7 @@ Every option is optional.
 
 | With source root `src`, you write | It matches                                    |
 | --------------------------------- | --------------------------------------------- |
+| `app/slider`                      | Everything in `src/app/slider`                |
 | `app/slider/**`                   | Everything in `src/app/slider`                |
 | `src/app/slider/**`               | Everything in `src/app/slider`                |
 | `**/slider/**`                    | Everything in any `slider` folder below `src` |

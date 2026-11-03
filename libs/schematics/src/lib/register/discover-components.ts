@@ -36,6 +36,7 @@ import { createTreeProgram } from '../schema/program';
 import { FormbarComponentInfo } from './component-info.type';
 
 const defaultIncludes = ['**/*.ts'];
+const globCharacters = /[*?[]/;
 const contracts = [
   'ReactiveFormbarControl',
   'ReactiveFormbarGroup',
@@ -121,6 +122,7 @@ function toComponentInfo(
  *
  * Notes:
  *   - Patterns are paths as well, so "app/**" and "src/app/**" both match "/src/app/a.ts".
+ *   - A pattern without any of these can name a folder, so "app" also means "app/**".
  *   - Patterns are compiled once to RegExp for speed.
  *   - No extra dependencies.
  */
@@ -196,16 +198,27 @@ function compileGlobs(
       throw new SchematicsException(`Invalid ${kind} glob "${raw}".`);
     }
 
-    regs.push(rx);
+    regs.push(rx, ...folderContents(resolved));
   }
 
   return regs;
 }
 
+/** A path without a glob character can name a folder, which stands for its contents. */
+function folderContents(path: string) {
+  const contents = isGlobFree(path) && globToRegExp(`${path}/**`);
+
+  return contents ? [contents] : [];
+}
+
+function isGlobFree(path: string) {
+  return !globCharacters.test(path);
+}
+
 /** Whether the fixed folders a glob starts with lie in or above the source root. */
 function canMatchWithin(glob: string, sourceRoot: string) {
   const segments = glob.slice(1).split('/');
-  const firstPattern = segments.findIndex((segment) => /[*?[]/.test(segment));
+  const firstPattern = segments.findIndex((segment) => !isGlobFree(segment));
   const fixed = segments
     .slice(0, firstPattern === -1 ? undefined : firstPattern)
     .join('/');
