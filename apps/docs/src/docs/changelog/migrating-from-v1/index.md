@@ -517,7 +517,7 @@ The default `T = unknown` keeps existing call sites working.
 
 ## Step 11: Drop the leading `/` from source-root paths
 
-A leading `/` in a schematics path now means the workspace root. This applies to the options, the schematics configuration file and `angular.json`, and it also changes values written for the `2.0.0-next.x` prereleases. Drop it from values such as `controlRegistrationsPath`, `viewProviderHelperPath` and `schematicsConfig` that were meant relative to the source root:
+A leading `/` in a schematics path now means the workspace root. This applies to the options, the schematics configuration file and `angular.json`, and it also changes values written for the `2.0.0-next.x` prereleases. Drop it from values such as `path`, `--path`, `controlRegistrationsPath`, `viewProviderHelperPath` and `schematicsConfig` that were meant relative to the source root:
 
 **Before:**
 
@@ -535,7 +535,7 @@ A leading `/` in a schematics path now means the workspace root. This applies to
 }
 ```
 
-A `schematicsConfig` that still has it fails with `Schematics configuration file not found`. A `controlRegistrationsPath` or `viewProviderHelperPath` that still has it logs a warning naming the path it resolved to.
+A `schematicsConfig` that still has it fails with `Schematics configuration file not found`. A `controlRegistrationsPath` or `viewProviderHelperPath` that still has it logs a warning naming the path it resolved to. A `path` or `--path` that still has it writes under the workspace root.
 
 ## What stays in `@ngx-formbar/core`
 
