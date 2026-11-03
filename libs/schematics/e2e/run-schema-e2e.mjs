@@ -7,9 +7,11 @@
  * read differently from plain concatenation, and in every layout the root
  * providers can have. A second one starts from `ng new --no-standalone`. A
  * third one goes through `ng add`, scaffolds into the seeded union, re-runs
- * `ng add`, runs `schema` and builds. Every other test in these libraries runs inside
- * this workspace against a virtual Tree, which is the shape of test that
- * passes while the shipped artifact is broken.
+ * `ng add`, runs `schema` and builds. The rows of "Where Components Go" and a
+ * run without a schematics configuration file go through the CLI too. Every
+ * other test in these libraries runs inside this workspace against a virtual
+ * Tree, which is the shape of test that passes while the shipped artifact is
+ * broken.
  */
 import { spawnSync } from 'node:child_process';
 import {
@@ -287,7 +289,8 @@ function readJson(path) {
  * `workspace:` ranges are rewritten at release time against the registry. Here
  * the sibling tarball takes that role for dependencies, and peer dependencies
  * get the caret range the release writes, so the manifest a consumer installs
- * is the built one and not a hand-assembled node_modules.
+ * is the built one and not a hand-assembled node_modules. The release gives all
+ * packages one version, which `ng add` relies on for the range it saves.
  */
 function stagePackage(name, stagingDir, tarballs, versions) {
   const staged = join(stagingDir, name);
@@ -297,6 +300,10 @@ function stagePackage(name, stagingDir, tarballs, versions) {
 
   const manifestPath = join(staged, 'package.json');
   const manifest = readJson(manifestPath);
+
+  manifest.version = readJson(
+    join(WORKSPACE_ROOT, 'dist', 'libs', 'reactive-forms', 'package.json'),
+  ).version;
 
   for (const [dependency, range] of Object.entries(
     manifest.dependencies ?? {},
@@ -1298,6 +1305,171 @@ function runDevDependencyFlow(appDir) {
   );
 }
 
+/**
+ * Without a schematics configuration file, the generators only get what ng add
+ * wrote to angular.json through the CLI, which validates it against each schema.
+ */
+function runAngularJsonDefaultsFlow(appDir) {
+  const project = 'angular-json-app';
+  const sourceRoot = join(appDir, 'projects', project, 'src');
+  const registrationsPath = join(
+    sourceRoot,
+    'app',
+    'forms',
+    'component-registrations.ts',
+  );
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+
+  ngAdd(appDir, project, [
+    '--use-schematic-config=false',
+    '--registration-style=config',
+    '--registrations-path=app/forms',
+  ]);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  generate(appDir, project, 'block', ['--key', 'note']);
+  generate(appDir, project, 'control', [
+    '--key',
+    'rating',
+    '--skip-registration',
+  ]);
+
+  const registeredByControl = readFileSync(registrationsPath, 'utf8');
+
+  generate(appDir, project, 'register');
+  run('npx', ['ng', 'build', project], appDir);
+
+  console.log('angular.json defaults assertions:');
+
+  const registered = readFileSync(registrationsPath, 'utf8');
+
+  check(
+    !existsSync(join(sourceRoot, 'app', 'formbar-schematic.config.json')),
+    'ng add wrote no schematics configuration file',
+  );
+  check(
+    /["']?slider["']?:\s*loadComponent\(/.test(registeredByControl),
+    'control registered as the angular.json defaults say',
+  );
+  check(
+    /["']?note["']?:\s*loadComponent\(/.test(registeredByControl),
+    'block took the angular.json defaults',
+  );
+  check(
+    !registeredByControl.includes('RatingControl') &&
+      registered.includes('RatingControl'),
+    'register found the control and the file through the angular.json defaults',
+  );
+}
+
+function generateFailure(cwd, project, args) {
+  return spawnSync(
+    'npx',
+    [
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:control`,
+      '--project',
+      project,
+      ...args,
+    ],
+    {
+      cwd,
+      encoding: 'utf8',
+      env: { ...process.env, CI: 'true', NG_CLI_ANALYTICS: 'false' },
+    },
+  );
+}
+
+/**
+ * The tables of "Where Components Go". `from` is the directory the command runs
+ * in, relative to the app, and `expected` where the component's folder ends up.
+ */
+function checkPathRows(appDir, project, rows) {
+  for (const { key, from = '', path, expected } of rows) {
+    const cwd = join(appDir, from);
+
+    mkdirSync(cwd, { recursive: true });
+    generate(cwd, project, 'control', [
+      '--key',
+      key,
+      '--skip-registration',
+      ...(path ? ['--path', path] : []),
+    ]);
+
+    check(
+      existsSync(join(appDir, expected, key, `${key}-control.ts`)),
+      `${project}: ${path ? `--path ${path}` : `running from "${from}"`} writes to ${expected}/${key}`,
+    );
+  }
+}
+
+function runProjectPathFlow(appDir) {
+  const project = 'path-table-app';
+  const other = 'other-table-app';
+  const sourceRoot = `projects/${project}/src`;
+
+  for (const name of [project, other]) {
+    run(
+      'npx',
+      ['ng', 'generate', 'application', name, '--skip-install', '--defaults'],
+      appDir,
+    );
+  }
+  ngAdd(appDir, project);
+
+  console.log('--path in a project of its own assertions:');
+
+  checkPathRows(appDir, project, [
+    { key: 'alpha', expected: `${sourceRoot}/app` },
+    {
+      key: 'bravo',
+      from: `${sourceRoot}/app/forms`,
+      expected: `${sourceRoot}/app/forms`,
+    },
+    {
+      key: 'charlie',
+      path: `projects/${project}/tools`,
+      expected: `projects/${project}/tools`,
+    },
+    { key: 'delta', path: 'forms', expected: `${sourceRoot}/forms` },
+    { key: 'echo', path: '/forms', expected: 'forms' },
+  ]);
+
+  for (const path of [`projects/${other}/forms`, `/projects/${other}/forms`]) {
+    const { status, stderr, stdout } = generateFailure(appDir, project, [
+      '--key',
+      'foxtrot',
+      '--skip-registration',
+      '--path',
+      path,
+    ]);
+
+    check(
+      status !== 0 &&
+        `${stdout}${stderr}`.includes('lies inside another project'),
+      `${project}: --path ${path} fails naming the other project`,
+    );
+  }
+}
+
+/** The default `ng new` layout, where the project is the workspace root. */
+function runRootProjectPathFlow(appDir, project) {
+  console.log('--path at the workspace root assertions:');
+
+  checkPathRows(appDir, project, [
+    { key: 'alpha', expected: 'src/app' },
+    { key: 'bravo', from: 'src/app/forms', expected: 'src/app/forms' },
+    { key: 'charlie', path: 'src/app/forms', expected: 'src/app/forms' },
+    { key: 'delta', path: 'app/forms', expected: 'app/forms' },
+    { key: 'echo', path: '/forms', expected: 'forms' },
+  ]);
+}
+
 function runNgAddFlow(appParent, tarballs) {
   const appDir = createApp('formbar', appParent);
 
@@ -1383,6 +1555,8 @@ function runNgAddFlow(appParent, tarballs) {
       'the generated schema rejects a type nothing was scaffolded for',
     );
   }
+
+  runRootProjectPathFlow(appDir, 'formbar');
 
   return appDir;
 }
@@ -1518,6 +1692,8 @@ function main() {
   runKeptIndexFlow(appDir);
 
   runDevDependencyFlow(appDir);
+  runAngularJsonDefaultsFlow(appDir);
+  runProjectPathFlow(appDir);
 
   const ngModuleAppDir = runNgModuleFlow(appParent, tarballs);
   const formbarAppDir = runNgAddFlow(appParent, tarballs);

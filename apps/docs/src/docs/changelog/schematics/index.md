@@ -30,7 +30,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Fixed
 
-- `register` honors `--controlRegistrations` and `--registrationType`.
+- `register` honors `--controlRegistrationsPath`, `--controlRegistrations` and `--registrationType`.
 - A scaffold warns when the registrations file is missing or holds no registrations.
 - Paths above the workspace root give a clear error.
 
