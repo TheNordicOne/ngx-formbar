@@ -1,6 +1,6 @@
 ## Overview
 
-Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library _directives_ and instead _implement an interface_. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
+Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library _directives_ and instead _implement an interface_. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
 
 **New package structure:**
 
@@ -98,7 +98,7 @@ The generators read their `angular.json` defaults from keys such as `@ngx-formba
 }
 ```
 
-`controlRegistrationsPath` names the registrations file. With a custom `--registrationsPath`, v1's `ng add` set it to the registrations directory in the schematics configuration file. Append the file name:
+`controlRegistrationsPath` names the registrations file. With a custom `--registrationsPath`, v1's `ng add` set it to the registrations directory in the schematics configuration file, and the `2.0.0-next.x` prereleases did the same. Append the file name:
 
 **Before:**
 
@@ -189,12 +189,13 @@ If you have a custom `ComponentResolver`, change its `registrations` signal type
 
 This is the biggest change. In v1 your components attached library directives via `hostDirectives` and pulled state out by injecting them. In v2 your component declares signal inputs and _implements_ one of the formbar contracts. The library writes those inputs when it mounts the component.
 
-The three contracts live in `@ngx-formbar/reactive-forms`:
+The four contracts live in `@ngx-formbar/reactive-forms`:
 
 | Contract                    | Use for                               | `T extends`      |
 | --------------------------- | ------------------------------------- | ---------------- |
 | `ReactiveFormbarControl<T>` | Leaf form controls (input, select, …) | `NgxFbControl`   |
 | `ReactiveFormbarGroup<T>`   | Container nodes that hold children    | `NgxFbFormGroup` |
+| `ReactiveFormbarArray<T>`   | Repeating rows of controls            | `NgxFbArray`     |
 | `FormbarBlock<T>`           | Non-control content (notes, dividers) | `NgxFbBlock`     |
 
 Custom properties on `T` beyond the base interface automatically become signal inputs on the component contract. Required properties must be declared; optional ones (`?`) can be omitted.
@@ -392,7 +393,7 @@ If your codebase has any of the following, delete it. None of it has any meaning
 - `hostDirectives: [{ directive: NgxfbControlDirective, inputs: [...] }]` (and the group/block variants) on consumer components.
 - `inject(NgxfbControlDirective)`, `inject(NgxfbGroupDirective)`, `inject(NgxfbBlockDirective)` from inside consumer components.
 - Any local "host directive helper" file your generator emitted in v1 that re-exported a configured `hostDirectives` entry.
-- A `hostDirectiveHelperPath` setting in your `angular.json` schematic options.
+- A `hostDirectiveHelperPath` setting in your `angular.json` schematic options, or under `control`, `group` and `block` in `formbar-schematic.config.json`.
 
 The library's directives still exist as **internal mounting infrastructure**, but they are no longer the public consumer-facing surface. Your components do not reference them.
 
