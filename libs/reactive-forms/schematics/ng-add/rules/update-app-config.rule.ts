@@ -67,7 +67,7 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
     }
 
     const { updatedProvidersArray, extraChanges, didChange } =
-      buildProvidersUpdate(sourceFile, ruleContext, providersInit);
+      buildProvidersUpdate(tree, sourceFile, ruleContext, providersInit);
 
     changes.push(...extraChanges);
 

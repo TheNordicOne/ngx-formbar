@@ -9,9 +9,16 @@ import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
 import { join } from 'path';
 import {
+  CompilerHost,
+  createProgram,
+  createSourceFile,
+  flattenDiagnosticMessageText,
   isImportDeclaration,
   isNamedImports,
   isStringLiteral,
+  ModuleKind,
+  ModuleResolutionKind,
+  ScriptTarget,
   SourceFile,
   transpileModule,
 } from 'typescript';
@@ -112,6 +119,61 @@ describe('ng-add schematic', () => {
     return (
       transpileModule(code, { reportDiagnostics: true }).diagnostics ?? []
     ).map(({ messageText }) => messageText);
+  }
+
+  /**
+   * Type-checks every file of the tree. Packages stay out of reach, so only an
+   * import that a file of the project does not satisfy gets reported.
+   */
+  function brokenImports(tree: UnitTestTree) {
+    const missingExportCodes = [2305, 2459, 2614, 2724];
+    const host: CompilerHost = {
+      fileExists: (fileName) => tree.exists(fileName),
+      readFile: (fileName) =>
+        tree.exists(fileName) ? tree.readText(fileName) : undefined,
+      getSourceFile: (fileName, languageVersion) =>
+        tree.exists(fileName)
+          ? createSourceFile(fileName, tree.readText(fileName), languageVersion)
+          : undefined,
+      getDefaultLibFileName: () => 'lib.d.ts',
+      writeFile: () => undefined,
+      getCurrentDirectory: () => '/',
+      getCanonicalFileName: (fileName) => fileName,
+      useCaseSensitiveFileNames: () => true,
+      getNewLine: () => '\n',
+    };
+    const program = createProgram(
+      tree.files.filter((file) => file.endsWith('.ts')),
+      {
+        noLib: true,
+        noEmit: true,
+        experimentalDecorators: true,
+        target: ScriptTarget.ES2022,
+        module: ModuleKind.ESNext,
+        moduleResolution: ModuleResolutionKind.Bundler,
+      },
+      host,
+    );
+
+    return program
+      .getSemanticDiagnostics()
+      .filter(
+        ({ code, messageText }) =>
+          missingExportCodes.includes(code) ||
+          (code === 2307 &&
+            flattenDiagnosticMessageText(messageText, ' ').includes("'.")),
+      )
+      .map(
+        ({ file, messageText }) =>
+          `${file?.fileName ?? ''}: ${flattenDiagnosticMessageText(messageText, ' ')}`,
+      );
+  }
+
+  async function scaffoldControl(tree: UnitTestTree) {
+    return new SchematicTestRunner(
+      'scaffold',
+      SCAFFOLD_COLLECTION_PATH,
+    ).runSchematic('control', { key: 'slider', project: 'test-app' }, tree);
   }
 
   beforeEach(async () => {
@@ -784,6 +846,116 @@ describe('ng-add schematic', () => {
       expect(
         exists(tree, `${src(providerConfigPath)}/${providerConfigFileName}`),
       ).toBe(true);
+    });
+  });
+
+  describe('a folder whose kept index lacks what ng add seeds', () => {
+    const sharedFolder = app('shared');
+    const keptIndex = 'export const other = 1;\n';
+
+    it.each<[string, Schema]>([
+      ['token', {}],
+      ['config', { registrationStyle: 'config' }],
+      [
+        'token without validators',
+        {
+          includeSyncValidators: false,
+          includeAsyncValidators: false,
+        },
+      ],
+      [
+        'config in the root providers',
+        {
+          registrationStyle: 'config',
+          provideInline: true,
+        },
+      ],
+      ['token in the root providers', { provideInline: true }],
+    ])('compiles with the registrations of %s style', async (_, options) => {
+      appTree.create(`${sharedFolder}/index.ts`, keptIndex);
+
+      const tree = await scaffoldControl(
+        await runAdd({ registrationsPath: 'app/shared', ...options }),
+      );
+
+      expect(read(tree, `${sharedFolder}/index.ts`)).toBe(keptIndex);
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    it('imports only what the index lacks from the seeded file', async () => {
+      appTree.create(
+        `${sharedFolder}/index.ts`,
+        "export { validatorRegistrations } from './validator-registrations';\n",
+      );
+
+      const tree = await runAdd({
+        registrationsPath: 'app/shared',
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+      const sf = parseTS(read(tree, appConfigPath));
+
+      expect(importedFrom(sf, './shared')).toEqual(['validatorRegistrations']);
+      expect(importedFrom(sf, './shared/component-registrations')).toEqual([
+        'componentRegistrations',
+      ]);
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    it('compiles with the helper in that folder', async () => {
+      appTree.create(`${sharedFolder}/index.ts`, keptIndex);
+
+      const tree = await scaffoldControl(
+        await runAdd({ helperPath: 'app/shared' }),
+      );
+
+      expect(read(tree, app('slider/slider-control.ts'))).toContain(
+        "from '../shared/view-provider'",
+      );
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    it.each<[string, Schema]>([
+      ['token', {}],
+      ['config', { registrationStyle: 'config' }],
+    ])(
+      'compiles with registrations and helper in one new folder, in %s style',
+      async (_, options) => {
+        const tree = await scaffoldControl(
+          await runAdd({
+            registrationsPath: 'app/x',
+            helperPath: 'app/x',
+            ...options,
+          }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../x/view-provider'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      },
+    );
+
+    it('compiles when a re-run adds validators the seeded index lacks', async () => {
+      appTree = await runAdd({
+        registrationStyle: 'config',
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+        provideInline: true,
+      });
+      appTree.overwrite(
+        appConfigPath,
+        read(appTree, appConfigPath)
+          .replace(/import \{ componentRegistrations \}.*\n/, '')
+          .replace(/provideFormbar\([\s\S]*?\)\s*\n/, ''),
+      );
+
+      const tree = await runAdd({
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(brokenImports(tree)).toEqual([]);
     });
   });
 

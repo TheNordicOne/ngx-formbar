@@ -128,9 +128,9 @@ export function ngAdd(options: Schema): Rule {
     };
 
     return chain([
-      createFormbarRegistrationsConfig(ruleContext),
       createTokenRegistrationFiles(ruleContext),
       createConfigRegistrationFiles(ruleContext),
+      createFormbarRegistrationsConfig(ruleContext),
       createHelperFiles(ruleContext),
       createContentTypeFile(ruleContext),
       createSchematicsConfig(ruleContext),

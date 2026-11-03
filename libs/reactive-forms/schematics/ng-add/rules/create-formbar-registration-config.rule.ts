@@ -8,7 +8,7 @@ import {
   Rule,
   url,
 } from '@angular-devkit/schematics';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { registrationImportStatements } from '../helper';
 
 export function createFormbarRegistrationsConfig(
   ruleContext: RuleContext,
@@ -35,9 +35,15 @@ export function createFormbarRegistrationsConfig(
         ? 'config'
         : 'inline';
 
-    const registrationsRelativePath = buildRelativePath(
+    const registrationImports = registrationImportStatements(
+      tree,
       `${providerConfigDirectory}/${providerConfigFileName}.ts`,
       registrationsDirectory,
+      [
+        'componentRegistrations',
+        ...(includeSyncValidators ? ['validatorRegistrations'] : []),
+        ...(includeAsyncValidators ? ['asyncValidatorRegistrations'] : []),
+      ],
     );
 
     return mergeWith(
@@ -45,7 +51,7 @@ export function createFormbarRegistrationsConfig(
         applyTemplates({
           includeSyncValidators,
           includeAsyncValidators,
-          registrationsPath: registrationsRelativePath,
+          registrationImports,
           providerConfigFileName,
         }),
         move(providerConfigDirectory),

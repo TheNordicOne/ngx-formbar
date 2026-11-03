@@ -16,12 +16,13 @@ import {
 import { Change, ReplaceChange } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { isJsonObject, JsonObject } from '@angular-devkit/core';
+import { isJsonObject, JsonObject, strings } from '@angular-devkit/core';
 import { posix } from 'node:path';
 import {
   DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME,
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
+  exportsIdentifier,
   isCallee,
   joinToSourceRoot,
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
@@ -40,7 +41,7 @@ import {
   updateWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
-import { Rule, SchematicsException } from '@angular-devkit/schematics';
+import { Rule, SchematicsException, Tree } from '@angular-devkit/schematics';
 
 type GeneratorOptions = Record<string, string | undefined>;
 
@@ -176,6 +177,49 @@ function componentRegistrationsFile(ruleContext: RuleContext) {
     : providerFile;
 }
 
+/**
+ * The registrations folder, as long as its `index.ts` exports the symbol. A kept
+ * index need not, so then the seeded file the symbol comes from.
+ */
+export function registrationImportPath(
+  tree: Tree,
+  importingFile: string,
+  registrationsDirectory: string,
+  symbol: string,
+): string {
+  const seededFile = strings.dasherize(symbol.replace(/Provider$/, ''));
+
+  return buildRelativePath(
+    importingFile,
+    exportsIdentifier(
+      tree,
+      posix.join(registrationsDirectory, 'index.ts'),
+      symbol,
+    )
+      ? registrationsDirectory
+      : posix.join(registrationsDirectory, seededFile),
+  );
+}
+
+export function registrationImportStatements(
+  tree: Tree,
+  importingFile: string,
+  registrationsDirectory: string,
+  symbols: string[],
+): string {
+  const paths = symbols.map((symbol) =>
+    registrationImportPath(tree, importingFile, registrationsDirectory, symbol),
+  );
+
+  return [...new Set(paths)]
+    .map((path) => {
+      const imported = symbols.filter((_, index) => paths[index] === path);
+
+      return `import { ${imported.join(', ')} } from '${path}';`;
+    })
+    .join('\n');
+}
+
 export interface ProvidersUpdateResult {
   updatedProvidersArray: ArrayLiteralExpression;
   extraChanges: Change[];
@@ -183,6 +227,7 @@ export interface ProvidersUpdateResult {
 }
 
 export function buildProvidersUpdate(
+  tree: Tree,
   sourceFile: SourceFile,
   ruleContext: RuleContext,
   providersArray: ArrayLiteralExpression,
@@ -200,10 +245,8 @@ export function buildProvidersUpdate(
   const existingElements = [...providersArray.elements];
   const newElements = [...existingElements];
 
-  const registrationsImportPath = buildRelativePath(
-    appConfigPath,
-    registrationsDirectory,
-  );
+  const registrationImport = (symbol: string) =>
+    registrationImportPath(tree, appConfigPath, registrationsDirectory, symbol);
 
   const providerConfigImportPath = buildRelativePath(
     appConfigPath,
@@ -215,7 +258,7 @@ export function buildProvidersUpdate(
     const callArgs = createArgsForConfig(
       sourceFile,
       ruleContext,
-      registrationsImportPath,
+      registrationImport,
       providerConfigImportPath,
       extraChanges,
     );
@@ -242,7 +285,7 @@ export function buildProvidersUpdate(
     handleSplitRegistrations(
       sourceFile,
       ruleContext,
-      registrationsImportPath,
+      registrationImport,
       existingElements,
       newElements,
       extraChanges,
@@ -309,7 +352,7 @@ function compareElements(
 function createArgsForConfig(
   sourceFile: SourceFile,
   ruleContext: RuleContext,
-  registrationsImportPath: string,
+  registrationImport: (symbol: string) => string,
   providerConfigImportPath: string,
   extraChanges: Change[],
 ) {
@@ -363,17 +406,15 @@ function createArgsForConfig(
   }
 
   if (provideInline && splitRegistrations) {
-    if (registrationsImportPath) {
-      extraChanges.push(
-        insertImport(
-          sourceFile,
-          appConfigPath,
-          'componentRegistrations',
-          registrationsImportPath,
-          false,
-        ),
-      );
-    }
+    extraChanges.push(
+      insertImport(
+        sourceFile,
+        appConfigPath,
+        'componentRegistrations',
+        registrationImport('componentRegistrations'),
+        false,
+      ),
+    );
     const additionalProperties: ShorthandPropertyAssignment[] = [];
 
     if (includeSyncValidators) {
@@ -382,7 +423,7 @@ function createArgsForConfig(
           sourceFile,
           appConfigPath,
           'validatorRegistrations',
-          registrationsImportPath,
+          registrationImport('validatorRegistrations'),
           false,
         ),
       );
@@ -397,7 +438,7 @@ function createArgsForConfig(
           sourceFile,
           appConfigPath,
           'asyncValidatorRegistrations',
-          registrationsImportPath,
+          registrationImport('asyncValidatorRegistrations'),
           false,
         ),
       );
@@ -506,7 +547,7 @@ function addSplitRegistrationProvider(
   providerName: string,
   sourceFile: SourceFile,
   ruleContext: RuleContext,
-  registrationsImportPath: string,
+  registrationImport: (symbol: string) => string,
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
@@ -520,7 +561,7 @@ function addSplitRegistrationProvider(
         sourceFile,
         appConfigPath,
         providerName,
-        registrationsImportPath,
+        registrationImport(providerName),
         false,
       ),
     );
@@ -532,7 +573,7 @@ function addSplitRegistrationProvider(
 function handleSplitRegistrations(
   sourceFile: SourceFile,
   ruleContext: RuleContext,
-  registrationsImportPath: string,
+  registrationImport: (symbol: string) => string,
   existingElements: Expression[],
   newElements: Expression[],
   extraChanges: Change[],
@@ -543,7 +584,7 @@ function handleSplitRegistrations(
     'componentRegistrationsProvider',
     sourceFile,
     ruleContext,
-    registrationsImportPath,
+    registrationImport,
     existingElements,
     newElements,
     extraChanges,
@@ -554,7 +595,7 @@ function handleSplitRegistrations(
       'validatorRegistrationsProvider',
       sourceFile,
       ruleContext,
-      registrationsImportPath,
+      registrationImport,
       existingElements,
       newElements,
       extraChanges,
@@ -566,7 +607,7 @@ function handleSplitRegistrations(
       'asyncValidatorRegistrationsProvider',
       sourceFile,
       ruleContext,
-      registrationsImportPath,
+      registrationImport,
       existingElements,
       newElements,
       extraChanges,

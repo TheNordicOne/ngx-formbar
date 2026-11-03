@@ -785,6 +785,73 @@ function runMovedConfigFlow(appDir) {
   );
 }
 
+const KEPT_INDEX = 'export const other = 1;\n';
+
+/**
+ * `ng add` keeps an existing `index.ts`, which need not export what it seeds,
+ * and registrations and helper files seeded into one folder share one index.
+ * The build proves the imports go where the exports are.
+ */
+function runKeptIndexFlow(appDir) {
+  const sharedFolder = [
+    '--registrations-path=app/shared',
+    '--helper-path=app/shared',
+  ];
+  const runs = [
+    { name: 'kept-index-token', args: sharedFolder, keptIndex: 'shared' },
+    {
+      name: 'kept-index-config',
+      args: [...sharedFolder, '--registration-style=config'],
+      keptIndex: 'shared',
+    },
+    {
+      name: 'one-folder-token',
+      args: ['--registrations-path=app/x', '--helper-path=app/x'],
+    },
+    {
+      name: 'one-folder-config',
+      args: [
+        '--registrations-path=app/x',
+        '--helper-path=app/x',
+        '--registration-style=config',
+      ],
+    },
+  ];
+
+  for (const { name, args, keptIndex } of runs) {
+    const app = join(appDir, 'projects', name, 'src', 'app');
+    const index = join(app, keptIndex ?? '', 'index.ts');
+
+    run(
+      'npx',
+      ['ng', 'generate', 'application', name, '--skip-install', '--defaults'],
+      appDir,
+    );
+
+    if (keptIndex) {
+      mkdirSync(dirname(index), { recursive: true });
+      writeFileSync(index, KEPT_INDEX);
+    }
+
+    ngAdd(appDir, name, args);
+    generate(appDir, name, 'control', ['--key', 'slider']);
+    run('npx', ['ng', 'build', name], appDir);
+
+    console.log(`${name} assertions:`);
+
+    check(
+      !keptIndex || readFileSync(index, 'utf8') === KEPT_INDEX,
+      `${name}: ng add kept the index and the build passed`,
+    );
+    check(
+      /from '\.\.\/[a-z]+\/view-provider'/.test(
+        readFileSync(join(app, 'slider', 'slider-control.ts'), 'utf8'),
+      ),
+      `${name}: the scaffold imports the helper from its file`,
+    );
+  }
+}
+
 function replaceInFile(path, search, replacement) {
   writeFileSync(path, readFileSync(path, 'utf8').replace(search, replacement));
 }
@@ -1409,6 +1476,7 @@ function main() {
   runPathOptionsFlow(appDir);
   runMovedConfigFlow(appDir);
   runRootConfigFlow(appDir);
+  runKeptIndexFlow(appDir);
 
   const ngModuleAppDir = runNgModuleFlow(appParent, tarballs);
   const formbarAppDir = runNgAddFlow(appParent, tarballs);
