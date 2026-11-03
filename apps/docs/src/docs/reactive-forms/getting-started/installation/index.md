@@ -74,12 +74,12 @@ The same settings means the same registration style, registrations file and view
 
 To name the location yourself:
 
-| You pass                              | `ng add` uses                                                                                  |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `--schematicsConfigPath=forms`        | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it |
-| `--schematicConfigFileName=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                       |
-| `--schematicsConfigPath=app`          | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning    |
-| `--schematicsConfigPath=/`            | The workspace root rows above, or a new file there if there is none                            |
+| You pass                              | `ng add` uses                                                                                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--schematicsConfigPath=forms`        | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it                                                         |
+| `--schematicConfigFileName=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                                                                               |
+| `--schematicsConfigPath=app`          | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning                                                            |
+| `--schematicsConfigPath=/`            | `formbar-schematic.config.json` at the workspace root. With other settings already there, a new `src/app/formbar-schematic.config.json` and a warning. |
 
 ## Options
 
