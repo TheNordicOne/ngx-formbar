@@ -12,7 +12,7 @@ ng add @ngx-formbar/reactive-forms
 
 By default, this does the following.
 
-- Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
+- Install `@ngx-formbar/reactive-forms` and `@ngx-formbar/core` as dependencies, in matching versions
 - Install `@ngx-formbar/schematics` as a dev dependency (for the control, group, block, array, register, and schema generators)
 - Create a provider configuration file
 - Setup token-based registration including

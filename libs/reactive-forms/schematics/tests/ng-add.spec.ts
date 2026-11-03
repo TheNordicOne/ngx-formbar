@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -7,7 +7,13 @@ import { isJsonObject, JsonObject } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
-import { readFileSync } from 'node:fs';
+import {
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'path';
 import {
   CompilerHost,
@@ -244,6 +250,130 @@ describe('ng-add schematic', () => {
         'devDependencies',
         schematicsPackage,
       ]);
+    });
+  });
+
+  describe('installing core', () => {
+    const corePackage = '@ngx-formbar/core';
+    const declaredRange = /"@ngx-formbar\/core": "(.+)"/.exec(
+      readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
+    )?.[1];
+    let packageDirectories: string[] = [];
+
+    /** The built schematic next to another manifest, as a published package reads its own. */
+    async function runAddWithManifest(manifest: string | null) {
+      const packageDirectory = mkdtempSync(
+        join(COLLECTION_PATH, '../../../manifest-'),
+      );
+
+      packageDirectories.push(packageDirectory);
+      cpSync(
+        join(COLLECTION_PATH, '..'),
+        join(packageDirectory, 'schematics'),
+        { recursive: true },
+      );
+
+      if (manifest !== null) {
+        writeFileSync(join(packageDirectory, 'package.json'), manifest);
+      }
+
+      return new SchematicTestRunner(
+        'schematics',
+        join(packageDirectory, 'schematics/collection.json'),
+      ).runSchematic('ng-add', baseOptions, appTree);
+    }
+
+    afterEach(() => {
+      for (const directory of packageDirectories) {
+        rmSync(directory, { recursive: true });
+      }
+      packageDirectories = [];
+    });
+
+    it('saves it as a dependency in the declared peer range', async () => {
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(declaredRange).toBeTruthy();
+      expect(manifest).toHaveProperty(
+        ['dependencies', corePackage],
+        declaredRange,
+      );
+      expect(manifest).not.toHaveProperty(['devDependencies', corePackage]);
+    });
+
+    it('saves the range of a resolved manifest', async () => {
+      const tree = await runAddWithManifest(
+        JSON.stringify({
+          version: '2.0.0-next.5',
+          peerDependencies: { [corePackage]: '^2.0.0-next.5' },
+        }),
+      );
+      const manifest = tree.readJson('/package.json');
+
+      expect(manifest).toHaveProperty(
+        ['dependencies', corePackage],
+        '^2.0.0-next.5',
+      );
+      expect(manifest).toHaveProperty(
+        ['devDependencies', '@ngx-formbar/schematics'],
+        '^2.0.0-next.5',
+      );
+    });
+
+    it.each([
+      ['dependencies', 'devDependencies'],
+      ['devDependencies', 'dependencies'],
+    ])('keeps an existing entry in %s', async (section, otherSection) => {
+      appTree.overwrite(
+        '/package.json',
+        read(appTree, '/package.json').replace(
+          `"${section}": {`,
+          `"${section}": {\n    "${corePackage}": "1.2.3",`,
+        ),
+      );
+
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(manifest).toHaveProperty([section, corePackage], '1.2.3');
+      expect(manifest).not.toHaveProperty([otherSection, corePackage]);
+    });
+
+    it.each<[string, string | null]>([
+      ['no manifest', null],
+      ['a manifest that is no JSON', '{'],
+      ['no peer dependencies', JSON.stringify({ version: '2.0.0' })],
+      [
+        'no peer range for core',
+        JSON.stringify({ version: '2.0.0', peerDependencies: { rxjs: '^7' } }),
+      ],
+      [
+        'a peer range that is no string',
+        JSON.stringify({
+          version: '2.0.0',
+          peerDependencies: { [corePackage]: 2 },
+        }),
+      ],
+      [
+        'an empty peer range',
+        JSON.stringify({
+          version: '2.0.0',
+          peerDependencies: { [corePackage]: '' },
+        }),
+      ],
+    ])('fails naming core with %s', async (_, manifest) => {
+      await expect(runAddWithManifest(manifest)).rejects.toThrow(
+        `Could not read the version range of ${corePackage}`,
+      );
+    });
+
+    it('fails naming the schematics package without a version of its own', async () => {
+      await expect(
+        runAddWithManifest(
+          JSON.stringify({ peerDependencies: { [corePackage]: '^2.0.0' } }),
+        ),
+      ).rejects.toThrow(
+        'Could not read the version range of @ngx-formbar/schematics',
+      );
     });
   });
 

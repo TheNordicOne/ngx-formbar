@@ -593,9 +593,9 @@ function findFile(directory, fileName) {
 
 /**
  * The tarball is installed beforehand, so `ng add` uses it as is. ng-add then
- * queues installs of core by package name and of what it adds to package.json,
- * which could replace the tarballs with whatever the registry has. Those
- * installs run as npm dry runs, so the app keeps the packages under test.
+ * queues an install of what it adds to package.json, which could replace the
+ * tarballs with whatever the registry has. That install runs as an npm dry run,
+ * so the app keeps the packages under test.
  */
 function ngAdd(appDir, project, args = []) {
   return run(
@@ -1599,6 +1599,13 @@ function main() {
 
     tarballs.set(manifest.name, tarball);
     versions.set(manifest.name, manifest.version);
+
+    if (manifest.name === REACTIVE_FORMS_PACKAGE_NAME) {
+      check(
+        /^\^\d/.test(manifest.peerDependencies[CORE_PACKAGE_NAME]),
+        `the staged manifest declares core in a caret range: ${manifest.peerDependencies[CORE_PACKAGE_NAME]}`,
+      );
+    }
 
     if (manifest.name === SCHEMATICS_PACKAGE_NAME) {
       schematicsFiles = files;
