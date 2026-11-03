@@ -18,7 +18,7 @@ import {
   addMissingProviders,
   findProvidersOwner,
   insertNamedImport,
-} from '../root-config';
+} from '../root-providers';
 import { REACTIVE_FORMS_PACKAGE_NAME } from '../../shared/constants';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {

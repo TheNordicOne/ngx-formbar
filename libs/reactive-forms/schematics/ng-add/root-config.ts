@@ -5,20 +5,12 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import {
-  applyToUpdateRecorder,
-  Change,
-  InsertChange,
-} from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import {
   ProjectDefinition,
   WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import {
   findProvidersProperty,
   findTsConfigPath,
-  findVariableWithObjectLiteral,
-  isCallee,
   isInsideProject,
   joinToSourceRoot,
   readCompilerOptions,
@@ -26,29 +18,28 @@ import {
 } from '@ngx-formbar/setup';
 import {
   CallExpression,
-  canHaveDecorators,
-  ClassDeclaration,
   CompilerHost,
   CompilerOptions,
   createProgram,
   createSourceFile,
   Expression,
-  getDecorators,
+  ImportSpecifier,
   isArrayLiteralExpression,
   isCallExpression,
   isClassDeclaration,
   isExportDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isImportSpecifier,
   isNamedImports,
   isNamespaceImport,
-  isObjectLiteralExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
   isSourceFile,
   isSpreadAssignment,
   isStringLiteralLike,
   isVariableDeclaration,
+  NamespaceImport,
   Node,
   ObjectLiteralExpression,
   Program,
@@ -75,8 +66,6 @@ export type RootConfig =
 const BOOTSTRAP_PACKAGE = '@angular/platform-browser';
 const BOOTSTRAP_FUNCTION = 'bootstrapApplication';
 const BOOTSTRAP_MODULE_METHOD = 'bootstrapModule';
-const MERGE_FUNCTION = 'mergeApplicationConfig';
-const EMPTY_PROVIDERS = '{\n  providers: []\n}';
 
 export function locateRootConfig(
   tree: Tree,
@@ -207,8 +196,7 @@ function findBootstrapCall(
   return null;
 }
 
-function bootstrapCalls(sourceFile: SourceFile) {
-  const isBootstrapCall = bootstrapMatcher(sourceFile);
+export function bootstrapCalls(sourceFile: SourceFile): CallExpression[] {
   const calls: CallExpression[] = [];
 
   function visit(node: Node) {
@@ -223,43 +211,67 @@ function bootstrapCalls(sourceFile: SourceFile) {
   return calls;
 }
 
-/**
- * `bootstrapApplication` counts only as imported from Angular, under whatever
- * name, as a local function of that name could do anything.
- */
-function bootstrapMatcher(sourceFile: SourceFile) {
-  const bindings = sourceFile.statements
+function isBootstrapCall(call: CallExpression) {
+  return (
+    isBootstrapModuleCall(call) ||
+    refersToImport(call.expression, BOOTSTRAP_FUNCTION, BOOTSTRAP_PACKAGE)
+  );
+}
+
+export function importBindings(
+  sourceFile: SourceFile,
+  packageName: string,
+): (ImportSpecifier | NamespaceImport)[] {
+  return sourceFile.statements
     .filter(isImportDeclaration)
     .filter(
       ({ moduleSpecifier }) =>
         isStringLiteralLike(moduleSpecifier) &&
-        moduleSpecifier.text === BOOTSTRAP_PACKAGE,
+        moduleSpecifier.text === packageName,
     )
-    .map(({ importClause }) => importClause?.namedBindings);
-  const named = bindings
-    .flatMap((binding) =>
-      binding && isNamedImports(binding) ? [...binding.elements] : [],
-    )
-    .filter(
-      ({ name, propertyName }) =>
-        (propertyName ?? name).text === BOOTSTRAP_FUNCTION,
-    )
-    .map(({ name }) => name.text);
-  const namespaces = bindings.flatMap((binding) =>
-    binding && isNamespaceImport(binding) ? [binding.name.text] : [],
-  );
+    .flatMap<ImportSpecifier | NamespaceImport>(({ importClause }) => {
+      const bindings = importClause?.namedBindings;
 
-  return ({ expression }: CallExpression) =>
-    isIdentifier(expression)
-      ? named.includes(expression.text)
-      : isPropertyAccessExpression(expression) &&
-        (expression.name.text === BOOTSTRAP_MODULE_METHOD ||
-          (expression.name.text === BOOTSTRAP_FUNCTION &&
-            isIdentifier(expression.expression) &&
-            namespaces.includes(expression.expression.text)));
+      return !bindings
+        ? []
+        : isNamedImports(bindings)
+          ? [...bindings.elements]
+          : [bindings];
+    });
 }
 
-function isBootstrapModuleCall({ expression }: CallExpression) {
+/**
+ * Whether `callee` is that export of the package, under whatever name it is
+ * imported. A local function of the same name could do anything.
+ */
+export function refersToImport(
+  callee: Expression,
+  exportName: string,
+  packageName: string,
+): boolean {
+  const bindings = importBindings(callee.getSourceFile(), packageName);
+
+  if (isIdentifier(callee)) {
+    return bindings.some(
+      (binding) =>
+        isImportSpecifier(binding) &&
+        binding.name.text === callee.text &&
+        (binding.propertyName ?? binding.name).text === exportName,
+    );
+  }
+
+  return (
+    isPropertyAccessExpression(callee) &&
+    callee.name.text === exportName &&
+    bindings.some(
+      (binding) =>
+        isNamespaceImport(binding) &&
+        binding.name.text === callee.expression.getText(),
+    )
+  );
+}
+
+export function isBootstrapModuleCall({ expression }: CallExpression): boolean {
   return (
     isPropertyAccessExpression(expression) &&
     expression.name.text === BOOTSTRAP_MODULE_METHOD
@@ -394,252 +406,14 @@ function fromDefaultLocation(
   return { holder: 'variable', filePath };
 }
 
-/** The object whose `providers` array holds the root providers. */
-export function findProvidersOwner(
-  sourceFile: SourceFile,
-  rootConfig: RootConfig,
-): ObjectLiteralExpression | null {
-  switch (rootConfig.holder) {
-    case 'variable':
-      return findVariableWithObjectLiteral(
-        sourceFile,
-        ({ name, initializer }) =>
-          rootConfig.variable
-            ? isIdentifier(name) && name.text === rootConfig.variable
-            : !!initializer && hasEditableInitializer(initializer),
-      );
-    case 'module':
-      return moduleMetadata(sourceFile, rootConfig.className);
-    case 'bootstrap':
-      return bootstrapConfigObject(bootstrapApplicationCall(sourceFile));
-  }
-}
-
-function hasEditableInitializer(initializer: Expression) {
+export function hasEditableInitializer(initializer: Expression): boolean {
   const owner = unwrapToObjectLiteral(initializer);
 
   return !!owner && hasEditableProviders(owner);
 }
 
-function bootstrapApplicationCall(sourceFile: SourceFile) {
-  return (
-    bootstrapCalls(sourceFile).find((call) => !isBootstrapModuleCall(call)) ??
-    null
-  );
-}
-
-function moduleMetadata(sourceFile: SourceFile, className: string | undefined) {
-  const declaration = findClass(sourceFile, className);
-  const decorators =
-    declaration && canHaveDecorators(declaration)
-      ? (getDecorators(declaration) ?? [])
-      : [];
-
-  return (
-    decorators
-      .map(({ expression }) =>
-        isCallExpression(expression) &&
-        isCallee(expression.expression, 'NgModule')
-          ? expression.arguments.at(0)
-          : undefined,
-      )
-      .find(isObjectLiteralArgument) ?? null
-  );
-}
-
-function isObjectLiteralArgument(
-  metadata: Expression | undefined,
-): metadata is ObjectLiteralExpression {
-  return !!metadata && isObjectLiteralExpression(metadata);
-}
-
-function findClass(
-  node: Node,
-  className: string | undefined,
-): ClassDeclaration | undefined {
-  return node.forEachChild((child) =>
-    isClassDeclaration(child) && child.name?.text === className
-      ? child
-      : findClass(child, className),
-  );
-}
-
-/**
- * A bootstrap call or an NgModule need not have a `providers` array yet. A
- * config whose contents are out of reach, such as a function call, stays as it
- * is and gets merged with a config object that has one.
- */
-export function addMissingProviders(
-  tree: Tree,
-  sourceFile: SourceFile,
-  rootConfig: RootConfig,
-): void {
-  const recorder = tree.beginUpdate(rootConfig.filePath);
-
-  applyToUpdateRecorder(
-    recorder,
-    rootConfig.holder === 'module'
-      ? moduleChanges(sourceFile, rootConfig.filePath, rootConfig.className)
-      : rootConfig.holder === 'bootstrap'
-        ? bootstrapChanges(sourceFile, rootConfig.filePath)
-        : [],
-  );
-  tree.commitUpdate(recorder);
-}
-
-function moduleChanges(
-  sourceFile: SourceFile,
-  filePath: string,
-  className: string | undefined,
-) {
-  const owner = moduleMetadata(sourceFile, className);
-
-  if (!owner) {
-    throw new SchematicsException(
-      `Could not find the @NgModule metadata of "${className ?? 'default'}" in ${filePath}. It has to be an object in the decorator.`,
-    );
-  }
-
-  const providers = findProvidersProperty(owner);
-
-  if (hasEditableProviders(owner)) {
-    return [];
-  }
-
-  if (owner.properties.some(isSpreadAssignment)) {
-    throw new SchematicsException(
-      `Could not add the root providers to the @NgModule in ${filePath}, as its metadata spreads another object.`,
-    );
-  }
-
-  return !providers
-    ? insertIntoObject(owner, filePath)
-    : isPropertyAssignment(providers)
-      ? [
-          new InsertChange(filePath, providers.initializer.getStart(), '['),
-          new InsertChange(filePath, providers.initializer.getEnd(), ']'),
-        ]
-      : [new InsertChange(filePath, providers.getEnd(), ': [providers]')];
-}
-
-function bootstrapChanges(sourceFile: SourceFile, filePath: string) {
-  const call = bootstrapApplicationCall(sourceFile);
-  const config = call?.arguments.at(1);
-
-  return !call || bootstrapConfigObject(call)
-    ? []
-    : !config
-      ? insertAsArgument(call, filePath)
-      : isMergeCall(config)
-        ? insertAsArgument(config, filePath)
-        : isObjectLiteralExpression(config) && acceptsProviders(config)
-          ? insertIntoObject(config, filePath)
-          : wrapInMergeCall(sourceFile, config, filePath);
-}
-
-/** A spread further down would replace an array added at the top. */
-function acceptsProviders(object: ObjectLiteralExpression) {
-  return (
-    !findProvidersProperty(object) &&
-    !object.properties.some(isSpreadAssignment)
-  );
-}
-
-function insertIntoObject(owner: ObjectLiteralExpression, filePath: string) {
-  return [
-    new InsertChange(
-      filePath,
-      owner.getStart() + 1,
-      `\n  providers: []${owner.properties.length > 0 ? ',' : '\n'}`,
-    ),
-  ];
-}
-
-/** After the last argument, as the call may end in a trailing comma. */
-function insertAsArgument(call: CallExpression, filePath: string) {
-  const lastArgument = call.arguments.at(-1);
-
-  return [
-    lastArgument
-      ? new InsertChange(
-          filePath,
-          lastArgument.getEnd(),
-          `, ${EMPTY_PROVIDERS}`,
-        )
-      : new InsertChange(filePath, call.getEnd() - 1, EMPTY_PROVIDERS),
-  ];
-}
-
-function wrapInMergeCall(
-  sourceFile: SourceFile,
-  config: Expression,
-  filePath: string,
-) {
-  return [
-    insertNamedImport(sourceFile, filePath, MERGE_FUNCTION, '@angular/core'),
-    new InsertChange(filePath, config.getStart(), `${MERGE_FUNCTION}(`),
-    new InsertChange(filePath, config.getEnd(), `, ${EMPTY_PROVIDERS})`),
-  ];
-}
-
-/**
- * `insertImport` takes a namespace import as already providing the symbol, but
- * the call it is imported for uses the bare name.
- */
-export function insertNamedImport(
-  sourceFile: SourceFile,
-  filePath: string,
-  symbol: string,
-  packageName: string,
-): Change {
-  const bindings = sourceFile.statements
-    .filter(isImportDeclaration)
-    .filter(
-      ({ moduleSpecifier }) =>
-        isStringLiteralLike(moduleSpecifier) &&
-        moduleSpecifier.text === packageName,
-    )
-    .map((declaration) => ({
-      declaration,
-      binding: declaration.importClause?.namedBindings,
-    }));
-  const isNamed = bindings.some(
-    ({ binding }) =>
-      binding &&
-      isNamedImports(binding) &&
-      binding.elements.some(({ name }) => name.text === symbol),
-  );
-  const namespaced = bindings.find(
-    ({ binding }) => binding && isNamespaceImport(binding),
-  );
-
-  return namespaced && !isNamed
-    ? new InsertChange(
-        filePath,
-        namespaced.declaration.getEnd(),
-        `\nimport { ${symbol} } from '${packageName}';`,
-      )
-    : insertImport(sourceFile, filePath, symbol, packageName);
-}
-
-function bootstrapConfigObject(call: CallExpression | null) {
-  const config = call?.arguments.at(1);
-  const candidates =
-    config && isMergeCall(config)
-      ? config.arguments.filter(isObjectLiteralExpression)
-      : config && isObjectLiteralExpression(config)
-        ? [config]
-        : [];
-
-  return candidates.find(hasEditableProviders) ?? null;
-}
-
-function isMergeCall(node: Expression): node is CallExpression {
-  return isCallExpression(node) && isCallee(node.expression, MERGE_FUNCTION);
-}
-
 /** A spread after the array can replace it, so adding to it may do nothing. */
-function hasEditableProviders(object: ObjectLiteralExpression) {
+export function hasEditableProviders(object: ObjectLiteralExpression): boolean {
   const providers = findProvidersProperty(object);
 
   return (
