@@ -25,7 +25,6 @@ import {
   transpileModule,
 } from 'typescript';
 import { Schema } from '../ng-add/schema';
-import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 import {
   app,
   appRoot,
@@ -458,13 +457,14 @@ describe('ng-add schematic', () => {
     it('uses schematics configuration file without values', async () => {
       const tree = await runAdd();
 
-      const schematicsConfig = JSON.parse(
-        read(tree, schematicsConfigPath),
-      ) as NgxFormbarAutomationConfig;
+      const schematicsConfig = tree.readJson(schematicsConfigPath);
 
-      expect(schematicsConfig.registrationType).toBeUndefined();
-      expect(schematicsConfig.controlRegistrationsPath).toBeUndefined();
-      expect(schematicsConfig.viewProviderHelperPath).toBe(DEFAULT_HELPER_PATH);
+      expect(schematicsConfig).not.toHaveProperty('registrationType');
+      expect(schematicsConfig).not.toHaveProperty('controlRegistrationsPath');
+      expect(schematicsConfig).toHaveProperty(
+        'viewProviderHelperPath',
+        DEFAULT_HELPER_PATH,
+      );
     });
   });
 
@@ -1685,15 +1685,17 @@ describe('ng-add schematic', () => {
           providerConfigFileName,
         });
 
-        const schematicsConfig = JSON.parse(
-          read(tree, schematicsConfigPath),
-        ) as NgxFormbarAutomationConfig;
+        const schematicsConfig = tree.readJson(schematicsConfigPath);
 
-        expect(schematicsConfig.registrationType).toBe('config');
-        expect(schematicsConfig.controlRegistrationsPath).toBe(
+        expect(schematicsConfig).toHaveProperty('registrationType', 'config');
+        expect(schematicsConfig).toHaveProperty(
+          'controlRegistrationsPath',
           `${registrationsPath}/component-registrations.ts`,
         );
-        expect(schematicsConfig.viewProviderHelperPath).toBe(helperPath);
+        expect(schematicsConfig).toHaveProperty(
+          'viewProviderHelperPath',
+          helperPath,
+        );
       });
 
       it('uses the user provided schematicsConfigPath && schematicConfigFileName', async () => {
@@ -4138,13 +4140,11 @@ describe('ng-add schematic', () => {
       result.readText('/projects/test-app/src/app/types/content.type.ts'),
     ).toContain('export type AppContent = never;');
 
-    const config = JSON.parse(
-      result.readText(
-        '/projects/test-app/src/app/formbar-schematic.config.json',
-      ),
-    ) as NgxFormbarAutomationConfig;
+    const config = result.readJson(
+      '/projects/test-app/src/app/formbar-schematic.config.json',
+    );
 
-    expect(config.schema).toEqual({
+    expect(config).toHaveProperty('schema', {
       type: 'app/types/content.type.ts#AppContent',
       emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
     });

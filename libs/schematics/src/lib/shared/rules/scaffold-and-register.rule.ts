@@ -371,9 +371,7 @@ function splitPath(pathPart: string) {
   const pathSegments = normalizedPath.split('/');
   const lastSegment = pathSegments[pathSegments.length - 1];
 
-  if (!EXT_REGEX.test(lastSegment)) {
-    return { directory: normalizedPath.replace(/(?<=.)\/$/, ''), fileName: '' };
-  }
-
-  return { directory: posix.dirname(normalizedPath), fileName: lastSegment };
+  return EXT_REGEX.test(lastSegment)
+    ? { directory: posix.dirname(normalizedPath), fileName: lastSegment }
+    : { directory: normalizedPath.replace(/(?<=.)\/$/, ''), fileName: '' };
 }
