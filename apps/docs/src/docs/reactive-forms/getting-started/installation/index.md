@@ -26,7 +26,6 @@ By default, this does the following.
 - Create a schematics configuration file
 - Create a content union file (`content.type.ts` with an `AppContent` type) that the schematics configuration file points at
 - Provide _ngx-formbar_ in your application's [root providers](#root-providers)
-- Install dependencies
 
 > **Note**
 > `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. See [Which Schematics Configuration File](#which-schematics-configuration-file).
