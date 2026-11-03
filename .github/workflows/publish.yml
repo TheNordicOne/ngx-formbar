@@ -63,7 +63,7 @@ jobs:
         if: steps.mode.outputs.mode == 'prerelease'
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Detect prerelease specifier
         if: steps.mode.outputs.mode == 'prerelease'
