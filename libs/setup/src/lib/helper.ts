@@ -1,18 +1,11 @@
-import { SchematicsException, Tree } from '@angular-devkit/schematics';
+import { SchematicsException } from '@angular-devkit/schematics';
 import {
-  getWorkspace,
   ProjectDefinition,
   WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
-import { isJsonObject } from '@angular-devkit/core';
+import { isJsonObject, normalize } from '@angular-devkit/core';
 import { COMPONENT_SCHEMATIC } from './constants';
-
-export async function getProject(
-  tree: Tree,
-  projectName?: string,
-): Promise<ProjectDefinition> {
-  return getProjectDefinition(await getWorkspace(tree), projectName);
-}
+import { isWithin } from './source-root-path';
 
 export function resolveProjectName(
   workspace: WorkspaceDefinition,
@@ -43,6 +36,40 @@ export function getProjectDefinition(
   }
 
   return project;
+}
+
+/**
+ * Directories of other projects, without a leading `/`. Those containing
+ * `project` are left out, as every path in the project lies within them.
+ */
+export function otherProjectDirectories(
+  project: ProjectDefinition,
+  workspace: WorkspaceDefinition,
+): string[] {
+  const directoriesOf = ({ root, sourceRoot }: ProjectDefinition) =>
+    [root, sourceRoot ?? root].map((path) => normalize(`/${path}`).slice(1));
+  const own = directoriesOf(project);
+
+  return [...workspace.projects.values()]
+    .flatMap(directoriesOf)
+    .filter(
+      (directory) =>
+        !own.includes(directory) && !isWithin(project.root, directory),
+    );
+}
+
+/** `path` has no leading `/`. A project nested in `project` is not part of it. */
+export function isInsideProject(
+  path: string,
+  project: ProjectDefinition,
+  workspace: WorkspaceDefinition,
+): boolean {
+  return (
+    isWithin(path, project.root) &&
+    !otherProjectDirectories(project, workspace).some((directory) =>
+      isWithin(path, directory),
+    )
+  );
 }
 
 /**

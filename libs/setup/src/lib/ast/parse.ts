@@ -13,7 +13,3 @@ export function loadSourceFile(
   const content = buffer.toString('utf-8');
   return createSourceFile(path, content, ScriptTarget.Latest, true);
 }
-
-export function parseTS(code: string): SourceFile {
-  return createSourceFile('temp.ts', code, ScriptTarget.Latest, true);
-}

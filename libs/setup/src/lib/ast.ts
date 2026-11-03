@@ -9,8 +9,8 @@ import {
   isParenthesizedExpression,
   isStringLiteral,
   isVariableStatement,
-  Node,
   NonNullExpression,
+  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   ParenthesizedExpression,
   PropertyName,
@@ -96,10 +96,6 @@ export function unwrapToObjectLiteral(
   }
 }
 
-export function isObjectLiteral(node: Node): node is ObjectLiteralExpression {
-  return isObjectLiteralExpression(node);
-}
-
 export function nameOfProperty(
   propertyName: PropertyName | undefined,
 ): string | null {
@@ -115,20 +111,10 @@ export function nameOfProperty(
         : null; // ignore computed names for this check
 }
 
-export function isObjectLiteralWithProperty(
-  variable: VariableDeclaration,
-  propertyName: string,
-): boolean {
-  const initializer = variable.initializer;
-  if (!initializer) {
-    return false;
-  }
-
-  if (!isObjectLiteral(initializer)) {
-    return false;
-  }
-
-  return initializer.properties.some(
-    (prop) => nameOfProperty(prop.name) === propertyName,
+export function findProvidersProperty(
+  object: ObjectLiteralExpression,
+): ObjectLiteralElementLike | undefined {
+  return object.properties.find(
+    (property) => nameOfProperty(property.name) === 'providers',
   );
 }

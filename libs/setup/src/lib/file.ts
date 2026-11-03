@@ -1,4 +1,5 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
+import { logging } from '@angular-devkit/core';
 import {
   DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME,
   DEFAULT_REGISTRATIONS_PATH,
@@ -6,77 +7,102 @@ import {
   DEFAULT_SCHEMATICS_CONFIG_PATH,
 } from './constants';
 import { NgxFormbarAutomationConfig } from './shared-config.type';
+import { joinToSourceRoot, resolveWithinWorkspace } from './source-root-path';
 
-export function findConfigPath(tree: Tree, sourceRoot: string): string | null {
+function findConfigPath(tree: Tree, sourceRoot: string) {
   const candidates = [
-    `/${sourceRoot}/${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`,
-    `/${sourceRoot}/app/formbar.config.ts`,
-    `/${sourceRoot}/app/app.config.ts`,
-  ];
+    `${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`,
+    'app/formbar.config.ts',
+    'app/app.config.ts',
+  ].map((path) => joinToSourceRoot(path, sourceRoot));
 
   return candidates.find((p) => tree.exists(p)) ?? null;
 }
 
-export function findSchematicsConfig(tree: Tree): string | null {
-  const configPath = `/${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
+/**
+ * A configured registrations file follows `resolveFromSourceRoot`, and is `null`
+ * above the workspace root. Without one, the default locations are searched.
+ */
+export function resolveRegistrationsPath(
+  tree: Tree,
+  sourceRoot: string,
+  configuredPath: string | null | undefined,
+): string | null {
+  return configuredPath
+    ? resolveWithinWorkspace(configuredPath, sourceRoot)
+    : findConfigPath(tree, sourceRoot);
+}
 
-  if (tree.exists(configPath)) {
-    return configPath;
-  }
+export function registrationsNotFoundMessage(path: string): string {
+  return `Registration file ${path} could not be found. Skipping registration.`;
+}
 
-  const files = tree.root.subfiles.filter(
-    (file) => file === DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
-  );
-
-  if (files.length > 0) {
-    return `/${files[0]}`;
-  }
-
-  const searchInDirectory = (dir: string): string | null => {
-    const currentPath = dir ? `/${dir}` : '';
-
-    const configFile = tree.exists(
-      `${currentPath}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
-    )
-      ? `${currentPath}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`
-      : null;
-
-    if (configFile) {
-      return configFile;
-    }
-
-    // Try to find in subdirectories
-    const subdirs = tree.getDir(currentPath).subdirs;
-
-    for (const subdir of subdirs) {
-      const foundInSubdir = searchInDirectory(
-        `${dir ? `${dir}/` : ''}${subdir}`,
-      );
-      if (foundInSubdir) {
-        return foundInSubdir;
-      }
-    }
-
-    return null;
-  };
-
-  return searchInDirectory('');
+export function registrationsMissingMessage(path: string): string {
+  return `Registration file ${path} holds no component registrations. Skipping registration.`;
 }
 
 /**
- * Reads `formbar-schematic.config.json`. An explicit `--schematicsConfig` is
- * project-relative; without one the file is discovered anywhere in the tree.
+ * The schematics configuration file of a project: the `app` folder in its source root, or
+ * else the workspace root. A config elsewhere needs `schematicsConfig`.
+ */
+function schematicsConfigLocations(sourceRoot: string) {
+  return [
+    joinToSourceRoot(
+      `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
+      sourceRoot,
+    ),
+    `/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
+  ];
+}
+
+export function findSchematicsConfig(
+  tree: Tree,
+  sourceRoot: string,
+): string | null {
+  return (
+    schematicsConfigLocations(sourceRoot).find((path) => tree.exists(path)) ??
+    null
+  );
+}
+
+/**
+ * Reads `formbar-schematic.config.json` and logs which file that was. An
+ * explicit `--schematicsConfig` follows `resolveFromSourceRoot` and must exist.
+ * Without one, see `findSchematicsConfig`.
  */
 export function loadAutomationConfig(
   tree: Tree,
-  projectRoot: string,
+  sourceRoot: string,
+  logger: logging.LoggerApi,
   configOption?: string,
 ): NgxFormbarAutomationConfig | null {
   const configPath = configOption
-    ? `/${projectRoot}/${configOption}`
-    : findSchematicsConfig(tree);
+    ? resolveExplicitConfig(tree, sourceRoot, configOption)
+    : findSchematicsConfig(tree, sourceRoot);
+
+  logger.info(
+    configPath
+      ? `Using schematics configuration file ${configPath}`
+      : `No schematics configuration file found. Looked for ${schematicsConfigLocations(sourceRoot).join(' and ')}`,
+  );
 
   return readFile<NgxFormbarAutomationConfig | null>(tree, configPath);
+}
+
+function resolveExplicitConfig(
+  tree: Tree,
+  sourceRoot: string,
+  configOption: string,
+) {
+  const path = resolveWithinWorkspace(configOption, sourceRoot);
+
+  if (!path || !tree.exists(path)) {
+    throw new SchematicsException(
+      `Schematics configuration file not found: ${path ?? configOption}`,
+    );
+  }
+
+  return path;
 }
 
 export function readFile<T>(tree: Tree, path?: string | null): T | null {

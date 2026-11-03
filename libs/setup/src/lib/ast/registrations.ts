@@ -18,16 +18,14 @@ import {
   isVariableDeclaration,
   isVariableStatement,
   Node,
-  ObjectLiteralElementLike,
   ObjectLiteralExpression,
-  PropertyAssignment,
   SourceFile,
   SyntaxKind,
   VariableDeclaration,
 } from 'typescript';
 import { ReplaceChange } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
-import { isCallee } from './decorators';
+import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
 
 export function findComponentRegistrationsNode(
   sourceFile: SourceFile,
@@ -162,55 +160,6 @@ export function addComponentRegistration(
   );
 }
 
-export function getProvideFormbarArg(
-  sf: SourceFile,
-): ObjectLiteralExpression | undefined {
-  let result: ObjectLiteralExpression | undefined;
-
-  const visit = (node: Node): void => {
-    if (result) {
-      return;
-    }
-
-    if (isCallExpression(node) && isCallee(node.expression, 'provideFormbar')) {
-      if (
-        node.arguments.length > 0 &&
-        isObjectLiteralExpression(node.arguments[0])
-      ) {
-        result = node.arguments[0];
-        return;
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return result;
-}
-
-export function matchesIdentifierName(
-  p: ObjectLiteralElementLike,
-  key: string,
-  identifierName: string,
-): boolean {
-  if (!isPropertyAssignment(p)) {
-    return false;
-  }
-
-  const n = p.name;
-  const matchesKey =
-    (isIdentifier(n) && n.text === key) ||
-    (isStringLiteral(n) && n.text === key);
-
-  return (
-    matchesKey &&
-    (isIdentifier(p.initializer)
-      ? p.initializer.text === identifierName
-      : extractComponentNameFromLazyImport(p.initializer) === identifierName)
-  );
-}
-
 export function registrationNodeHasKey(node: Node, key: string): boolean {
   if (isNewExpression(node)) {
     const arr = findMapArrayLiteral(node);
@@ -314,321 +263,6 @@ export function componentRegistrationsObjectUsesIdentifier(
   }
 
   return registrationsObjectUsesIdentifier(node, identifierName);
-}
-
-export function provideFormbarComponentRegistrationsHasIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): boolean {
-  const arg = getProvideFormbarArg(sf);
-  if (!arg) {
-    return false;
-  }
-
-  const regProp = arg.properties.find((p) => {
-    if (!isPropertyAssignment(p)) {
-      return false;
-    }
-    const n = p.name;
-    return (
-      (isIdentifier(n) && n.text === 'componentRegistrations') ||
-      (isStringLiteral(n) && n.text === 'componentRegistrations')
-    );
-  });
-
-  if (!regProp || !isPropertyAssignment(regProp)) {
-    return false;
-  }
-
-  const nested = regProp.initializer;
-  if (!isObjectLiteralExpression(nested)) {
-    return false;
-  }
-
-  const entry = nested.properties.find((p) => {
-    if (!isPropertyAssignment(p)) {
-      return false;
-    }
-    const n = p.name;
-    const matchesKey =
-      (isIdentifier(n) && n.text === key) ||
-      (isStringLiteral(n) && n.text === key);
-    if (!matchesKey) {
-      return false;
-    }
-    return (
-      (isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
-      extractComponentNameFromLazyImport(p.initializer) === identifierName
-    );
-  });
-
-  return !!entry;
-}
-
-export function defineFormbarConfigComponentRegistrationsHasIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): boolean {
-  let found = false;
-
-  const visit = (node: Node): void => {
-    if (found) return;
-
-    if (
-      isCallExpression(node) &&
-      isCallee(node.expression, 'defineFormbarConfig')
-    ) {
-      const [firstArg] = node.arguments;
-      if (node.arguments.length === 0 || !isObjectLiteralExpression(firstArg)) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      const regProp = firstArg.properties.find(
-        (p) =>
-          isPropertyAssignment(p) &&
-          isIdentifier(p.name) &&
-          p.name.text === 'componentRegistrations',
-      );
-
-      if (
-        !regProp ||
-        !isPropertyAssignment(regProp) ||
-        !isObjectLiteralExpression(regProp.initializer)
-      ) {
-        node.forEachChild(visit);
-        return;
-      }
-
-      found = regProp.initializer.properties.some((p) => {
-        return matchesIdentifierName(p, key, identifierName);
-      });
-
-      return;
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return found;
-}
-
-export function componentRegistrationsMapProviderHasIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): boolean {
-  let found = false;
-
-  const visit = (node: Node): void => {
-    if (found) return;
-
-    if (isVariableStatement(node)) {
-      const decls = node.declarationList.declarations;
-      for (const decl of decls) {
-        const mapArg = getMapArguments(decl);
-        if (!mapArg) {
-          continue;
-        }
-        found = mapArg.elements.some((el) => {
-          return isArrayAndMatchesIdentifierName(el, key, identifierName);
-        });
-
-        if (found) return;
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return found;
-}
-
-export function directComponentRegistrationsHasIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): boolean {
-  let found = false;
-
-  const visit = (node: Node): void => {
-    if (found) return;
-
-    if (isVariableStatement(node)) {
-      const decls = node.declarationList.declarations;
-      for (const decl of decls) {
-        if (
-          !isIdentifier(decl.name) ||
-          decl.name.text !== 'componentRegistrations'
-        ) {
-          continue;
-        }
-
-        const init = decl.initializer;
-        if (!init || !isObjectLiteralExpression(init)) {
-          continue;
-        }
-
-        found = init.properties.some((p) => {
-          return matchesIdentifierName(p, key, identifierName);
-        });
-
-        return;
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return found;
-}
-
-export function appConfigProvidersComponentRegistrationsMapHasIdentifier(
-  sf: SourceFile,
-  key: string,
-  identifierName: string,
-): boolean {
-  let found = false;
-
-  const visit = (node: Node): void => {
-    if (found) return;
-
-    if (!isVariableStatement(node)) {
-      node.forEachChild(visit);
-      return;
-    }
-
-    const decls = node.declarationList.declarations;
-    for (const decl of decls) {
-      if (
-        !isVariableDeclaration(decl) ||
-        !isIdentifier(decl.name) ||
-        decl.name.text !== 'appConfig' ||
-        !decl.initializer
-      ) {
-        continue;
-      }
-
-      if (!isObjectLiteralExpression(decl.initializer)) {
-        continue;
-      }
-
-      const providersProperty = decl.initializer.properties.find(
-        (prop) =>
-          isPropertyAssignment(prop) &&
-          isIdentifier(prop.name) &&
-          prop.name.text === 'providers',
-      );
-
-      if (
-        !providersProperty ||
-        !isPropertyAssignment(providersProperty) ||
-        !isArrayLiteralExpression(providersProperty.initializer)
-      ) {
-        continue;
-      }
-
-      const providersArray = providersProperty.initializer;
-
-      for (const element of providersArray.elements) {
-        if (!isObjectLiteralExpression(element)) continue;
-
-        const provideProp = element.properties.find(
-          (p) =>
-            isPropertyAssignment(p) &&
-            isIdentifier(p.name) &&
-            p.name.text === 'provide' &&
-            isIdentifier(p.initializer) &&
-            p.initializer.text === NGX_FW_COMPONENT_REGISTRATIONS,
-        );
-
-        if (!provideProp) continue;
-
-        const useValueProp = element.properties.find(
-          (p) =>
-            isPropertyAssignment(p) &&
-            isIdentifier(p.name) &&
-            p.name.text === 'useValue',
-        );
-
-        if (
-          !useValueProp ||
-          !isPropertyAssignment(useValueProp) ||
-          !isNewExpression(useValueProp.initializer)
-        ) {
-          continue;
-        }
-
-        const mapExpr = useValueProp.initializer;
-        if (
-          !mapExpr.arguments ||
-          mapExpr.arguments.length === 0 ||
-          !isArrayLiteralExpression(mapExpr.arguments[0])
-        ) {
-          continue;
-        }
-
-        const mapArg = mapExpr.arguments[0];
-        found = mapArg.elements.some((el) => {
-          return isArrayAndMatchesIdentifierName(el, key, identifierName);
-        });
-
-        if (found) return;
-      }
-    }
-
-    node.forEachChild(visit);
-  };
-
-  sf.forEachChild(visit);
-  return found;
-}
-
-export function getMapArguments(
-  decl: VariableDeclaration,
-): ArrayLiteralExpression | null {
-  if (
-    !isIdentifier(decl.name) ||
-    decl.name.text !== 'componentRegistrationsProvider'
-  ) {
-    return null;
-  }
-
-  const init = decl.initializer;
-  if (!init || !isObjectLiteralExpression(init)) {
-    return null;
-  }
-
-  const useValueProp = init.properties.find(
-    (p) =>
-      isPropertyAssignment(p) &&
-      isIdentifier(p.name) &&
-      p.name.text === 'useValue',
-  );
-
-  if (!useValueProp || !isPropertyAssignment(useValueProp)) {
-    return null;
-  }
-
-  const mapExpr = useValueProp.initializer;
-  if (
-    !isNewExpression(mapExpr) ||
-    !mapExpr.arguments ||
-    mapExpr.arguments.length === 0
-  ) {
-    return null;
-  }
-
-  const mapArg = mapExpr.arguments[0];
-  if (!isArrayLiteralExpression(mapArg)) {
-    return null;
-  }
-  return mapArg;
 }
 
 function findMapNodeInTokenRegistration(node: Node) {
@@ -781,9 +415,7 @@ function createLazyImportExpression(
   );
 }
 
-export function extractComponentNameFromLazyImport(
-  node: Node,
-): string | null {
+export function extractComponentNameFromLazyImport(node: Node): string | null {
   // Handle loadComponent(() => import(...).then(m => m.Component))
   if (
     isCallExpression(node) &&
@@ -918,55 +550,29 @@ function findProvideFormbarComponentRegistrations(node: Node) {
     return null;
   }
 
-  const providersArray = findProvidersArray(node);
-  if (!providersArray) {
-    return null;
-  }
+  const provideFormbarCall = node.declarationList.declarations
+    .flatMap((declaration) => [...providersOf(declaration)])
+    .find(
+      (el): el is CallExpression =>
+        isCallExpression(el) &&
+        isIdentifier(el.expression) &&
+        el.expression.text === 'provideFormbar',
+    );
 
-  const provideFormbarCall = providersArray.elements.find(
-    (el) =>
-      isCallExpression(el) &&
-      isIdentifier(el.expression) &&
-      el.expression.text === 'provideFormbar',
-  ) as CallExpression | undefined;
-
-  if (!provideFormbarCall || provideFormbarCall.arguments.length === 0) {
-    return null;
-  }
-
-  const configArg = provideFormbarCall.arguments[0];
-  return getComponentRegistrationExpression(configArg);
+  return provideFormbarCall?.arguments.length
+    ? getComponentRegistrationExpression(provideFormbarCall.arguments[0])
+    : null;
 }
 
-function findProvidersArray(node: Node) {
-  if (!isVariableStatement(node)) {
-    return null;
-  }
+function providersOf({ initializer }: VariableDeclaration) {
+  const owner = initializer && unwrapToObjectLiteral(initializer);
+  const providers = owner && findProvidersProperty(owner);
 
-  for (const declaration of node.declarationList.declarations) {
-    if (!isVariableDeclaration(declaration) || !declaration.initializer) {
-      continue;
-    }
-
-    if (!isObjectLiteralExpression(declaration.initializer)) {
-      continue;
-    }
-
-    const providersProperty = declaration.initializer.properties.find(
-      (prop) =>
-        isPropertyAssignment(prop) &&
-        isIdentifier(prop.name) &&
-        prop.name.text === 'providers',
-    ) as PropertyAssignment | undefined;
-
-    if (!providersProperty || !isPropertyAssignment(providersProperty)) {
-      continue;
-    }
-
-    return providersProperty.initializer as ArrayLiteralExpression;
-  }
-
-  return null;
+  return providers &&
+    isPropertyAssignment(providers) &&
+    isArrayLiteralExpression(providers.initializer)
+    ? providers.initializer.elements
+    : [];
 }
 
 function createUpdatedRegistrationsObject(
@@ -1026,24 +632,6 @@ function getComponentRegistrationExpression(configArg: Expression) {
   }
 
   return componentRegProp.initializer;
-}
-
-function isArrayAndMatchesIdentifierName(
-  el: Expression,
-  key: string,
-  identifierName: string,
-) {
-  if (!isArrayLiteralExpression(el) || el.elements.length !== 2) {
-    return false;
-  }
-
-  const [keyEl, valueEl] = el.elements;
-  return (
-    isStringLiteral(keyEl) &&
-    keyEl.text === key &&
-    ((isIdentifier(valueEl) && valueEl.text === identifierName) ||
-      extractComponentNameFromLazyImport(valueEl) === identifierName)
-  );
 }
 
 function arrayLiteralHasKey(arr: ArrayLiteralExpression, key: string) {
