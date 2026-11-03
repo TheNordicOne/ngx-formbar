@@ -1,9 +1,12 @@
 /**
- * Runs the `schema` schematic the way a consumer does: packed tarballs,
- * installed into a fresh Angular app outside this repository, driven through
- * the real Angular CLI. Every other test in this library runs inside this
- * workspace against a hand-written core stub in a virtual Tree, which is the
- * shape of test that passes while the shipped artifact is broken.
+ * Runs the schematics the way a consumer does: packed tarballs, installed into
+ * fresh Angular apps outside this repository, driven through the real Angular
+ * CLI. One app runs `schema` over a hand-written content union, from its root
+ * and from a subdirectory, and over the union of a library project in it. A
+ * second one goes through `ng add`, scaffolds into the seeded union, runs
+ * `schema` and builds. Every other test in these libraries runs inside this
+ * workspace against a virtual Tree, which is the shape of test that passes while
+ * the shipped artifact is broken.
  */
 import { spawnSync } from 'node:child_process';
 import {
@@ -11,19 +14,22 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, sep } from 'node:path';
+import { basename, dirname, join, sep } from 'node:path';
 import Ajv from 'ajv';
 import Ajv2020 from 'ajv/dist/2020.js';
+import ts from 'typescript';
 
 const WORKSPACE_ROOT = process.cwd();
-const PACKAGES = ['core', 'setup', 'schematics'];
+const PACKAGES = ['core', 'setup', 'schematics', 'reactive-forms'];
 const CORE_PACKAGE_NAME = '@ngx-formbar/core';
 const SCHEMATICS_PACKAGE_NAME = '@ngx-formbar/schematics';
+const REACTIVE_FORMS_PACKAGE_NAME = '@ngx-formbar/reactive-forms';
 const DRAFT_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
 const DRAFT_07 = 'http://json-schema.org/draft-07/schema#';
 
@@ -51,6 +57,11 @@ export interface RepeatArray extends NgxFbArray<AppContent> {
   type: 'repeat';
 }
 
+/** A section left on core's default children, as the Groups guide writes it. */
+export interface PlainGroup extends NgxFbFormGroup {
+  type: 'plain';
+}
+
 /** Static text rendered between controls. */
 export interface NoteBlock extends NgxFbBlock {
   type: 'note';
@@ -61,7 +72,12 @@ export interface NoteBlock extends NgxFbBlock {
  * Every form node type this app supports.
  * The \`schema\` schematic reads this union; scaffolding a control adds to it.
  */
-export type AppContent = TextControl | SectionGroup | RepeatArray | NoteBlock;
+export type AppContent =
+  | TextControl
+  | SectionGroup
+  | RepeatArray
+  | NoteBlock
+  | PlainGroup;
 `;
 
 /**
@@ -121,10 +137,33 @@ export default defineEmitter({
 });
 `;
 
+const SHARED_TEXT_CONTROL = `import { NgxFbControl } from '@ngx-formbar/core';
+
+export interface SharedTextControl extends NgxFbControl {
+  type: 'sharedText';
+}
+`;
+
+/** Reaches its member only through a `paths` alias of the root tsconfig. */
+const LIBRARY_CONTENT_TYPE = `import { SharedTextControl } from '@consumer/shared/text-control';
+
+export type LibraryContent = SharedTextControl;
+`;
+
+const LIBRARY_SCHEMATIC_CONFIG = {
+  schema: {
+    type: 'content.type.ts#LibraryContent',
+    emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+  },
+};
+
+const LIBRARY_FORM = {
+  content: { name: { type: 'sharedText', label: 'Name' } },
+};
+
 const SCHEMATIC_CONFIG = {
   schema: {
     type: 'app/types/content.type.ts#AppContent',
-    docs: true,
     emitters: [
       { use: 'json-schema-2020-12', output: 'form.schema.json' },
       { use: 'json-schema-draft-07', output: 'form.draft-07.schema.json' },
@@ -149,6 +188,13 @@ const VALID_FORM = {
       type: 'repeat',
       rowControl: { type: 'text', label: 'Alias', hideStrategy: 'keep' },
     },
+    plain: {
+      type: 'plain',
+      controls: {
+        city: { type: 'text', label: 'City' },
+        stops: { type: 'repeat', rowControl: { type: 'text' } },
+      },
+    },
   },
 };
 
@@ -168,6 +214,30 @@ const NARROWED_ROW_FORM = {
   },
 };
 
+/** `NgxFbItem` children stand for the registered members, not any `type`. */
+const UNREGISTERED_CHILD_FORM = {
+  content: {
+    plain: { type: 'plain', controls: { city: { type: 'txet' } } },
+  },
+};
+
+/** Uses the camelCase key and the group the scaffolds added to the union. */
+const SCAFFOLDED_FORM = {
+  content: {
+    phone: { type: 'phoneNumber', label: 'Phone' },
+    address: {
+      type: 'address',
+      controls: { mobile: { type: 'phoneNumber' } },
+    },
+  },
+};
+
+const UNKNOWN_TYPE_FORM = {
+  content: {
+    phone: { type: 'faxNumber' },
+  },
+};
+
 const failures = [];
 
 function check(condition, description) {
@@ -180,13 +250,13 @@ function check(condition, description) {
   console.log(`  FAIL  ${description}`);
 }
 
-function run(command, args, cwd) {
+function run(command, args, cwd, env = {}) {
   const started = Date.now();
   const result = spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, CI: 'true', NG_CLI_ANALYTICS: 'false' },
+    env: { ...process.env, CI: 'true', NG_CLI_ANALYTICS: 'false', ...env },
   });
 
   console.log(
@@ -212,10 +282,11 @@ function readJson(path) {
 
 /**
  * `workspace:` ranges are rewritten at release time against the registry. Here
- * the sibling tarball takes that role, so the manifest a consumer installs is
- * the built one and not a hand-assembled node_modules.
+ * the sibling tarball takes that role for dependencies, and peer dependencies
+ * get the caret range the release writes, so the manifest a consumer installs
+ * is the built one and not a hand-assembled node_modules.
  */
-function stagePackage(name, stagingDir, tarballs) {
+function stagePackage(name, stagingDir, tarballs, versions) {
   const staged = join(stagingDir, name);
   cpSync(join(WORKSPACE_ROOT, 'dist', 'libs', name), staged, {
     recursive: true,
@@ -229,6 +300,14 @@ function stagePackage(name, stagingDir, tarballs) {
   )) {
     if (typeof range === 'string' && range.startsWith('workspace:')) {
       manifest.dependencies[dependency] = `file:${tarballs.get(dependency)}`;
+    }
+  }
+
+  for (const [dependency, range] of Object.entries(
+    manifest.peerDependencies ?? {},
+  )) {
+    if (typeof range === 'string' && range.startsWith('workspace:')) {
+      manifest.peerDependencies[dependency] = `^${versions.get(dependency)}`;
     }
   }
 
@@ -313,23 +392,29 @@ function validateWith(ajv, document, dialect) {
     validate(NARROWED_ROW_FORM) === false,
     `${dialect} rejects a row top using hideStrategy 'remove'`,
   );
+  check(
+    validate(UNREGISTERED_CHILD_FORM) === false,
+    `${dialect} rejects an unregistered type under a group left on core's default children`,
+  );
 }
 
 function checkInventory(inventory, appDir) {
   const kinds = inventory.nodes.map((node) => node.kind).sort();
   const names = inventory.nodes.map((node) => node.name).sort();
   const array = inventory.nodes.find((node) => node.kind === 'array');
-  const group = inventory.nodes.find((node) => node.kind === 'group');
+  const group = inventory.nodes.find((node) => node.name === 'SectionGroup');
+  const plain = inventory.nodes.find((node) => node.name === 'PlainGroup');
 
   check(
     JSON.stringify(kinds) ===
-      JSON.stringify(['array', 'block', 'control', 'group']),
+      JSON.stringify(['array', 'block', 'control', 'group', 'group']),
     'the local emitter saw all four node kinds',
   );
   check(
     JSON.stringify(names) ===
       JSON.stringify([
         'NoteBlock',
+        'PlainGroup',
         'RepeatArray',
         'SectionGroup',
         'TextControl',
@@ -339,6 +424,11 @@ function checkInventory(inventory, appDir) {
   check(
     group?.children?.includes('SectionGroup') === true,
     'the self-referential group points back at the union',
+  );
+  check(
+    JSON.stringify([...(plain?.children ?? [])].sort()) ===
+      JSON.stringify(names),
+    "the group left on core's default children takes every registered member",
   );
   check(
     array?.children?.includes('RepeatArray') === true,
@@ -353,6 +443,94 @@ function checkInventory(inventory, appDir) {
     inventory.paths.workspaceRoot === appDir,
     'the emitter received the consumer app as the on-disk workspace root',
   );
+}
+
+/** The Angular CLI keeps the cwd of a run started below the workspace root. */
+function checkSubdirectoryRun(appDir) {
+  run(
+    'npx',
+    [
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:schema`,
+      '--project',
+      'consumer',
+      '--emitter',
+      './tools/inventory-emitter.ts',
+      '--output',
+      'inventory-subdirectory.json',
+    ],
+    join(appDir, 'src', 'app'),
+  );
+
+  const inventoryPath = join(appDir, 'src', 'inventory-subdirectory.json');
+
+  check(
+    existsSync(inventoryPath) &&
+      readJson(inventoryPath).paths.workspaceRoot === appDir,
+    'a run from a subdirectory hands the emitter the consumer app as the workspace root',
+  );
+}
+
+/**
+ * A library has no `tsconfig.app.json`, so the alias in the root tsconfig
+ * reaches its union only through the library's own tsconfig.
+ */
+function runLibraryFlow(appDir) {
+  const libraryName = 'forms-lib';
+  const sourceRoot = join(appDir, 'projects', libraryName, 'src');
+  const tsConfigPath = join(appDir, 'tsconfig.json');
+
+  run(
+    'npx',
+    ['ng', 'generate', 'library', libraryName, '--skip-install'],
+    appDir,
+  );
+
+  const { config } = ts.parseConfigFileTextToJson(
+    tsConfigPath,
+    readFileSync(tsConfigPath, 'utf8'),
+  );
+  config.compilerOptions.paths = {
+    ...config.compilerOptions.paths,
+    '@consumer/shared/*': ['./shared/*'],
+  };
+  writeFileSync(tsConfigPath, `${JSON.stringify(config, null, 2)}\n`);
+
+  mkdirSync(join(appDir, 'shared'), { recursive: true });
+  writeFileSync(join(appDir, 'shared', 'text-control.ts'), SHARED_TEXT_CONTROL);
+  writeFileSync(join(sourceRoot, 'content.type.ts'), LIBRARY_CONTENT_TYPE);
+  writeFileSync(
+    join(sourceRoot, 'formbar-schematic.config.json'),
+    `${JSON.stringify(LIBRARY_SCHEMATIC_CONFIG, null, 2)}\n`,
+  );
+
+  generate(appDir, libraryName, 'schema', [
+    '--schematics-config=formbar-schematic.config.json',
+  ]);
+
+  console.log('library assertions:');
+
+  const schemaPath = join(sourceRoot, 'form.schema.json');
+  check(
+    existsSync(schemaPath),
+    "schema wrote the library's schema through the root path alias",
+  );
+
+  if (existsSync(schemaPath)) {
+    const validate = new Ajv2020({ strict: false }).compile(
+      readJson(schemaPath),
+    );
+
+    check(
+      validate(LIBRARY_FORM) === true,
+      "the library's schema accepts a config using the aliased member",
+    );
+    check(
+      validate(UNKNOWN_TYPE_FORM) === false,
+      "the library's schema rejects a type outside its union",
+    );
+  }
 }
 
 function checkPackedFiles(files) {
@@ -371,6 +549,151 @@ function checkPackedFiles(files) {
   );
 }
 
+function createApp(name, appParent) {
+  const appDir = join(appParent, name);
+
+  run(
+    'npx',
+    [
+      '--yes',
+      '@angular/cli@21',
+      'new',
+      name,
+      '--skip-git',
+      '--skip-install',
+      '--defaults',
+      '--package-manager',
+      'npm',
+    ],
+    appParent,
+  );
+  run('npm', ['install'], appDir);
+
+  return appDir;
+}
+
+function findFile(directory, fileName) {
+  const match = readdirSync(directory, { recursive: true }).find(
+    (entry) => basename(entry) === fileName,
+  );
+
+  return match ? join(directory, match) : null;
+}
+
+/**
+ * The tarball is installed beforehand, so `ng add` uses it as is. ng-add then
+ * queues installs of core and the schematics by package name, which could
+ * replace the tarballs with whatever the registry has. Those installs run as
+ * npm dry runs, so the app keeps the packages under test.
+ */
+function ngAdd(appDir, project, args = []) {
+  return run(
+    'npx',
+    [
+      'ng',
+      'add',
+      REACTIVE_FORMS_PACKAGE_NAME,
+      '--project',
+      project,
+      '--defaults',
+      '--skip-confirmation',
+      ...args,
+    ],
+    appDir,
+    { npm_config_dry_run: 'true' },
+  );
+}
+
+function generate(cwd, project, schematic, args = []) {
+  return run(
+    'npx',
+    [
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:${schematic}`,
+      '--project',
+      project,
+      ...args,
+    ],
+    cwd,
+  );
+}
+
+function runNgAddFlow(appParent, tarballs) {
+  const appDir = createApp('formbar', appParent);
+
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, 'formbar');
+  generate(appDir, 'formbar', 'control', ['--key', 'phoneNumber']);
+  generate(appDir, 'formbar', 'group', ['--key', 'address']);
+
+  const unionPath = join(appDir, 'src', 'app', 'types', 'content.type.ts');
+  const scaffoldedUnion = readFileSync(unionPath, 'utf8');
+
+  generate(appDir, 'formbar', 'schema');
+  run('npx', ['ng', 'build'], appDir);
+
+  console.log('ng add flow assertions:');
+
+  const interfacePath = findFile(
+    join(appDir, 'src'),
+    'phone-number-control-config.ts',
+  );
+
+  check(
+    interfacePath !== null &&
+      basename(dirname(interfacePath)) === 'phone-number',
+    'the camelCase key was scaffolded into a dasherized directory',
+  );
+  check(
+    /import \{ PhoneNumberControlConfig \} from '[./]+\/phone-number\/phone-number-control-config';/.test(
+      scaffoldedUnion,
+    ),
+    'the union imports the camelCase scaffold from where it was written',
+  );
+  check(
+    scaffoldedUnion.includes('AddressGroupConfig<AppContent>'),
+    'the scaffolded group joined the union with the union as its content',
+  );
+
+  const schemaPath = join(appDir, 'src', 'form.schema.json');
+  check(
+    existsSync(schemaPath),
+    'schema wrote the seeded 2020-12 emitter output',
+  );
+
+  if (existsSync(schemaPath)) {
+    const validate = new Ajv2020({ strict: false }).compile(
+      readJson(schemaPath),
+    );
+
+    check(
+      validate(SCAFFOLDED_FORM) === true,
+      'the generated schema accepts a config using both scaffolds',
+    );
+    check(
+      validate(UNKNOWN_TYPE_FORM) === false,
+      'the generated schema rejects a type nothing was scaffolded for',
+    );
+  }
+
+  return appDir;
+}
+
 function main() {
   const stagingDir = mkdtempSync(join(tmpdir(), 'formbar-e2e-pack-'));
   const appParent = mkdtempSync(join(tmpdir(), 'formbar-e2e-app-'));
@@ -386,6 +709,7 @@ function main() {
       'run-many',
       '-t',
       'build',
+      'clean-schematics',
       '-p',
       ...PACKAGES.map((name) => `@ngx-formbar/${name}`),
     ],
@@ -393,36 +717,27 @@ function main() {
   );
 
   const tarballs = new Map();
+  const versions = new Map();
   let schematicsFiles = [];
 
   for (const name of PACKAGES) {
-    const { staged, manifest } = stagePackage(name, stagingDir, tarballs);
+    const { staged, manifest } = stagePackage(
+      name,
+      stagingDir,
+      tarballs,
+      versions,
+    );
     const { tarball, files } = packPackage(staged, stagingDir);
 
     tarballs.set(manifest.name, tarball);
+    versions.set(manifest.name, manifest.version);
 
     if (manifest.name === SCHEMATICS_PACKAGE_NAME) {
       schematicsFiles = files;
     }
   }
 
-  run(
-    'npx',
-    [
-      '--yes',
-      '@angular/cli@21',
-      'new',
-      'consumer',
-      '--skip-git',
-      '--skip-install',
-      '--defaults',
-      '--package-manager',
-      'npm',
-    ],
-    appParent,
-  );
-
-  run('npm', ['install'], appDir);
+  createApp('consumer', appParent);
   run('npm', ['install', tarballs.get(CORE_PACKAGE_NAME)], appDir);
   run(
     'npm',
@@ -495,8 +810,13 @@ function main() {
     checkInventory(readJson(inventoryPath), appDir);
   }
 
+  checkSubdirectoryRun(appDir);
+  runLibraryFlow(appDir);
+
+  const formbarAppDir = runNgAddFlow(appParent, tarballs);
+
   if (failures.length > 0) {
-    console.log(`\nkept for inspection: ${appDir}`);
+    console.log(`\nkept for inspection: ${appDir} and ${formbarAppDir}`);
     throw new Error(
       `${failures.length} assertion(s) failed:\n  ${failures.join('\n  ')}`,
     );
@@ -505,7 +825,7 @@ function main() {
   rmSync(stagingDir, { recursive: true, force: true });
   rmSync(appParent, { recursive: true, force: true });
 
-  console.log('\nschema e2e passed.');
+  console.log('\nschematics e2e passed.');
 }
 
 try {
