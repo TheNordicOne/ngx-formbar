@@ -10,7 +10,6 @@ export interface Schema {
 
 export interface SchemaContext {
   typeReference: string;
-  docs: boolean;
   entries: SchemaEmitterEntry[];
   projectRoot: string;
   workspaceRoot: string;

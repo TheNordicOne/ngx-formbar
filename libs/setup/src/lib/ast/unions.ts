@@ -21,7 +21,7 @@ export function addUnionMember(
   const sourceFile = loadSourceFile(tree, filePath);
 
   if (!sourceFile) {
-    throw new SchematicsException(`Union file not found: ${filePath}`);
+    throw new SchematicsException(`Type file not found: ${filePath}`);
   }
 
   const alias = sourceFile.statements

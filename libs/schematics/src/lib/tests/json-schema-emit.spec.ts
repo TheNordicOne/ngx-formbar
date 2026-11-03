@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import Ajv2020 from 'ajv/dist/2020';
 import Ajv from 'ajv';
-import { EmptyTree } from '@angular-devkit/schematics';
+import { EmptyTree, SchematicsException } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { logging } from '@angular-devkit/core';
 import {
@@ -14,7 +14,8 @@ import {
   draft202012Emitter,
 } from '../schema/emitter/json-schema/dialects';
 import { EmitContext, EmitPaths } from '../schema/emitter/define-emitter';
-import { FormModel, Property } from '../schema/model';
+import { builtInDefaultOutput } from '../schema/emitter/registry';
+import { FormModel, Property, TypeNode } from '../schema/model';
 
 const MODEL: FormModel = {
   root: { name: 'AppContent', members: ['TextControl', 'NoteBlock'] },
@@ -178,7 +179,7 @@ describe('buildJsonSchema', () => {
     ]);
   });
 
-  it('describes a node and a documented property when docs are enabled', () => {
+  it('describes a node and a documented property with docs', () => {
     const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true });
 
     expect(at(document, '$defs', 'TextControl', 'description')).toBe(
@@ -196,7 +197,7 @@ describe('buildJsonSchema', () => {
     ).toBe('The visible label.');
   });
 
-  it('omits descriptions when docs are disabled', () => {
+  it('omits descriptions without docs', () => {
     const document = buildJsonSchema(MODEL, DRAFT_2020_12, { docs: false });
 
     expect(at(document, '$defs', 'TextControl', 'description')).toBeUndefined();
@@ -490,6 +491,31 @@ describe('buildJsonSchema', () => {
     ).toBe(false);
   });
 
+  it('keeps a shared inner shape apart when its cycle binds to different outer shapes', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(sharedInnerCycleModel(), DRAFT_2020_12, { docs: true }),
+    );
+    const x = { a: 's', inner: {} };
+
+    expect(
+      validate({
+        content: {
+          c: {
+            type: 'c',
+            x,
+            y: { b: 1, inner: { back: { b: 2, inner: {} } } },
+          },
+        },
+      }),
+    ).toBe(true);
+    // `y.inner.back` must follow the `Outer` that `y` holds, which has `b`.
+    expect(
+      validate({
+        content: { c: { type: 'c', x, y: { b: 1, inner: { back: x } } } },
+      }),
+    ).toBe(false);
+  });
+
   it('binds a cycle to the innermost enclosing shape of that name', () => {
     const document = buildJsonSchema(shadowedCycleModel(), DRAFT_2020_12, {
       docs: true,
@@ -571,17 +597,201 @@ describe('buildJsonSchema', () => {
       buildJsonSchema(dangling, DRAFT_2020_12, { docs: true }),
     ).toThrow(/Absent/);
   });
+
+  it('rejects a reference to a node the model does not define', () => {
+    const dangling: FormModel = {
+      root: { name: 'AppContent', members: ['Control'] },
+      nodes: {
+        Control: {
+          name: 'Control',
+          kind: 'control',
+          typeLiteral: ['dangling'],
+          open: false,
+          properties: [
+            {
+              name: 'target',
+              optional: false,
+              type: { k: 'ref', node: 'Missing' },
+            },
+          ],
+        },
+      },
+    };
+
+    expect(() =>
+      buildJsonSchema(dangling, DRAFT_2020_12, { docs: true }),
+    ).toThrow('No definition name is reserved for "Missing".');
+  });
+
+  it('resolves references whose type names hold pointer and URI characters (2020-12)', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(printedNameModel(), DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate(printedNameForm('x'))).toBe(true);
+    expect(validate(printedNameForm(1))).toBe(false);
+  });
+
+  it('resolves references whose type names hold pointer and URI characters (draft-07)', () => {
+    const validate = new Ajv({ strict: false }).compile(
+      buildJsonSchema(printedNameModel(), DRAFT_07, { docs: true }),
+    );
+
+    expect(validate(printedNameForm('x'))).toBe(true);
+    expect(validate(printedNameForm(1))).toBe(false);
+  });
+
+  it('names every definition with a plain identifier', () => {
+    const document = buildJsonSchema(printedNameModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(keysAt(document, '$defs')).toEqual([
+      'Pick_AppContent',
+      'Pick_AppContent2',
+      'Root_a_b',
+      'Record_a_b_c_string',
+      'Record_a_b_c_string2',
+    ]);
+  });
+
+  it('types tuple positions with prefixItems (2020-12)', () => {
+    const document = buildJsonSchema(tupleModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(at(document, '$defs', 'TupleControl', 'properties', 'pair')).toEqual(
+      {
+        type: 'array',
+        prefixItems: [{ type: 'string' }, { type: 'number' }],
+        items: false,
+        minItems: 2,
+      },
+    );
+    expect(
+      at(document, '$defs', 'TupleControl', 'properties', 'spread'),
+    ).toEqual({ type: 'array', items: { type: 'number' }, minItems: 1 });
+  });
+
+  it('types tuple positions with an items array (draft-07)', () => {
+    const document = buildJsonSchema(tupleModel(), DRAFT_07, { docs: true });
+
+    expect(
+      at(document, 'definitions', 'TupleControl', 'properties', 'pair'),
+    ).toEqual({
+      type: 'array',
+      items: [{ type: 'string' }, { type: 'number' }],
+      additionalItems: false,
+      minItems: 2,
+    });
+  });
+
+  it('validates tuples by position and length (2020-12)', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(tupleModel(), DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate(tupleForm(['a', 1]))).toBe(true);
+    expect(validate(tupleForm(['a']))).toBe(false);
+    expect(validate(tupleForm(['a', 1, 2]))).toBe(false);
+    expect(validate(tupleForm([1, 'a']))).toBe(false);
+    expect(validate(tupleForm(['a', 1], [1, 2, 3]))).toBe(true);
+    expect(validate(tupleForm(['a', 1], []))).toBe(false);
+    expect(validate(tupleForm(['a', 1], ['x']))).toBe(false);
+  });
+
+  it('validates tuples by position and length (draft-07)', () => {
+    const validate = new Ajv({ strict: false }).compile(
+      buildJsonSchema(tupleModel(), DRAFT_07, { docs: true }),
+    );
+
+    expect(validate(tupleForm(['a', 1]))).toBe(true);
+    expect(validate(tupleForm(['a']))).toBe(false);
+    expect(validate(tupleForm(['a', 1, 2]))).toBe(false);
+    expect(validate(tupleForm([1, 'a']))).toBe(false);
+    expect(validate(tupleForm(['a', 1], [1, 2, 3]))).toBe(true);
+    expect(validate(tupleForm(['a', 1], []))).toBe(false);
+    expect(validate(tupleForm(['a', 1], ['x']))).toBe(false);
+  });
+
+  it('defines a declared object once however often it is used', () => {
+    const document = buildJsonSchema(reusedObjectModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(keysAt(document, '$defs')).toEqual([
+      'ListControl',
+      'AppContent',
+      'OptionNode',
+    ]);
+    expect(at(document, '$defs', 'ListControl', 'properties')).toEqual({
+      type: { const: 'list' },
+      first: { $ref: '#/$defs/OptionNode' },
+      second: { $ref: '#/$defs/OptionNode' },
+    });
+  });
+
+  it('keeps cycles bound when a recursive declared object is reused', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(reusedObjectModel(), DRAFT_2020_12, { docs: true }),
+    );
+    const tree = { label: 'a', children: [{ label: 'b', children: [] }] };
+
+    expect(
+      validate({
+        content: { list: { type: 'list', first: tree, second: tree } },
+      }),
+    ).toBe(true);
+    expect(
+      validate({
+        content: {
+          list: {
+            type: 'list',
+            first: tree,
+            second: { label: 'a', children: [{ nope: 1 }] },
+          },
+        },
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('the built-in emitters', () => {
-  it('writes the document under the project root by default', async () => {
+  it.each([
+    [draft202012Emitter, '/projects/test-app/src/form.schema.json'],
+    [draft07Emitter, '/projects/test-app/src/form.schema.draft-07.json'],
+  ])(
+    'gives a built-in a default output under the project root',
+    (emitter, output) => {
+      expect(builtInDefaultOutput(emitter.name, PATHS.projectRoot)).toBe(
+        output,
+      );
+    },
+  );
+
+  it('has no default output for anything but a built-in', () => {
+    expect(builtInDefaultOutput('./tools/a.ts', PATHS.projectRoot)).toBeNull();
+  });
+
+  it('writes to the output it receives', async () => {
     const tree = new UnitTestTree(new EmptyTree());
 
-    await draft202012Emitter.emit(MODEL, context(tree, PATHS));
+    await draft202012Emitter.emit(
+      MODEL,
+      context(tree, { ...PATHS, output: 'schemas/form.json' }),
+    );
 
-    expect(
-      JSON.parse(tree.readContent('projects/test-app/src/form.schema.json')),
-    ).toEqual(buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true }));
+    expect(JSON.parse(tree.readContent('schemas/form.json'))).toEqual(
+      buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true }),
+    );
+  });
+
+  it('fails without an output', () => {
+    const tree = new UnitTestTree(new EmptyTree());
+
+    expect(() => draft07Emitter.emit(MODEL, context(tree, PATHS))).toThrow(
+      `The "${draft07Emitter.name}" emitter received no output path.`,
+    );
   });
 
   it('overwrites the configured output file', async () => {
@@ -598,14 +808,57 @@ describe('the built-in emitters', () => {
     );
   });
 
-  it('forwards the emit options instead of hardcoding them', async () => {
+  it('renders no descriptions with options.docs: false', async () => {
     const tree = new UnitTestTree(new EmptyTree());
 
-    await draft202012Emitter.emit(MODEL, context(tree, PATHS, { docs: false }));
+    await draft202012Emitter.emit(
+      MODEL,
+      context(
+        tree,
+        { ...PATHS, output: 'projects/test-app/src/form.schema.json' },
+        { docs: false },
+      ),
+    );
 
     expect(
       JSON.parse(tree.readContent('projects/test-app/src/form.schema.json')),
     ).toEqual(buildJsonSchema(MODEL, DRAFT_2020_12, { docs: false }));
+  });
+
+  describe.each([
+    ['json-schema-2020-12', draft202012Emitter, '$defs'],
+    ['json-schema-draft-07', draft07Emitter, 'definitions'],
+  ])('%s', (name, emitter, defsKeyword) => {
+    const OUTPUT = { ...PATHS, output: 'schemas/form.json' };
+
+    it('renders descriptions by default', async () => {
+      const tree = new UnitTestTree(new EmptyTree());
+
+      await emitter.emit(MODEL, context(tree, OUTPUT));
+
+      expect(
+        at(
+          JSON.parse(tree.readContent('schemas/form.json')),
+          defsKeyword,
+          'TextControl',
+          'description',
+        ),
+      ).toBe('A text input.');
+    });
+
+    it.each([
+      ['a string', 'false', '"false"'],
+      ['a number', 0, '0'],
+      ['null', null, 'null'],
+    ])('names itself when docs is %s', (_, docs, printed) => {
+      const tree = new UnitTestTree(new EmptyTree());
+      const emit = () => emitter.emit(MODEL, context(tree, OUTPUT, { docs }));
+
+      expect(emit).toThrow(SchematicsException);
+      expect(emit).toThrow(
+        `"options.docs" of the "${name}" emitter must be a boolean, got ${printed}.`,
+      );
+    });
   });
 });
 
@@ -636,7 +889,7 @@ function keysAt(value: unknown, ...path: string[]) {
 function context(
   tree: UnitTestTree,
   paths: EmitPaths,
-  options: EmitContext['options'] = { docs: true },
+  options: EmitContext['options'] = {},
 ): EmitContext {
   return {
     tree,
@@ -860,6 +1113,138 @@ function sameNameModel(): FormModel {
   };
 }
 
+function printedNameForm(value: unknown) {
+  return {
+    content: {
+      pick: {
+        type: 'pick',
+        tilde: { 'a/b~c': 'x' },
+        slash: { 'a/b~c': value },
+      },
+      other: { type: 'other' },
+    },
+  };
+}
+
+/**
+ * Names as `checker.typeToString` prints them: `/` and `~` are JSON Pointer
+ * syntax, and `<`, `>`, `"` and spaces are not allowed in a URI fragment. Two
+ * of them collapse onto the same identifier and must stay apart.
+ */
+function printedNameModel(): FormModel {
+  const record = (name: string): TypeNode => ({
+    k: 'object',
+    name,
+    properties: [{ name: 'a/b~c', optional: false, type: { k: 'string' } }],
+  });
+
+  return {
+    root: {
+      name: 'Root<"a/b">',
+      members: ['Pick<AppContent>', 'Pick<"AppContent">'],
+    },
+    nodes: {
+      'Pick<AppContent>': {
+        name: 'Pick<AppContent>',
+        kind: 'control',
+        typeLiteral: ['pick'],
+        open: false,
+        properties: [
+          {
+            name: 'tilde',
+            optional: false,
+            type: record('Record<"a/b~c", string>'),
+          },
+          {
+            name: 'slash',
+            optional: false,
+            type: record('Record<"a/b~c", string >'),
+          },
+        ],
+      },
+      'Pick<"AppContent">': {
+        name: 'Pick<"AppContent">',
+        kind: 'control',
+        typeLiteral: ['other'],
+        open: false,
+        properties: [],
+      },
+    },
+  };
+}
+
+function tupleForm(pair: unknown, spread: unknown = [1]) {
+  return { content: { t: { type: 'tuple', pair, spread } } };
+}
+
+/** `pair` is `[string, number]`, `spread` is `[...number[], number]`. */
+function tupleModel(): FormModel {
+  return {
+    root: { name: 'AppContent', members: ['TupleControl'] },
+    nodes: {
+      TupleControl: {
+        name: 'TupleControl',
+        kind: 'control',
+        typeLiteral: ['tuple'],
+        open: false,
+        properties: [
+          {
+            name: 'pair',
+            optional: false,
+            type: {
+              k: 'tuple',
+              elements: [{ k: 'string' }, { k: 'number' }],
+              minItems: 2,
+            },
+          },
+          {
+            name: 'spread',
+            optional: false,
+            type: {
+              k: 'tuple',
+              elements: [],
+              minItems: 1,
+              rest: { k: 'number' },
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
+/** `ListControl` uses the recursive `OptionNode` in two properties. */
+function reusedObjectModel(): FormModel {
+  const optionNode: TypeNode = {
+    k: 'object',
+    name: 'OptionNode',
+    properties: [
+      { name: 'label', optional: false, type: { k: 'string' } },
+      {
+        name: 'children',
+        optional: true,
+        type: { k: 'array', items: { k: 'cycle', name: 'OptionNode' } },
+      },
+    ],
+  };
+
+  return {
+    root: { name: 'AppContent', members: ['ListControl'] },
+    nodes: {
+      ListControl: {
+        name: 'ListControl',
+        kind: 'control',
+        typeLiteral: ['list'],
+        open: false,
+        properties: [
+          { name: 'first', optional: false, type: optionNode },
+          { name: 'second', optional: false, type: optionNode },
+        ],
+      },
+    },
+  };
+}
+
 /** An inner `Node` shadows an outer one, and the cycle sits inside the inner. */
 function shadowedCycleModel(): FormModel {
   return {
@@ -895,6 +1280,58 @@ function shadowedCycleModel(): FormModel {
                     ],
                   },
                 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
+/**
+ * Two unrelated shapes both print as `Outer` and hold the same `Inner`, whose
+ * `back` cycles out to whichever `Outer` encloses it.
+ */
+function sharedInnerCycleModel(): FormModel {
+  const inner: TypeNode = {
+    k: 'object',
+    name: 'Inner',
+    properties: [
+      { name: 'back', optional: true, type: { k: 'cycle', name: 'Outer' } },
+    ],
+  };
+
+  return {
+    root: { name: 'AppContent', members: ['C'] },
+    nodes: {
+      C: {
+        name: 'C',
+        kind: 'control',
+        typeLiteral: ['c'],
+        open: false,
+        properties: [
+          {
+            name: 'x',
+            optional: false,
+            type: {
+              k: 'object',
+              name: 'Outer',
+              properties: [
+                { name: 'inner', optional: false, type: inner },
+                { name: 'a', optional: false, type: { k: 'string' } },
+              ],
+            },
+          },
+          {
+            name: 'y',
+            optional: false,
+            type: {
+              k: 'object',
+              name: 'Outer',
+              properties: [
+                { name: 'inner', optional: false, type: inner },
+                { name: 'b', optional: false, type: { k: 'number' } },
               ],
             },
           },

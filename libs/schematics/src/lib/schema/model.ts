@@ -44,11 +44,16 @@ export type TypeNode =
   | { k: 'string' | 'number' | 'boolean' | 'null' | 'unknown' | 'any' }
   | { k: 'literal'; value: string | number | boolean }
   | { k: 'array'; items: TypeNode }
+  /**
+   * `elements` types the leading positions and `minItems` is how many items
+   * must be present. `rest` types every further item; without it none is allowed.
+   */
+  | { k: 'tuple'; elements: TypeNode[]; minItems: number; rest?: TypeNode }
   /** `name` is set when the shape was declared, absent for an inline type literal. */
   | { k: 'object'; name?: string; properties: Property[]; index?: TypeNode }
   | { k: 'union'; members: TypeNode[] }
   | { k: 'function' }
-  /** No JSON value satisfies the type — a non-JSON primitive such as bigint or symbol. */
+  /** No JSON value satisfies the type, as for a non-JSON primitive such as bigint or symbol. */
   | { k: 'never' }
   | { k: 'ref'; node: string }
   /** A back-reference to the enclosing `{ k: 'object' }` of the same name. */

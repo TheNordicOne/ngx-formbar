@@ -686,6 +686,15 @@ describe('control schematic', () => {
       expect(hasRegistration).toBe(true);
     });
 
+    it('registers a camelCase key from the dasherized directory it is written to', async () => {
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+      const tree = await runSchematic('control', { key: 'phoneNumber' });
+
+      expect(read(tree, src(registrationsPath))).toContain(
+        'import("../phone-number/phone-number-control")',
+      );
+    });
+
     it('registers the created control with the token provider if registrations are not split', async () => {
       provideTokenNoSplit(appTree, appConfigPathRaw);
       const tree = await runSchematic('control');

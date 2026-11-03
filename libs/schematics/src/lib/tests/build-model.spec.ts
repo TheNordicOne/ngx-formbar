@@ -32,7 +32,7 @@ export interface RowArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbA
 export type AppContent = TextControl | NoteBlock | GroupControl<AppContent> | RowArray<AppContent>;
 `;
 
-async function modelFor(source: string, docs = true): Promise<FormModel> {
+async function modelFor(source: string): Promise<FormModel> {
   const tree: UnitTestTree = await setupWorkspace(
     new SchematicTestRunner('schematics', COLLECTION_PATH),
   );
@@ -41,14 +41,13 @@ async function modelFor(source: string, docs = true): Promise<FormModel> {
 
   const { type, checker, coreRoot } = resolveContentType(tree, {
     typeReference: 'app/types/content.type.ts#AppContent',
-    docs,
     entries: [],
     projectRoot: 'projects/test-app/src',
     workspaceRoot: '/',
     tsConfigPath: 'projects/test-app/tsconfig.app.json',
   });
 
-  return buildModel(type, checker, coreRoot, docs);
+  return buildModel(type, checker, coreRoot);
 }
 
 function peerContent(union: string) {
@@ -130,7 +129,7 @@ describe('buildModel', () => {
       });
     });
 
-    it('carries doc comments when enabled', () => {
+    it('always carries doc comments', () => {
       const hint = model.nodes['TextControl'].properties.find(
         (property) => property.name === 'hint',
       );
@@ -186,6 +185,265 @@ describe('buildModel', () => {
     });
   });
 
+  describe('two instantiations of one generic', () => {
+    let model: FormModel;
+
+    beforeEach(async () => {
+      model = await modelFor(
+        `import { NgxFbControl, NgxFbBlock, NgxFbFormGroup, NgxFbBaseContent, NgxFbItem } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; }
+export interface GroupControl<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbFormGroup<T> { type: 'group'; }
+export type Inner = TextControl | NoteBlock;
+export type AppContent = TextControl | GroupControl<AppContent> | GroupControl<Inner>;
+`,
+      );
+    });
+
+    it('keeps each instantiation a node of its own', () => {
+      expect(model.root.members).toEqual([
+        'TextControl',
+        'GroupControl<AppContent>',
+        'GroupControl<Inner>',
+      ]);
+      expect(Object.keys(model.nodes).sort()).toEqual([
+        'GroupControl<AppContent>',
+        'GroupControl<Inner>',
+        'NoteBlock',
+        'TextControl',
+      ]);
+    });
+
+    it('gives each instantiation its own children', () => {
+      expect(model.nodes['GroupControl<AppContent>'].children?.members).toEqual(
+        model.root.members,
+      );
+      expect(model.nodes['GroupControl<Inner>'].children?.members).toEqual([
+        'TextControl',
+        'NoteBlock',
+      ]);
+    });
+
+    it('validates each instantiation against its own children', () => {
+      const validate = new Ajv2020({ strict: false }).compile(
+        buildJsonSchema(model, DRAFT_2020_12, { docs: true }),
+      );
+
+      expect(
+        validate({
+          content: {
+            g: {
+              type: 'group',
+              controls: { n: { type: 'note', isControl: false } },
+            },
+          },
+        }),
+      ).toBe(true);
+      expect(
+        validate({
+          content: {
+            g: { type: 'group', controls: { n: { type: 'nope' } } },
+          },
+        }),
+      ).toBe(false);
+    });
+  });
+
+  describe("a group and an array left on core's default children", () => {
+    let model: FormModel;
+
+    beforeEach(async () => {
+      model = await modelFor(
+        `import { NgxFbControl, NgxFbBlock, NgxFbFormGroup, NgxFbArray } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; }
+export interface GroupControl extends NgxFbFormGroup { type: 'group'; }
+export interface RowArray extends NgxFbArray { type: 'array'; }
+export type AppContent = TextControl | NoteBlock | GroupControl | RowArray;
+`,
+      );
+    });
+
+    it('takes every registered member as a child', () => {
+      expect(Object.keys(model.nodes)).toEqual(model.root.members);
+      expect(model.nodes['GroupControl'].children?.members).toEqual(
+        model.root.members,
+      );
+      expect(model.nodes['RowArray'].children?.members).toEqual(
+        model.root.members,
+      );
+    });
+
+    it("keeps core's row narrowing on the array's children", () => {
+      expect(model.nodes['RowArray'].children?.constraints).toEqual([
+        {
+          name: 'hideStrategy',
+          optional: true,
+          type: { k: 'union', members: [{ k: 'literal', value: 'keep' }] },
+        },
+      ]);
+    });
+
+    it('validates nested children against the registered members', () => {
+      const validate = new Ajv2020({ strict: false }).compile(
+        buildJsonSchema(model, DRAFT_2020_12, { docs: true }),
+      );
+
+      expect(
+        validate({
+          content: {
+            g: {
+              type: 'group',
+              controls: {
+                t: { type: 'text' },
+                rows: { type: 'array', rowControl: { type: 'text' } },
+              },
+            },
+          },
+        }),
+      ).toBe(true);
+      expect(
+        validate({
+          content: { g: { type: 'group', controls: { t: { type: 'txet' } } } },
+        }),
+      ).toBe(false);
+      expect(
+        validate({
+          content: {
+            rows: {
+              type: 'array',
+              rowControl: { type: 'text', hideStrategy: 'remove' },
+            },
+          },
+        }),
+      ).toBe(false);
+    });
+  });
+
+  it('takes only the registered members of the kind a core base child names', async () => {
+    const model = await modelFor(
+      `import { NgxFbControl, NgxFbBlock, NgxFbFormGroup } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; }
+export interface FieldGroup extends NgxFbFormGroup<NgxFbControl> { type: 'fields'; }
+export type AppContent = TextControl | NoteBlock | FieldGroup;
+`,
+    );
+
+    expect(model.nodes['FieldGroup'].children?.members).toEqual([
+      'TextControl',
+    ]);
+  });
+
+  it('rejects a core base child whose kind the union never registers', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl, NgxFbArray, NgxFbFormGroup } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface ArrayGroup extends NgxFbFormGroup<NgxFbArray> { type: 'arrays'; }
+export type AppContent = TextControl | ArrayGroup;
+`,
+      ),
+    ).rejects.toThrow(
+      'ArrayGroup takes its children from core base types, but the content union has no member of their kind.',
+    );
+  });
+
+  describe('property types beyond plain primitives and objects', () => {
+    // An optional property's union keeps one arm once `undefined` is filtered out.
+    const OPTIONAL_STRING = { k: 'union', members: [{ k: 'string' }] };
+
+    let model: FormModel;
+    let validate: (data: unknown) => boolean;
+
+    const accepts = (property: string, value: unknown) =>
+      validate({ content: { w: { type: 'wide', [property]: value } } });
+
+    beforeEach(async () => {
+      model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export enum Size { Small, Large }
+export enum Tone { Warm = 'warm', Cool = 'cool' }
+export interface WideControl extends NgxFbControl {
+  type: 'wide';
+  width?: \`\${number}px\`;
+  shout?: Uppercase<string>;
+  tone?: 'warm' | 'cool' | (string & {});
+  id?: string & { __brand: 'id' };
+  pair?: [string, number];
+  head?: readonly [string, number?];
+  spread?: [string, ...number[]];
+  tail?: [...string[], number];
+  bag?: object;
+  anything?: {};
+  size?: Size;
+  hue?: Tone;
+}
+export type AppContent = WideControl;
+`,
+      );
+      validate = new Ajv2020({ strict: false }).compile(
+        buildJsonSchema(model, DRAFT_2020_12, { docs: true }),
+      );
+    });
+
+    it('maps template literal, string mapping and branded types to string', () => {
+      const types = Object.fromEntries(
+        model.nodes['WideControl'].properties.map((property) => [
+          property.name,
+          property.type,
+        ]),
+      );
+
+      expect(types['width']).toEqual(OPTIONAL_STRING);
+      expect(types['shout']).toEqual(OPTIONAL_STRING);
+      expect(types['id']).toEqual(OPTIONAL_STRING);
+    });
+
+    it('accepts any string where a literal union is widened by string & {}', () => {
+      expect(accepts('tone', 'warm')).toBe(true);
+      expect(accepts('tone', 'anything')).toBe(true);
+      expect(accepts('tone', 1)).toBe(false);
+    });
+
+    it('accepts the strings a template literal or branded type admits', () => {
+      expect(accepts('width', '12px')).toBe(true);
+      expect(accepts('shout', 'LOUD')).toBe(true);
+      expect(accepts('id', 'abc')).toBe(true);
+      expect(accepts('width', 12)).toBe(false);
+    });
+
+    it('validates a tuple by position and length', () => {
+      expect(accepts('pair', ['a', 1])).toBe(true);
+      expect(accepts('pair', ['a'])).toBe(false);
+      expect(accepts('pair', ['a', 1, 2])).toBe(false);
+      expect(accepts('pair', [1, 'a'])).toBe(false);
+      expect(accepts('head', ['a'])).toBe(true);
+      expect(accepts('head', ['a', 1, 2])).toBe(false);
+      expect(accepts('spread', ['a', 1, 2])).toBe(true);
+      expect(accepts('spread', ['a', 'b'])).toBe(false);
+      expect(accepts('spread', [])).toBe(false);
+      expect(accepts('tail', [1])).toBe(true);
+      expect(accepts('tail', [])).toBe(false);
+    });
+
+    it('accepts any object or array for object, and any non-null value for {}', () => {
+      expect(accepts('bag', { a: 1 })).toBe(true);
+      expect(accepts('bag', [1])).toBe(true);
+      expect(accepts('bag', 'x')).toBe(false);
+      expect(accepts('anything', 'x')).toBe(true);
+      expect(accepts('anything', { a: 1 })).toBe(true);
+      expect(accepts('anything', null)).toBe(false);
+    });
+
+    it('restricts an enum to its member values', () => {
+      expect(accepts('size', 1)).toBe(true);
+      expect(accepts('size', 2)).toBe(false);
+      expect(accepts('hue', 'cool')).toBe(true);
+      expect(accepts('hue', 'hot')).toBe(false);
+    });
+  });
+
   it('represents a plain boolean property as a boolean node', async () => {
     const toggle = await modelFor(
       `import { NgxFbControl } from '@ngx-formbar/core';
@@ -198,15 +456,6 @@ export type AppContent = ToggleControl;
     );
 
     expect(required?.type).toEqual({ k: 'boolean' });
-  });
-
-  it('omits doc comments when disabled', async () => {
-    const withoutDocs = await modelFor(CONTENT, false);
-    const hint = withoutDocs.nodes['TextControl'].properties.find(
-      (property) => property.name === 'hint',
-    );
-
-    expect(hint?.doc).toBeUndefined();
   });
 
   it('leaves typeLiteral null when type is not narrowed', async () => {
@@ -421,6 +670,32 @@ export type AppContent = (TextControl & { required: true }) | NoteBlock;
       ],
     });
     expect(narrowed.root.constraints).toBeUndefined();
+  });
+
+  it('lists a node reached through a narrowed and a plain arm once, unnarrowed', async () => {
+    const merged = await modelFor(
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; required?: boolean; }
+export type AppContent = TextControl | (TextControl & { required: true });
+`,
+    );
+
+    expect(merged.root.members).toEqual(['TextControl']);
+    expect(merged.root.constraints).toBeUndefined();
+    expect(merged.root.memberConstraints).toBeUndefined();
+  });
+
+  it('rejects a node reached through two differently narrowed arms', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; a?: string; b?: string; }
+export type AppContent = (TextControl & { a: string }) | (TextControl & { b: string });
+`,
+      ),
+    ).rejects.toThrow(
+      'TextControl appears in one union under different narrowings',
+    );
   });
 
   it('splits an array row per member when the union narrows one arm', async () => {

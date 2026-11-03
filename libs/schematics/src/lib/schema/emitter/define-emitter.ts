@@ -15,10 +15,7 @@ export interface EmitPaths {
   output: string | null;
 }
 
-export interface EmitOptions {
-  docs: boolean;
-  [key: string]: unknown;
-}
+export type EmitOptions = Record<string, unknown>;
 
 export interface EmitContext {
   tree: Tree;

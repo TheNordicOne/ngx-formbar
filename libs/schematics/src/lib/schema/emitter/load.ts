@@ -15,9 +15,11 @@ import { defineEmitter, Emitter } from './define-emitter';
 const RELATIVE_CANDIDATES = ['', '.ts', '.js', '/index.ts', '/index.js'];
 
 /**
- * The runtime surface an emitter imports from this package. Serving it from the
- * running process keeps `defineEmitter` a single instance whatever the consumer's
- * install layout resolves to, so anything emitters may call must be listed here.
+ * The runtime surface a path-loaded emitter imports from this package. Serving it
+ * from the running process means the emitter calls the same code that built the
+ * model, whatever copy the consumer's install layout would resolve, so anything
+ * emitters may call must be listed here. Package emitters load through Node's
+ * `require` and resolve this package themselves.
  * `emitter-exports.spec.ts` fails when a new runtime export is neither listed here
  * nor explicitly withheld.
  */
@@ -110,7 +112,7 @@ export function loadFromPackage(
 ): Emitter {
   const [packageName, exportName] = specifier.split('#');
   // `resolve`, not `join`: it anchors absolutely even if `workspaceRoot` is not.
-  // `requireFrom` needs the opposite for its '/'-rooted Tree path — see there.
+  // `requireFrom` needs the opposite for its '/'-rooted Tree path (see there).
   const nodeRequire = createRequire(resolve(workspaceRoot, 'package.json'));
   const loaded: unknown = nodeRequire(packageName);
 
@@ -240,13 +242,13 @@ function pick(loaded: unknown, exportName: string) {
   return isRecord(loaded) ? loaded[exportName] : undefined;
 }
 
-function toEmitter(loaded: unknown, specifier: string): Emitter {
+function toEmitter(loaded: unknown, specifier: string) {
   const candidate =
     isRecord(loaded) && 'default' in loaded ? loaded['default'] : loaded;
 
   if (!isEmitter(candidate)) {
     throw new SchematicsException(
-      `"${specifier}" does not export an emitter created with defineEmitter().`,
+      `"${specifier}" does not export an emitter (an object with a string "name" and an "emit" function).`,
     );
   }
 

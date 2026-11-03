@@ -15,7 +15,6 @@ import { SchemaContext } from '../schema/schema';
 function context(overrides: Partial<SchemaContext> = {}): SchemaContext {
   return {
     typeReference: 'app/types/content.type.ts#AppContent',
-    docs: true,
     entries: [],
     projectRoot: 'projects/test-app/src',
     workspaceRoot: '/',
@@ -70,6 +69,15 @@ export type AppContent = TextControl | NoteBlock;
     expect(names).toEqual(['TextControl', 'NoteBlock']);
   });
 
+  it('reads a leading "/" as the workspace root', () => {
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: '/shared/absent.type.ts#AppContent' }),
+      ),
+    ).toThrow('Type file not found: /shared/absent.type.ts');
+  });
+
   it('names a missing "./"-prefixed file without a "/./" in the path', () => {
     expect(() =>
       resolveContentType(
@@ -77,7 +85,7 @@ export type AppContent = TextControl | NoteBlock;
         context({ typeReference: './app/types/absent.type.ts#AppContent' }),
       ),
     ).toThrow(
-      'Type file not found: projects/test-app/src/app/types/absent.type.ts',
+      'Type file not found: /projects/test-app/src/app/types/absent.type.ts',
     );
   });
 

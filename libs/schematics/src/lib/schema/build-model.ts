@@ -11,6 +11,7 @@ import {
   Type,
   TypeChecker,
   TypeFlags,
+  TupleTypeReference,
 } from 'typescript';
 import {
   FormModel,
@@ -45,33 +46,62 @@ const NON_JSON_FLAGS =
   TypeFlags.Undefined |
   TypeFlags.Never;
 
+/** An intersection holding one of these is a branded primitive, such as `string & {}`. */
+const PRIMITIVE_FLAGS =
+  TypeFlags.StringLike |
+  TypeFlags.NumberLike |
+  TypeFlags.BooleanLike |
+  TypeFlags.BigIntLike |
+  TypeFlags.ESSymbolLike;
+
+/** `object` admits every object and every array. */
+const ANY_OBJECT: TypeNode = {
+  k: 'union',
+  members: [
+    { k: 'object', properties: [], index: { k: 'unknown' } },
+    { k: 'array', items: { k: 'unknown' } },
+  ],
+};
+
+/** `{}` admits every value except `null` and `undefined`. */
+const NON_NULLISH: TypeNode = {
+  k: 'union',
+  members: [{ k: 'string' }, { k: 'number' }, { k: 'boolean' }, ANY_OBJECT],
+};
+
 interface Builder {
   checker: TypeChecker;
   coreRoot: string;
-  docs: boolean;
+  /** The root union's members, which a core base child stands for. */
+  registered: Type[];
   /** A Map, not a Record, so a miss is typed as `undefined` while building. */
   nodes: Map<string, FormNode>;
-  nodeNames: Set<string>;
+  /** Keyed by type identity, so each instantiation of a generic is a node of its own. */
+  nodeNames: Map<Type, string>;
 }
 
 export function buildModel(
   type: Type,
   checker: TypeChecker,
   coreRoot: string,
-  docs: boolean,
 ): FormModel {
   const builder: Builder = {
     checker,
     coreRoot,
-    docs,
+    registered: unionMembers(type),
     nodes: new Map(),
-    nodeNames: new Set(),
+    nodeNames: new Map(),
   };
+  const collected = new Set<Type>();
 
   // Names are collected up front so a property referencing another node emits a
   // reference no matter where that node sits in the union.
   for (const member of unionMembers(type)) {
-    collectNodeName(member, builder);
+    collectNode(member, builder, collected);
+  }
+
+  for (const [node, name] of nameNodes([...collected], checker)) {
+    builder.nodeNames.set(node, name);
   }
 
   const root = toTypeRef(type, builder);
@@ -83,31 +113,68 @@ export function buildModel(
   return { root, nodes: Object.fromEntries(builder.nodes) };
 }
 
-function collectNodeName(type: Type, builder: Builder) {
-  const name = nodeName(type, builder.checker);
-
-  if (builder.nodeNames.has(name)) {
+function collectNode(type: Type, builder: Builder, collected: Set<Type>) {
+  if (collected.has(type)) {
     return;
   }
 
-  builder.nodeNames.add(name);
+  collected.add(type);
 
   const structural = STRUCTURAL_PROPERTIES[resolveKind(type, builder)];
   const itemType = structural
     ? structuralItemType(type, structural, builder)
     : undefined;
 
-  if (!itemType) {
-    return;
-  }
-
-  for (const member of unionMembers(itemType)) {
-    collectNodeName(member, builder);
+  for (const member of itemType ? childMembers(itemType, builder) : []) {
+    collectNode(member, builder, collected);
   }
 }
 
+/**
+ * A node is named after its interface. Only a generic used with more than one
+ * set of type arguments prints them, so its instantiations stay apart.
+ */
+function nameNodes(types: Type[], checker: TypeChecker) {
+  const printed = types.map((type) => {
+    const full = checker.typeToString(type);
+
+    return { type, full, bare: full.replace(/<.*>$/, '') };
+  });
+  const bareCounts = new Map<string, number>();
+
+  for (const { bare } of printed) {
+    bareCounts.set(bare, (bareCounts.get(bare) ?? 0) + 1);
+  }
+
+  const taken = new Set<string>();
+  const names = new Map<Type, string>();
+
+  for (const { type, full, bare } of printed) {
+    const shared = (bareCounts.get(bare) ?? 0) > 1;
+    const name = uniqueName(shared ? full : bare, taken);
+
+    taken.add(name);
+    names.set(type, name);
+  }
+
+  return names;
+}
+
+/** Two unrelated interfaces can print alike, and each still needs a node. */
+function uniqueName(preferred: string, taken: Set<string>) {
+  let name = preferred;
+  let suffix = 2;
+
+  while (taken.has(name)) {
+    name = `${preferred}${String(suffix)}`;
+    suffix += 1;
+  }
+
+  return name;
+}
+
 function addNode(type: Type, builder: Builder) {
-  const name = nodeName(type, builder.checker);
+  const name = nodeName(type, builder);
 
   if (builder.nodes.has(name)) {
     return;
@@ -123,7 +190,7 @@ function addNode(type: Type, builder: Builder) {
     typeLiteral: null,
     open: hasIndexSignature(type, builder.checker),
     properties: [],
-    doc: builder.docs ? docOf(type.getSymbol(), builder.checker) : undefined,
+    doc: docOf(type.getSymbol(), builder.checker),
   };
   builder.nodes.set(name, node);
 
@@ -231,11 +298,45 @@ function readChildren(
     return undefined;
   }
 
-  for (const member of unionMembers(itemType)) {
+  for (const member of childMembers(itemType, builder)) {
     addNode(member, builder);
   }
 
-  return toTypeRef(itemType, builder);
+  const children = toTypeRef(itemType, builder);
+
+  if (children.members.length === 0) {
+    throw new SchematicsException(
+      `${nodeName(type, builder)} takes its children from core base types, but the content union has no member of their kind.`,
+    );
+  }
+
+  return children;
+}
+
+function childMembers(itemType: Type, builder: Builder) {
+  return unionMembers(itemType).flatMap((member) =>
+    registeredFor(member, builder),
+  );
+}
+
+/**
+ * A child left on a core base, as the default `NgxFbItem` of `NgxFbFormGroup`
+ * and `NgxFbArray` leaves it, stands for every registered member of that kind.
+ * Those are exactly the configs the registry can render, and each of them is
+ * assignable to the base. The base itself has no `type` literal to discriminate
+ * on, so emitting it would let a mistyped `type` pass as that base.
+ */
+function registeredFor(type: Type, builder: Builder) {
+  const declaration = type
+    .getSymbol()
+    ?.declarations?.find(isInterfaceDeclaration);
+  const kind = declaration ? coreBaseKind(declaration, builder.coreRoot) : null;
+
+  return kind
+    ? builder.registered.filter(
+        (member) => resolveKind(member, builder) === kind,
+      )
+    : [type];
 }
 
 /** A group holds its children behind an index signature, an array holds one row type. */
@@ -259,7 +360,7 @@ function toProperty(symbol: TsSymbol, builder: Builder, open: OpenTypes) {
   return {
     name,
     optional: (symbol.flags & SymbolFlags.Optional) !== 0,
-    doc: builder.docs ? docOf(symbol, builder.checker) : undefined,
+    doc: docOf(symbol, builder.checker),
     type: toTypeNode(builder.checker.getTypeOfSymbol(symbol), builder, {
       open,
       property: name,
@@ -316,11 +417,13 @@ function toTypeNode(
     return { k: 'literal', value: checker.typeToString(type) === 'true' };
   }
 
-  if ((type.flags & TypeFlags.String) !== 0) {
+  // Template literals and `Uppercase<string>` admit strings no JSON Schema
+  // keyword describes faithfully, so they widen to `string`.
+  if ((type.flags & TypeFlags.StringLike) !== 0) {
     return { k: 'string' };
   }
 
-  if ((type.flags & TypeFlags.Number) !== 0) {
+  if ((type.flags & TypeFlags.NumberLike) !== 0) {
     return { k: 'number' };
   }
 
@@ -340,6 +443,18 @@ function toTypeNode(
     return { k: 'never' };
   }
 
+  const primitive = type.isIntersection()
+    ? type.types.find((member) => (member.flags & PRIMITIVE_FLAGS) !== 0)
+    : undefined;
+
+  if (primitive) {
+    return toTypeNode(primitive, builder, expansion);
+  }
+
+  if ((type.flags & TypeFlags.NonPrimitive) !== 0) {
+    return ANY_OBJECT;
+  }
+
   if (type.getCallSignatures().length > 0) {
     return { k: 'function' };
   }
@@ -351,9 +466,17 @@ function toTypeNode(
       : { k: 'array', items: { k: 'unknown' } };
   }
 
-  const referenced = nodeName(type, checker);
+  if (isTupleReference(type, checker)) {
+    return toTupleNode(type, builder, expansion);
+  }
 
-  if (builder.nodeNames.has(referenced)) {
+  if (isEmptyObject(type, checker)) {
+    return NON_NULLISH;
+  }
+
+  const referenced = builder.nodeNames.get(type);
+
+  if (referenced !== undefined) {
     return { k: 'ref', node: referenced };
   }
 
@@ -375,6 +498,49 @@ function toTypeNode(
       open: nested,
     }),
   };
+}
+
+function isTupleReference(
+  type: Type,
+  checker: TypeChecker,
+): type is TupleTypeReference {
+  return checker.isTupleType(type);
+}
+
+/**
+ * Items past the fixed leading positions, a rest element and anything after it,
+ * share one type, so a rest in the middle widens to a union of what follows.
+ */
+function toTupleNode(
+  type: TupleTypeReference,
+  builder: Builder,
+  expansion: Expansion,
+) {
+  const { fixedLength, minLength, elementFlags } = type.target;
+  const items = builder.checker
+    .getTypeArguments(type)
+    .slice(0, elementFlags.length)
+    .map((item) => toTypeNode(item, builder, expansion));
+  const trailing = items.slice(fixedLength);
+  const rest: TypeNode | undefined =
+    trailing.length > 1 ? { k: 'union', members: trailing } : trailing.at(0);
+
+  return {
+    k: 'tuple',
+    elements: items.slice(0, fixedLength),
+    minItems: minLength,
+    ...(rest ? { rest } : {}),
+  } satisfies TypeNode;
+}
+
+/** `{}` and an empty interface place no demand on a value beyond being non-nullish. */
+function isEmptyObject(type: Type, checker: TypeChecker) {
+  return (
+    (type.flags & TypeFlags.Object) !== 0 &&
+    type.getProperties().length === 0 &&
+    checker.getIndexInfosOfType(type).length === 0 &&
+    type.getConstructSignatures().length === 0
+  );
 }
 
 /** An anonymous shape has no name to point back at, so the cycle cannot be expressed. */
@@ -422,19 +588,47 @@ function isBooleanLiteralNode(node: TypeNode) {
 }
 
 function toTypeRef(type: Type, builder: Builder): TypeRef {
-  const constituents = type.isUnion() ? type.types : [type];
-  const members = constituents.map((constituent) =>
-    nodeName(toDeclaredNode(constituent), builder.checker),
-  );
+  const arms = (type.isUnion() ? type.types : [type]).flatMap((constituent) => {
+    const narrowing = narrowingOf(constituent, builder);
+
+    return registeredFor(toDeclaredNode(constituent), builder).map((node) => ({
+      name: nodeName(node, builder),
+      narrowing,
+    }));
+  });
+  const members = [...new Set(arms.map((arm) => arm.name))];
 
   return {
     name: aliasName(type),
     members,
     ...narrowingFields(
       members,
-      constituents.map((constituent) => narrowingOf(constituent, builder)),
+      members.map((member) => mergedNarrowing(member, arms)),
     ),
   };
+}
+
+/**
+ * A plain arm admits everything a narrowed arm of the same node does, so it
+ * wins. Two different narrowings of one node form a union of their own, which
+ * a single reference with one set of constraints cannot carry.
+ */
+function mergedNarrowing(
+  member: string,
+  arms: { name: string; narrowing: Property[] }[],
+) {
+  const narrowings = arms
+    .filter((arm) => arm.name === member)
+    .map((arm) => arm.narrowing);
+  const plain = narrowings.some((narrowing) => narrowing.length === 0);
+
+  if (!plain && !isUniform(narrowings)) {
+    throw new SchematicsException(
+      `${member} appears in one union under different narrowings. Declare each narrowing as its own interface so the schema can reference it.`,
+    );
+  }
+
+  return plain ? [] : narrowings[0];
 }
 
 /**
@@ -473,9 +667,8 @@ function narrowingOf(type: Type, builder: Builder) {
     .map((symbol) => toProperty(symbol, builder, new Map()));
 }
 
-/** Node names are the bare interface name; instantiated generics print their arguments. */
-function nodeName(type: Type, checker: TypeChecker) {
-  return checker.typeToString(type).replace(/<.*>$/, '');
+function nodeName(type: Type, builder: Builder) {
+  return builder.nodeNames.get(type) ?? builder.checker.typeToString(type);
 }
 
 function unionMembers(type: Type) {
@@ -519,14 +712,14 @@ function aliasName(type: Type) {
   return type.aliasSymbol?.getName() ?? null;
 }
 
-function readTypeLiterals(type: Type, checker: TypeChecker): string[] | null {
+function readTypeLiterals(type: Type, checker: TypeChecker) {
   const property = type.getProperty('type');
 
   if (!property) {
     return null;
   }
 
-  // An open `string` arm collapses the result to null — any string is allowed,
+  // An open `string` arm collapses the result to null. Any string is allowed,
   // so the schema must not pin literals.
   const literals: string[] = [];
   const propertyType = checker.getTypeOfSymbol(property);

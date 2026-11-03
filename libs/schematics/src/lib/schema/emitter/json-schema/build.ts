@@ -1,22 +1,29 @@
 import { SchematicsException } from '@angular-devkit/schematics';
 import { FormModel, FormNode, Property, TypeNode, TypeRef } from '../../model';
 import { toJsonTypes } from '../../json-types';
-import { EmitOptions } from '../define-emitter';
 
 export interface Dialect {
   id: string;
   defsKeyword: '$defs' | 'definitions';
+  /** Draft 2020-12 types tuple positions with `prefixItems`, draft-07 with an `items` array. */
+  positionalKeyword: 'prefixItems' | 'items';
 }
 
 export const DRAFT_2020_12: Dialect = {
   id: 'https://json-schema.org/draft/2020-12/schema',
   defsKeyword: '$defs',
+  positionalKeyword: 'prefixItems',
 };
 
 export const DRAFT_07: Dialect = {
   id: 'http://json-schema.org/draft-07/schema#',
   defsKeyword: 'definitions',
+  positionalKeyword: 'items',
 };
+
+export interface JsonSchemaOptions {
+  docs: boolean;
+}
 
 /** A schema is an object or, since draft-06, a bare boolean. */
 type JsonSchema = object | boolean;
@@ -33,8 +40,12 @@ interface Scope {
  */
 interface BuildContext {
   dialect: Dialect;
-  options: EmitOptions;
+  options: JsonSchemaOptions;
   defs: Record<string, JsonSchema>;
+  /** Node and union names mapped to the definition each one was claimed under. */
+  names: Map<string, string>;
+  /** Each declared object already defined, keyed by `shapeKey`. */
+  shapes: Map<string, string>;
   /** Outermost first: the declared objects currently being expanded. */
   enclosing: Scope[];
 }
@@ -42,10 +53,17 @@ interface BuildContext {
 export function buildJsonSchema(
   model: FormModel,
   dialect: Dialect,
-  options: EmitOptions,
+  options: JsonSchemaOptions,
 ): object {
   const defs: Record<string, JsonSchema> = {};
-  const ctx: BuildContext = { dialect, options, defs, enclosing: [] };
+  const ctx: BuildContext = {
+    dialect,
+    options,
+    defs,
+    names: new Map(),
+    shapes: new Map(),
+    enclosing: [],
+  };
   const rootName = model.root.name ?? 'FormContent';
   const unions = collectUnions(model, rootName);
 
@@ -54,19 +72,19 @@ export function buildJsonSchema(
   // name and a union alias reserving the same slot is a genuine authoring
   // collision, not something to paper over with a suffix.
   for (const node of Object.values(model.nodes)) {
-    reserveDefName(node.name, defs);
+    reserveDefName(node.name, ctx);
   }
 
   for (const name of Object.keys(unions)) {
-    reserveDefName(name, defs);
+    reserveDefName(name, ctx);
   }
 
   for (const [name, ref] of Object.entries(unions)) {
-    defs[name] = buildRef(ref, ctx);
+    defs[defNameOf(name, ctx)] = buildRef(ref, ctx);
   }
 
   for (const node of Object.values(model.nodes)) {
-    defs[node.name] = buildNode(node, ctx);
+    defs[defNameOf(node.name, ctx)] = buildNode(node, ctx);
   }
 
   return {
@@ -79,7 +97,7 @@ export function buildJsonSchema(
       content: {
         type: 'object',
         additionalProperties: withConstraints(
-          { $ref: refPath(rootName, dialect) },
+          { $ref: refPath(defNameOf(rootName, ctx), dialect) },
           model.root.constraints,
           ctx,
         ),
@@ -94,25 +112,25 @@ export function buildJsonSchema(
 function buildNode(node: FormNode, ctx: BuildContext) {
   const { properties, required } = buildProperties(node.properties, ctx);
 
-  if (node.children) {
-    const childSchema = withConstraints(
-      { $ref: refPath(childRefName(node), ctx.dialect) },
+  const childSchema =
+    node.children &&
+    withConstraints(
+      { $ref: refPath(defNameOf(childRefName(node), ctx), ctx.dialect) },
       node.children.constraints,
       ctx,
     );
 
-    if (node.kind === 'group') {
-      properties['controls'] = {
-        type: 'object',
-        additionalProperties: childSchema,
-      };
-      required.push('controls');
-    }
+  if (childSchema && node.kind === 'group') {
+    properties['controls'] = {
+      type: 'object',
+      additionalProperties: childSchema,
+    };
+    required.push('controls');
+  }
 
-    if (node.kind === 'array') {
-      properties['rowControl'] = childSchema;
-      required.push('rowControl');
-    }
+  if (childSchema && node.kind === 'array') {
+    properties['rowControl'] = childSchema;
+    required.push('rowControl');
   }
 
   // `type` leads, so a reader of the document sees which node it identifies
@@ -132,11 +150,11 @@ function buildNode(node: FormNode, ctx: BuildContext) {
 function discriminant(node: FormNode) {
   const literals = node.typeLiteral;
 
-  if (literals === null) {
-    return { type: 'string' };
-  }
-
-  return literals.length === 1 ? { const: literals[0] } : { enum: literals };
+  return literals === null
+    ? { type: 'string' }
+    : literals.length === 1
+      ? { const: literals[0] }
+      : { enum: literals };
 }
 
 /**
@@ -182,14 +200,26 @@ function collectUnions(model: FormModel, rootName: string) {
   return unions;
 }
 
-function reserveDefName(name: string, defs: Record<string, JsonSchema>) {
-  if (name in defs) {
+function reserveDefName(name: string, ctx: BuildContext) {
+  if (ctx.names.has(name)) {
     throw new SchematicsException(
       `A union alias and a node both claim the definition name "${name}".`,
     );
   }
 
-  defs[name] = {};
+  ctx.names.set(name, claimDefName(name, ctx));
+}
+
+function defNameOf(name: string, ctx: BuildContext) {
+  const defName = ctx.names.get(name);
+
+  if (defName === undefined) {
+    throw new SchematicsException(
+      `No definition name is reserved for "${name}".`,
+    );
+  }
+
+  return defName;
 }
 
 function childRefName(node: FormNode) {
@@ -205,7 +235,7 @@ function buildRef(ref: TypeRef, ctx: BuildContext) {
   return {
     anyOf: ref.members.map((member) =>
       withConstraints(
-        { $ref: refPath(member, ctx.dialect) },
+        { $ref: refPath(defNameOf(member, ctx), ctx.dialect) },
         ref.memberConstraints?.[member],
         ctx,
       ),
@@ -266,10 +296,12 @@ function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
       return { const: type.value };
     case 'array':
       return { type: 'array', items: buildType(type.items, ctx) };
+    case 'tuple':
+      return buildTuple(type, ctx);
     case 'union':
       return { anyOf: type.members.map((member) => buildType(member, ctx)) };
     case 'ref':
-      return { $ref: refPath(type.node, ctx.dialect) };
+      return { $ref: refPath(defNameOf(type.node, ctx), ctx.dialect) };
     case 'cycle':
       return { $ref: refPath(cycleDefName(type.name, ctx), ctx.dialect) };
     case 'object':
@@ -285,15 +317,37 @@ function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
 }
 
 /**
+ * Items past the positions go under `items` in 2020-12 and `additionalItems` in
+ * draft-07. Both drafts reject an empty positional list, so a tuple with no
+ * positions types every item through `items` alone.
+ */
+function buildTuple(
+  type: Extract<TypeNode, { k: 'tuple' }>,
+  ctx: BuildContext,
+) {
+  const positions = type.elements.map((element) => buildType(element, ctx));
+  const further = type.rest ? buildType(type.rest, ctx) : false;
+  const length = type.minItems > 0 ? { minItems: type.minItems } : {};
+
+  if (positions.length === 0) {
+    return { type: 'array', items: further, ...length };
+  }
+
+  return ctx.dialect.positionalKeyword === 'prefixItems'
+    ? { type: 'array', prefixItems: positions, items: further, ...length }
+    : { type: 'array', items: positions, additionalItems: further, ...length };
+}
+
+/**
  * A declared object is hoisted into the definitions table and referenced, so a
  * `{ k: 'cycle' }` pointing back at it resolves. The name is claimed before
  * recursing, otherwise a self-referential shape would recurse forever.
  *
  * `name` comes from `checker.typeToString`, so it is not unique: two same-named
  * interfaces in different files both print as `Options`, and `Record<string, X>`
- * gets a name too. Each occurrence therefore gets its own definition, and a
- * `cycle` binds to the lexically enclosing object rather than to whatever the
- * flat table happens to hold under that name.
+ * gets a name too. A definition is therefore shared by identical shapes only,
+ * and a `cycle` binds to the lexically enclosing object rather than to whatever
+ * the flat table happens to hold under that name.
  */
 function buildObject(
   type: Extract<TypeNode, { k: 'object' }>,
@@ -305,13 +359,58 @@ function buildObject(
     return buildObjectBody(type, ctx);
   }
 
+  const key = shapeKey(type, ctx);
+  const existing = ctx.shapes.get(key);
+
+  if (existing !== undefined) {
+    return { $ref: refPath(existing, ctx.dialect) };
+  }
+
   const defName = claimDefName(name, ctx);
+  ctx.shapes.set(key, defName);
 
   ctx.enclosing.push({ typeName: name, defName });
   ctx.defs[defName] = buildObjectBody(type, ctx);
   ctx.enclosing.pop();
 
   return { $ref: refPath(defName, ctx.dialect) };
+}
+
+/**
+ * A shape that cycles out to an enclosing object reads differently under each
+ * enclosing definition, so where its free cycles bind is part of its identity.
+ */
+function shapeKey(type: TypeNode, ctx: BuildContext) {
+  const bindings = freeCycles(type, []).map((name) => cycleDefName(name, ctx));
+
+  return JSON.stringify([type, bindings]);
+}
+
+function freeCycles(type: TypeNode, bound: string[]): string[] {
+  switch (type.k) {
+    case 'cycle':
+      return bound.includes(type.name) ? [] : [type.name];
+    case 'array':
+      return freeCycles(type.items, bound);
+    case 'tuple':
+      return [...type.elements, ...(type.rest ? [type.rest] : [])].flatMap(
+        (child) => freeCycles(child, bound),
+      );
+    case 'union':
+      return type.members.flatMap((member) => freeCycles(member, bound));
+    case 'object':
+      return [
+        ...type.properties.map((property) => property.type),
+        ...(type.index ? [type.index] : []),
+      ].flatMap((child) =>
+        freeCycles(
+          child,
+          type.name === undefined ? bound : [...bound, type.name],
+        ),
+      );
+    default:
+      return [];
+  }
 }
 
 function buildObjectBody(
@@ -347,12 +446,18 @@ function cycleDefName(name: string, ctx: BuildContext) {
   return scope.defName;
 }
 
+/**
+ * Type names print with `<`, `"`, `/`, `~` and spaces. Reducing them to an
+ * identifier keeps every `$ref` a valid JSON Pointer and URI fragment without
+ * escaping, so the definitions stay readable in an editor.
+ */
 function claimDefName(preferred: string, ctx: BuildContext) {
-  let name = preferred;
+  const base = toIdentifier(preferred);
+  let name = base;
   let suffix = 2;
 
   while (name in ctx.defs) {
-    name = `${preferred}${String(suffix)}`;
+    name = `${base}${String(suffix)}`;
     suffix += 1;
   }
 
@@ -364,13 +469,15 @@ function claimDefName(preferred: string, ctx: BuildContext) {
 function withDoc(
   schema: JsonSchema,
   doc: string | undefined,
-  options: EmitOptions,
+  options: JsonSchemaOptions,
 ) {
-  if (!options.docs || doc === undefined || typeof schema !== 'object') {
-    return schema;
-  }
+  return !options.docs || doc === undefined || typeof schema !== 'object'
+    ? schema
+    : { ...schema, description: doc };
+}
 
-  return { ...schema, description: doc };
+function toIdentifier(name: string) {
+  return name.replace(/[^\w$]+/g, '_').replace(/^_+|_+$/g, '') || 'Type';
 }
 
 function refPath(name: string, dialect: Dialect) {

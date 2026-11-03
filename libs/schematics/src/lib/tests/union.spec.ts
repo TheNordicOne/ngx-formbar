@@ -41,6 +41,21 @@ describe('scaffolding updates the content union', () => {
     expect(union).toContain('export type AppContent = SliderControlConfig;');
   });
 
+  it('imports a camelCase key from the dasherized directory it is written to', async () => {
+    const result = await runner.runSchematic(
+      'control',
+      { key: 'phoneNumber', project: 'test-app' },
+      tree,
+    );
+
+    expect(
+      exists(result, app('phone-number/phone-number-control-config.ts')),
+    ).toBe(true);
+    expect(read(result, app('types/content.type.ts'))).toContain(
+      "import { PhoneNumberControlConfig } from '../phone-number/phone-number-control-config';",
+    );
+  });
+
   it('adds a scaffolded group with the union as its type argument', async () => {
     const result = await runner.runSchematic(
       'group',
@@ -228,7 +243,29 @@ describe('degrades gracefully when the union cannot be updated', () => {
     );
 
     expect(exists(result, app('slider/slider-control.ts'))).toBe(true);
-    expect(messages.some((m) => m.includes('Union file not found'))).toBe(true);
+    expect(messages).toContain(
+      `Skipping union update: Type file not found: ${app('types/missing.type.ts')}`,
+    );
+  });
+
+  it('warns and still scaffolds when schema.type escapes the workspace root', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: { type: '../../../../x.ts#AppContent' },
+    });
+
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    const result = await runner.runSchematic(
+      'control',
+      { key: 'slider', project: 'test-app' },
+      tree,
+    );
+
+    expect(exists(result, app('slider/slider-control.ts'))).toBe(true);
+    expect(messages).toContain(
+      'Skipping union update: Type file not found: ../../../../x.ts',
+    );
   });
 
   it('warns and still scaffolds when the union has no matching type alias', async () => {

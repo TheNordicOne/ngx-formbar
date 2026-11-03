@@ -3,7 +3,7 @@ import { addUnionMember, loadSourceFile } from '@ngx-formbar/setup';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
-import { normalizePath, parseTypeReference } from '../type-reference';
+import { parseTypeReference, resolveTypeFile } from '../type-reference';
 import { ScaffoldContext, ScaffoldType } from '../schema';
 
 /**
@@ -12,7 +12,7 @@ import { ScaffoldContext, ScaffoldType } from '../schema';
  * maintain and the scaffold is left alone.
  *
  * A stale or malformed `schema.type` degrades to a warning rather than aborting
- * the scaffold, matching every other bookkeeping rule in this chain — the next
+ * the scaffold, matching every other bookkeeping rule in this chain. The next
  * `schema` run reports an out-of-date union just as clearly as this rule would.
  */
 export function registerUnion(ruleContext: ScaffoldContext): Rule {
@@ -23,23 +23,14 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
   }
 
   return (tree: Tree, context: SchematicContext) => {
-    const parsed = parseReference(reference, context);
+    const parsed = parseReference(reference, ruleContext.projectRoot, context);
 
     if (!parsed) {
       return tree;
     }
 
-    const unionPath = normalizePath(
-      `${ruleContext.projectRoot}/${parsed.filePath}`,
-    );
-
-    const added = addMember(
-      tree,
-      unionPath,
-      parsed.exportName,
-      ruleContext,
-      context,
-    );
+    const { unionPath, exportName } = parsed;
+    const added = addMember(tree, unionPath, exportName, ruleContext, context);
 
     if (!added) {
       return tree;
@@ -74,11 +65,20 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
   };
 }
 
-function parseReference(reference: string, context: SchematicContext) {
+function parseReference(
+  reference: string,
+  projectRoot: string,
+  context: SchematicContext,
+) {
   try {
-    return parseTypeReference(reference);
+    const { filePath, exportName } = parseTypeReference(reference);
+
+    return {
+      unionPath: resolveTypeFile(filePath, projectRoot),
+      exportName,
+    };
   } catch (error) {
-    context.logger.warn(`${messageOf(error)} Skipping union update.`);
+    context.logger.warn(`Skipping union update: ${messageOf(error)}`);
     return null;
   }
 }
@@ -100,7 +100,7 @@ function addMember(
     );
     return true;
   } catch (error) {
-    context.logger.warn(`${messageOf(error)} Skipping union update.`);
+    context.logger.warn(`Skipping union update: ${messageOf(error)}`);
     return false;
   }
 }
@@ -109,7 +109,7 @@ function messageOf(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Groups and arrays are generic over the content they accept — the union itself. */
+/** Groups and arrays are generic over the content they accept, which is the union itself. */
 function typeArgumentFor(kind: ScaffoldType, unionName: string) {
   return kind === 'group' || kind === 'array' ? unionName : null;
 }

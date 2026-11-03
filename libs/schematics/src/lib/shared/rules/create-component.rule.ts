@@ -20,7 +20,7 @@ export function createComponent(ruleContext: ScaffoldContext): Rule {
           name: resolvedName,
           ...strings,
         }),
-        move(normalize(strings.dasherize(componentPath))),
+        move(normalize(componentPath)),
       ]),
     );
   };

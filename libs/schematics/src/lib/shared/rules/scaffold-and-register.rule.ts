@@ -180,7 +180,7 @@ function buildComponentPath(
 ) {
   const pathOption = config.path ?? 'app';
   const rootPath = pathOption.startsWith(projectRoot) ? '' : projectRoot;
-  const componentPath = `${rootPath}/${pathOption}/${resolvedName}`;
+  const componentPath = `${rootPath}/${pathOption}/${dasherize(resolvedName)}`;
 
   return {
     componentPath,

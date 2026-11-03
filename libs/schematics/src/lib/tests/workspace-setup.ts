@@ -74,7 +74,12 @@ export interface NgxFbForm<C extends NgxFbBaseContent = NgxFbItem> { content: Re
 interface AngularJson {
   projects: Record<
     string,
-    { schematics?: Record<string, Record<string, unknown>> }
+    {
+      projectType?: string;
+      root?: string;
+      sourceRoot?: string;
+      schematics?: Record<string, Record<string, unknown>>;
+    }
   >;
   schematics?: Record<string, Record<string, unknown>>;
 }
@@ -97,6 +102,21 @@ export function setComponentTypeConfig(
     ...container[COMPONENT_SCHEMATIC],
     ...config,
   };
+
+  appTree.overwrite('/angular.json', JSON.stringify(angularJson, null, 2));
+}
+
+export function addProject(
+  appTree: UnitTestTree,
+  name: string,
+  root: string,
+  sourceRoot?: string,
+): void {
+  const angularJson = JSON.parse(
+    appTree.readContent('/angular.json'),
+  ) as AngularJson;
+
+  angularJson.projects[name] = { projectType: 'application', root, sourceRoot };
 
   appTree.overwrite('/angular.json', JSON.stringify(angularJson, null, 2));
 }

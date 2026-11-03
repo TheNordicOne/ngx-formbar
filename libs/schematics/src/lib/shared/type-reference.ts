@@ -1,5 +1,5 @@
 import { SchematicsException } from '@angular-devkit/schematics';
-import { posix } from 'node:path';
+import { resolveProjectPath } from '../schema/project-path';
 
 /**
  * Splits a "path/to/file.ts#ExportName" config value on its first "#". This is
@@ -18,14 +18,12 @@ export function splitHashReference(reference: string): {
   const trimmed = reference.trim();
   const hashIndex = trimmed.indexOf('#');
 
-  if (hashIndex < 0) {
-    return { path: trimmed, exportName: '' };
-  }
-
-  return {
-    path: trimmed.slice(0, hashIndex),
-    exportName: trimmed.slice(hashIndex + 1),
-  };
+  return hashIndex < 0
+    ? { path: trimmed, exportName: '' }
+    : {
+        path: trimmed.slice(0, hashIndex),
+        exportName: trimmed.slice(hashIndex + 1),
+      };
 }
 
 /** The variant for callers with no default to fall back on. */
@@ -44,11 +42,12 @@ export function parseTypeReference(reference: string): {
   return { filePath: path, exportName };
 }
 
-/**
- * Collapses "." and ".." segments so every reader of the same config value —
- * the Tree, TypeScript's directory-walking module resolution, and Angular's
- * `buildRelativePath` — agrees on the same canonical spelling.
- */
-export function normalizePath(fileName: string): string {
-  return posix.resolve('/', fileName);
+export function resolveTypeFile(filePath: string, sourceRoot: string): string {
+  const resolved = resolveProjectPath(filePath, sourceRoot);
+
+  if (!resolved) {
+    throw new SchematicsException(`Type file not found: ${filePath}`);
+  }
+
+  return resolved;
 }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  normalizePath,
   parseTypeReference,
   splitHashReference,
 } from '../shared/type-reference';
@@ -57,19 +56,5 @@ describe('splitHashReference', () => {
       path: 'a.ts',
       exportName: 'B#C',
     });
-  });
-});
-
-describe('normalizePath', () => {
-  it('collapses a "." segment', () => {
-    expect(normalizePath('/projects/test-app/src/./app/content.ts')).toBe(
-      '/projects/test-app/src/app/content.ts',
-    );
-  });
-
-  it('collapses a ".." segment', () => {
-    expect(normalizePath('/projects/test-app/src/../shared/content.ts')).toBe(
-      '/projects/test-app/shared/content.ts',
-    );
   });
 });

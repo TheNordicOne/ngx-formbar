@@ -32,6 +32,5 @@ export interface SchemaEmitterEntry {
 
 export interface SchemaConfig {
   type?: string;
-  docs?: boolean;
   emitters?: SchemaEmitterEntry[];
 }

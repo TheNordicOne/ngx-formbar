@@ -13,6 +13,8 @@ export function toJsonTypes(type: TypeNode): TypeNode | null {
       return projectUnion(type.members);
     case 'array':
       return projectArray(type.items);
+    case 'tuple':
+      return projectTuple(type);
     case 'object':
       return projectObject(type);
     case 'string':
@@ -36,19 +38,17 @@ function projectObject(
   for (const property of type.properties) {
     const projected = toJsonTypes(property.type);
 
-    if (projected === null) {
-      // An optional property with no JSON form can simply be left out. A
-      // required one cannot: no JSON value satisfies the object, so the object
-      // projects to nothing, just as a node's own required function-valued
-      // property does.
-      if (!property.optional) {
-        return null;
-      }
-
-      continue;
+    // An optional property with no JSON form can simply be left out. A
+    // required one cannot: no JSON value satisfies the object, so the object
+    // projects to nothing, just as a node's own required function-valued
+    // property does.
+    if (projected === null && !property.optional) {
+      return null;
     }
 
-    properties.push({ ...property, type: projected });
+    if (projected !== null) {
+      properties.push({ ...property, type: projected });
+    }
   }
 
   return {
@@ -82,4 +82,30 @@ function projectUnion(members: TypeNode[]): TypeNode | null {
 function projectArray(items: TypeNode): TypeNode | null {
   const projected = toJsonTypes(items);
   return projected ? { k: 'array', items: projected } : null;
+}
+
+/**
+ * A position with no JSON form can only be left out, and so can every position
+ * after it. Nothing satisfies the tuple once that leaves fewer than it requires.
+ */
+function projectTuple(
+  type: Extract<TypeNode, { k: 'tuple' }>,
+): TypeNode | null {
+  const projected = type.elements.map(toJsonTypes);
+  const cut = projected.indexOf(null);
+  const elements = (cut === -1 ? projected : projected.slice(0, cut)).filter(
+    (element): element is TypeNode => element !== null,
+  );
+  const rest =
+    cut === -1 && type.rest ? (toJsonTypes(type.rest) ?? undefined) : undefined;
+  const capacity = rest ? Infinity : elements.length;
+
+  return type.minItems > capacity
+    ? null
+    : {
+        k: 'tuple',
+        elements,
+        minItems: type.minItems,
+        ...(rest ? { rest } : {}),
+      };
 }

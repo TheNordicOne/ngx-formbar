@@ -1,4 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
+import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { existsSync, readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import {
@@ -17,7 +18,27 @@ import {
   sys,
   TypeChecker,
 } from 'typescript';
-import { normalizePath } from '../shared/type-reference';
+
+/**
+ * The tsconfig of the project's `build` target, then the candidates. The target
+ * is what makes `schema --project` work for a library, which has no
+ * `tsconfig.app.json`.
+ */
+export function findTsConfigPath(
+  tree: Tree,
+  project: ProjectDefinition,
+): string {
+  const configured = project.targets.get('build')?.options?.['tsConfig'];
+  const candidates = [
+    ...(typeof configured === 'string' ? [configured] : []),
+    `${project.root}/tsconfig.app.json`,
+    `${project.root}/tsconfig.lib.json`,
+    `${project.root}/tsconfig.json`,
+    'tsconfig.json',
+  ];
+
+  return candidates.find((path) => tree.exists(path)) ?? 'tsconfig.base.json';
+}
 
 export function createTreeCompilerHost(tree: Tree): CompilerHost {
   return {
@@ -55,7 +76,9 @@ export function readCompilerOptions(
   };
 
   // `baseUrl`, `paths` and `typeRoots` resolve against this, unrooted otherwise.
-  const configPath = normalizePath(tsConfigPath);
+  const configPath = tsConfigPath.startsWith('/')
+    ? tsConfigPath
+    : `/${tsConfigPath}`;
   const raw = tree.read(configPath);
 
   if (!raw) {
@@ -101,8 +124,8 @@ export function createTreeProgram(
 /** Tree is consulted first, disk is a fallback. `getCurrentDirectory()` is
  * '/', so most paths reaching these helpers are virtual Tree paths, but
  * TypeScript's own lib files legitimately arrive here as real absolute
- * paths through the same functions — the two path spaces overlap by
- * design because TS lib files must resolve from disk. */
+ * paths through the same functions. The two path spaces overlap by design
+ * because TS lib files must resolve from disk. */
 function readTreeOrDisk(tree: Tree, fileName: string) {
   const fromTree = tree.read(fileName);
   return fromTree ? fromTree.toString('utf-8') : readFromDisk(fileName);
@@ -119,10 +142,8 @@ function treeDirectoryExists(tree: Tree, directoryName: string) {
   );
 }
 
-// Neither suite reaches this: TypeScript never asked the host for directories
-// on these programs, so the `normalizePath` here is unverified, not known-needed.
 function treeDirectories(tree: Tree, directoryName: string) {
-  const dir = tree.getDir(normalizePath(directoryName));
+  const dir = tree.getDir(directoryName);
   const diskDirs = sys.directoryExists(directoryName)
     ? sys.getDirectories(directoryName)
     : [];

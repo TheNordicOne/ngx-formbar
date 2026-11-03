@@ -28,6 +28,16 @@ const EVERY_KIND: TypeNode = {
       type: { k: 'union', members: [{ k: 'string' }, { k: 'number' }] },
     },
     {
+      name: 'pair',
+      optional: true,
+      type: {
+        k: 'tuple',
+        elements: [{ k: 'string' }, { k: 'function' }],
+        minItems: 1,
+        rest: { k: 'number' },
+      },
+    },
+    {
       name: 'list',
       optional: false,
       type: {
@@ -210,5 +220,37 @@ describe('toJsonTypes', () => {
       properties: [{ name: 'a', optional: false, type: { k: 'string' } }],
       index: undefined,
     });
+  });
+
+  it('ends a tuple before its first optional position with no JSON form', () => {
+    expect(
+      toJsonTypes({
+        k: 'tuple',
+        elements: [{ k: 'string' }, { k: 'function' }, { k: 'number' }],
+        minItems: 1,
+        rest: { k: 'number' },
+      }),
+    ).toEqual({ k: 'tuple', elements: [{ k: 'string' }], minItems: 1 });
+  });
+
+  it('returns null when a required tuple position has no JSON form', () => {
+    expect(
+      toJsonTypes({
+        k: 'tuple',
+        elements: [{ k: 'string' }, { k: 'function' }],
+        minItems: 2,
+      }),
+    ).toBeNull();
+  });
+
+  it('drops a rest element with no JSON form', () => {
+    expect(
+      toJsonTypes({
+        k: 'tuple',
+        elements: [{ k: 'string' }],
+        minItems: 1,
+        rest: { k: 'function' },
+      }),
+    ).toEqual({ k: 'tuple', elements: [{ k: 'string' }], minItems: 1 });
   });
 });

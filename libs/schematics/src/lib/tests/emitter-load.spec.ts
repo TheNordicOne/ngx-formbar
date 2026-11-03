@@ -119,15 +119,25 @@ export default defineEmitter({
     );
   });
 
-  it('throws when the module does not export a defineEmitter result', () => {
+  it('loads a plain object emitter not created with defineEmitter', () => {
     tree.create(
       src('tools/plain.ts'),
-      `export default { name: 'plain', render() {} };
+      `export default { name: 'plain', emit() {} };
 `,
     );
 
-    expect(() => resolveEmitter('./tools/plain.ts', tree, PATHS)).toThrow(
-      `"${src('tools/plain.ts')}" does not export an emitter created with defineEmitter().`,
+    expect(resolveEmitter('./tools/plain.ts', tree, PATHS).name).toBe('plain');
+  });
+
+  it('throws when the default export lacks an emit function', () => {
+    tree.create(
+      src('tools/render-only.ts'),
+      `export default { name: 'render-only', render() {} };
+`,
+    );
+
+    expect(() => resolveEmitter('./tools/render-only.ts', tree, PATHS)).toThrow(
+      `"${src('tools/render-only.ts')}" does not export an emitter (an object with a string "name" and an "emit" function).`,
     );
   });
 
@@ -405,7 +415,7 @@ export default defineEmitter({ name: label, emit() {} });
 function emitContext(tree: UnitTestTree, paths: EmitPaths): EmitContext {
   return {
     tree,
-    options: { docs: true },
+    options: {},
     logger: new logging.NullLogger(),
     paths,
   };
