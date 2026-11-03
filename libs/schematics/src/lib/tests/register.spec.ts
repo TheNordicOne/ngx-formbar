@@ -1817,6 +1817,127 @@ export class RangeComponent extends MiddleControl {}
       },
     );
 
+    describe('in a form written by hand', () => {
+      const componentPath = app('one/one-control.ts');
+      const lazyImport =
+        "() => import('../one/one-control').then((m) => m.OneControl)";
+      const staticImport = "import { OneControl } from '../one/one-control';";
+      const options = "{ hiddenHandling: 'manual' }";
+      const forms: [string, string, string][] = [
+        ['the class', 'OneControl', staticImport],
+        ['staticComponent', 'staticComponent(OneControl)', staticImport],
+        [
+          'staticComponent with options',
+          `staticComponent(OneControl, ${options})`,
+          staticImport,
+        ],
+        [
+          'a renamed import',
+          'staticComponent(Renamed)',
+          "import { OneControl as Renamed } from '../one/one-control';",
+        ],
+        ['a component entry', '{ component: OneControl }', staticImport],
+        [
+          'a component entry with options',
+          "{ component: OneControl, hiddenHandling: 'manual' }",
+          staticImport,
+        ],
+        ['loadComponent', `loadComponent(${lazyImport})`, ''],
+        [
+          'loadComponent with options',
+          `loadComponent(${lazyImport}, ${options})`,
+          '',
+        ],
+        ['a loadComponent entry', `{ loadComponent: ${lazyImport} }`, ''],
+        [
+          'a loadComponent entry with options',
+          `{ loadComponent: ${lazyImport}, hiddenHandling: 'manual' }`,
+          '',
+        ],
+      ];
+
+      function createComponent() {
+        appTree.create(
+          componentPath,
+          `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface OneConfig { type: 'one'; }
+
+@Component({ selector: 'app-one', template: '' })
+export class OneControl implements ReactiveFormbarControl<OneConfig> {
+  readonly name = input.required<string>();
+}
+`,
+        );
+      }
+
+      it.each(forms)(
+        'adds no second token entry for %s',
+        async (_, entry, imports) => {
+          createComponent();
+          provideToken(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            `['custom', ${entry}]`,
+            imports,
+          );
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic();
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it.each(forms)(
+        'adds no second config entry for %s',
+        async (_, entry, imports) => {
+          createComponent();
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+            `custom: ${entry}`,
+          );
+          appTree.overwrite(
+            src(registrationsPath),
+            `${imports}\n${read(appTree, src(registrationsPath))}`,
+          );
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic({ registrationType: 'config' });
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it('changes nothing on a clean re-run', async () => {
+        createComponent();
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['custom', staticComponent(OneControl)]",
+          staticImport,
+        );
+        appTree = await runSchematic();
+        const before = read(appTree, src(registrationsPath));
+        const warnings = logged('warn');
+
+        const tree = await runSchematic();
+
+        expect(read(tree, src(registrationsPath))).toBe(before);
+        expect(warnings).toEqual([]);
+      });
+    });
+
     it('still warns when another component holds the key', async () => {
       const component = (className: string) =>
         `import { Component, input } from '@angular/core';

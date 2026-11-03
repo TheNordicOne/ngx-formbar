@@ -6,10 +6,13 @@ import {
   EmitHint,
   Expression,
   factory,
+  Identifier,
   isArrowFunction,
   isArrayLiteralExpression,
   isCallExpression,
   isIdentifier,
+  isImportDeclaration,
+  isNamedImports,
   isNewExpression,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
@@ -19,6 +22,7 @@ import {
   isVariableStatement,
   Node,
   ObjectLiteralExpression,
+  PropertyAssignment,
   SourceFile,
   SyntaxKind,
   VariableDeclaration,
@@ -26,6 +30,8 @@ import {
 import { ReplaceChange } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
 import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
+
+const registrationHelpers = ['staticComponent', 'loadComponent'];
 
 export function findComponentRegistrationsNode(
   sourceFile: SourceFile,
@@ -224,10 +230,7 @@ function registrationsObjectUsesIdentifier(
     if (!isPropertyAssignment(p)) {
       continue;
     }
-    if (isIdentifier(p.initializer) && p.initializer.text === identifierName) {
-      return true;
-    }
-    if (extractComponentNameFromLazyImport(p.initializer) === identifierName) {
+    if (registeredClassName(p.initializer) === identifierName) {
       return true;
     }
   }
@@ -415,37 +418,58 @@ function createLazyImportExpression(
   );
 }
 
-function extractComponentNameFromLazyImport(node: Node): string | null {
-  // Handle loadComponent(() => import(...).then(m => m.Component))
-  if (
-    isCallExpression(node) &&
-    isIdentifier(node.expression) &&
-    node.expression.text === 'loadComponent' &&
-    node.arguments.length > 0
-  ) {
-    return extractComponentNameFromLazyImport(node.arguments[0]);
+/** The class of a registration value, in any form a registration can take. */
+function registeredClassName(value: Node) {
+  const target = registrationTarget(value);
+
+  return target && isIdentifier(target)
+    ? importedClassName(target)
+    : lazyClassName(target);
+}
+
+function registrationTarget(value: Node) {
+  if (isCallExpression(value)) {
+    return isIdentifier(value.expression) &&
+      registrationHelpers.includes(value.expression.text)
+      ? value.arguments.at(0)
+      : undefined;
   }
 
-  // Handle bare () => import(...).then(m => m.Component)
-  if (!isArrowFunction(node)) {
-    return null;
-  }
-  const body = node.body;
-  if (!isCallExpression(body)) {
-    return null;
-  }
-  if (body.arguments.length === 0) {
-    return null;
-  }
-  const thenCallback = body.arguments[0];
-  if (!isArrowFunction(thenCallback)) {
-    return null;
-  }
-  const innerBody = thenCallback.body;
-  if (!isPropertyAccessExpression(innerBody)) {
-    return null;
-  }
-  return isIdentifier(innerBody.name) ? innerBody.name.text : null;
+  return isObjectLiteralExpression(value)
+    ? value.properties.find(
+        (property): property is PropertyAssignment =>
+          isPropertyWithName(property, 'component') ||
+          isPropertyWithName(property, 'loadComponent'),
+      )?.initializer
+    : value;
+}
+
+function importedClassName(local: Identifier) {
+  const renamed = local
+    .getSourceFile()
+    .statements.filter(isImportDeclaration)
+    .flatMap(({ importClause }) => {
+      const bindings = importClause?.namedBindings;
+
+      return bindings && isNamedImports(bindings) ? [...bindings.elements] : [];
+    })
+    .find(({ name }) => name.text === local.text)?.propertyName;
+
+  return renamed?.text ?? local.text;
+}
+
+function lazyClassName(target: Node | undefined) {
+  const load = target && isArrowFunction(target) ? target.body : undefined;
+  const callback =
+    load && isCallExpression(load) ? load.arguments.at(0) : undefined;
+  const picked =
+    callback && isArrowFunction(callback) ? callback.body : undefined;
+
+  return picked &&
+    isPropertyAccessExpression(picked) &&
+    isIdentifier(picked.name)
+    ? picked.name.text
+    : null;
 }
 
 function createNewMapEntry(
@@ -656,10 +680,7 @@ function arrayLiteralUsesIdentifier(
       continue;
     }
     const [, v] = el.elements;
-    if (
-      (isIdentifier(v) && v.text === identifierName) ||
-      extractComponentNameFromLazyImport(v) === identifierName
-    ) {
+    if (registeredClassName(v) === identifierName) {
       return true;
     }
   }
@@ -690,10 +711,7 @@ function objectLiteralUsesIdentifier(
     if (!isPropertyAssignment(p)) {
       continue;
     }
-    if (
-      (isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
-      extractComponentNameFromLazyImport(p.initializer) === identifierName
-    ) {
+    if (registeredClassName(p.initializer) === identifierName) {
       return true;
     }
   }
