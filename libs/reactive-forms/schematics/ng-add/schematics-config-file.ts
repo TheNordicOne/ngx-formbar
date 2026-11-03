@@ -102,32 +102,27 @@ export function seededUnionType(sourceRoot: string): string {
 }
 
 /**
- * What the file of this run says about the content union: `new` without a file,
- * `unset` for a kept file without `schema.type`.
+ * What the file of this run says about the content union: `unset` for a kept
+ * file without `schema.type`. A file this run writes names this union.
  */
 export function keptConfigUnion(
   tree: Tree,
   ruleContext: RuleContext,
   union: string,
-): 'new' | 'unset' | 'this' | 'other' {
+): 'unset' | 'this' | 'other' {
   const file = schematicsConfigFile(tree, ruleContext);
-
-  if (!tree.exists(file)) {
-    return 'new';
-  }
-
-  const kept = tree.readJson(file);
+  const kept = tree.exists(file)
+    ? tree.readJson(file)
+    : { schema: { type: union } };
   const schema = isJsonObject(kept) ? kept.schema : null;
   const type = schema && isJsonObject(schema) ? schema.type : null;
 
-  if (typeof type !== 'string') {
-    return 'unset';
-  }
-
-  return resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) ===
-    union
-    ? 'this'
-    : 'other';
+  return typeof type !== 'string'
+    ? 'unset'
+    : resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) ===
+        union
+      ? 'this'
+      : 'other';
 }
 
 /** The settings of this run that a kept file does not hold, as `name: value`. */
