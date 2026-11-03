@@ -15,7 +15,6 @@ import {
   isPropertyAccessExpression,
   SourceFile,
   SymbolFlags,
-  SyntaxKind,
   TypeChecker,
 } from 'typescript';
 import { normalize, strings } from '@angular-devkit/core';
@@ -416,8 +415,7 @@ function extractComponentInfo(
 
 function contractOf(classNode: ClassDeclaration, checker: TypeChecker) {
   return classNode.heritageClauses
-    ?.filter(({ token }) => token === SyntaxKind.ImplementsKeyword)
-    .flatMap(({ types }) => [...types])
+    ?.flatMap(({ types }) => [...types])
     .find((heritage) => isContract(heritage, checker));
 }
 
