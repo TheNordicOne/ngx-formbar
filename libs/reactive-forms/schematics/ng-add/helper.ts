@@ -47,11 +47,12 @@ type GeneratorOptions = Record<string, string | undefined>;
 
 /**
  * Merges each generator's options into its `@ngx-formbar/schematics:<generator>`
- * entry in angular.json, in a single write.
+ * entry in angular.json, in a single write, after dropping `replacedKeys`.
  */
 export function updateSchematicConfigs(
   configs: Record<string, GeneratorOptions>,
   projectName: string,
+  replacedKeys: string[] = [],
 ): Rule {
   return updateWorkspace((workspace: WorkspaceDefinition) => {
     const projectDef = workspace.projects.get(projectName);
@@ -70,10 +71,12 @@ export function updateSchematicConfigs(
       const schematicKey = `${SCHEMATICS_PACKAGE_NAME}:${schematicName}`;
       const existingConfig = schematicsExt[schematicKey];
 
+      const kept = Object.entries(
+        existingConfig && isJsonObject(existingConfig) ? existingConfig : {},
+      ).filter(([key]) => !replacedKeys.includes(key));
+
       schematicsExt[schematicKey] = {
-        ...(existingConfig && isJsonObject(existingConfig)
-          ? existingConfig
-          : {}),
+        ...Object.fromEntries(kept),
         ...definedOptions(options),
       };
     }

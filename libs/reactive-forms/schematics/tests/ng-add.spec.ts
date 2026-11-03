@@ -1069,6 +1069,54 @@ describe('ng-add schematic', () => {
       });
     });
 
+    describe('a re-run with useSchematicConfig set to false', () => {
+      it('drops the settings of the earlier run that no longer apply', async () => {
+        appTree = await runAdd({
+          useSchematicConfig: false,
+          registrationStyle: 'config',
+          registrationsPath: 'app/one',
+        });
+
+        const tree = await runAdd({
+          useSchematicConfig: false,
+          useHelper: false,
+        });
+        const defaults = await generatorDefaults(tree);
+
+        expect(defaults.slice(0, 5)).toEqual(
+          generators.slice(0, 5).map(() => ({})),
+        );
+      });
+
+      it('keeps the settings ng add does not own', async () => {
+        appTree = await runAdd({
+          useSchematicConfig: false,
+          registrationStyle: 'config',
+        });
+
+        const workspace = JSON.parse(read(appTree, 'angular.json')) as {
+          projects: Record<
+            string,
+            { schematics: Record<string, Record<string, unknown>> }
+          >;
+        };
+
+        workspace.projects['test-app'].schematics[
+          '@ngx-formbar/schematics:control'
+        ].interfaceSuffix = 'Type';
+        appTree.overwrite('angular.json', JSON.stringify(workspace));
+
+        const [controlDefaults] = await generatorDefaults(
+          await runAdd({ useSchematicConfig: false }),
+        );
+
+        expect(controlDefaults).toEqual({
+          interfaceSuffix: 'Type',
+          viewProviderHelperPath: DEFAULT_HELPER_PATH,
+        });
+      });
+    });
+
     describe('useSchematicConfig is set to true', () => {
       it('writes all user provided configurations in config file', async () => {
         const helperPath = 'app/management/forms/helper';

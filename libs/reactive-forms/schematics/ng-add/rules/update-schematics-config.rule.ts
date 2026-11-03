@@ -5,6 +5,13 @@ import { RuleContext } from '../schema';
 import { generatorDefaults, updateSchematicConfigs } from '../helper';
 import { SCAFFOLD_GENERATORS } from '../../shared/constants';
 
+const NG_ADD_SETTINGS = [
+  'registrationType',
+  'controlRegistrationsPath',
+  'viewProviderHelperPath',
+  'controlRegistrations',
+];
+
 /**
  * Without a schematics configuration file, its settings become generator defaults in
  * angular.json.
@@ -40,6 +47,7 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
         },
       },
       projectName,
+      NG_ADD_SETTINGS,
     );
   };
 }
