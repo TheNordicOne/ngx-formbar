@@ -385,7 +385,7 @@ function extractComponentInfo(
   filePath: string,
   checker: TypeChecker,
   context: SchematicContext,
-): FormbarComponentInfo | undefined {
+) {
   if (!isCallExpression(componentDecorator.expression)) {
     return undefined;
   }
@@ -456,7 +456,7 @@ function configTypeLiteral(
   return type?.isStringLiteral() ? type.value : undefined;
 }
 
-function stripComponentSuffix(name: string): string {
+function stripComponentSuffix(name: string) {
   if (!name.endsWith('Component')) {
     return name;
   }
