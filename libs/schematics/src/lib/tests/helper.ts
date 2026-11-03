@@ -660,11 +660,11 @@ export function decoratorPropInitializerIsIdentifier(
     );
   });
 
-  if (!prop || !isPropertyAssignment(prop)) {
-    return false;
-  }
   return (
-    isIdentifier(prop.initializer) && prop.initializer.text === identifierName
+    !!prop &&
+    isPropertyAssignment(prop) &&
+    isIdentifier(prop.initializer) &&
+    prop.initializer.text === identifierName
   );
 }
 
@@ -689,11 +689,9 @@ export function getDecoratorArrayProp(
     );
   });
 
-  if (!prop || !isPropertyAssignment(prop)) {
-    return undefined;
-  }
-
-  return isArrayLiteralExpression(prop.initializer)
+  return prop &&
+    isPropertyAssignment(prop) &&
+    isArrayLiteralExpression(prop.initializer)
     ? prop.initializer
     : undefined;
 }
@@ -704,20 +702,20 @@ export function decoratorHasProp(
   propName: string,
 ): boolean {
   const obj = getDecoratorObject(sf, decoratorName);
-  if (!obj) {
-    return false;
-  }
 
-  return obj.properties.some((p) => {
-    if (!isPropertyAssignment(p)) {
-      return false;
-    }
-    const n = p.name;
-    return (
-      (isIdentifier(n) && n.text === propName) ||
-      (isStringLiteral(n) && n.text === propName)
-    );
-  });
+  return (
+    !!obj &&
+    obj.properties.some((p) => {
+      if (!isPropertyAssignment(p)) {
+        return false;
+      }
+      const n = p.name;
+      return (
+        (isIdentifier(n) && n.text === propName) ||
+        (isStringLiteral(n) && n.text === propName)
+      );
+    })
+  );
 }
 
 export function componentSelectorEquals(
@@ -740,16 +738,12 @@ export function componentSelectorEquals(
     );
   });
 
-  if (!prop || !isPropertyAssignment(prop)) {
-    return false;
-  }
-
-  const init = prop.initializer;
-  if (!isStringLiteral(init)) {
-    return false;
-  }
-
-  return init.text === expected;
+  return (
+    !!prop &&
+    isPropertyAssignment(prop) &&
+    isStringLiteral(prop.initializer) &&
+    prop.initializer.text === expected
+  );
 }
 
 export function getProvideFormbarArg(
@@ -762,14 +756,14 @@ export function getProvideFormbarArg(
       return;
     }
 
-    if (isCallExpression(node) && isCallee(node.expression, 'provideFormbar')) {
-      if (
-        node.arguments.length > 0 &&
-        isObjectLiteralExpression(node.arguments[0])
-      ) {
-        result = node.arguments[0];
-        return;
-      }
+    if (
+      isCallExpression(node) &&
+      isCallee(node.expression, 'provideFormbar') &&
+      node.arguments.length > 0 &&
+      isObjectLiteralExpression(node.arguments[0])
+    ) {
+      result = node.arguments[0];
+      return;
     }
 
     node.forEachChild(visit);
@@ -839,12 +833,10 @@ export function provideFormbarComponentRegistrationsHasIdentifier(
     const matchesKey =
       (isIdentifier(n) && n.text === key) ||
       (isStringLiteral(n) && n.text === key);
-    if (!matchesKey) {
-      return false;
-    }
     return (
-      (isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
-      extractComponentNameFromLazyImport(p.initializer) === identifierName
+      matchesKey &&
+      ((isIdentifier(p.initializer) && p.initializer.text === identifierName) ||
+        extractComponentNameFromLazyImport(p.initializer) === identifierName)
     );
   });
 
@@ -1110,8 +1102,6 @@ export function getMapArguments(
   }
 
   const mapArg = mapExpr.arguments[0];
-  if (!isArrayLiteralExpression(mapArg)) {
-    return null;
-  }
-  return mapArg;
+
+  return isArrayLiteralExpression(mapArg) ? mapArg : null;
 }

@@ -1710,13 +1710,11 @@ describe('ng-add schematic', () => {
           registrationsPath,
         });
 
-        const angularJson = JSON.parse(read(tree, 'angular.json')) as {
-          projects: Record<
-            string,
-            { schematics: Record<string, Record<string, unknown>> }
-          >;
-        };
-        const schematics = angularJson.projects['test-app'].schematics;
+        const workspace = await getWorkspace(tree);
+        const defined =
+          workspace.projects.get('test-app')?.extensions.schematics;
+        const schematics: JsonObject =
+          defined && isJsonObject(defined) ? defined : {};
         const registrationsFile = `${registrationsPath}/component-registrations.ts`;
 
         for (const generator of ['control', 'group', 'array']) {
