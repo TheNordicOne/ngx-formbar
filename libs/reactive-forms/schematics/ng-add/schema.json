@@ -44,7 +44,7 @@
     },
     "useHelper": {
       "type": "boolean",
-      "description": "Include helper files for view providers and host directives",
+      "description": "Include helper files for view providers",
       "default": true
     },
     "helperPath": {
