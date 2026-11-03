@@ -29,7 +29,7 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
     const registerComponentContext: RegisterComponentContext = {
       controlRegistrationsPath,
       key,
-      componentFilePath,
+      componentFilePath: `${componentFilePath}.ts`,
       componentClassName,
       tsConfigPath,
       alreadyRegisteredLevel: 'warn',
