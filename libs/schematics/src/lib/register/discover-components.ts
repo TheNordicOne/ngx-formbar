@@ -35,7 +35,6 @@ import { isWithin, resolveRequiredPath } from '@ngx-formbar/setup';
 import { createTreeProgram } from '../schema/program';
 import { FormbarComponentInfo } from './component-info.type';
 
-const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
 const defaultIncludes = ['**/*.ts'];
 const contracts = [
   'ReactiveFormbarControl',
@@ -50,13 +49,12 @@ export function discoverComponents(
   context: SchematicContext,
 ): RegisterContext {
   const { exclude = [], include = [...defaultIncludes] } = registerContext;
-  const resolvedExcludes = [...exclude, ...alwaysExclude];
 
   const files = findPotentialControlComponents(
     tree,
     registerContext,
     include,
-    resolvedExcludes,
+    exclude,
   );
   registerContext.components = toComponentInfo(
     tree,
@@ -148,7 +146,7 @@ export function findPotentialControlComponents(
       return;
     }
 
-    if (excludeRegs.length > 0 && someRegMatch(excludeRegs, path)) {
+    if (someRegMatch(excludeRegs, path)) {
       return;
     }
 
@@ -169,10 +167,6 @@ function compileGlobs(
   sourceRoot: string,
 ) {
   const regs: RegExp[] = [];
-
-  if (patterns.length === 0) {
-    return regs;
-  }
 
   for (const raw of patterns) {
     if (!raw || raw.trim() === '') {
@@ -215,17 +209,7 @@ function canMatchWithin(glob: string, sourceRoot: string) {
 }
 
 function someRegMatch(regs: readonly RegExp[], input: string) {
-  if (regs.length === 0) {
-    return false;
-  }
-
-  for (const r of regs) {
-    if (r.test(input)) {
-      return true;
-    }
-  }
-
-  return false;
+  return regs.some((r) => r.test(input));
 }
 
 /**
@@ -361,7 +345,6 @@ function analyzeSourceFile(
 
     const componentInfo = extractComponentInfo(
       stmt,
-      componentDecorator,
       filePath,
       checker,
       context,
@@ -382,11 +365,8 @@ function getDecoratorName(decorator: Decorator) {
   }
 
   const callee = decorator.expression.expression;
-  if (isIdentifier(callee)) {
-    return callee.text;
-  }
 
-  return undefined;
+  return isIdentifier(callee) ? callee.text : undefined;
 }
 
 /**
@@ -394,15 +374,10 @@ function getDecoratorName(decorator: Decorator) {
  */
 function extractComponentInfo(
   classNode: ClassDeclaration,
-  componentDecorator: Decorator,
   filePath: string,
   checker: TypeChecker,
   context: SchematicContext,
 ) {
-  if (!isCallExpression(componentDecorator.expression)) {
-    return undefined;
-  }
-
   const className = classNode.name?.text;
   const configs = contractConfigs(classNode, new Map(), checker, new Set());
 
@@ -421,7 +396,8 @@ function extractComponentInfo(
   const configured = configs
     .map((config) => configTypeLiteral(config, checker))
     .find(Boolean);
-  const key = configured ?? strings.dasherize(stripComponentSuffix(className));
+  const key =
+    configured ?? strings.dasherize(className.replace(/Component$/, ''));
 
   if (!configured) {
     context.logger.warn(
@@ -596,12 +572,4 @@ function configTypeLiteral(config: Type | undefined, checker: TypeChecker) {
   const type = property && checker.getTypeOfSymbol(property);
 
   return type?.isStringLiteral() ? type.value : undefined;
-}
-
-function stripComponentSuffix(name: string) {
-  if (!name.endsWith('Component')) {
-    return name;
-  }
-
-  return name.slice(0, name.length - 'Component'.length);
 }

@@ -956,6 +956,21 @@ export class TagsInput implements ${contract}<TagsConfig> {}
       );
     }
 
+    it.each<[string, string]>([
+      ['a spec file', app('tags/tags-input.spec.ts')],
+      ['a nested node_modules folder', app('node_modules/tags/tags-input.ts')],
+    ])('skips %s', async (_, path) => {
+      appTree.create(
+        path,
+        createControlComponent('tags', inlineProviders, 'TagsInput'),
+      );
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      const tree = await runSchematic();
+
+      expect(read(tree, src(registrationsPath))).not.toContain('TagsInput');
+    });
+
     it('skips the other projects of the workspace', async () => {
       appTree = await runner.runExternalSchematic(
         '@schematics/angular',

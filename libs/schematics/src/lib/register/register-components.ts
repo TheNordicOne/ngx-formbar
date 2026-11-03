@@ -12,16 +12,9 @@ import { registerTypeConfig } from '../shared/rules/register-type-map.rule';
 
 export function registerComponents(
   tree: Tree,
-  registerContext: RegisterContext | undefined,
+  registerContext: RegisterContext,
   context: SchematicContext,
-): Rule | Tree | undefined {
-  if (!registerContext) {
-    context.logger.error(
-      'Component registration failed, because no proper context was generated!',
-    );
-    return;
-  }
-
+): Rule | Tree {
   const { controlRegistrations, configuredRegistrations } = registerContext;
 
   if (!controlRegistrations) {

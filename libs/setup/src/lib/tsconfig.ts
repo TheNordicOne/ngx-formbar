@@ -145,10 +145,7 @@ function treeDirectories(tree: Tree, directoryName: string) {
  * TypeScript's own lib files legitimately arrive here as real absolute
  * paths through the same functions. The two path spaces overlap by design
  * because TS lib files must resolve from disk. */
-export function readTreeOrDisk(
-  tree: Tree,
-  fileName: string,
-): string | undefined {
+function readTreeOrDisk(tree: Tree, fileName: string) {
   const fromTree = tree.read(fileName);
   return fromTree ? fromTree.toString('utf-8') : readFromDisk(fileName);
 }
