@@ -47,16 +47,16 @@ By default, this does the following.
 
 `ng add` follows the bootstrap call in the project's main file, also into files that file imports, and edits:
 
-| The bootstrap call                                  | `ng add` edits                                                                                       |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `bootstrapApplication(App, appConfig)`              | The `appConfig` variable, also through a barrel or a path alias                                      |
-| `bootstrapApplication(App, { providers: [] })`      | The object                                                                                           |
-| `bootstrapApplication(App)`                         | The call, which gets a config object                                                                 |
-| `bootstrapApplication(App, makeConfig())`           | The call, as `bootstrapApplication(App, mergeApplicationConfig(makeConfig(), { providers: [...] }))` |
-| `bootstrapApplication(App, { ...base })`            | The call, wrapped the same way                                                                       |
-| `bootstrapApplication(App, configFromOtherProject)` | The call, wrapped the same way, so that no other project imports from this one                       |
-| `platformBrowser().bootstrapModule(AppModule)`      | The `providers` of `AppModule`, also through a barrel or a path alias                                |
-| None                                                | `app/app.config.ts` in the source root, with a warning naming it                                     |
+| The bootstrap call                                  | `ng add` edits                                                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `bootstrapApplication(App, appConfig)`              | The `appConfig` variable, also through a barrel or a path alias                                                |
+| `bootstrapApplication(App, { providers: [] })`      | The object                                                                                                     |
+| `bootstrapApplication(App)`                         | The call, which gets a config object                                                                           |
+| `bootstrapApplication(App, makeConfig())`           | The call, as `bootstrapApplication(App, mergeApplicationConfig(makeConfig(), { providers: [...] }))`           |
+| `bootstrapApplication(App, { ...base })`            | The call, wrapped the same way                                                                                 |
+| `bootstrapApplication(App, configFromOtherProject)` | The call, wrapped the same way, so that no other project imports from this one                                 |
+| `platformBrowser().bootstrapModule(AppModule)`      | The `providers` of `AppModule`, also through a barrel or a path alias                                          |
+| None                                                | `app/app.config.ts` in the source root, with a warning naming it. If that file is missing too, `ng add` fails. |
 
 A root NgModule has to be declared in the project, and its metadata has to be an object in the decorator without a spread. Otherwise `ng add` fails naming the file.
 
