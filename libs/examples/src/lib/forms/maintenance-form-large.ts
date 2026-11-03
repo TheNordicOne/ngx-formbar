@@ -19,7 +19,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
       type: 'group',
       legend: 'Requester',
       dynamicTitle:
-        "'Requester' + (requester && requester.fullName ? ' — ' + requester.fullName : '')",
+        "'Requester' + (requester && requester.fullName ? ' (' + requester.fullName + ')' : '')",
       controls: {
         fullName: {
           type: 'text',
@@ -126,7 +126,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
       type: 'group',
       legend: 'Details',
       dynamicTitle:
-        "'Details' + (details && details.category ? ' — ' + details.category : '')",
+        "'Details' + (details && details.category ? ' (' + details.category + ')' : '')",
       controls: {
         category: {
           type: 'dropdown',
@@ -396,7 +396,7 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
       type: 'group',
       legend: 'Approvals',
       dynamicTitle:
-        "'Approvals' + (details && details.urgency ? ' — ' + details.urgency : '')",
+        "'Approvals' + (details && details.urgency ? ' (' + details.urgency + ')' : '')",
       controls: {
         managerApprovalNeeded: {
           type: 'checkbox',
@@ -574,10 +574,10 @@ export const maintenanceFormLarge: NgxFbForm<ExampleControls> = {
             const apprOk = apprNeed ? !!value.approvals?.managerApproved : true;
 
             if (!reqOk || !detOk) {
-              return 'No — missing required fields';
+              return 'No, missing required fields';
             }
 
-            return apprOk ? 'Yes' : 'No — pending approvals';
+            return apprOk ? 'Yes' : 'No, approvals pending';
           },
         },
       },

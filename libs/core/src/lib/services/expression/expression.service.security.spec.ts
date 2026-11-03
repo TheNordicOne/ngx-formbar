@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ExpressionService } from './expression.service';
 import { FormContext } from '../../types/expression.type';
 
-describe('ExpressionService — sandbox boundary', () => {
+describe('ExpressionService: sandbox boundary', () => {
   let service: ExpressionService;
 
   beforeEach(() => {

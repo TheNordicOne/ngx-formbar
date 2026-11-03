@@ -120,7 +120,7 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
     details: {
       type: 'group',
       dynamicTitle:
-        "'Issue Details' + (details && details.category ? ' — ' + details.category : '')",
+        "'Issue Details' + (details && details.category ? ' (' + details.category + ')' : '')",
       controls: {
         category: {
           type: 'dropdown',
@@ -305,7 +305,7 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
     approvals: {
       type: 'group',
       dynamicTitle:
-        "'Approvals' + (details && details.urgency ? ' — ' + details.urgency : '')",
+        "'Approvals' + (details && details.urgency ? ' (' + details.urgency + ')' : '')",
       hidden: '!(details.urgency === "high" || details.urgency === "critical")',
       hideStrategy: 'remove',
       valueStrategy: 'reset',

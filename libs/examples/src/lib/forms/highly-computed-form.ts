@@ -39,7 +39,7 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       type: 'text',
       label: 'Root Decorated',
       readonly: 'true',
-      computedValue: '`«${(seed ?? "").trim() ? (seed ?? "").trim() : "—"}»`',
+      computedValue: '`«${(seed ?? "").trim() ? (seed ?? "").trim() : "-"}»`',
       disabled: 'mode === "beta"'
     },
 

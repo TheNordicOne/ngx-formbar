@@ -384,7 +384,7 @@ export class Parser {
             raw: ident.name,
           };
         } else {
-          // Refuse to promote `this` to a ThisExpression — this DSL does
+          // Refuse to promote `this` to a ThisExpression. This DSL does
           // not bind a receiver.
           if (ident.name === 'this') {
             this.throwError('The `this` keyword is not supported');
@@ -401,7 +401,7 @@ export class Parser {
       return (after ?? false);
     }
 
-    // Skip property access on SequenceExpression — the arrow plugin will
+    // Skip property access on SequenceExpression. The arrow plugin will
     // expand `(a, b) => x` later; member/call on a sequence is rejected
     // at the top level.
     if (node.type !== 'SequenceExpression') {
