@@ -353,9 +353,22 @@ export function appendToArray(
   const { elements: existing } = array;
   const text = sourceFile.text;
   const closing = array.getEnd() - 1;
-  const lineStart = text.lastIndexOf('\n', array.getStart(sourceFile)) + 1;
-  const indent = /^[ \t]*/.exec(text.slice(lineStart))?.[0] ?? '';
-  const elementIndent = `${indent}  `;
+  const newLine = text.includes('\r\n') ? '\r\n' : '\n';
+  const indentUnit = /^([ \t]+)[^ \t*\r\n]/m.exec(text)?.[1] ?? '  ';
+  const indent = lineIndent(text, array.getStart(sourceFile));
+  const inner = text.slice(existing.end, closing);
+  const last = existing.at(-1);
+  const firstAfterElements = /\S/.exec(inner)?.index;
+  const anchor =
+    last?.getStart(sourceFile) ??
+    (firstAfterElements === undefined
+      ? undefined
+      : existing.end + firstAfterElements);
+  const elementIndent =
+    anchor !== undefined &&
+    text.slice(array.getStart(sourceFile), anchor).includes('\n')
+      ? lineIndent(text, anchor)
+      : `${indent}${indentUnit}`;
   const printer = createPrinter({});
   const lines = elements
     .map((element) =>
@@ -364,28 +377,28 @@ export function appendToArray(
         .replace(
           /\n( *)/g,
           (_, spaces: string) =>
-            `\n${elementIndent}${' '.repeat(spaces.length / 2)}`,
+            `${newLine}${elementIndent}${indentUnit.repeat(spaces.length / 4)}`,
         ),
     )
-    .map((printed) => `\n${elementIndent}${printed}`)
+    .map((printed) => `${newLine}${elementIndent}${printed}`)
     .join(',');
   const trailingComma = existing.hasTrailingComma ? ',' : '';
-  const last = existing.at(-1);
-  const closingOnOwnLine =
-    !!last && text.slice(existing.end, closing).includes('\n');
+  const closingLineBreak = text.lastIndexOf(newLine, closing);
 
   return [
     ...(last && !existing.hasTrailingComma
       ? [new InsertChange(filePath, last.getEnd(), ',')]
       : []),
-    closingOnOwnLine
-      ? new InsertChange(
-          filePath,
-          text.lastIndexOf('\n', closing),
-          `${lines}${trailingComma}`,
-        )
-      : new InsertChange(filePath, closing, `${lines}\n${indent}`),
+    inner.includes('\n')
+      ? new InsertChange(filePath, closingLineBreak, `${lines}${trailingComma}`)
+      : new InsertChange(filePath, closing, `${lines}${newLine}${indent}`),
   ];
+}
+
+function lineIndent(text: string, position: number) {
+  const lineStart = text.lastIndexOf('\n', position - 1) + 1;
+
+  return /^[ \t]*/.exec(text.slice(lineStart))?.[0] ?? '';
 }
 
 function isProvideFormbarCall(n: Expression) {

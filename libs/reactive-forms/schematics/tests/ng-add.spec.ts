@@ -613,6 +613,96 @@ describe('ng-add schematic', () => {
     });
   });
 
+  describe('the layout of the added providers', () => {
+    function configWith(providers: string, newLine = '\n') {
+      return `export const appConfig = {\n${providers}\n};\n`.replace(
+        /\n/g,
+        newLine,
+      );
+    }
+
+    async function editedConfig(providers: string, options: Schema = {}) {
+      appTree.overwrite(appConfigPath, configWith(providers));
+
+      return read(await runAdd(options), appConfigPath);
+    }
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('follows a file indented with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(
+        `${outer}providers: [\n${inner}provideRouter(routes),\n${outer}],`,
+      );
+
+      expect(edited).toContain(
+        `${inner}provideRouter(routes),\n${inner}provideFormbar(formbarConfig),\n${inner}componentRegistrationsProvider,`,
+      );
+      expect(edited).toContain(`\n${outer}],`);
+    });
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('indents an added object with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(
+        `${outer}providers: [\n${inner}provideRouter(routes),\n${outer}],`,
+        { splitRegistrations: false },
+      );
+
+      expect(edited).toContain(
+        `\n${inner}{\n${inner}${outer}provide: NGX_FW_COMPONENT_REGISTRATIONS,`,
+      );
+    });
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('indents into an empty array with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(`${outer}providers: [],`);
+
+      expect(edited).toContain(
+        `${outer}providers: [\n${inner}provideFormbar(formbarConfig),`,
+      );
+      expect(edited).toContain(`\n${outer}],`);
+    });
+
+    it.each<[string, string]>([
+      ['a comment after the last element', '    provideRouter(routes) // c'],
+      ['a trailing comma', '    provideRouter(routes),'],
+      ['a comment only', '    // todo'],
+    ])('keeps CRLF line endings with %s', async (_, element) => {
+      appTree.overwrite(
+        appConfigPath,
+        configWith(`  providers: [\n${element}\n  ],`, '\r\n'),
+      );
+
+      const tree = await runAdd({ splitRegistrations: false });
+      const edited = tree.readText(appConfigPath);
+
+      expect(edited).toContain('provideFormbar');
+      expect(edited).not.toMatch(/(?<!\r)\n/);
+    });
+
+    it('adds no whitespace-only line to an array holding only a comment', async () => {
+      const edited = await editedConfig('  providers: [\n    // todo\n  ],');
+
+      expect(edited).toContain(
+        '    // todo\n    provideFormbar(formbarConfig),',
+      );
+      expect(edited).not.toMatch(/^[ \t]+$/m);
+      expect(syntaxErrors(edited)).toEqual([]);
+    });
+
+    it('adds no blank line to an array broken over two lines', async () => {
+      const edited = await editedConfig('  providers: [\n  ],');
+
+      expect(edited).toContain(
+        '  providers: [\n    provideFormbar(formbarConfig),',
+      );
+    });
+  });
+
   describe('Registration Style Token', () => {
     it('generates config-based registration files and formbar.config.ts', async () => {
       const tree = await runAdd({ registrationStyle: 'token' });
