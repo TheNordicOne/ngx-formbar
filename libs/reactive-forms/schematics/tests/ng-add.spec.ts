@@ -873,6 +873,25 @@ describe('ng-add schematic', () => {
       expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(false);
     });
 
+    it('names no helper in the schematics configuration file without helper files', async () => {
+      const tree = await runAdd({ useHelper: false });
+      const schematicsConfig = JSON.parse(
+        read(tree, schematicsConfigPath),
+      ) as NgxFormbarAutomationConfig;
+
+      expect(schematicsConfig).not.toHaveProperty('viewProviderHelperPath');
+    });
+
+    it('names no helper in angular.json without helper files', async () => {
+      const tree = await runAdd({
+        useHelper: false,
+        useSchematicConfig: false,
+      });
+      const [controlDefaults] = await generatorDefaults(tree);
+
+      expect(controlDefaults).not.toHaveProperty('viewProviderHelperPath');
+    });
+
     it('uses the user provided helperPath', async () => {
       const helperPath = 'app/management/forms/helper';
       const finalPath = src(helperPath);
@@ -2614,6 +2633,7 @@ describe('ng-add schematic', () => {
       it.each([
         ['a dynamic import', `import('./bootstrap').catch(console.error);\n`],
         ['a static import', `import './bootstrap';\n`],
+        ['a re-export', `export * from './bootstrap';\n`],
       ])('follows %s from the main file', async (_, main) => {
         const tree = await add(
           workspace('src', {
@@ -2626,6 +2646,21 @@ describe('ng-add schematic', () => {
 
         expect(read(tree, '/src/real.ts')).toContain('provideFormbar(');
         expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
+      });
+
+      it('treats a config from a package as out of reach', async () => {
+        const packageFile = '/node_modules/config-package/index.ts';
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': `import { bootstrapApplication } from '@angular/platform-browser';\nimport { appConfig } from 'config-package';\nbootstrapApplication(App, appConfig);\n`,
+            [packageFile]: `export const appConfig = { providers: [] };\n`,
+          }),
+        );
+
+        expect(read(tree, packageFile)).not.toContain('provideFormbar(');
+        expect(read(tree, '/src/main.ts')).toContain(
+          'mergeApplicationConfig(appConfig, {',
+        );
       });
 
       it('wraps the config in the followed file, not the main file', async () => {
@@ -3164,7 +3199,17 @@ describe('ng-add schematic', () => {
 
     it('keeps the other settings of a generator', async () => {
       const linked = await runAdd({ schematicConfigFileName: 'custom.json' });
+      const workspace = JSON.parse(read(linked, 'angular.json')) as {
+        projects: Record<
+          string,
+          { schematics: Record<string, Record<string, unknown>> }
+        >;
+      };
 
+      workspace.projects['test-app'].schematics[
+        '@ngx-formbar/schematics:control'
+      ].interfaceSuffix = 'Type';
+      linked.overwrite('angular.json', JSON.stringify(workspace));
       appTree = linked;
 
       const tree = await runAdd({
@@ -3173,6 +3218,7 @@ describe('ng-add schematic', () => {
       });
       const [controlDefaults] = await generatorDefaults(tree);
 
+      expect(controlDefaults?.interfaceSuffix).toBe('Type');
       expect(controlDefaults?.registrationType).toBe('config');
       expect(controlDefaults).not.toHaveProperty('schematicsConfig');
     });
