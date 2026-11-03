@@ -8,6 +8,7 @@ import {
   ClassDeclaration,
   ClassLikeDeclaration,
   Decorator,
+  getCombinedModifierFlags,
   getDecorators,
   InterfaceDeclaration,
   isCallExpression,
@@ -18,6 +19,7 @@ import {
   isIntersectionTypeNode,
   isTypeAliasDeclaration,
   isTypeReferenceNode,
+  ModifierFlags,
   Node,
   NodeArray,
   SourceFile,
@@ -404,7 +406,15 @@ function extractComponentInfo(
   const className = classNode.name?.text;
   const configs = contractConfigs(classNode, new Map(), checker, new Set());
 
-  if (!className || configs.length === 0) {
+  if (!className || configs.length === 0 || isAbstract(classNode)) {
+    return undefined;
+  }
+
+  if (!isNamedExport(classNode, className, checker)) {
+    context.logger.warn(
+      `${className} is not a named export, so it is not registered.`,
+    );
+
     return undefined;
   }
 
@@ -424,6 +434,26 @@ function extractComponentInfo(
     componentClassName: className,
     key,
   };
+}
+
+function isAbstract(classNode: ClassDeclaration) {
+  return !!(getCombinedModifierFlags(classNode) & ModifierFlags.Abstract);
+}
+
+/** A registration imports the class by its name. */
+function isNamedExport(
+  classNode: ClassDeclaration,
+  className: string,
+  checker: TypeChecker,
+) {
+  const moduleSymbol = checker.getSymbolAtLocation(classNode.getSourceFile());
+
+  return (
+    !!moduleSymbol &&
+    checker
+      .getExportsOfModule(moduleSymbol)
+      .some(({ name }) => name === className)
+  );
 }
 
 /**

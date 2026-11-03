@@ -6,6 +6,8 @@ This schematic registers every component that implements one of `ReactiveFormbar
 
 It looks through the source root of the project and skips any other project inside it.
 
+It skips abstract classes. It also skips a class that is not a named export, such as `export default class`, with a warning naming the class, as a registration imports it by name.
+
 Each control is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
 | The component                                                                                           | Registered as    |

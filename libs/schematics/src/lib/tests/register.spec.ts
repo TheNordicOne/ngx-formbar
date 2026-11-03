@@ -33,9 +33,12 @@ import {
   hasNamedImport,
 } from './helper';
 import { DiscoverOptions } from '../register/schema';
+import { createTreeProgram } from '../schema/program';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { SourceFile } from 'typescript';
 import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
+
+const PROPERTY_DOES_NOT_EXIST = 2339;
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
@@ -769,6 +772,140 @@ export class OtherPage implements OnInit {
       );
 
       expect(registrations).not.toContain('OtherPage');
+    });
+
+    describe('what a registration cannot import', () => {
+      const header = `import { Component } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface TagsConfig { type: 'tags'; }
+
+@Component({ selector: 'app-tags-input', template: '' })`;
+
+      function collectWarnings() {
+        const warnings: string[] = [];
+        runner.logger.subscribe((entry) => {
+          if (entry.level === 'warn') {
+            warnings.push(entry.message);
+          }
+        });
+
+        return warnings;
+      }
+
+      it('skips an abstract class silently', async () => {
+        const warnings = collectWarnings();
+
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+export abstract class TagsInput implements ReactiveFormbarControl<TagsConfig> {}
+`,
+        );
+
+        expect(registrations).not.toContain('TagsInput');
+        expect(warnings).toEqual([]);
+      });
+
+      it('registers a class extending an abstract one, and not the abstract one', async () => {
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+export abstract class BaseInput<T> implements ReactiveFormbarControl<T> {}
+
+@Component({ selector: 'app-tags', template: '' })
+export class TagsInput extends BaseInput<TagsConfig> {}
+`,
+        );
+
+        expect(registrations).toContain('TagsInput');
+        expect(registrations).not.toContain('BaseInput');
+      });
+
+      it.each<[string, string]>([
+        [
+          'a class without an export',
+          'class TagsInput implements ReactiveFormbarControl<TagsConfig> {}',
+        ],
+        [
+          'a default export',
+          'export default class TagsInput implements ReactiveFormbarControl<TagsConfig> {}',
+        ],
+        [
+          'an export under another name',
+          'class TagsInput implements ReactiveFormbarControl<TagsConfig> {}\nexport { TagsInput as Tags };',
+        ],
+      ])('skips %s with a warning', async (_, declaration) => {
+        const warnings = collectWarnings();
+
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}\n${declaration}\n`,
+        );
+
+        expect(registrations).not.toContain('TagsInput');
+        expect(warnings).toEqual([
+          'TagsInput is not a named export, so it is not registered.',
+        ]);
+      });
+
+      it('registers a class exported after its declaration', async () => {
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+class TagsInput implements ReactiveFormbarControl<TagsConfig> {}
+export { TagsInput };
+`,
+        );
+
+        expect(registrations).toContain('TagsInput');
+      });
+
+      it('does not warn about a class without a contract', async () => {
+        const warnings = collectWarnings();
+
+        await registeredAfterCreating(
+          app('tags/tags-page.ts'),
+          `import { Component } from '@angular/core';
+
+@Component({ selector: 'app-tags-page', template: '' })
+export default class TagsPage {}
+`,
+        );
+
+        expect(warnings).toEqual([]);
+      });
+
+      it('leaves registrations that compile', async () => {
+        for (const [name, declaration] of Object.entries({
+          Abstract: 'export abstract class',
+          Hidden: 'class',
+          Default: 'export default class',
+          Named: 'export class',
+        })) {
+          appTree.create(
+            app(`tags/${name.toLowerCase()}.ts`),
+            `import { Component } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+@Component({ selector: 'app-${name}', template: '' })
+${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' }> {}
+`,
+          );
+        }
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+        const tree = await runSchematic();
+        const file = src(registrationsPath);
+        const { program } = createTreeProgram(tree, '/tsconfig.json', [file]);
+        const missingMembers = program
+          .getSemanticDiagnostics(program.getSourceFile(file))
+          .filter(({ code }) => code === PROPERTY_DOES_NOT_EXIST)
+          .map(({ messageText }) => messageText);
+
+        expect(missingMembers).toEqual([]);
+        expect(read(tree, file)).toContain('NamedInput');
+      });
     });
 
     it.each([

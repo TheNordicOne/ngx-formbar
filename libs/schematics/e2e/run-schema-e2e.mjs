@@ -73,6 +73,23 @@ interface InheritingConfig extends NgxFbControl {
 @Component({ selector: 'app-inheriting-input', template: '' })
 export class InheritingInput extends BaseInput<InheritingConfig> {}
 `;
+const UNREGISTRABLE_CONTROLS = `import { Component } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { BaseInput } from './base-input';
+
+interface UnregistrableConfig extends NgxFbControl {
+  type: 'unregistrable';
+}
+
+@Component({ selector: 'app-abstract-input', template: '' })
+export abstract class AbstractInput extends BaseInput<UnregistrableConfig> {}
+
+@Component({ selector: 'app-hidden-input', template: '' })
+class HiddenInput extends BaseInput<UnregistrableConfig> {}
+
+@Component({ selector: 'app-default-input', template: '' })
+export default class DefaultInput extends BaseInput<UnregistrableConfig> {}
+`;
 const HOST_PAGE = `import { Component } from '@angular/core';
 import { NgxFbForm } from '@ngx-formbar/core';
 
@@ -1415,6 +1432,10 @@ function runAngularJsonDefaultsFlow(appDir) {
     INHERITING_CONTROL,
   );
   writeFileSync(
+    join(sourceRoot, 'app', 'written', 'unregistrable-inputs.ts'),
+    UNREGISTRABLE_CONTROLS,
+  );
+  writeFileSync(
     join(sourceRoot, 'app', 'written', 'summary-page.ts'),
     HOST_PAGE,
   );
@@ -1454,6 +1475,10 @@ function runAngularJsonDefaultsFlow(appDir) {
   check(
     /["']?inheriting["']?:\s*loadComponent\(/.test(registered),
     'register read the type of a config passed through a base class holding the contract',
+  );
+  check(
+    !/["']?unregistrable["']?:/.test(registered),
+    'register skipped abstract, non-exported and default-exported classes, and the app still builds',
   );
   check(
     !registered.includes('SummaryPage'),
