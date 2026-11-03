@@ -12,6 +12,7 @@ import { ScaffoldContext, ScaffoldType, Schema } from '../schema';
 import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
+  exportsIdentifier,
   getAngularComponentNaming,
   getProjectDefinition,
   isWithin,
@@ -297,7 +298,7 @@ function resolveImportPathAndIdentifier(
   if (!pathOption) {
     return [];
   }
-  const { directory, fileName, identifier } = extractFromPath(
+  const { directory, fileName, identifier, namesFile } = extractFromPath(
     pathOption,
     defaultFileOption,
   );
@@ -311,20 +312,26 @@ function resolveImportPathAndIdentifier(
 
   const helperFile = posix.join(resolvedDirectory, fileName);
 
-  const target = [
-    {
-      file: posix.join(resolvedDirectory, 'index.ts'),
-      importPath: resolvedDirectory,
-    },
-    { file: `${helperFile}.ts`, importPath: helperFile },
-  ].find(({ file }) => tree.exists(file));
+  if (
+    !namesFile &&
+    exportsIdentifier(
+      tree,
+      posix.join(resolvedDirectory, 'index.ts'),
+      identifier,
+    )
+  ) {
+    return [
+      buildRelativePath(componentFilePath, resolvedDirectory),
+      identifier,
+    ];
+  }
 
-  if (!target) {
+  if (!tree.exists(`${helperFile}.ts`)) {
     warnHelperNotFound(`${helperFile}.ts`, context);
     return [];
   }
 
-  return [buildRelativePath(componentFilePath, target.importPath), identifier];
+  return [buildRelativePath(componentFilePath, helperFile), identifier];
 }
 
 function warnHelperNotFound(path: string, context: SchematicContext) {
@@ -350,7 +357,12 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
 
   const identifier = inputParts.exportName || defaultParts.exportName;
 
-  return { directory, fileName, identifier };
+  return {
+    directory,
+    fileName,
+    identifier,
+    namesFile: !!inputPathParts.fileName,
+  };
 }
 
 function splitPath(pathPart: string) {

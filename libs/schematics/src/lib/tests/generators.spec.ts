@@ -179,8 +179,13 @@ describe('control schematic', () => {
         expect(hasViewProviderInDecorator).toBe(true);
       });
 
-      it('imports view providers from barrel export using identifier from option', async () => {
+      it('imports a file named with an identifier from that file, not from the index of its folder', async () => {
         addHelperIndexFile(appTree, viewProviderHelperPath);
+        addHelperFile(
+          appTree,
+          `${viewProviderHelperPath}/control-container.view-provider.ts`,
+          'controlContainerViewProviders',
+        );
         const tree = await runSchematic('control', {
           viewProviderHelperPath: viewProviderHelperPathOption,
         });
@@ -191,7 +196,7 @@ describe('control schematic', () => {
 
         const viewProviderImportPath = buildRelativePath(
           defaultComponentOutputPath,
-          src(viewProviderHelperPath),
+          src(`${viewProviderHelperPath}/control-container.view-provider`),
         );
 
         const importsViewProviderHelper = hasNamedImport(
@@ -218,8 +223,13 @@ describe('control schematic', () => {
         expect(hasViewProviderInDecorator).toBe(true);
       });
 
-      it('imports view providers from barrel export using file name from option and default identifier', async () => {
+      it('imports a named file from that file, not from the index of its folder', async () => {
         addHelperIndexFile(appTree, viewProviderHelperPath);
+        addHelperFile(
+          appTree,
+          `${viewProviderHelperPath}/control-container.view-provider.ts`,
+          'viewProviders',
+        );
         const tree = await runSchematic('control', {
           viewProviderHelperPath: `${viewProviderHelperPath}/control-container.view-provider.ts`,
         });
@@ -230,7 +240,7 @@ describe('control schematic', () => {
 
         const viewProviderImportPath = buildRelativePath(
           defaultComponentOutputPath,
-          src(viewProviderHelperPath),
+          src(`${viewProviderHelperPath}/control-container.view-provider`),
         );
 
         const importsViewProviderHelper = hasNamedImport(
@@ -319,6 +329,60 @@ describe('control schematic', () => {
           true,
         );
         expect(decoratorHasProp(sf, 'Component', 'viewProviders')).toBe(true);
+      });
+    });
+
+    describe('a helper folder with an index', () => {
+      const helperFile = `${viewProviderHelperPath}/view-provider.ts`;
+
+      it.each([
+        ['a named export', "export { viewProviders } from './view-provider';"],
+        ['a renamed export', "export { other as viewProviders } from './x';"],
+        ['a star export', "export * from './view-provider';"],
+        ['a declaration', 'export const viewProviders = [];'],
+      ])('imports from the index when it has %s', async (_, index) => {
+        writeTs(appTree, src(`${viewProviderHelperPath}/index.ts`), index);
+        addHelperFile(appTree, helperFile, 'viewProviders');
+
+        const tree = await runSchematic('control', { viewProviderHelperPath });
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        expect(hasNamedImport(sf, '../shared/helper', 'viewProviders')).toBe(
+          true,
+        );
+      });
+
+      it.each([
+        ['other exports', 'export const other = 1;'],
+        [
+          'a type export of that name',
+          "export type { viewProviders } from './x';",
+        ],
+        ['an unexported declaration', 'const viewProviders = [];'],
+      ])('imports from the file when the index has %s', async (_, index) => {
+        writeTs(appTree, src(`${viewProviderHelperPath}/index.ts`), index);
+        addHelperFile(appTree, helperFile, 'viewProviders');
+
+        const tree = await runSchematic('control', { viewProviderHelperPath });
+        const sf = parseTS(read(tree, defaultComponentOutputPath));
+
+        expect(
+          hasNamedImport(sf, '../shared/helper/view-provider', 'viewProviders'),
+        ).toBe(true);
+      });
+
+      it('uses the verbose syntax when neither the index nor a file has the helper', async () => {
+        writeTs(
+          appTree,
+          src(`${viewProviderHelperPath}/index.ts`),
+          'export const other = 1;',
+        );
+
+        const tree = await runSchematic('control', { viewProviderHelperPath });
+
+        expect(read(tree, defaultComponentOutputPath)).toContain(
+          'ControlContainer',
+        );
       });
     });
 

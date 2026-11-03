@@ -23,13 +23,11 @@ All four schematics (`control`, `group`, `block`, `array`) support the same opti
 
 `viewProviderHelperPath` takes one of these forms. It follows [Paths](#paths).
 
-| You write                                             | The helper is                                                   |
-| ----------------------------------------------------- | --------------------------------------------------------------- |
-| `app/shared/helper`                                   | The export `viewProviders` of `view-provider.ts` in that folder |
-| `app/shared/helper/form-helpers.ts`                   | The export `viewProviders` of that file                         |
-| `app/shared/helper/form-helpers.ts#formViewProviders` | The export `formViewProviders` of that file                     |
-
-If the folder has an `index.ts`, the component imports from it, so it has to export the helper too.
+| You write                                             | The helper is                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `app/shared/helper`                                   | The export `viewProviders` of `index.ts` in that folder if it has one, otherwise of `view-provider.ts` in that folder |
+| `app/shared/helper/form-helpers.ts`                   | The export `viewProviders` of that file                                                                               |
+| `app/shared/helper/form-helpers.ts#formViewProviders` | The export `formViewProviders` of that file                                                                           |
 
 When the helper file cannot be found, the generator logs a warning naming the resolved path, and the component uses the verbose syntax.
 
