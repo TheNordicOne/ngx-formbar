@@ -629,41 +629,44 @@ describe('register schematic', () => {
     );
   });
 
-  it('honors the controlRegistrations option when no config file is present', async () => {
-    const files: TestComponentDetails[] = [
-      {
-        path: app('components/form/controls/inline.component.ts'),
-        content: createControlComponent(
-          'inline',
-          inlineProviders,
-          'InlineComponent',
-        ),
-        className: 'InlineComponent',
-        key: 'inline',
-      },
-    ];
-    const customRegistrations = 'app/forms/component-registrations.ts';
+  it.each(['controlRegistrations', 'controlRegistrationsPath'])(
+    'honors the %s option when no config file is present',
+    async (option) => {
+      const files: TestComponentDetails[] = [
+        {
+          path: app('components/form/controls/inline.component.ts'),
+          content: createControlComponent(
+            'inline',
+            inlineProviders,
+            'InlineComponent',
+          ),
+          className: 'InlineComponent',
+          key: 'inline',
+        },
+      ];
+      const customRegistrations = 'app/forms/component-registrations.ts';
 
-    addComponentFiles(appTree, files);
-    provideMap(
-      appTree,
-      appConfigPathRaw,
-      customRegistrations,
-      formbarConfigPath,
-    );
+      addComponentFiles(appTree, files);
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        customRegistrations,
+        formbarConfigPath,
+      );
 
-    const tree = await runSchematic({
-      registrationType: 'config',
-      controlRegistrations: customRegistrations,
-    });
+      const tree = await runSchematic({
+        registrationType: 'config',
+        [option]: customRegistrations,
+      });
 
-    assertRegisteredComponents(
-      tree,
-      files,
-      src(customRegistrations),
-      directComponentRegistrationsHasIdentifier,
-    );
-  });
+      assertRegisteredComponents(
+        tree,
+        files,
+        src(customRegistrations),
+        directComponentRegistrationsHasIdentifier,
+      );
+    },
+  );
 
   it.each([
     'projects/test-app/src/app/forms/component-registrations.ts',

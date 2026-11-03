@@ -45,10 +45,7 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
             generator === 'block' ? withoutHelper : defaults,
           ]),
         ),
-        register: {
-          registrationType: defaults.registrationType,
-          controlRegistrations: defaults.controlRegistrationsPath,
-        },
+        register: withoutHelper,
       },
       projectName,
       NG_ADD_SETTINGS,

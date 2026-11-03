@@ -1150,7 +1150,7 @@ describe('ng-add schematic', () => {
         });
         expect(schematics['@ngx-formbar/schematics:register']).toEqual({
           registrationType: 'config',
-          controlRegistrations: registrationsFile,
+          controlRegistrationsPath: registrationsFile,
         });
         expect(
           Object.keys(schematics).filter((key) =>

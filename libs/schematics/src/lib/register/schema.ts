@@ -4,6 +4,7 @@ import { FormbarComponentInfo } from './component-info.type';
 export interface DiscoverOptions {
   project?: string;
   registrationType?: RegistrationType;
+  controlRegistrationsPath?: string;
   controlRegistrations?: string | null;
   schematicsConfig?: string;
   include?: string[];

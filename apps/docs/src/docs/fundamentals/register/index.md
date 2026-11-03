@@ -6,14 +6,15 @@ This schematic tries to find all relevant controls and registers them at the app
 
 ## Options
 
-| Option                 | Type                | Required | Default (control/group/block) | Description                                                                                                                  |
-| ---------------------- | ------------------- | -------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| --project              | string              | No       | workspace default project     | Angular project name where files are generated.                                                                              |
-| --registrationType     | 'token' \| 'config' | No       | 'token'                       | Which registration type is used.                                                                                             |
-| --controlRegistrations | string              | No       | -                             | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
-| --schematicsConfig     | string              | No       | -                             | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --include              | array               | No       | `["\*\*/*.ts"]`               | Glob patterns to include when searching for components                                                                       |
-| --exclude              | array               | No       | `[]`                          | Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                 |
+| Option                     | Type                | Required | Default                   | Description                                                                                                                  |
+| -------------------------- | ------------------- | -------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| --project                  | string              | No       | workspace default project | Angular project name where files are generated.                                                                              |
+| --registrationType         | 'token' \| 'config' | No       | 'token'                   | Which registration type is used.                                                                                             |
+| --controlRegistrationsPath | string              | No       | -                         | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
+| --controlRegistrations     | string              | No       | -                         | The same as `--controlRegistrationsPath`.                                                                                    |
+| --schematicsConfig         | string              | No       | -                         | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
+| --include                  | array               | No       | `["\*\*/*.ts"]`           | Glob patterns to include when searching for components                                                                       |
+| --exclude                  | array               | No       | `[]`                      | Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                 |
 
 ## Setting Options
 
@@ -50,7 +51,7 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
       "schematics": {
         "@ngx-formbar/schematics:register": {
           "registrationType": "token",
-          "controlRegistrations": "app/form/registrations.ts",
+          "controlRegistrationsPath": "app/form/registrations.ts",
           "include": ["**/components/form/controls/**"],
           "exclude": ["**/components/form/controls/secret/**"]
         }

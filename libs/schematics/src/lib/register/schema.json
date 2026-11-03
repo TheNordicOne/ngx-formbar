@@ -17,9 +17,13 @@
       "description": "How components will be registered",
       "default": "token"
     },
-    "controlRegistrations": {
+    "controlRegistrationsPath": {
       "type": "string",
       "description": "The component registrations file"
+    },
+    "controlRegistrations": {
+      "type": "string",
+      "description": "The same as controlRegistrationsPath"
     },
     "schematicsConfig": {
       "type": "string",

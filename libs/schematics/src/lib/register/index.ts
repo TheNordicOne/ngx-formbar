@@ -59,7 +59,9 @@ function mergeOptions(
   const discoverConfig = automationConfig ? automationConfig.discovery : {};
 
   const configuredRegistrations =
-    automationConfig?.controlRegistrationsPath ?? options.controlRegistrations;
+    automationConfig?.controlRegistrationsPath ??
+    options.controlRegistrationsPath ??
+    options.controlRegistrations;
 
   const controlRegistrations = resolveRegistrationsPath(
     tree,
