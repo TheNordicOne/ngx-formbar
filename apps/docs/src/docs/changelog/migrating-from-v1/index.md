@@ -61,7 +61,7 @@ The `--hostDirectiveHelperPath` option no longer exists. Generators emit interfa
 
 `--path` inside the project is relative to the workspace root, as in Angular's generators. In a project rooted at the workspace root (the default `ng new` layout), `--path app/forms` now writes to `app/forms`, where v1 wrote to `src/app/forms`. A path outside the project goes under the source root, a leading `/` means the workspace root, and a path inside another project fails.
 
-A schematics configuration file anywhere other than the `app` folder of the source root or the workspace root is no longer found, so set `schematicsConfig` to its path. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
+A schematics configuration file anywhere other than the `app` folder of the source root or the workspace root is no longer found, so set `schematicsConfig` to its path. A `schematicsConfig` pointing at a missing file now fails. A project no longer picks up another project's file. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
 
 Generated file and class names now follow Angular's `@schematics/angular:component` config, so by default there is no `.component`/`Component` suffix. The config interface is named with a `Config` suffix. See [Naming](/fundamentals/generators#naming) for the full behavior.
 
