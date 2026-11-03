@@ -8,6 +8,8 @@ It looks through the source root of the project and skips any other project insi
 
 It skips abstract classes. It also skips a class that is not a named export, such as `export default class`, with a warning naming the class, as a registration imports it by name.
 
+A component it cannot read a contract from is skipped too. If its file mentions one of the contracts, a warning names the class.
+
 Each component is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
 | The component                                                                                                       | Registered as    |

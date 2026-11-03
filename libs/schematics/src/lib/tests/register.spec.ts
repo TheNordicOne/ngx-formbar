@@ -775,6 +775,75 @@ export class OtherPage implements OnInit {
       expect(registrations).not.toContain('OtherPage');
     });
 
+    describe('a component whose file mentions a contract', () => {
+      const header = `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';`;
+      const decorator = "@Component({ selector: 'app-x', template: '' })";
+      const nameInput = 'readonly name = input.required<string>();';
+
+      function warned() {
+        const warnings: string[] = [];
+        runner.logger.subscribe((entry) => {
+          if (entry.level === 'warn') {
+            warnings.push(entry.message);
+          }
+        });
+
+        return warnings;
+      }
+
+      it('warns with the class name when no contract can be read', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${header}
+
+${decorator}
+export class Wrapped implements Required<ReactiveFormbarControl> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).not.toContain('Wrapped');
+        expect(warnings).toEqual([
+          'Wrapped is not registered. Its file mentions ReactiveFormbarControl, but this schematic cannot read a contract from the class.',
+        ]);
+      });
+
+      it.each<[string, string, string]>([
+        ['an abstract class', 'export abstract class Wrapped', header],
+        ['a class that is not exported', 'class Wrapped', header],
+        [
+          'an ordinary component',
+          'export class Wrapped',
+          "import { Component, input } from '@angular/core';",
+        ],
+        [
+          'a component with a longer name containing a contract',
+          'export class Wrapped',
+          `import { Component, input } from '@angular/core';
+type MyReactiveFormbarControlOptions = object;`,
+        ],
+      ])('stays silent for %s', async (_, declaration, imports) => {
+        const warnings = warned();
+
+        await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${imports}
+
+${decorator}
+${declaration} {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(warnings).toEqual([]);
+      });
+    });
+
     describe('what a registration cannot import', () => {
       const nameInput = 'readonly name = input.required<string>();';
       const header = `import { Component, input } from '@angular/core';

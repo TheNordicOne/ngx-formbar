@@ -392,11 +392,19 @@ function extractComponentInfo(
   const className = classNode.name?.text;
   const configs = contractConfigs(classNode, new Map(), checker, new Set());
 
-  if (!className || configs.length === 0 || isAbstract(classNode)) {
+  if (!className || isAbstract(classNode)) {
     return undefined;
   }
 
-  if (!isNamedExport(classNode, className, checker)) {
+  const namedExport = isNamedExport(classNode, className, checker);
+
+  if (configs.length === 0) {
+    warnAboutMentionedContract(classNode, className, namedExport, context);
+
+    return undefined;
+  }
+
+  if (!namedExport) {
     context.logger.warn(
       `${className} is not a named export, so it is not registered.`,
     );
@@ -418,6 +426,25 @@ function extractComponentInfo(
       ? undefined
       : `${className} has no single string \`type\` in its config, so it is registered as "${key}".`,
   };
+}
+
+/** A file naming a contract suggests the class was meant to implement it. */
+function warnAboutMentionedContract(
+  classNode: ClassDeclaration,
+  className: string,
+  namedExport: boolean,
+  context: SchematicContext,
+) {
+  const text = classNode.getSourceFile().text;
+  const contract = contracts.find((name) =>
+    new RegExp(`\\b${name}\\b`).test(text),
+  );
+
+  if (namedExport && contract) {
+    context.logger.warn(
+      `${className} is not registered. Its file mentions ${contract}, but this schematic cannot read a contract from the class.`,
+    );
+  }
 }
 
 function isAbstract(classNode: ClassDeclaration) {
