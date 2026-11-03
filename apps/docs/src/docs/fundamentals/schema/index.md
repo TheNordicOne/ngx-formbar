@@ -38,7 +38,7 @@ This runs the configured emitters and writes their output. An empty union fails 
 
 The generator reads your project's TypeScript configuration, so path aliases in your content union work.
 
-## Options
+### Options
 
 | Option             | Type   | Required | Default                   | Description                                                                                                                                           |
 | ------------------ | ------ | -------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
