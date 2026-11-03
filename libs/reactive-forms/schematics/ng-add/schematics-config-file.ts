@@ -7,6 +7,7 @@ import {
   isWithin,
   joinToSourceRoot,
   resolveWithinWorkspace,
+  sourceRootValue,
 } from '@ngx-formbar/setup';
 import { posix } from 'node:path';
 import {
@@ -15,6 +16,11 @@ import {
   GeneratorDefaults,
 } from './helper';
 import { RuleContext } from './schema';
+import {
+  DEFAULT_CONTENT_TYPE_EXPORT_NAME,
+  DEFAULT_CONTENT_TYPE_FILE_NAME,
+  DEFAULT_CONTENT_TYPE_PATH,
+} from '../shared/constants';
 
 export const SHARED_CONFIG_FILE = `/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
 
@@ -90,21 +96,38 @@ export function schematicsConfigFile(
   );
 }
 
-/** Whether the file this run keeps takes its content union from another file. */
-export function keptConfigUsesOtherUnion(
+/** The `schema.type` this run seeds its content union for. */
+export function seededUnionType(sourceRoot: string): string {
+  return `${sourceRootValue(joinToSourceRoot(`${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`, sourceRoot), sourceRoot)}#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`;
+}
+
+/**
+ * What the file of this run says about the content union: `new` without a file,
+ * `unset` for a kept file without `schema.type`.
+ */
+export function keptConfigUnion(
   tree: Tree,
   ruleContext: RuleContext,
   union: string,
-): boolean {
+): 'new' | 'unset' | 'this' | 'other' {
   const file = schematicsConfigFile(tree, ruleContext);
-  const kept = tree.exists(file) ? tree.readJson(file) : null;
+
+  if (!tree.exists(file)) {
+    return 'new';
+  }
+
+  const kept = tree.readJson(file);
   const schema = isJsonObject(kept) ? kept.schema : null;
   const type = schema && isJsonObject(schema) ? schema.type : null;
 
-  return (
-    typeof type === 'string' &&
-    resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) !== union
-  );
+  if (typeof type !== 'string') {
+    return 'unset';
+  }
+
+  return resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) ===
+    union
+    ? 'this'
+    : 'other';
 }
 
 /** The settings of this run that a kept file does not hold, as `name: value`. */

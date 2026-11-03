@@ -70,6 +70,8 @@ With source root `src`, `ng add` uses the first row that matches:
 
 The same settings means the same registration style, registrations file and view provider helper as this run. A kept file is not changed, and a warning names each of those settings it does not have.
 
+`ng add` creates the content union file only for a new schematics configuration file or a kept one that points at it. A kept file without `schema.type` gets a warning naming the setting.
+
 To name the location yourself:
 
 | You pass                              | `ng add` uses                                                                                  |

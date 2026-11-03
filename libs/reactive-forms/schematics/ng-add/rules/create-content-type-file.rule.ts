@@ -9,7 +9,11 @@ import {
 import { joinToSourceRoot } from '@ngx-formbar/setup';
 import { posix } from 'node:path';
 import { RuleContext } from '../schema';
-import { keptConfigUsesOtherUnion } from '../schematics-config-file';
+import {
+  keptConfigUnion,
+  schematicsConfigFile,
+  seededUnionType,
+} from '../schematics-config-file';
 import { skipExistingFiles } from './skip-existing-files.rule';
 import {
   DEFAULT_CONTENT_TYPE_FILE_NAME,
@@ -21,22 +25,30 @@ import {
  * scaffolds have somewhere to add each generated config interface, and the
  * `schema` schematic has somewhere to read the union from, out of the box.
  * Only the schematics configuration file references it (via `schema.type`), so it is
- * seeded only alongside that file, and not for a kept file naming another union.
+ * seeded only alongside a new file or a kept file already pointing at it.
  */
 export function createContentTypeFile(ruleContext: RuleContext): Rule {
   return (tree, context) => {
     const { sourceRoot, useSchematicConfig } = ruleContext;
 
-    const directory = joinToSourceRoot(DEFAULT_CONTENT_TYPE_PATH, sourceRoot);
+    if (!useSchematicConfig) {
+      return;
+    }
 
-    if (
-      !useSchematicConfig ||
-      keptConfigUsesOtherUnion(
-        tree,
-        ruleContext,
-        posix.join(directory, `${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`),
-      )
-    ) {
+    const directory = joinToSourceRoot(DEFAULT_CONTENT_TYPE_PATH, sourceRoot);
+    const kept = keptConfigUnion(
+      tree,
+      ruleContext,
+      posix.join(directory, `${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`),
+    );
+
+    if (kept === 'unset') {
+      context.logger.warn(
+        `${schematicsConfigFile(tree, ruleContext)} stays as it is, without this setting of this run: schema.type: ${seededUnionType(sourceRoot)}. No content union file is created for it.`,
+      );
+    }
+
+    if (kept === 'unset' || kept === 'other') {
       return;
     }
 

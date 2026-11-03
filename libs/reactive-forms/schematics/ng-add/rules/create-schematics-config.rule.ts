@@ -8,25 +8,17 @@ import {
 } from '@angular-devkit/schematics';
 import { RuleContext } from '../schema';
 import { skipExistingFiles } from './skip-existing-files.rule';
-import {
-  joinToSourceRoot,
-  NgxFormbarAutomationConfig,
-  sourceRootValue,
-} from '@ngx-formbar/setup';
+import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 import { generatorDefaults } from '../helper';
 import {
   ignoredSettings,
   ownSchematicsConfigFile,
   schematicsConfigFile,
+  seededUnionType,
   settingsStoppingToApply,
   SHARED_CONFIG_FILE,
 } from '../schematics-config-file';
 import { posix } from 'node:path';
-import {
-  DEFAULT_CONTENT_TYPE_EXPORT_NAME,
-  DEFAULT_CONTENT_TYPE_FILE_NAME,
-  DEFAULT_CONTENT_TYPE_PATH,
-} from '../../shared/constants';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
@@ -48,7 +40,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     const schematicConfig: NgxFormbarAutomationConfig = {
       ...generatorDefaults(ruleContext),
       schema: {
-        type: `${sourceRootValue(joinToSourceRoot(`${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`, sourceRoot), sourceRoot)}#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
+        type: seededUnionType(sourceRoot),
         emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
       },
     };

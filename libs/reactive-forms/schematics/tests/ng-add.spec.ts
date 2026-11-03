@@ -3667,6 +3667,10 @@ describe('ng-add schematic', () => {
   });
 
   describe('a re-run with settings a kept schematics configuration file lacks', () => {
+    const pointingAtUnion = {
+      schema: { type: 'app/types/content.type.ts#AppContent' },
+    };
+
     async function warningsOfRun(options: Schema, project = 'test-app') {
       const warnings: string[] = [];
       const subscription = runner.logger.subscribe((entry) => {
@@ -3744,6 +3748,7 @@ describe('ng-add schematic', () => {
       appTree.create(
         schematicsConfigPath,
         JSON.stringify({
+          ...pointingAtUnion,
           registrationType: 'token',
           viewProviderHelperPath: 'app/shared/helper',
         }),
@@ -3799,6 +3804,7 @@ describe('ng-add schematic', () => {
       appTree.create(
         schematicsConfigPath,
         JSON.stringify({
+          ...pointingAtUnion,
           viewProviderHelperPath: 'app/shared/helper',
           [setting]: value,
         }),
@@ -3815,7 +3821,7 @@ describe('ng-add schematic', () => {
     ])('warns about %s', async (_, value) => {
       appTree.create(
         schematicsConfigPath,
-        JSON.stringify({ viewProviderHelperPath: value }),
+        JSON.stringify({ ...pointingAtUnion, viewProviderHelperPath: value }),
       );
 
       const { warnings } = await warningsOfRun({});
@@ -3912,7 +3918,10 @@ describe('ng-add schematic', () => {
           },
         ],
       ])('shares the file with %s', async (_, settings) => {
-        appTree.overwrite(sharedFile, JSON.stringify(settings));
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({ ...pointingAtUnion, ...settings }),
+        );
 
         const { tree, warnings } = await warningsOfRun(
           { schematicsConfigPath: '/' },
@@ -3988,6 +3997,7 @@ describe('ng-add schematic', () => {
 
         it('uses one written by hand with the same settings', async () => {
           const handWritten = JSON.stringify({
+            ...pointingAtUnion,
             viewProviderHelperPath: './app/shared/helper',
             control: { interfaceSuffix: 'Type' },
           });
@@ -4148,7 +4158,12 @@ describe('ng-add schematic', () => {
     it('stays when it points at the file the lookup finds', async () => {
       const ownLink = 'app/formbar-schematic.config.json';
 
-      appTree.create(schematicsConfigPath, '{}');
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          schema: { type: 'app/types/content.type.ts#AppContent' },
+        }),
+      );
       appTree.overwrite(
         'angular.json',
         read(appTree, 'angular.json').split(link).join(ownLink),
@@ -4335,10 +4350,45 @@ describe('ng-add schematic', () => {
       expect(exists(await runAdd(), contentTypePath)).toBe(true);
     });
 
-    it('seeds the union with a kept config without a schema', async () => {
-      appTree.create(schematicsConfigPath, JSON.stringify({}));
+    it.each<[string, object]>([
+      ['no schema', {}],
+      ['a schema without a type', { schema: { emitters: [] } }],
+    ])('seeds no union with a kept config with %s', async (_, kept) => {
+      appTree.create(schematicsConfigPath, JSON.stringify(kept));
 
-      expect(exists(await runAdd(), contentTypePath)).toBe(true);
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('names the setting a kept config without a schema lacks', async () => {
+      appTree.create(schematicsConfigPath, JSON.stringify({}));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await runAdd();
+
+      expect(warnings).toContain(
+        `${schematicsConfigPath} stays as it is, without this setting of this run: schema.type: app/types/content.type.ts#AppContent. No content union file is created for it.`,
+      );
+    });
+
+    it('does not warn about a kept config naming another union', async () => {
+      appTree.create(schematicsConfigPath, JSON.stringify(elsewhere));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await runAdd();
+
+      expect(
+        warnings.filter((message) => message.includes('schema.type')),
+      ).toEqual([]);
     });
   });
 
