@@ -16,7 +16,11 @@ type Story = StoryObj<StoryFormHostComponent>;
 
 export const SingleValidator: Story = {
   parameters: {
-    docs: { description: { story: 'Validates a single minLength validator triggers and clears.' } },
+    docs: {
+      description: {
+        story: 'Validates a single minLength validator triggers and clears.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -61,7 +65,11 @@ export const SingleValidator: Story = {
 
 export const MultipleValidators: Story = {
   parameters: {
-    docs: { description: { story: 'Validates multiple independent validators on one control.' } },
+    docs: {
+      description: {
+        story: 'Validates multiple independent validators on one control.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -126,7 +134,12 @@ export const MultipleValidators: Story = {
 
 export const CombinedValidator: Story = {
   parameters: {
-    docs: { description: { story: 'Validates a combined validator that applies minLength, required, and letter rules.' } },
+    docs: {
+      description: {
+        story:
+          'Validates a combined validator that applies minLength, required, and letter rules.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -165,9 +178,7 @@ export const CombinedValidator: Story = {
     // Clear the input — triggers required (from combined) as well
     await userEvent.clear(input);
 
-    await expect(
-      await canvas.findByText('Required'),
-    ).toBeInTheDocument();
+    await expect(await canvas.findByText('Required')).toBeInTheDocument();
 
     // Type a valid value satisfying all combined validators
     await userEvent.type(input, 'abc');
@@ -178,9 +189,7 @@ export const CombinedValidator: Story = {
     await expect(
       canvas.queryByText('Must contain the letter "a"'),
     ).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByText('Required'),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Required')).not.toBeInTheDocument();
   },
 };
 
@@ -190,7 +199,11 @@ export const CombinedValidator: Story = {
 
 export const AsyncValidator: Story = {
   parameters: {
-    docs: { description: { story: 'Validates async validators run after sync validators pass.' } },
+    docs: {
+      description: {
+        story: 'Validates async validators run after sync validators pass.',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -235,13 +248,13 @@ export const AsyncValidator: Story = {
 
     await waitFor(
       async () => {
-    await expect(
+        await expect(
           canvas.queryByText('Minimum 3 characters required'),
         ).not.toBeInTheDocument();
-    await expect(
+        await expect(
           canvas.queryByText('Must contain the letter "a"'),
         ).not.toBeInTheDocument();
-    await expect(
+        await expect(
           await canvas.findByText('Value must contain "async"'),
         ).toBeInTheDocument();
       },
@@ -254,7 +267,7 @@ export const AsyncValidator: Story = {
 
     await waitFor(
       async () => {
-    await expect(
+        await expect(
           canvas.queryByText('Value must contain "async"'),
         ).not.toBeInTheDocument();
       },
@@ -269,7 +282,12 @@ export const AsyncValidator: Story = {
 
 export const GroupValidator: Story = {
   parameters: {
-    docs: { description: { story: 'Validates group-level sync validators (no-duplicates, forbidden-letter-a).' } },
+    docs: {
+      description: {
+        story:
+          'Validates group-level sync validators (no-duplicates, forbidden-letter-a).',
+      },
+    },
   },
   args: {
     formConfig: {
@@ -293,8 +311,12 @@ export const GroupValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const firstInput = await canvas.findByRole('textbox', { name: 'First label' });
-    const secondInput = await canvas.findByRole('textbox', { name: 'Second label' });
+    const firstInput = await canvas.findByRole('textbox', {
+      name: 'First label',
+    });
+    const secondInput = await canvas.findByRole('textbox', {
+      name: 'Second label',
+    });
 
     // Initial state: group is pristine — errors not shown
     await expect(
@@ -343,7 +365,9 @@ export const GroupValidator: Story = {
 
 export const GroupAsyncValidator: Story = {
   parameters: {
-    docs: { description: { story: 'Validates a group-level async validator.' } },
+    docs: {
+      description: { story: 'Validates a group-level async validator.' },
+    },
   },
   args: {
     formConfig: {
@@ -367,7 +391,9 @@ export const GroupAsyncValidator: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const firstInput = await canvas.findByRole('textbox', { name: 'First label' });
+    const firstInput = await canvas.findByRole('textbox', {
+      name: 'First label',
+    });
 
     // Initial state: group is pristine — error not shown
     await expect(
@@ -380,7 +406,7 @@ export const GroupAsyncValidator: Story = {
 
     await waitFor(
       async () => {
-    await expect(
+        await expect(
           await canvas.findByText('At least one value must contain "sync"'),
         ).toBeInTheDocument();
       },
@@ -393,7 +419,7 @@ export const GroupAsyncValidator: Story = {
 
     await waitFor(
       async () => {
-    await expect(
+        await expect(
           canvas.queryByText('At least one value must contain "sync"'),
         ).not.toBeInTheDocument();
       },

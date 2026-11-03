@@ -700,9 +700,7 @@ export const GroupRemoveLastResetClearsCache: Story = {
       await userEvent.clear(triggerInput);
       await userEvent.type(triggerInput, 'hide');
 
-      await expect(
-        canvas.queryByText('Cached group'),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByText('Cached group')).not.toBeInTheDocument();
 
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Reset' }),
@@ -1105,9 +1103,9 @@ export const ThreeLevelInheritance: Story = {
     ).not.toBeInTheDocument();
 
     // grandparent's default applies to its direct leaf
-    await expect(
-      getFormPath('grandparentGroup', 'grandparentField'),
-    ).toBe('default-grandparent');
+    await expect(getFormPath('grandparentGroup', 'grandparentField')).toBe(
+      'default-grandparent',
+    );
     // parent overrides to last → parent's leaves preserve their typed values
     await expect(
       getFormPath('grandparentGroup', 'parentGroup', 'parentField'),

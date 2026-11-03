@@ -52,9 +52,7 @@ export const ResetReappliesComputedValues: Story = {
     await expect(derived).toHaveValue('Goodbye World');
 
     // Reset — source reverts to 'Hello', derived should recompute
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(source).toHaveValue('Hello');
     await expect(derived).toHaveValue('Hello World');
   },
@@ -113,9 +111,7 @@ export const ResetClearsManualOverride: Story = {
     await expect(combo).toHaveValue('MANUAL');
 
     // Reset — part1 reverts to 'A', computed becomes 'AB' (different from 'XB')
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(combo).toHaveValue('AB');
   },
 };
@@ -168,9 +164,7 @@ export const ResetWithUnchangedComputedDependencies: Story = {
 
     // Reset — dependencies are unchanged (A + B = AB, same as initial).
     // combo should still show 'AB' (computed re-applied).
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(combo).toHaveValue('AB');
   },
 };
@@ -216,9 +210,7 @@ export const ResetReEvaluatesDisabledExpression: Story = {
     await expect(target).toBeDisabled();
 
     // Reset — toggle reverts to '', target should re-enable
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(
       await canvas.findByRole('textbox', { name: 'Target' }),
     ).toBeEnabled();
@@ -269,9 +261,7 @@ export const ResetReEvaluatesHiddenExpression: Story = {
     ).not.toBeInTheDocument();
 
     // Reset — toggle reverts to '', target should become visible again
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(
       await canvas.findByRole('textbox', { name: 'Hideable Target' }),
     ).toBeInTheDocument();
@@ -319,9 +309,7 @@ export const ResetReEvaluatesReadonlyExpression: Story = {
     await expect(target).toHaveAttribute('readonly');
 
     // Reset — toggle reverts to '', target should lose readonly
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(
       await canvas.findByRole('textbox', { name: 'Target' }),
     ).not.toHaveAttribute('readonly');
@@ -358,9 +346,7 @@ export const ResetUpdatesDynamicLabels: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Initial dynamic label
-    await expect(
-      await canvas.findByText('Initial Label'),
-    ).toBeInTheDocument();
+    await expect(await canvas.findByText('Initial Label')).toBeInTheDocument();
 
     // Change source
     const source = await canvas.findByRole('textbox', { name: 'Source' });
@@ -369,12 +355,8 @@ export const ResetUpdatesDynamicLabels: Story = {
     await expect(await canvas.findByText('Custom Label')).toBeInTheDocument();
 
     // Reset — source reverts to 'Initial', label should update
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
-    await expect(
-      await canvas.findByText('Initial Label'),
-    ).toBeInTheDocument();
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
+    await expect(await canvas.findByText('Initial Label')).toBeInTheDocument();
   },
 };
 
@@ -413,9 +395,7 @@ export const ResetPreservesValidators: Story = {
     ).toBeInTheDocument();
 
     // Reset — form becomes pristine, error message disappears
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Reset' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
     await expect(
       canvas.queryByText('Minimum 3 characters required'),
     ).not.toBeInTheDocument();

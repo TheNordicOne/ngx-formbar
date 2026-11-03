@@ -196,7 +196,9 @@ export const InsertAtPosition: Story = {
 
     await userEvent.type(afterInsert[1], 'b');
     await expect(
-      (await canvas.findAllByRole('textbox')).map((i) => (i as HTMLInputElement).value),
+      (await canvas.findAllByRole('textbox')).map(
+        (i) => (i as HTMLInputElement).value,
+      ),
     ).toEqual(['a', 'b', 'c']);
   },
 };
@@ -301,9 +303,9 @@ export const ArrayHiddenKeep: Story = {
 
     // Re-show — the row reappears with its value
     await userEvent.clear(toggle);
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toHaveValue(
-      'kept',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toHaveValue('kept');
   },
 };
 
@@ -353,7 +355,9 @@ export const ArrayHiddenRemove: Story = {
 
     // Re-show — the array re-attaches and its rows render again
     await userEvent.clear(toggle);
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toBeInTheDocument();
     await expect(getFormValue()['tags']).toBeDefined();
   },
 };
@@ -602,7 +606,9 @@ export const ArrayDisabledCascades: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByTestId('tags-add'));
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toBeEnabled();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toBeEnabled();
 
     const toggle = await canvas.findByRole('textbox', {
       name: 'Type "off" to disable',
@@ -750,9 +756,9 @@ export const LoadShrinks: Story = {
     await userEvent.click(add);
     await userEvent.click(add);
     await userEvent.click(add);
-    await expect(await canvas.findAllByRole('textbox', { name: 'Tag' })).toHaveLength(
-      3,
-    );
+    await expect(
+      await canvas.findAllByRole('textbox', { name: 'Tag' }),
+    ).toHaveLength(3);
 
     // Load fewer rows than present
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
@@ -805,9 +811,9 @@ export const LoadAbsentKeyEmpties: Story = {
       canvas.queryByRole('textbox', { name: 'Tag' }),
     ).not.toBeInTheDocument();
     await expect(getFormValue()['tags']).toEqual([]);
-    await expect(await canvas.findByRole('textbox', { name: 'Title' })).toHaveValue(
-      'loaded',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Title' }),
+    ).toHaveValue('loaded');
   },
 };
 
@@ -851,9 +857,9 @@ export const LoadNestedArray: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Ada',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Name' }),
+    ).toHaveValue('Ada');
     const nicknames = await canvas.findAllByRole('textbox', {
       name: 'Nickname',
     });
@@ -897,12 +903,12 @@ export const LoadPartialRow: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Ada',
-    );
-    await expect(await canvas.findByRole('textbox', { name: 'Email' })).toHaveValue(
-      'none',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Name' }),
+    ).toHaveValue('Ada');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Email' }),
+    ).toHaveValue('none');
   },
 };
 
@@ -1249,7 +1255,9 @@ export const RowChildReadonlyInitialState: Story = {
       await canvas.findByRole('textbox', { name: 'Name' }),
     ).toHaveAttribute('readonly');
 
-    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Lock toggle' }));
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Lock toggle' }),
+    );
     await expect(
       await canvas.findByRole('textbox', { name: 'Name' }),
     ).not.toHaveAttribute('readonly');
@@ -1707,7 +1715,9 @@ export const RowChildValueStrategyDefault: Story = {
     await expect(
       canvas.queryByRole('textbox', { name: 'Name' }),
     ).not.toBeInTheDocument();
-    await expect(getFormValue()['contacts']).toEqual([{ name: 'default-name' }]);
+    await expect(getFormValue()['contacts']).toEqual([
+      { name: 'default-name' },
+    ]);
 
     await userEvent.clear(toggle);
     await expect(
@@ -1903,7 +1913,9 @@ export const RowChildUpdateOnSubmit: Story = {
     await userEvent.tab();
     await expect(getFormValue()['tags']).not.toEqual(['submit-text']);
 
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
     await expect(getFormValue()['tags']).toEqual(['submit-text']);
   },
 };
@@ -2040,8 +2052,12 @@ export const ArrayRowTestIdComposition: Story = {
 
     // Scalar row: input and row operation buttons
     await expect(await canvas.findByTestId('tags-0-input')).toBeInTheDocument();
-    await expect(await canvas.findByTestId('tags-0-remove')).toBeInTheDocument();
-    await expect(await canvas.findByTestId('tags-0-insert')).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('tags-0-remove'),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('tags-0-insert'),
+    ).toBeInTheDocument();
     await expect(
       await canvas.findByTestId('tags-0-move-up'),
     ).toBeInTheDocument();
@@ -2067,7 +2083,7 @@ export const RowChildHideStrategyRemoveInGroupRow: Story = {
     docs: {
       description: {
         story:
-          "A child inside a group row with hideStrategy remove drops its own key from each row object when hidden (siblings and rows remain), and re-attaches the key with its cached value on show.",
+          'A child inside a group row with hideStrategy remove drops its own key from each row object when hidden (siblings and rows remain), and re-attaches the key with its cached value on show.',
       },
     },
   },
@@ -2553,7 +2569,9 @@ export const RowChildUpdateOnSubmitInGroup: Story = {
     await userEvent.tab();
     await expect(getFormValue()['contacts']).not.toEqual([{ name: 'Ada' }]);
 
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
     await expect(getFormValue()['contacts']).toEqual([{ name: 'Ada' }]);
   },
 };
@@ -2596,7 +2614,9 @@ export const RowChildDynamicLabelInGroup: Story = {
     await userEvent.click(await canvas.findByTestId('contacts-add'));
     await expect(await canvas.findByText('email address')).toBeInTheDocument();
 
-    const fieldType = await canvas.findByRole('textbox', { name: 'Field Type' });
+    const fieldType = await canvas.findByRole('textbox', {
+      name: 'Field Type',
+    });
     await userEvent.clear(fieldType);
     await userEvent.type(fieldType, 'phone');
     await expect(await canvas.findByText('phone address')).toBeInTheDocument();
@@ -2672,10 +2692,9 @@ export const RowGroupTopHiddenKeep: Story = {
       '',
       '',
     ]);
-    await expect(shownEmails.map((i) => (i as HTMLInputElement).value)).toEqual([
-      '',
-      '',
-    ]);
+    await expect(shownEmails.map((i) => (i as HTMLInputElement).value)).toEqual(
+      ['', ''],
+    );
   },
 };
 
