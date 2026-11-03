@@ -6,13 +6,14 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { app, src, writeTs } from './helper';
-import { COMPONENT_SCHEMATIC } from '@ngx-formbar/setup';
 import { strings } from '@angular-devkit/core';
 const { classify } = strings;
 import {
   CORE_PACKAGE_NAME,
   REACTIVE_FORMS_PACKAGE_NAME,
 } from '../shared/constants';
+
+const COMPONENT_SCHEMATIC = '@schematics/angular:component';
 
 export const COLLECTION_PATH = join(
   __dirname,
@@ -104,6 +105,11 @@ export function setComponentTypeConfig(
   };
 
   appTree.overwrite('/angular.json', JSON.stringify(angularJson, null, 2));
+}
+
+/** Adds a project whose root is the workspace root, so every other project sits inside it. */
+export function addRootProject(appTree: UnitTestTree, name: string): void {
+  addProject(appTree, name, '');
 }
 
 export function addProject(
@@ -331,6 +337,14 @@ export function addHelperIndexFile(
   ].join('\n');
 
   writeTs(appTree, src(`${helperPath}/index.ts`), index);
+}
+
+export function addHelperFile(
+  appTree: UnitTestTree,
+  helperFilePath: string,
+  identifier: string,
+): void {
+  writeTs(appTree, src(helperFilePath), `export const ${identifier} = [];`);
 }
 
 export function addComponentFiles(

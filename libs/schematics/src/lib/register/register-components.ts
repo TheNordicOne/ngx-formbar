@@ -5,6 +5,7 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import { RegisterContext } from './schema';
+import { registrationsNotFoundMessage } from '@ngx-formbar/setup';
 import { RegisterComponentContext } from '../shared/schema';
 import { registerTypeToken } from '../shared/rules/register-type-token.rule';
 import { registerTypeConfig } from '../shared/rules/register-type-map.rule';
@@ -21,11 +22,13 @@ export function registerComponents(
     return;
   }
 
-  const { controlRegistrations } = registerContext;
+  const { controlRegistrations, configuredRegistrations } = registerContext;
 
   if (!controlRegistrations) {
     context.logger.warn(
-      'No file for registrations could be found. Skipping registration.',
+      configuredRegistrations
+        ? registrationsNotFoundMessage(configuredRegistrations)
+        : 'No file for registrations could be found. Skipping registration.',
     );
     return tree;
   }

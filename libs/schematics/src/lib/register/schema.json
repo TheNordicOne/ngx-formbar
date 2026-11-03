@@ -18,11 +18,11 @@
     },
     "controlRegistrations": {
       "type": "string",
-      "description": "Path to the registration file that should be used."
+      "description": "The component registrations file"
     },
     "schematicsConfig": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic"
+      "description": "The schematics configuration file to use"
     },
     "include": {
       "type": "array",

@@ -2,19 +2,27 @@ import {
   chain,
   Rule,
   SchematicContext,
+  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
+import { posix } from 'node:path';
 
 import { ScaffoldContext, ScaffoldType, Schema } from '../schema';
 import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
-  findConfigPath,
   getAngularComponentNaming,
   getProjectDefinition,
+  isWithin,
+  joinToSourceRoot,
   loadAutomationConfig,
   NgxFormbarAutomationConfig,
+  otherProjectDirectories,
+  registrationsNotFoundMessage,
+  resolveRegistrationsPath,
+  resolveRequiredPath,
+  resolveWithinWorkspace,
 } from '@ngx-formbar/setup';
 import {
   DEFAULT_INTERFACE_FILE_SUFFIX,
@@ -26,6 +34,7 @@ import { registerUnion } from './register-union.rule';
 import {
   getWorkspace,
   ProjectDefinition,
+  WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { splitHashReference } from '../type-reference';
@@ -41,6 +50,7 @@ export function scaffoldAndRegister(options: Schema, type: ScaffoldType): Rule {
     const ruleContext = buildScaffoldContext(
       options,
       type,
+      workspace,
       project,
       componentNaming,
       tree,
@@ -58,6 +68,7 @@ export function scaffoldAndRegister(options: Schema, type: ScaffoldType): Rule {
 function buildScaffoldContext(
   options: Schema,
   type: ScaffoldType,
+  workspace: WorkspaceDefinition,
   project: ProjectDefinition,
   componentNaming: AngularComponentNaming,
   tree: Tree,
@@ -65,22 +76,22 @@ function buildScaffoldContext(
 ) {
   const projectRoot = project.sourceRoot ?? project.root;
 
-  const { automationConfig, mergedConfig } = loadMergedConfig(
+  const { automationConfig, typeConfig, mergedConfig } = loadMergedConfig(
     options,
     type,
     tree,
     projectRoot,
+    context,
   );
 
   const resolvedName = mergedConfig.name ?? mergedConfig.key;
   const names = deriveNames(resolvedName, mergedConfig, componentNaming);
 
-  const { componentPath, componentFilePath } = buildComponentPath(
-    mergedConfig,
-    projectRoot,
-    resolvedName,
-    names.componentFileName,
-  );
+  const directory = typeConfig?.path
+    ? resolveRequiredPath(`${type}.path`, typeConfig.path, projectRoot)
+    : resolvePathOption(options.path, project, workspace);
+  const componentPath = `${directory}/${dasherize(resolvedName)}`;
+  const componentFilePath = `${componentPath}/${names.componentFileName}`;
 
   const viewProvider = resolveViewProvider(
     tree,
@@ -88,12 +99,15 @@ function buildScaffoldContext(
     automationConfig,
     mergedConfig,
     componentFilePath,
+    type,
+    context,
   );
 
   const controlRegistrationsPath = findControlRegistrationsPath(
     tree,
     projectRoot,
-    automationConfig,
+    automationConfig?.controlRegistrationsPath ??
+      options.controlRegistrationsPath,
     context,
   );
 
@@ -102,7 +116,9 @@ function buildScaffoldContext(
     ...names,
     ...viewProvider,
     registrationType:
-      automationConfig?.registrationType ?? DEFAULT_REGISTRATION_TYPE,
+      automationConfig?.registrationType ??
+      options.registrationType ??
+      DEFAULT_REGISTRATION_TYPE,
     registrationKind: type,
     contentTypeReference: automationConfig?.schema?.type,
     resolvedName,
@@ -119,18 +135,20 @@ function loadMergedConfig(
   options: Schema,
   type: ScaffoldType,
   tree: Tree,
-  projectRoot: string,
+  sourceRoot: string,
+  context: SchematicContext,
 ) {
   const automationConfig = loadAutomationConfig(
     tree,
-    projectRoot,
+    sourceRoot,
+    context.logger,
     options.schematicsConfig,
   );
-  const controlTypeConfig = automationConfig ? automationConfig[type] : {};
+  const typeConfig = automationConfig?.[type];
 
-  const mergedConfig: Schema = { ...options, ...controlTypeConfig };
+  const mergedConfig: Schema = { ...options, ...typeConfig };
 
-  return { automationConfig, mergedConfig };
+  return { automationConfig, typeConfig, mergedConfig };
 }
 
 function deriveNames(
@@ -172,20 +190,47 @@ function buildClassName(name: string, componentNaming: AngularComponentNaming) {
   return `${classify(name)}${typeSuffix}`;
 }
 
-function buildComponentPath(
-  config: Schema,
-  projectRoot: string,
-  resolvedName: string,
-  componentFileName: string,
+/**
+ * A leading `/` is explicit and means the workspace root. Without one, as the
+ * CLI supplies it, `--path` is workspace-relative when it lies in the project.
+ * Any other path is read relative to the source root. A path in another project
+ * fails, so a component never lands there while registering in this one.
+ */
+function resolvePathOption(
+  path: string | undefined,
+  project: ProjectDefinition,
+  workspace: WorkspaceDefinition,
 ) {
-  const pathOption = config.path ?? 'app';
-  const rootPath = pathOption.startsWith(projectRoot) ? '' : projectRoot;
-  const componentPath = `${rootPath}/${pathOption}/${dasherize(resolvedName)}`;
+  const sourceRoot = project.sourceRoot ?? project.root;
 
-  return {
-    componentPath,
-    componentFilePath: `/${componentPath}/${componentFileName}`,
-  };
+  if (!path) {
+    return joinToSourceRoot('app', sourceRoot);
+  }
+
+  const fromWorkspace = resolveWithinWorkspace(`/${path}`, sourceRoot);
+  const resolved = resolveRequiredPath(
+    'path',
+    fromWorkspace && isWithin(fromWorkspace.slice(1), project.root)
+      ? fromWorkspace
+      : path,
+    sourceRoot,
+  );
+  const otherProjects = otherProjectDirectories(project, workspace);
+  const inOtherProject = [fromWorkspace, resolved].some(
+    (candidate) =>
+      candidate &&
+      otherProjects.some((directory) =>
+        isWithin(candidate.slice(1), directory),
+      ),
+  );
+
+  if (inOtherProject) {
+    throw new SchematicsException(
+      `"path" lies inside another project: ${path}`,
+    );
+  }
+
+  return resolved;
 }
 
 function resolveViewProvider(
@@ -194,9 +239,15 @@ function resolveViewProvider(
   automationConfig: NgxFormbarAutomationConfig | null,
   config: Schema,
   componentFilePath: string,
+  type: ScaffoldType,
+  context: SchematicContext,
 ) {
+  // A block's template has no view providers.
   const pathOption =
-    automationConfig?.viewProviderHelperPath ?? config.viewProviderHelperPath;
+    type === 'block'
+      ? undefined
+      : (automationConfig?.viewProviderHelperPath ??
+        config.viewProviderHelperPath);
 
   const [viewProviderHelperPath, viewProviderIdentifier] =
     resolveImportPathAndIdentifier(
@@ -205,6 +256,7 @@ function resolveViewProvider(
       componentFilePath,
       pathOption,
       DEFAULT_VIEW_PROVIDER_HELPER,
+      context,
     );
 
   return {
@@ -217,16 +269,17 @@ function resolveViewProvider(
 function findControlRegistrationsPath(
   tree: Tree,
   projectRoot: string,
-  automationConfig: NgxFormbarAutomationConfig | null,
+  configuredPath: string | undefined,
   context: SchematicContext,
 ) {
-  const controlRegistrationsPath = automationConfig?.controlRegistrationsPath
-    ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
-    : findConfigPath(tree, projectRoot);
+  const controlRegistrationsPath =
+    resolveRegistrationsPath(tree, projectRoot, configuredPath) ?? undefined;
 
   if (!controlRegistrationsPath) {
     context.logger.warn(
-      'No configuration files provided or found! Registration will be skipped!',
+      configuredPath
+        ? registrationsNotFoundMessage(configuredPath)
+        : 'No configuration files provided or found! Registration will be skipped!',
     );
   }
 
@@ -239,6 +292,7 @@ function resolveImportPathAndIdentifier(
   componentFilePath: string,
   pathOption: string | undefined,
   defaultFileOption: string,
+  context: SchematicContext,
 ) {
   if (!pathOption) {
     return [];
@@ -248,24 +302,35 @@ function resolveImportPathAndIdentifier(
     defaultFileOption,
   );
 
-  const includesProjectRoot = directory.startsWith(projectRoot);
-  const resolvedDirectory = includesProjectRoot
-    ? directory
-    : `/${projectRoot}/${directory}`;
+  const resolvedDirectory = resolveWithinWorkspace(directory, projectRoot);
 
-  const barrelExport = `${resolvedDirectory}/index.ts`;
-  if (tree.exists(barrelExport)) {
-    const barrelImport = buildRelativePath(
-      componentFilePath,
-      resolvedDirectory,
-    );
-    return [barrelImport, identifier];
+  if (!resolvedDirectory) {
+    warnHelperNotFound(pathOption, context);
+    return [];
   }
-  const directImportPath = buildRelativePath(
-    componentFilePath,
-    `${resolvedDirectory}/${fileName}`,
+
+  const helperFile = posix.join(resolvedDirectory, fileName);
+
+  const target = [
+    {
+      file: posix.join(resolvedDirectory, 'index.ts'),
+      importPath: resolvedDirectory,
+    },
+    { file: `${helperFile}.ts`, importPath: helperFile },
+  ].find(({ file }) => tree.exists(file));
+
+  if (!target) {
+    warnHelperNotFound(`${helperFile}.ts`, context);
+    return [];
+  }
+
+  return [buildRelativePath(componentFilePath, target.importPath), identifier];
+}
+
+function warnHelperNotFound(path: string, context: SchematicContext) {
+  context.logger.warn(
+    `View provider helper ${path} could not be found. Using the verbose syntax.`,
   );
-  return [directImportPath, identifier];
 }
 
 const EXT_REGEX = /\.ts$/i;
@@ -299,9 +364,8 @@ function splitPath(pathPart: string) {
   const lastSegment = pathSegments[pathSegments.length - 1];
 
   if (!EXT_REGEX.test(lastSegment)) {
-    return { directory: normalizedPath.replace(/\/$/, ''), fileName: '' };
+    return { directory: normalizedPath.replace(/(?<=.)\/$/, ''), fileName: '' };
   }
 
-  const directory = pathSegments.slice(0, -1).join('/');
-  return { directory, fileName: lastSegment };
+  return { directory: posix.dirname(normalizedPath), fileName: lastSegment };
 }

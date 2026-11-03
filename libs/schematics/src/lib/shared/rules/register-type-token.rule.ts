@@ -9,6 +9,8 @@ import {
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
+  registrationsMissingMessage,
+  registrationsNotFoundMessage,
   findComponentRegistrationsNode,
   findMapArrayLiteral,
   registrationNodeHasKey,
@@ -36,14 +38,19 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
 
     if (!registrationsSourceFile) {
       context.logger.warn(
-        `Registration file ${controlRegistrationsPath} could be found. Skipping registration.`,
+        registrationsNotFoundMessage(controlRegistrationsPath),
       );
       return tree;
     }
 
     const mapNode = findComponentRegistrationsNode(registrationsSourceFile);
 
-    if (!mapNode) {
+    const mapArrayLiteral = mapNode && findMapArrayLiteral(mapNode);
+
+    if (!mapNode || !mapArrayLiteral) {
+      context.logger.warn(
+        registrationsMissingMessage(controlRegistrationsPath),
+      );
       return tree;
     }
 
@@ -80,21 +87,17 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     );
     changes.push(loadComponentImport);
 
-    const mapArrayLiteral = findMapArrayLiteral(mapNode);
+    const updateChanges = updateMapEntries(
+      tree,
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      mapArrayLiteral,
+      key,
+      componentClassName,
+      componentImportPath,
+    );
 
-    if (mapArrayLiteral) {
-      const updateChanges = updateMapEntries(
-        tree,
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        mapArrayLiteral,
-        key,
-        componentClassName,
-        componentImportPath,
-      );
-
-      changes.push(...updateChanges);
-    }
+    changes.push(...updateChanges);
 
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);

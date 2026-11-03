@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect } from 'vitest';
-import { SchematicTestRunner, UnitTestTree } from '@angular-devkit/schematics/testing';
+import {
+  SchematicTestRunner,
+  UnitTestTree,
+} from '@angular-devkit/schematics/testing';
 
 import {
   addComponentFiles,
@@ -11,7 +14,7 @@ import {
   provideMap,
   provideToken,
   setupWorkspace,
-  TestComponentDetails
+  TestComponentDetails,
 } from './workspace-setup';
 import {
   app,
@@ -21,18 +24,16 @@ import {
   hasDynamicImportOf,
   read,
   src,
-  writeJson
-} from './helper';
-import { DiscoverOptions } from '../register/schema';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { SourceFile } from 'typescript';
-import {
+  writeJson,
   componentRegistrationsMapProviderHasIdentifier,
   directComponentRegistrationsHasIdentifier,
   parseTS,
   hasNamedImport,
-  NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
+} from './helper';
+import { DiscoverOptions } from '../register/schema';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { SourceFile } from 'typescript';
+import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
@@ -58,6 +59,23 @@ describe('register schematic', () => {
   beforeEach(async () => {
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     appTree = await setupWorkspace(runner);
+  });
+
+  it('treats a --controlRegistrations above the workspace root as a missing file', async () => {
+    const warnings: string[] = [];
+    runner.logger.subscribe((entry) => {
+      if (entry.level === 'warn') {
+        warnings.push(entry.message);
+      }
+    });
+
+    await runSchematic({
+      controlRegistrations: '../../../../registrations.ts',
+    });
+
+    expect(warnings).toContain(
+      'Registration file ../../../../registrations.ts could not be found. Skipping registration.',
+    );
   });
 
   it('finds and registers components anywhere, with and without helper', async () => {
@@ -453,7 +471,7 @@ describe('register schematic', () => {
     expect(existingRegistrationsCount).toBe(1);
   });
 
-  it('uses schematics config file when passed as parameter', async () => {
+  it('uses schematics configuration file when passed as parameter', async () => {
     const files: TestComponentDetails[] = [
       {
         path: app('components/form/controls/inline.component.ts'),
@@ -533,7 +551,7 @@ describe('register schematic', () => {
     );
   });
 
-  it('finds schematics config file if no parameter was passed', async () => {
+  it('finds schematics configuration file if no parameter was passed', async () => {
     const files: TestComponentDetails[] = [
       {
         path: app('components/form/controls/inline.component.ts'),
@@ -600,6 +618,84 @@ describe('register schematic', () => {
       directComponentRegistrationsHasIdentifier,
     );
   });
+
+  it('honors the controlRegistrations option when no config file is present', async () => {
+    const files: TestComponentDetails[] = [
+      {
+        path: app('components/form/controls/inline.component.ts'),
+        content: createControlComponent(
+          'inline',
+          inlineProviders,
+          'InlineComponent',
+        ),
+        className: 'InlineComponent',
+        key: 'inline',
+      },
+    ];
+    const customRegistrations = 'app/forms/component-registrations.ts';
+
+    addComponentFiles(appTree, files);
+    provideMap(
+      appTree,
+      appConfigPathRaw,
+      customRegistrations,
+      formbarConfigPath,
+    );
+
+    const tree = await runSchematic({
+      registrationType: 'config',
+      controlRegistrations: customRegistrations,
+    });
+
+    assertRegisteredComponents(
+      tree,
+      files,
+      src(customRegistrations),
+      directComponentRegistrationsHasIdentifier,
+    );
+  });
+
+  it.each([
+    'projects/test-app/src/app/forms/component-registrations.ts',
+    '/projects/test-app/src/app/forms/component-registrations.ts',
+  ])(
+    'registers into a controlRegistrations path of %s as given',
+    async (controlRegistrations) => {
+      const files: TestComponentDetails[] = [
+        {
+          path: app('components/form/controls/inline.component.ts'),
+          content: createControlComponent(
+            'inline',
+            inlineProviders,
+            'InlineComponent',
+          ),
+          className: 'InlineComponent',
+          key: 'inline',
+        },
+      ];
+      const customRegistrations = 'app/forms/component-registrations.ts';
+
+      addComponentFiles(appTree, files);
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        customRegistrations,
+        formbarConfigPath,
+      );
+
+      const tree = await runSchematic({
+        registrationType: 'config',
+        controlRegistrations,
+      });
+
+      assertRegisteredComponents(
+        tree,
+        files,
+        src(customRegistrations),
+        directComponentRegistrationsHasIdentifier,
+      );
+    },
+  );
 
   it('honors the registrationType option when no config file is present', async () => {
     const files: TestComponentDetails[] = [

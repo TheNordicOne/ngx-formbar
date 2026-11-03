@@ -47,7 +47,7 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
 
     const importPath = buildRelativePath(
       unionPath,
-      `/${ruleContext.componentPath}/${ruleContext.interfaceFileName}`,
+      `${ruleContext.componentPath}/${ruleContext.interfaceFileName}`,
     );
     const recorder = tree.beginUpdate(unionPath);
 

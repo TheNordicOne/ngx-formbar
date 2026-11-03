@@ -8,20 +8,24 @@ import {
 import { discoverComponents } from './discover-components';
 import { DiscoverOptions, RegisterContext } from './schema';
 import { registerComponents } from './register-components';
-import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import {
-  findConfigPath,
+  getWorkspace,
+  ProjectDefinition,
+} from '@schematics/angular/utility/workspace';
+import {
   loadAutomationConfig,
   DEFAULT_REGISTRATION_TYPE,
-  getProject,
+  getProjectDefinition,
+  resolveRegistrationsPath,
 } from '@ngx-formbar/setup';
 
 export function register(options: DiscoverOptions): Rule {
   let registerContext: RegisterContext;
 
-  const mergeConfigs: Rule = async (tree: Tree) => {
-    const project = await getProject(tree, options.project);
-    registerContext = mergeOptions(options, project, tree);
+  const mergeConfigs: Rule = async (tree: Tree, context: SchematicContext) => {
+    const workspace = await getWorkspace(tree);
+    const project = getProjectDefinition(workspace, options.project);
+    registerContext = mergeOptions(options, project, tree, context);
     return tree;
   };
 
@@ -41,25 +45,33 @@ function mergeOptions(
   options: DiscoverOptions,
   project: ProjectDefinition,
   tree: Tree,
+  context: SchematicContext,
 ) {
   const projectRoot = project.sourceRoot ?? project.root;
 
   const automationConfig = loadAutomationConfig(
     tree,
     projectRoot,
+    context.logger,
     options.schematicsConfig,
   );
 
   const discoverConfig = automationConfig ? automationConfig.discovery : {};
 
-  const controlRegistrations = automationConfig?.controlRegistrationsPath
-    ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
-    : findConfigPath(tree, projectRoot);
+  const configuredRegistrations =
+    automationConfig?.controlRegistrationsPath ?? options.controlRegistrations;
+
+  const controlRegistrations = resolveRegistrationsPath(
+    tree,
+    projectRoot,
+    configuredRegistrations,
+  );
 
   const mergedConfig: RegisterContext = {
     ...options,
     ...discoverConfig,
     controlRegistrations,
+    configuredRegistrations,
     registrationType:
       automationConfig?.registrationType ??
       options.registrationType ??

@@ -11,6 +11,7 @@ const NOT_EXPOSED_TO_EMITTERS = [
   'control',
   'group',
   'block',
+  'array',
   'register',
   'schema',
 ];

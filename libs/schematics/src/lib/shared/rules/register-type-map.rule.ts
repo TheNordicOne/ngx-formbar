@@ -8,6 +8,8 @@ import {
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   loadSourceFile,
+  registrationsMissingMessage,
+  registrationsNotFoundMessage,
   addComponentRegistration,
   componentRegistrationsObjectHasKey,
   componentRegistrationsObjectUsesIdentifier,
@@ -36,7 +38,7 @@ export function registerTypeConfig(
 
     if (!registrationsSourceFile) {
       context.logger.warn(
-        `Registration file ${controlRegistrationsPath} could be found. Skipping registration.`,
+        registrationsNotFoundMessage(controlRegistrationsPath),
       );
       return tree;
     }
@@ -46,6 +48,9 @@ export function registerTypeConfig(
     );
 
     if (!registrationsObject) {
+      context.logger.warn(
+        registrationsMissingMessage(controlRegistrationsPath),
+      );
       return tree;
     }
 

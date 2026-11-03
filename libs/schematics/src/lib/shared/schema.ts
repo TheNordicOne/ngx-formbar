@@ -8,6 +8,8 @@ export interface Schema extends BaseGenerateSchematicConfig {
   key: string;
   path?: string;
   project?: string;
+  registrationType?: RegistrationType;
+  controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;
   schematicsConfig?: string;
 }
@@ -30,7 +32,6 @@ export interface ScaffoldContext extends Schema {
   hasViewProviderHelper: boolean;
   viewProviderHelperPath?: string;
   viewProviderIdentifier?: string;
-  controlRegistrationsPath?: string | null;
 }
 
 export interface RegisterComponentContext {
