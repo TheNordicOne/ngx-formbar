@@ -40,13 +40,17 @@ The generator reads your project's TypeScript configuration, so path aliases in 
 
 ### Options
 
-| Option             | Type   | Required | Default                   | Description                                                                                                                      |
-| ------------------ | ------ | -------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| --project          | string | No       | workspace default project | Angular project name where files are generated.                                                                                  |
-| --schematicsConfig | string | No       | -                         | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).     |
-| --type             | string | No       | -                         | The content union as file and export, like `app/types/content.type.ts#AppContent`. Overrides `schema.type`. See [Paths](#paths). |
-| --emitter          | array  | No       | -                         | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                 |
-| --output           | string | No       | -                         | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.            |
+| Option             | Type   | Required | Default                             | Description                                                                                                                      |
+| ------------------ | ------ | -------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| --project          | string | No       | [Default Project](#default-project) | Angular project to run the emitters for.                                                                                         |
+| --schematicsConfig | string | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).     |
+| --type             | string | No       | -                                   | The content union as file and export, like `app/types/content.type.ts#AppContent`. Overrides `schema.type`. See [Paths](#paths). |
+| --emitter          | array  | No       | -                                   | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                 |
+| --output           | string | No       | -                                   | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.            |
+
+## Default Project
+
+{% include "../../shared/default-project.md" %}
 
 ## Paths
 

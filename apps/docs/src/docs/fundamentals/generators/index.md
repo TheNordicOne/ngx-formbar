@@ -8,7 +8,7 @@ _ngx-formbar_ includes four generator schematics that scaffold and register a ne
 | -------------------------- | ------------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | --key                      | string              | Yes      | -                                                               | Registration key used in the Formbar configuration.                                                                            |
 | --name                     | string              | No       | `key`                                                           | Base name for component and config interface.                                                                                  |
-| --project                  | string              | No       | workspace default project                                       | Angular project name where files are generated.                                                                                |
+| --project                  | string              | No       | [Default Project](#default-project)                             | Angular project name where files are generated.                                                                                |
 | --registrationType         | `token` \| `config` | No       | `token`                                                         | How the component is registered.                                                                                               |
 | --controlRegistrationsPath | string              | No       | -                                                               | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations).   |
 | --path                     | string              | No       | `app` in the source root                                        | The directory the component's own directory is created in. See [Where Components Go](#where-components-go).                    |
@@ -30,6 +30,10 @@ _ngx-formbar_ includes four generator schematics that scaffold and register a ne
 | `app/shared/helper/form-helpers.ts#formViewProviders` | The export `formViewProviders` of that file                                                                           |
 
 When the helper file cannot be found, the generator logs a warning naming the resolved path, and the component uses the verbose syntax.
+
+## Default Project
+
+{% include "../../shared/default-project.md" %}
 
 ## Paths
 

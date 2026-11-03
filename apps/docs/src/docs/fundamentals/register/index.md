@@ -16,15 +16,15 @@ Each control is registered under the `type` of its config interface, as a form r
 
 ## Options
 
-| Option                     | Type                | Required | Default                   | Description                                                                                                                  |
-| -------------------------- | ------------------- | -------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| --project                  | string              | No       | workspace default project | Angular project name where files are generated.                                                                              |
-| --registrationType         | 'token' \| 'config' | No       | 'token'                   | Which registration type is used.                                                                                             |
-| --controlRegistrationsPath | string              | No       | -                         | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
-| --controlRegistrations     | string              | No       | -                         | The same as `--controlRegistrationsPath`.                                                                                    |
-| --schematicsConfig         | string              | No       | -                         | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --include                  | array               | No       | `["\*\*/*.ts"]`           | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
-| --exclude                  | array               | No       | `[]`                      | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                               |
+| Option                     | Type                | Required | Default                             | Description                                                                                                                  |
+| -------------------------- | ------------------- | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| --project                  | string              | No       | [Default Project](#default-project) | Angular project to register components in.                                                                                   |
+| --registrationType         | 'token' \| 'config' | No       | 'token'                             | Which registration type is used.                                                                                             |
+| --controlRegistrationsPath | string              | No       | -                                   | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
+| --controlRegistrations     | string              | No       | -                                   | The same as `--controlRegistrationsPath`.                                                                                    |
+| --schematicsConfig         | string              | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
+| --include                  | array               | No       | `["\*\*/*.ts"]`                     | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
+| --exclude                  | array               | No       | `[]`                                | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                               |
 
 ## Setting Options
 
@@ -70,6 +70,10 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
   }
 }
 ```
+
+## Default Project
+
+{% include "../../shared/default-project.md" %}
 
 ## Paths
 
