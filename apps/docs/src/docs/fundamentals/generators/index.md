@@ -69,6 +69,8 @@ With a project at `projects/my-app` and its source root at `projects/my-app/src`
 | With `--path projects/other-app/forms`  | Fails, because that lies inside another project |
 | With `--path /projects/other-app/forms` | Fails, because that lies inside another project |
 
+`register` only finds components in the source root, so it skips a component written anywhere else.
+
 ## Naming
 
 The generated **component** follows Angular's own component naming. The generators read Angular's `@schematics/angular:component` settings from `angular.json`, so you configure this the same way you configure `ng generate component`. The `type` value is the file and class suffix, `addTypeToClassName` gates whether the class gets it, and a project-level entry takes precedence over a workspace-level one. For `generate control --key text`:

@@ -88,6 +88,8 @@ All options are optional, but are listed here in full. You can put any combinati
 | `src/app/slider/**`               | Everything in `src/app/slider`                |
 | `**/slider/**`                    | Everything in any `slider` folder below `src` |
 
+`register` only finds components in the source root, so an `--include` outside it fails.
+
 ## Default Registration Locations
 
 {% include "../../shared/default-registrations.md" %}
