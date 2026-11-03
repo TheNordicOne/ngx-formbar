@@ -46,4 +46,6 @@ export interface RuleContext
   schematicsConfigDirectory: string;
   /** Whether this run says where the schematics configuration file goes. */
   schematicsConfigNamed: boolean;
+  /** The `schematicsConfig` an earlier run or the developer set in angular.json. */
+  schematicsConfigLink?: string;
 }

@@ -48,8 +48,21 @@ export function ownSchematicsConfigFile({ projectRoot }: RuleContext): string {
   );
 }
 
+/** Where `schematicsConfig` in angular.json points, if that file exists. */
+export function linkedSchematicsConfigFile(
+  tree: Tree,
+  { schematicsConfigLink, projectRoot }: RuleContext,
+): string | null {
+  const linked = schematicsConfigLink
+    ? resolveWithinWorkspace(schematicsConfigLink, projectRoot)
+    : null;
+
+  return linked && tree.exists(linked) ? linked : null;
+}
+
 /**
- * The file holding the settings of this run. The lookup prefers a project's own
+ * The file holding the settings of this run. A link stays unless the run names
+ * another location. The lookup prefers a project's own
  * file and does not merge it with the shared one, so that is where settings go
  * that differ from the shared file.
  */
@@ -59,16 +72,22 @@ export function schematicsConfigFile(
 ): string {
   const requested = requestedSchematicsConfigFile(ruleContext);
   const own = ownSchematicsConfigFile(ruleContext);
+  const linked = ruleContext.schematicsConfigNamed
+    ? null
+    : linkedSchematicsConfigFile(tree, ruleContext);
   const keepsSharedDefault =
     !ruleContext.schematicsConfigNamed &&
     !tree.exists(own) &&
     tree.exists(SHARED_CONFIG_FILE);
 
-  return requested === SHARED_CONFIG_FILE || keepsSharedDefault
-    ? ignoredSettings(tree, SHARED_CONFIG_FILE, ruleContext).length > 0
-      ? own
-      : SHARED_CONFIG_FILE
-    : requested;
+  return (
+    linked ??
+    (requested === SHARED_CONFIG_FILE || keepsSharedDefault
+      ? ignoredSettings(tree, SHARED_CONFIG_FILE, ruleContext).length > 0
+        ? own
+        : SHARED_CONFIG_FILE
+      : requested)
+  );
 }
 
 /** The settings of this run that a kept file does not hold, as `name: value`. */

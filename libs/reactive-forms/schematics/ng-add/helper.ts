@@ -38,6 +38,7 @@ import {
 import { insertNamedImport } from './root-providers';
 import { RuleContext } from './schema';
 import {
+  ProjectDefinition,
   updateWorkspace,
   WorkspaceDefinition,
 } from '@schematics/angular/utility';
@@ -108,6 +109,25 @@ export function removeSchematicsConfigLink(
       }
     }
   });
+}
+
+/** The file a generator of the project is pointed at. */
+export function schematicsConfigLink(
+  project: ProjectDefinition,
+  generators: string[],
+): string | undefined {
+  const { schematics } = project.extensions;
+
+  return schematics && isJsonObject(schematics)
+    ? generators
+        .map(
+          (generator) => schematics[`${SCHEMATICS_PACKAGE_NAME}:${generator}`],
+        )
+        .flatMap((config) =>
+          config && isJsonObject(config) ? [config.schematicsConfig] : [],
+        )
+        .find((link) => typeof link === 'string')
+    : undefined;
 }
 
 function definedOptions(options: GeneratorOptions) {

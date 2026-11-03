@@ -7,13 +7,8 @@ import { isJsonObject, JsonObject } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
-import {
-  cpSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import {
   CompilerHost,
@@ -267,11 +262,11 @@ describe('ng-add schematic', () => {
       );
 
       packageDirectories.push(packageDirectory);
-      cpSync(
+      execFileSync('cp', [
+        '-r',
         join(COLLECTION_PATH, '..'),
         join(packageDirectory, 'schematics'),
-        { recursive: true },
-      );
+      ]);
 
       if (manifest !== null) {
         writeFileSync(join(packageDirectory, 'package.json'), manifest);
@@ -3806,25 +3801,119 @@ describe('ng-add schematic', () => {
     });
   });
 
-  describe('a stale schematicsConfig link', () => {
-    it.each<[string, Schema]>([
-      ['the lookup finds the config now', {}],
-      ['no config file is used now', { useSchematicConfig: false }],
-    ])('is removed when %s', async (_, options) => {
-      const linked = await runAdd({ schematicConfigFileName: 'custom.json' });
+  describe('a schematicsConfig link', () => {
+    const customFile = app('custom.json');
+    const link = 'app/custom.json';
 
-      appTree = linked;
-
+    async function run(options: Schema) {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
       const tree = await runAdd(options);
-      const defaults = await generatorDefaults(tree);
 
-      expect(defaults.map((generator) => generator?.schematicsConfig)).toEqual(
-        generators.map(() => undefined),
-      );
+      subscription.unsubscribe();
+
+      return { tree, warnings };
+    }
+
+    function links(defaults: Awaited<ReturnType<typeof generatorDefaults>>) {
+      return defaults.map((generator) => generator?.schematicsConfig);
+    }
+
+    beforeEach(async () => {
+      appTree = await runAdd({ schematicConfigFileName: 'custom.json' });
     });
 
+    it('stays on a plain re-run, with the linked file as the kept one', async () => {
+      const kept = read(appTree, customFile);
+      const { tree, warnings } = await run({});
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => link),
+      );
+      expect(read(tree, customFile)).toBe(kept);
+      expect(tree.exists(schematicsConfigPath)).toBe(false);
+      expect(warnings).toEqual([]);
+    });
+
+    it('warns about settings the linked file lacks on a plain re-run', async () => {
+      const { tree, warnings } = await run({ registrationStyle: 'config' });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => link),
+      );
+      expect(warnings).toEqual([
+        `${customFile} stays as it is, so these settings of this run are ignored: registrationType: config. Change them in that file.`,
+      ]);
+    });
+
+    it('stays when it points at the file the lookup finds', async () => {
+      const ownLink = 'app/formbar-schematic.config.json';
+
+      appTree.create(schematicsConfigPath, '{}');
+      appTree.overwrite(
+        'angular.json',
+        read(appTree, 'angular.json').split(link).join(ownLink),
+      );
+
+      const { tree, warnings } = await run({ useHelper: false });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => ownLink),
+      );
+      expect(warnings).toEqual([]);
+    });
+
+    it('moves when the run names another location', async () => {
+      const { tree, warnings } = await run({
+        schematicConfigFileName: 'other.json',
+      });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => 'app/other.json'),
+      );
+      expect(warnings).toEqual([]);
+    });
+
+    it.each<[string, Schema, () => void, string]>([
+      [
+        'the run names a location the lookup finds',
+        { schematicsConfigPath: 'app' },
+        () => undefined,
+        `Removed the schematicsConfig link to ${link} from angular.json, as the generators find ${schematicsConfigPath} without it.`,
+      ],
+      [
+        'the linked file is gone',
+        {},
+        () => {
+          appTree.delete(customFile);
+        },
+        `Removed the schematicsConfig link to ${link} from angular.json, as the generators find ${schematicsConfigPath} without it.`,
+      ],
+      [
+        'no config file is used now',
+        { useSchematicConfig: false },
+        () => undefined,
+        `Removed the schematicsConfig link to ${link} from angular.json, as this run uses no schematics configuration file.`,
+      ],
+    ])(
+      'is removed with a warning when %s',
+      async (_, options, arrange, message) => {
+        arrange();
+
+        const { tree, warnings } = await run(options);
+
+        expect(links(await generatorDefaults(tree))).toEqual(
+          generators.map(() => undefined),
+        );
+        expect(warnings).toContain(message);
+      },
+    );
+
     it('keeps the other settings of a generator', async () => {
-      appTree = await runAdd({ schematicConfigFileName: 'custom.json' });
       seedForeignControlSetting();
 
       const tree = await runAdd({

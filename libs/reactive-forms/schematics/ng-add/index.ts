@@ -17,6 +17,7 @@ import {
   DEFAULT_HELPER_PATH,
   DEFAULT_PROVIDER_CONFIG_FILE_NAME,
   DEFAULT_PROVIDER_CONFIG_PATH,
+  SCHEMATICS_GENERATORS,
 } from '../shared/constants';
 import {
   DEFAULT_REGISTRATION_TYPE,
@@ -35,6 +36,7 @@ import { linkSchematicsConfig } from './rules/link-schematics-config.rule';
 import { createFormbarRegistrationsConfig } from './rules/create-formbar-registration-config.rule';
 import { createContentTypeFile } from './rules/create-content-type-file.rule';
 import { locateRootConfig } from './root-config';
+import { schematicsConfigLink } from './helper';
 
 // noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {
@@ -122,6 +124,10 @@ export function ngAdd(options: Schema): Rule {
         !!options.schematicsConfigPath ||
         `${schematicConfigFileName}.json` !==
           DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
+      schematicsConfigLink: schematicsConfigLink(
+        project,
+        SCHEMATICS_GENERATORS,
+      ),
       splitRegistrations,
       appConfigPath: rootConfig.filePath,
       rootConfig,

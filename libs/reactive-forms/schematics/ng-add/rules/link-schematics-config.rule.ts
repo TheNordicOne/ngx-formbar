@@ -3,24 +3,45 @@ import { findSchematicsConfig, sourceRootValue } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
 import { removeSchematicsConfigLink, updateSchematicConfigs } from '../helper';
-import { schematicsConfigFile } from '../schematics-config-file';
+import {
+  linkedSchematicsConfigFile,
+  schematicsConfigFile,
+} from '../schematics-config-file';
 import { SCHEMATICS_GENERATORS } from '../../shared/constants';
 
 /**
  * Sets `schematicsConfig` on every generator when the lookup would not find the
- * schematics configuration file ng-add wrote. Otherwise a link from an earlier run is
- * stale, as it would point past the file the generators are meant to use.
+ * schematics configuration file of this run. A link to another file goes, with a
+ * warning, as it would point past the file the generators are meant to use.
  */
 export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { useSchematicConfig, projectName, projectRoot } = ruleContext;
+    const {
+      useSchematicConfig,
+      projectName,
+      projectRoot,
+      schematicsConfigLink,
+    } = ruleContext;
 
     const configFilePath = schematicsConfigFile(tree, ruleContext);
+
+    if (
+      useSchematicConfig &&
+      linkedSchematicsConfigFile(tree, ruleContext) === configFilePath
+    ) {
+      return;
+    }
 
     if (
       !useSchematicConfig ||
       findSchematicsConfig(tree, projectRoot) === configFilePath
     ) {
+      if (schematicsConfigLink) {
+        context.logger.warn(
+          `Removed the schematicsConfig link to ${schematicsConfigLink} from angular.json, as ${useSchematicConfig ? `the generators find ${configFilePath} without it` : 'this run uses no schematics configuration file'}.`,
+        );
+      }
+
       return removeSchematicsConfigLink(SCHEMATICS_GENERATORS, projectName);
     }
 
