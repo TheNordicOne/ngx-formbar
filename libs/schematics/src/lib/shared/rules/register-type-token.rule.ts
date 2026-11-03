@@ -25,6 +25,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      alreadyRegisteredLevel,
     } = ruleContext;
 
     if (!controlRegistrationsPath) {
@@ -60,7 +61,8 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     );
 
     if (identifierAlreadyUsed) {
-      context.logger.warn(
+      context.logger.log(
+        alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,
       );
       return tree;

@@ -25,6 +25,7 @@ export function registerTypeConfig(
       key,
       componentFilePath,
       componentClassName,
+      alreadyRegisteredLevel,
     } = ruleContext;
 
     if (!controlRegistrationsPath) {
@@ -60,7 +61,8 @@ export function registerTypeConfig(
     );
 
     if (identifierAlreadyUsed) {
-      context.logger.warn(
+      context.logger.log(
+        alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,
       );
       return tree;

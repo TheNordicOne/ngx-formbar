@@ -1734,6 +1734,85 @@ export class RangeComponent extends MiddleControl {}
     });
   });
 
+  describe('a component that is already registered', () => {
+    function logged(level: string) {
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === level) {
+          messages.push(entry.message);
+        }
+      });
+
+      return messages;
+    }
+
+    it.each<['token' | 'config', () => void]>([
+      [
+        'token',
+        () => {
+          provideToken(appTree, appConfigPathRaw, registrationsPath);
+        },
+      ],
+      [
+        'config',
+        () => {
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+          );
+        },
+      ],
+    ])(
+      'is logged at info level on a %s re-run',
+      async (registrationType, provide) => {
+        appTree.create(
+          app('one/one-control.ts'),
+          createControlComponent('one', inlineProviders, 'OneControl'),
+        );
+        provide();
+        appTree = await runSchematic({ registrationType });
+
+        const warnings = logged('warn');
+        const infos = logged('info');
+
+        await runSchematic({ registrationType });
+
+        const alreadyUsed =
+          'A component with the name "OneControl" is already used';
+
+        expect(warnings).not.toContain(alreadyUsed);
+        expect(infos).toContain(alreadyUsed);
+      },
+    );
+
+    it('still warns when another component holds the key', async () => {
+      const component = (className: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface SharedConfig { type: 'shared'; }
+
+@Component({ selector: 'app-x', template: '' })
+export class ${className} implements ReactiveFormbarControl<SharedConfig> {
+  readonly name = input.required<string>();
+}
+`;
+      appTree.create(app('one/one-control.ts'), component('OneControl'));
+      appTree.create(app('two/two-control.ts'), component('TwoControl'));
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      const warnings = logged('warn');
+
+      await runSchematic();
+
+      expect(warnings).toEqual([
+        'A key with the name "shared" is already used',
+      ]);
+    });
+  });
+
   it('honors the registrationType option when no config file is present', async () => {
     const files: TestComponentDetails[] = [
       {

@@ -30,6 +30,7 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      alreadyRegisteredLevel: 'warn',
     };
 
     switch (registrationType) {

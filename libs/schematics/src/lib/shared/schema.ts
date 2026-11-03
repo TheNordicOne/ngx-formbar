@@ -39,4 +39,6 @@ export interface RegisterComponentContext {
   key: string;
   componentFilePath: string;
   componentClassName: string;
+  /** A `register` run meets every component it registered before. */
+  alreadyRegisteredLevel: 'info' | 'warn';
 }

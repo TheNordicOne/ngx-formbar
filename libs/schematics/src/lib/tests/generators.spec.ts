@@ -1457,6 +1457,24 @@ describe('scaffold warnings', () => {
     );
   }
 
+  it('warns when the registrations already use the name of the component', async () => {
+    appTree = await scaffold('control', {
+      path: 'app/first',
+      registrationType: 'config',
+    });
+
+    await scaffold('control', {
+      key: 'other',
+      name: 'test',
+      path: 'app/second',
+      registrationType: 'config',
+    });
+
+    expect(warnings).toContain(
+      'A component with the name "TestControl" is already used',
+    );
+  });
+
   it.each<'token' | 'config'>(['token', 'config'])(
     'names the resolved path when the %s registrations file does not exist',
     async (registrationType) => {

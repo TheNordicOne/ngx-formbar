@@ -43,6 +43,7 @@ function registerComponentsByComponentInfo(
       key,
       componentFilePath,
       componentClassName,
+      alreadyRegisteredLevel: 'info',
     };
 
     switch (registrationType) {
