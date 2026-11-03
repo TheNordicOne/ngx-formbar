@@ -96,9 +96,7 @@ export function unwrapToObjectLiteral(
   }
 }
 
-function nameOfProperty(
-  propertyName: PropertyName | undefined,
-): string | null {
+function nameOfProperty(propertyName: PropertyName | undefined): string | null {
   if (!propertyName) {
     return null;
   }
