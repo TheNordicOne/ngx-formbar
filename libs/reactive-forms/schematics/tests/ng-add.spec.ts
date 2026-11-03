@@ -1239,6 +1239,86 @@ describe('ng-add schematic', () => {
       expect(brokenImports(tree)).toEqual([]);
     });
 
+    describe('with export * in the kept index', () => {
+      const keptStar = "export * from './utils';\n";
+
+      beforeEach(() => {
+        appTree.create(`${sharedFolder}/index.ts`, keptStar);
+        appTree.create(`${sharedFolder}/utils.ts`, 'export const util = 1;\n');
+      });
+
+      it.each<[string, Schema]>([
+        ['token', {}],
+        ['config', { registrationStyle: 'config' }],
+        [
+          'config in the root providers',
+          { registrationStyle: 'config', provideInline: true },
+        ],
+      ])('compiles with the registrations of %s style', async (_, options) => {
+        const tree = await scaffoldControl(
+          await runAdd({ registrationsPath: 'app/shared', ...options }),
+        );
+
+        expect(read(tree, `${sharedFolder}/index.ts`)).toBe(keptStar);
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles with the helper in that folder', async () => {
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared/view-provider'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles when export * goes in a circle', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/utils.ts`,
+          "export * from './index';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles when export * names a package or a missing file', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/index.ts`,
+          "export * from 'some-package';\nexport * from './missing';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared/view-provider'",
+        );
+      });
+
+      it('imports from the index when export * reaches the symbol', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/utils.ts`,
+          "export * from './view-provider';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      });
+    });
+
     it('imports only what the index lacks from the seeded file', async () => {
       appTree.create(
         `${sharedFolder}/index.ts`,

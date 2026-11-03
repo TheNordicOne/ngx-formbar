@@ -1,6 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
   Declaration,
+  ExportDeclaration,
   getCombinedModifierFlags,
   isClassDeclaration,
   isEnumDeclaration,
@@ -8,6 +9,7 @@ import {
   isFunctionDeclaration,
   isIdentifier,
   isNamedExports,
+  isStringLiteral,
   isVariableStatement,
   ModifierFlags,
   NamedExportBindings,
@@ -16,20 +18,53 @@ import {
 import { posix } from 'node:path';
 import { loadSourceFile } from './parse';
 
-/** By name or through `export *`, which is taken at its word. */
+/**
+ * By name or through `export *` from a file in the tree. Whatever `export *` names
+ * outside the tree does not count, as nothing there can be checked.
+ */
 export function exportsIdentifier(
   tree: Tree,
   filePath: string,
   identifier: string,
+  visited = new Set<string>(),
 ): boolean {
-  const sourceFile = loadSourceFile(tree, filePath);
+  const sourceFile = visited.has(filePath)
+    ? undefined
+    : loadSourceFile(tree, filePath);
+
+  visited.add(filePath);
 
   return (
     !!sourceFile &&
     sourceFile.statements.some((statement) =>
-      statementExports(statement, identifier),
+      isStarExport(statement)
+        ? starTargetExports(tree, filePath, statement, identifier, visited)
+        : statementExports(statement, identifier),
     )
   );
+}
+
+function isStarExport(statement: Statement): statement is ExportDeclaration {
+  return (
+    isExportDeclaration(statement) &&
+    !statement.exportClause &&
+    !statement.isTypeOnly
+  );
+}
+
+function starTargetExports(
+  tree: Tree,
+  filePath: string,
+  { moduleSpecifier }: ExportDeclaration,
+  identifier: string,
+  visited: Set<string>,
+) {
+  const target =
+    moduleSpecifier &&
+    isStringLiteral(moduleSpecifier) &&
+    relativeModuleFile(tree, filePath, moduleSpecifier.text);
+
+  return !!target && exportsIdentifier(tree, target, identifier, visited);
 }
 
 /** The file of a relative module specifier, as a TypeScript path lookup finds it. */
@@ -50,21 +85,15 @@ export function relativeModuleFile(
 function statementExports(statement: Statement, identifier: string) {
   return isExportDeclaration(statement)
     ? !statement.isTypeOnly &&
+        !!statement.exportClause &&
         exportClauseHas(statement.exportClause, identifier)
     : declaredNames(statement).includes(identifier);
 }
 
-/** No clause at all is `export *`. */
-function exportClauseHas(
-  clause: NamedExportBindings | undefined,
-  identifier: string,
-) {
-  return (
-    !clause ||
-    (isNamedExports(clause)
-      ? clause.elements.some(({ name }) => name.text === identifier)
-      : clause.name.text === identifier)
-  );
+function exportClauseHas(clause: NamedExportBindings, identifier: string) {
+  return isNamedExports(clause)
+    ? clause.elements.some(({ name }) => name.text === identifier)
+    : clause.name.text === identifier;
 }
 
 function declaredNames(statement: Statement) {
