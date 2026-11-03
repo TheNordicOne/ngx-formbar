@@ -35,7 +35,7 @@ There are two ways to set custom default options, avoiding repeated parameters o
 
 ### In formbar-schematic.config.json
 
-All options are optional, but are listed here in full. You can put any combination of them.
+Every option is optional.
 
 Every path in this file follows [Paths](#paths).
 
@@ -54,7 +54,7 @@ Every path in this file follows [Paths](#paths).
 
 You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
-All options are optional, but are listed here in full. You can put any combination of them.
+Every option is optional.
 
 ```json name="angular.json"
 {

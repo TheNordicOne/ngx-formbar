@@ -37,7 +37,7 @@ By default, this does the following.
 > A schematics configuration file wins over the `angular.json` settings written with `--useSchematicConfig=false`. `ng add` logs a warning naming the file when there is one.
 
 > **Note**
-> `helperPath` is a folder. To rename the files or exports later, see [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
+> To rename the files or exports later, see [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
 
 ## Root Providers
 

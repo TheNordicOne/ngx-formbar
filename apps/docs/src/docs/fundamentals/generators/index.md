@@ -162,7 +162,7 @@ There are two ways to set custom default options, avoiding repeated parameters o
 
 ### In the Schematics Configuration File
 
-All options are optional, but are listed here in full. You can put any combination of them.
+Every option is optional.
 
 ```json name="formbar-schematic.config.json"
 {
@@ -203,7 +203,7 @@ The `path` key in a generator section takes precedence over `--path`. It follows
 
 You can set default values for any _ngx-formbar_ schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
-All options are optional, but are listed here in full. You can put any combination of them.
+Every option is optional.
 Note, that compared to the schematics configuration file, you have to repeat all values.
 
 This example is for a project at `projects/my-app`. `path` is a value for `--path`, so it follows [Where Components Go](#where-components-go). The other paths follow [Paths](#paths).
