@@ -956,7 +956,7 @@ const ROOT_CONFIG_LAYOUTS = [
       replaceInFile(
         main,
         APP_CONFIG_CALL,
-        'bootstrapApplication(App, { providers: [], ...appConfig })',
+        'const base: Partial<typeof appConfig> = appConfig;\n\nbootstrapApplication(App, { providers: [], ...base })',
       ),
   },
   {
@@ -1159,7 +1159,7 @@ function runNgModuleFlow(appParent, tarballs) {
   console.log('NgModule assertions:');
 
   check(
-    /providers: \[SHARED,/.test(readFileSync(barrelModulePath, 'utf8')),
+    /providers: \[\s*SHARED,/.test(readFileSync(barrelModulePath, 'utf8')),
     'ng add followed a barrel to the root NgModule and kept its providers in an array',
   );
 
