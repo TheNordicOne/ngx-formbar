@@ -2,22 +2,22 @@ _ngx-formbar_ includes four generator schematics that scaffold and register a ne
 
 ## Options
 
-All four schematics (`control`, `group`, `block`, `array`) support the same options:
+`control`, `group`, `block` and `array` support these options. Only `control`, `group` and `array` support `--viewProviderHelperPath`.
 
-| Option                     | Type                | Required | Default (control/group/block/array)                             | Description                                                                                                                  |
-| -------------------------- | ------------------- | -------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| --key                      | string              | Yes      | -                                                               | Registration key used in the Formbar configuration.                                                                          |
-| --name                     | string              | No       | `key`                                                           | Base name for component and config interface.                                                                                |
-| --project                  | string              | No       | workspace default project                                       | Angular project name where files are generated.                                                                              |
-| --registrationType         | `token` \| `config` | No       | `token`                                                         | How the component is registered.                                                                                             |
-| --controlRegistrationsPath | string              | No       | -                                                               | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
-| --path                     | string              | No       | `app` in the source root                                        | The directory the component's own directory is created in. See [Where Components Go](#where-components-go).                  |
-| --interfaceSuffix          | string              | No       | `ControlConfig` / `GroupConfig` / `BlockConfig` / `ArrayConfig` | Suffix appended to the config interface name.                                                                                |
-| --componentSuffix          | string              | No       | `Control` / `Group` / `Block` / `Array`                         | Suffix appended to the component name.                                                                                       |
-| --interfaceFileSuffix      | string              | No       | derived (see Naming)                                            | Segment before `.ts` in the interface file name (e.g. `type` gives `name.type.ts`). See Naming.                              |
-| --viewProviderHelperPath   | string              | No       | -                                                               | The view provider helper. Without it, the component uses the verbose syntax. See [Paths](#paths).                            |
-| --schematicsConfig         | string              | No       | -                                                               | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --skipRegistration         | boolean             | No       | `false`                                                         | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                  |
+| Option                     | Type                | Required | Default (control/group/block/array)                             | Description                                                                                                                    |
+| -------------------------- | ------------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| --key                      | string              | Yes      | -                                                               | Registration key used in the Formbar configuration.                                                                            |
+| --name                     | string              | No       | `key`                                                           | Base name for component and config interface.                                                                                  |
+| --project                  | string              | No       | workspace default project                                       | Angular project name where files are generated.                                                                                |
+| --registrationType         | `token` \| `config` | No       | `token`                                                         | How the component is registered.                                                                                               |
+| --controlRegistrationsPath | string              | No       | -                                                               | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations).   |
+| --path                     | string              | No       | `app` in the source root                                        | The directory the component's own directory is created in. See [Where Components Go](#where-components-go).                    |
+| --interfaceSuffix          | string              | No       | `ControlConfig` / `GroupConfig` / `BlockConfig` / `ArrayConfig` | Suffix appended to the config interface name.                                                                                  |
+| --componentSuffix          | string              | No       | `Control` / `Group` / `Block` / `Array`                         | Suffix appended to the component name.                                                                                         |
+| --interfaceFileSuffix      | string              | No       | derived (see Naming)                                            | Segment before `.ts` in the interface file name (e.g. `type` gives `name.type.ts`). See Naming.                                |
+| --viewProviderHelperPath   | string              | No       | -                                                               | The view provider helper of a control, group or array. Without it, the component uses the verbose syntax. See [Paths](#paths). |
+| --schematicsConfig         | string              | No       | -                                                               | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).   |
+| --skipRegistration         | boolean             | No       | `false`                                                         | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                    |
 
 ### Notes for the View Provider Path Option
 
@@ -219,7 +219,6 @@ Note, that compared to the schematics configuration file, you have to repeat all
           "path": "projects/my-app/src/app/forms",
           "registrationType": "config",
           "controlRegistrationsPath": "app/form/registrations.ts",
-          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders",
           "interfaceSuffix": "BlockType",
           "componentSuffix": "Block",
           "interfaceFileSuffix": "type",

@@ -1137,13 +1137,17 @@ describe('ng-add schematic', () => {
         const schematics = angularJson.projects['test-app'].schematics;
         const registrationsFile = `${registrationsPath}/component-registrations.ts`;
 
-        for (const generator of ['control', 'group', 'block', 'array']) {
+        for (const generator of ['control', 'group', 'array']) {
           expect(schematics[`@ngx-formbar/schematics:${generator}`]).toEqual({
             registrationType: 'config',
             controlRegistrationsPath: registrationsFile,
             viewProviderHelperPath: helperPath,
           });
         }
+        expect(schematics['@ngx-formbar/schematics:block']).toEqual({
+          registrationType: 'config',
+          controlRegistrationsPath: registrationsFile,
+        });
         expect(schematics['@ngx-formbar/schematics:register']).toEqual({
           registrationType: 'config',
           controlRegistrations: registrationsFile,

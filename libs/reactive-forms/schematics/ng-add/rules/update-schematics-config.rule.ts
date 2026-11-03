@@ -35,11 +35,15 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
     }
 
     const defaults = generatorDefaults(ruleContext);
+    const { viewProviderHelperPath: _, ...withoutHelper } = defaults;
 
     return updateSchematicConfigs(
       {
         ...Object.fromEntries(
-          SCAFFOLD_GENERATORS.map((generator) => [generator, defaults]),
+          SCAFFOLD_GENERATORS.map((generator) => [
+            generator,
+            generator === 'block' ? withoutHelper : defaults,
+          ]),
         ),
         register: {
           registrationType: defaults.registrationType,

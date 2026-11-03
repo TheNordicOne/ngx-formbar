@@ -55,10 +55,6 @@
       "type": "string",
       "description": "The component registrations file"
     },
-    "viewProviderHelperPath": {
-      "type": "string",
-      "description": "The view provider helper"
-    },
     "schematicsConfig": {
       "type": "string",
       "description": "The schematics configuration file to use"

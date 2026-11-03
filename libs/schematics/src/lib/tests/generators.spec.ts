@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -1566,6 +1568,15 @@ describe('scaffold warnings', () => {
     await scaffold('control');
 
     expect(warnings.filter((w) => w.includes('View provider'))).toEqual([]);
+  });
+
+  it('offers no helper option on the block generator', () => {
+    const schema: unknown = JSON.parse(
+      readFileSync(join(dirname(COLLECTION_PATH), 'block/schema.json'), 'utf8'),
+    );
+
+    expect(schema).toHaveProperty('properties.key');
+    expect(schema).not.toHaveProperty('properties.viewProviderHelperPath');
   });
 
   it('does not warn about a helper the block generator has no use for', async () => {
