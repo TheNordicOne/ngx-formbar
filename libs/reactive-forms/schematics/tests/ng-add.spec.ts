@@ -170,6 +170,17 @@ describe('ng-add schematic', () => {
       );
   }
 
+  /** In the entry an earlier run left for the control generator. */
+  function seedForeignControlSetting() {
+    appTree.overwrite(
+      'angular.json',
+      read(appTree, 'angular.json').replace(
+        '"@ngx-formbar/schematics:control": {',
+        '"@ngx-formbar/schematics:control": { "interfaceSuffix": "Type",',
+      ),
+    );
+  }
+
   async function scaffoldControl(tree: UnitTestTree) {
     return new SchematicTestRunner(
       'scaffold',
@@ -185,59 +196,54 @@ describe('ng-add schematic', () => {
   });
 
   describe('installing the schematics package', () => {
-    const version = (
-      JSON.parse(
-        readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
-      ) as { version: string }
-    ).version;
+    const schematicsPackage = '@ngx-formbar/schematics';
+    const version = /"version": "(.+)"/.exec(
+      readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
+    )?.[1];
 
-    function manifest(tree: UnitTestTree) {
-      return JSON.parse(read(tree, '/package.json')) as {
-        dependencies?: Record<string, string>;
-        devDependencies?: Record<string, string>;
-      };
+    function seedEntry(section: string) {
+      appTree.overwrite(
+        '/package.json',
+        read(appTree, '/package.json').replace(
+          `"${section}": {`,
+          `"${section}": {\n    "${schematicsPackage}": "1.2.3",`,
+        ),
+      );
     }
 
     it('saves it as a dev dependency in the released version', async () => {
-      const { dependencies, devDependencies } = manifest(await runAdd());
+      const manifest = (await runAdd()).readJson('/package.json');
 
-      expect(devDependencies?.['@ngx-formbar/schematics']).toBe(`^${version}`);
-      expect(dependencies).not.toHaveProperty('@ngx-formbar/schematics');
+      expect(version).toBeTruthy();
+      expect(manifest).toHaveProperty(
+        ['devDependencies', schematicsPackage],
+        `^${version ?? ''}`,
+      );
+      expect(manifest).not.toHaveProperty(['dependencies', schematicsPackage]);
     });
 
-    it.each(['dependencies', 'devDependencies'])(
-      'keeps an existing entry in %s',
-      async (section) => {
-        const before = JSON.parse(read(appTree, '/package.json')) as Record<
-          string,
-          Record<string, string>
-        >;
+    it.each([
+      ['dependencies', 'devDependencies'],
+      ['devDependencies', 'dependencies'],
+    ])('keeps an existing entry in %s', async (section, otherSection) => {
+      seedEntry(section);
 
-        before[section]['@ngx-formbar/schematics'] = '1.2.3';
-        appTree.overwrite('/package.json', JSON.stringify(before));
+      const manifest = (await runAdd()).readJson('/package.json');
 
-        const after = manifest(await runAdd());
-
-        expect(
-          section === 'dependencies'
-            ? after.dependencies?.['@ngx-formbar/schematics']
-            : after.devDependencies?.['@ngx-formbar/schematics'],
-        ).toBe('1.2.3');
-        expect(
-          section === 'dependencies'
-            ? after.devDependencies
-            : after.dependencies,
-        ).not.toHaveProperty('@ngx-formbar/schematics');
-      },
-    );
+      expect(manifest).toHaveProperty([section, schematicsPackage], '1.2.3');
+      expect(manifest).not.toHaveProperty([otherSection, schematicsPackage]);
+    });
 
     it('leaves it out with installSchematics set to false', async () => {
-      const { dependencies, devDependencies } = manifest(
-        await runAdd({ installSchematics: false }),
+      const manifest = (await runAdd({ installSchematics: false })).readJson(
+        '/package.json',
       );
 
-      expect(dependencies).not.toHaveProperty('@ngx-formbar/schematics');
-      expect(devDependencies).not.toHaveProperty('@ngx-formbar/schematics');
+      expect(manifest).not.toHaveProperty(['dependencies', schematicsPackage]);
+      expect(manifest).not.toHaveProperty([
+        'devDependencies',
+        schematicsPackage,
+      ]);
     });
   });
 
@@ -1010,11 +1016,10 @@ describe('ng-add schematic', () => {
 
     it('names no helper in the schematics configuration file without helper files', async () => {
       const tree = await runAdd({ useHelper: false });
-      const schematicsConfig = JSON.parse(
-        read(tree, schematicsConfigPath),
-      ) as NgxFormbarAutomationConfig;
 
-      expect(schematicsConfig).not.toHaveProperty('viewProviderHelperPath');
+      expect(tree.readJson(schematicsConfigPath)).not.toHaveProperty(
+        'viewProviderHelperPath',
+      );
     });
 
     it('names no helper in angular.json without helper files', async () => {
@@ -1320,17 +1325,7 @@ describe('ng-add schematic', () => {
           registrationStyle: 'config',
         });
 
-        const workspace = JSON.parse(read(appTree, 'angular.json')) as {
-          projects: Record<
-            string,
-            { schematics: Record<string, Record<string, unknown>> }
-          >;
-        };
-
-        workspace.projects['test-app'].schematics[
-          '@ngx-formbar/schematics:control'
-        ].interfaceSuffix = 'Type';
-        appTree.overwrite('angular.json', JSON.stringify(workspace));
+        seedForeignControlSetting();
 
         const [controlDefaults] = await generatorDefaults(
           await runAdd({ useSchematicConfig: false }),
@@ -3299,14 +3294,13 @@ describe('ng-add schematic', () => {
           },
           'other',
         );
-        const ownConfig = JSON.parse(
-          read(tree, otherOwnFile),
-        ) as NgxFormbarAutomationConfig;
+        const ownConfig = tree.readJson(otherOwnFile);
 
         expect(read(tree, sharedFile)).toBe(kept);
-        expect(ownConfig.registrationType).toBe('config');
-        expect(ownConfig.viewProviderHelperPath).toBe('app/h2');
-        expect(ownConfig.schema?.type).toBe(
+        expect(ownConfig).toHaveProperty('registrationType', 'config');
+        expect(ownConfig).toHaveProperty('viewProviderHelperPath', 'app/h2');
+        expect(ownConfig).toHaveProperty(
+          'schema.type',
           'app/types/content.type.ts#AppContent',
         );
         expect(warnings).toEqual([]);
@@ -3379,19 +3373,8 @@ describe('ng-add schematic', () => {
     });
 
     it('keeps the other settings of a generator', async () => {
-      const linked = await runAdd({ schematicConfigFileName: 'custom.json' });
-      const workspace = JSON.parse(read(linked, 'angular.json')) as {
-        projects: Record<
-          string,
-          { schematics: Record<string, Record<string, unknown>> }
-        >;
-      };
-
-      workspace.projects['test-app'].schematics[
-        '@ngx-formbar/schematics:control'
-      ].interfaceSuffix = 'Type';
-      linked.overwrite('angular.json', JSON.stringify(workspace));
-      appTree = linked;
+      appTree = await runAdd({ schematicConfigFileName: 'custom.json' });
+      seedForeignControlSetting();
 
       const tree = await runAdd({
         useSchematicConfig: false,
