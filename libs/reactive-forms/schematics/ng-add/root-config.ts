@@ -251,24 +251,20 @@ export function refersToImport(
 ): boolean {
   const bindings = importBindings(callee.getSourceFile(), packageName);
 
-  if (isIdentifier(callee)) {
-    return bindings.some(
-      (binding) =>
-        isImportSpecifier(binding) &&
-        binding.name.text === callee.text &&
-        (binding.propertyName ?? binding.name).text === exportName,
-    );
-  }
-
-  return (
-    isPropertyAccessExpression(callee) &&
-    callee.name.text === exportName &&
-    bindings.some(
-      (binding) =>
-        isNamespaceImport(binding) &&
-        binding.name.text === callee.expression.getText(),
-    )
-  );
+  return isIdentifier(callee)
+    ? bindings.some(
+        (binding) =>
+          isImportSpecifier(binding) &&
+          binding.name.text === callee.text &&
+          (binding.propertyName ?? binding.name).text === exportName,
+      )
+    : isPropertyAccessExpression(callee) &&
+        callee.name.text === exportName &&
+        bindings.some(
+          (binding) =>
+            isNamespaceImport(binding) &&
+            binding.name.text === callee.expression.getText(),
+        );
 }
 
 export function isBootstrapModuleCall({ expression }: CallExpression): boolean {

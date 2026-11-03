@@ -312,26 +312,22 @@ function resolveImportPathAndIdentifier(
 
   const helperFile = posix.join(resolvedDirectory, fileName);
 
-  if (
+  const importPath =
     !namesFile &&
     exportsIdentifier(
       tree,
       posix.join(resolvedDirectory, 'index.ts'),
       identifier,
     )
-  ) {
-    return [
-      buildRelativePath(componentFilePath, resolvedDirectory),
-      identifier,
-    ];
-  }
+      ? resolvedDirectory
+      : helperFile;
 
-  if (!tree.exists(`${helperFile}.ts`)) {
+  if (importPath === helperFile && !tree.exists(`${helperFile}.ts`)) {
     warnHelperNotFound(`${helperFile}.ts`, context);
     return [];
   }
 
-  return [buildRelativePath(componentFilePath, helperFile), identifier];
+  return [buildRelativePath(componentFilePath, importPath), identifier];
 }
 
 function warnHelperNotFound(path: string, context: SchematicContext) {

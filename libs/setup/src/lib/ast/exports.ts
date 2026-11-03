@@ -10,6 +10,7 @@ import {
   isNamedExports,
   isVariableStatement,
   ModifierFlags,
+  NamedExportBindings,
   Statement,
 } from 'typescript';
 import { loadSourceFile } from './parse';
@@ -31,37 +32,39 @@ export function exportsIdentifier(
 }
 
 function statementExports(statement: Statement, identifier: string) {
-  if (isExportDeclaration(statement)) {
-    const { exportClause, isTypeOnly } = statement;
+  return isExportDeclaration(statement)
+    ? !statement.isTypeOnly &&
+        exportClauseHas(statement.exportClause, identifier)
+    : declaredNames(statement).includes(identifier);
+}
 
-    return (
-      !isTypeOnly &&
-      (!exportClause ||
-        (isNamedExports(exportClause)
-          ? exportClause.elements.some(({ name }) => name.text === identifier)
-          : exportClause.name.text === identifier))
-    );
-  }
-
-  return declaredNames(statement).includes(identifier);
+/** No clause at all is `export *`. */
+function exportClauseHas(
+  clause: NamedExportBindings | undefined,
+  identifier: string,
+) {
+  return (
+    !clause ||
+    (isNamedExports(clause)
+      ? clause.elements.some(({ name }) => name.text === identifier)
+      : clause.name.text === identifier)
+  );
 }
 
 function declaredNames(statement: Statement) {
-  if (isVariableStatement(statement)) {
-    return statement.declarationList.declarations.flatMap((declaration) =>
-      isExported(declaration) && isIdentifier(declaration.name)
-        ? [declaration.name.text]
-        : [],
-    );
-  }
-
-  return (isFunctionDeclaration(statement) ||
-    isClassDeclaration(statement) ||
-    isEnumDeclaration(statement)) &&
-    isExported(statement) &&
-    statement.name
-    ? [statement.name.text]
-    : [];
+  return isVariableStatement(statement)
+    ? statement.declarationList.declarations.flatMap((declaration) =>
+        isExported(declaration) && isIdentifier(declaration.name)
+          ? [declaration.name.text]
+          : [],
+      )
+    : (isFunctionDeclaration(statement) ||
+          isClassDeclaration(statement) ||
+          isEnumDeclaration(statement)) &&
+        isExported(statement) &&
+        statement.name
+      ? [statement.name.text]
+      : [];
 }
 
 function isExported(declaration: Declaration) {
