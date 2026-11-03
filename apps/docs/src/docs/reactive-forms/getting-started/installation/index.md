@@ -35,10 +35,7 @@ By default, this does the following.
 > `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. When the options of that run differ from a kept schematics configuration file, `ng add` logs a warning naming each ignored setting. When that file is the shared one at the workspace root, the project gets its own file in the `app` folder of its source root instead.
 
 > **Note**
-> The generators read registrations inside `provideFormbar` only from a config variable. With any other [root providers](#root-providers), `--registrationStyle=config --provideInline --splitRegistrations=false` keeps the registrations in their own files.
-
-> **Note**
-> When the generators would not [find the schematics configuration file](/fundamentals/generators#finding-the-schematics-configuration) where `ng add` writes it, `ng add` sets `schematicsConfig` for every generator in `angular.json`, and removes it again once it is no longer needed.
+> With `--registrationStyle=config --provideInline --splitRegistrations=false`, registrations stay in their own files unless the [root providers](#root-providers) are a config variable.
 
 > **Note**
 > A schematics configuration file wins over the `angular.json` settings written with `--useSchematicConfig=false`. `ng add` logs a warning naming the file when there is one.
