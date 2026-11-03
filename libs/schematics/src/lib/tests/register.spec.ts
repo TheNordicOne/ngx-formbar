@@ -712,6 +712,92 @@ describe('register schematic', () => {
     },
   );
 
+  describe('what counts as a control', () => {
+    async function registeredAfterCreating(path: string, content: string) {
+      appTree.create(path, content);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      return read(await runSchematic(), src(registrationsPath));
+    }
+
+    it('skips a page hosting the form', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/checkout-page.ts'),
+        `import { Component } from '@angular/core';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
+
+@Component({
+  selector: 'app-checkout-page',
+  imports: [NgxFbFormComponent],
+  template: '<ngxfb-form />',
+})
+export class CheckoutPage {}
+`,
+      );
+
+      expect(registrations).not.toContain('CheckoutPage');
+    });
+
+    it('skips a page that only imports a type', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/summary-page.ts'),
+        `import { Component } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-summary-page', template: '' })
+export class SummaryPage {
+  readonly form: NgxFbForm = { content: {} };
+}
+`,
+      );
+
+      expect(registrations).not.toContain('SummaryPage');
+    });
+
+    it('skips a component implementing something else', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/other-page.ts'),
+        `import { Component, OnInit } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-other-page', template: '' })
+export class OtherPage implements OnInit {
+  readonly form?: NgxFbForm;
+  ngOnInit() {}
+}
+`,
+      );
+
+      expect(registrations).not.toContain('OtherPage');
+    });
+
+    it.each([
+      'ReactiveFormbarControl',
+      'ReactiveFormbarGroup',
+      'ReactiveFormbarArray',
+      'FormbarBlock',
+    ])('finds %s imported through a local barrel', async (contract) => {
+      appTree.create(
+        app('shared/index.ts'),
+        `export { ${contract} } from '@ngx-formbar/reactive-forms';\n`,
+      );
+
+      const registrations = await registeredAfterCreating(
+        app('tags/tags-input.ts'),
+        `import { Component } from '@angular/core';
+import { ${contract} } from '../shared';
+
+interface TagsConfig { type: 'tags'; }
+
+@Component({ selector: 'app-tags-input', template: '' })
+export class TagsInput implements ${contract}<TagsConfig> {}
+`,
+      );
+
+      expect(registrations).toContain('TagsInput');
+    });
+  });
+
   describe('the project it looks in', () => {
     function controlAt(path: string, className: string) {
       appTree.create(

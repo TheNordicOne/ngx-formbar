@@ -8,6 +8,7 @@ import {
   ClassDeclaration,
   createSourceFile,
   Decorator,
+  ExpressionWithTypeArguments,
   getDecorators,
   isCallExpression,
   isClassDeclaration,
@@ -85,19 +86,10 @@ function toComponentInfo(
       const fileContent = buffer.toString('utf-8');
 
       // Fast prefilter: only parse likely candidates
-      if (!fileContent.includes('@Component')) {
-        continue;
-      }
-
-      const lowerContent = fileContent.toLowerCase();
-      const hasNgxFbHints =
-        lowerContent.includes('ngxfb') ||
-        lowerContent.includes('formbarcontrol') ||
-        lowerContent.includes('formbargroup') ||
-        lowerContent.includes('formbarblock') ||
-        fileContent.includes('@ngx-formbar/');
-
-      if (!hasNgxFbHints) {
+      if (
+        !fileContent.includes('@Component') ||
+        !fileContent.includes('implements')
+      ) {
         continue;
       }
 
@@ -403,13 +395,14 @@ function extractComponentInfo(
   }
 
   const className = classNode.name?.text;
+  const contract = contractOf(classNode);
 
-  if (!className) {
+  if (!className || !contract) {
     return undefined;
   }
 
   const key =
-    configTypeLiteral(tree, classNode, filePath) ??
+    configTypeLiteral(tree, contract, filePath) ??
     strings.dasherize(stripComponentSuffix(className));
 
   return {
@@ -419,21 +412,24 @@ function extractComponentInfo(
   };
 }
 
+/** The contract a form component implements, whatever it is imported through. */
+function contractOf(classNode: ClassDeclaration) {
+  return classNode.heritageClauses
+    ?.filter(({ token }) => token === SyntaxKind.ImplementsKeyword)
+    .flatMap(({ types }) => [...types])
+    .find(
+      ({ expression }) =>
+        isIdentifier(expression) && contracts.includes(expression.text),
+    );
+}
+
 /** The `type` of the config interface, which is the key a form refers to. */
 function configTypeLiteral(
   tree: Tree,
-  classNode: ClassDeclaration,
+  contract: ExpressionWithTypeArguments,
   filePath: string,
 ) {
-  const configType = classNode.heritageClauses
-    ?.filter(({ token }) => token === SyntaxKind.ImplementsKeyword)
-    .flatMap(({ types }) => [...types])
-    .filter(
-      ({ expression }) =>
-        isIdentifier(expression) && contracts.includes(expression.text),
-    )
-    .map(({ typeArguments }) => typeArguments?.at(0))
-    .find((argument) => !!argument);
+  const configType = contract.typeArguments?.at(0);
 
   const name =
     configType &&

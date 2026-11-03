@@ -2,17 +2,17 @@ While the Generator Schematics, by default, already register every new component
 
 ## What Does It Do
 
-This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those must always be registered manually.
+This schematic registers every component whose class says `implements` with one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`. Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
 
 It looks through the source root of the project and skips any other project inside it.
 
 Each control is registered under the `type` of its config interface, as a form refers to it:
 
-| The component                                                            | Registered as    |
-| ------------------------------------------------------------------------ | ---------------- |
-| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'` | `slider`         |
-| `class RatingComponent`, with no such interface                          | `rating`         |
-| `class RatingControl`, with no such interface                            | `rating-control` |
+| The component                                                                     | Registered as    |
+| --------------------------------------------------------------------------------- | ---------------- |
+| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`          | `slider`         |
+| `class RatingComponent implements ReactiveFormbarControl`, with no such interface | `rating`         |
+| `class RatingControl implements ReactiveFormbarControl`, with no such interface   | `rating-control` |
 
 ## Options
 
