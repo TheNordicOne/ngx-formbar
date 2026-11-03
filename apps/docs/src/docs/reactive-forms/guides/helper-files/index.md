@@ -31,8 +31,6 @@ export const controlContainerViewProviders = [
 
 To have the generators use this file, set `viewProviderHelperPath` to `app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders`.
 
-> **Note:** Earlier versions of ngx-formbar shipped additional helpers (`ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, `ngxfbBlockHostDirective`) for applying host directives to consumer components. As of v2.0.0, components implement the interface contract directly, so those host-directive helpers are no longer needed and have been removed.
-
 ## Union Types
 
 For official documentation of Union Types check out the [official docs](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
