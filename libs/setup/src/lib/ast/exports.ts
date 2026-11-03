@@ -68,7 +68,7 @@ function starTargetExports(
 }
 
 /** The file of a relative module specifier, as a TypeScript path lookup finds it. */
-export function relativeModuleFile(
+function relativeModuleFile(
   tree: Tree,
   fromFile: string,
   specifier: string,

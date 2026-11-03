@@ -321,9 +321,6 @@ function globToRegExp(glob: string) {
   }
 }
 
-/**
- * Analyzes a TypeScript source file to find components with Ngx Formbar directives
- */
 function analyzeSourceFile(
   sourceFile: SourceFile,
   filePath: string,

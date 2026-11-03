@@ -105,7 +105,7 @@ function resolveExplicitConfig(
   return path;
 }
 
-export function readFile<T>(tree: Tree, path?: string | null): T | null {
+function readFile<T>(tree: Tree, path?: string | null): T | null {
   if (!path) {
     return null;
   }

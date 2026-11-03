@@ -195,7 +195,7 @@ export function registrationNodeUsesIdentifier(
   return false;
 }
 
-export function registrationsObjectHasKey(
+function registrationsObjectHasKey(
   obj: ObjectLiteralExpression,
   key: string,
 ): boolean {
@@ -216,7 +216,7 @@ export function registrationsObjectHasKey(
   return false;
 }
 
-export function registrationsObjectUsesIdentifier(
+function registrationsObjectUsesIdentifier(
   obj: ObjectLiteralExpression,
   identifierName: string,
 ): boolean {
