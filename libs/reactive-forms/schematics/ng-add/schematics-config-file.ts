@@ -1,10 +1,12 @@
-import { isJsonObject } from '@angular-devkit/core';
+import { isJsonObject, JsonValue } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import {
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
+  isWithin,
   joinToSourceRoot,
+  resolveWithinWorkspace,
 } from '@ngx-formbar/setup';
 import { posix } from 'node:path';
 import {
@@ -71,10 +73,69 @@ export function ignoredSettings(
   }
 
   const defaults = generatorDefaults(ruleContext);
+  const stated = (setting: keyof GeneratorDefaults) =>
+    defaults[setting] ?? UNSTATED[setting];
 
   return SETTINGS.filter(
     (setting) =>
-      (kept[setting] ?? UNSTATED[setting]) !==
-      (defaults[setting] ?? UNSTATED[setting]),
-  ).map((setting) => `${setting}: ${defaults[setting] ?? UNSTATED[setting]}`);
+      !isSameSetting(
+        setting,
+        kept[setting] ?? UNSTATED[setting],
+        stated(setting),
+        ruleContext.projectRoot,
+      ),
+  ).map((setting) => `${setting}: ${stated(setting)}`);
+}
+
+/** The top-level settings of `shared` that `own` does not repeat. */
+export function settingsStoppingToApply(
+  tree: Tree,
+  shared: string,
+  own: object,
+): string[] {
+  const kept = tree.readJson(shared);
+  const ownEntries = new Map(Object.entries(own));
+
+  return isJsonObject(kept)
+    ? Object.keys(kept).filter(
+        (setting) =>
+          JSON.stringify(kept[setting]) !==
+          JSON.stringify(ownEntries.get(setting)),
+      )
+    : [];
+}
+
+function isSameSetting(
+  setting: keyof GeneratorDefaults,
+  kept: JsonValue,
+  stated: string,
+  sourceRoot: string,
+) {
+  return (
+    kept === stated ||
+    (setting !== 'registrationType' &&
+      typeof kept === 'string' &&
+      stated !== UNSTATED.viewProviderHelperPath &&
+      isSamePath(setting, kept, stated, sourceRoot))
+  );
+}
+
+function isSamePath(
+  setting: keyof GeneratorDefaults,
+  kept: string,
+  stated: string,
+  sourceRoot: string,
+) {
+  const [keptPath] = kept.split('#');
+  const resolvedKept = resolveWithinWorkspace(keptPath, sourceRoot);
+  const resolvedStated = resolveWithinWorkspace(stated, sourceRoot);
+
+  return (
+    !!resolvedKept &&
+    !!resolvedStated &&
+    (resolvedKept === resolvedStated ||
+      (setting === 'viewProviderHelperPath' &&
+        keptPath.endsWith('.ts') &&
+        isWithin(resolvedKept.slice(1), resolvedStated.slice(1))))
+  );
 }

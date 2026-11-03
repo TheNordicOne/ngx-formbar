@@ -3480,6 +3480,77 @@ describe('ng-add schematic', () => {
       expect(warnings).toEqual([]);
     });
 
+    it.each<[string, string, string]>([
+      [
+        'the registrations spelled out',
+        'controlRegistrationsPath',
+        'app/registrations/component-registrations.ts',
+      ],
+      [
+        'the registrations with a leading ./',
+        'controlRegistrationsPath',
+        './app/registrations/component-registrations.ts',
+      ],
+      [
+        'the registrations from the workspace root',
+        'controlRegistrationsPath',
+        'projects/test-app/src/app/registrations/component-registrations.ts',
+      ],
+      [
+        'the helper from the workspace root',
+        'viewProviderHelperPath',
+        'projects/test-app/src/app/shared/helper',
+      ],
+      [
+        'the helper with a leading ./',
+        'viewProviderHelperPath',
+        './app/shared/helper',
+      ],
+      [
+        'the helper from a leading /',
+        'viewProviderHelperPath',
+        '/projects/test-app/src/app/shared/helper',
+      ],
+      [
+        'a helper file in the helper folder',
+        'viewProviderHelperPath',
+        'app/shared/helper/form-helpers.ts',
+      ],
+      [
+        'a helper file and export in the helper folder',
+        'viewProviderHelperPath',
+        'app/shared/helper/form-helpers.ts#formViewProviders',
+      ],
+    ])('does not warn about %s', async (_, setting, value) => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          viewProviderHelperPath: 'app/shared/helper',
+          [setting]: value,
+        }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([]);
+    });
+
+    it.each<[string, string]>([
+      ['a helper file in another folder', 'app/shared/other/helper.ts'],
+      ['a helper folder below the helper folder', 'app/shared/helper/sub'],
+    ])('warns about %s', async (_, value) => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({ viewProviderHelperPath: value }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([
+        `${schematicsConfigPath} stays as it is, so these settings of this run are ignored: viewProviderHelperPath: app/shared/helper. Change them in that file.`,
+      ]);
+    });
+
     describe('in the shared file at the workspace root', () => {
       const sharedFile = '/formbar-schematic.config.json';
       const otherOwnFile =
@@ -3513,6 +3584,68 @@ describe('ng-add schematic', () => {
           'schema.type',
           'app/types/content.type.ts#AppContent',
         );
+        expect(warnings).toEqual([
+          `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: viewProviderHelperPath.`,
+        ]);
+      });
+
+      it('names every setting that stops applying', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({
+            viewProviderHelperPath: 'app/shared/helper',
+            control: { interfaceSuffix: 'Type' },
+            discovery: { include: ['**/forms/**'] },
+          }),
+        );
+
+        const { warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+
+        expect(warnings).toEqual([
+          `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: control, discovery.`,
+        ]);
+      });
+
+      it('does not list what the own file repeats', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({ viewProviderHelperPath: 'app/shared/helper' }),
+        );
+
+        const { warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+
+        expect(warnings).toEqual([
+          `${otherOwnFile} now applies to this project instead of ${sharedFile}.`,
+        ]);
+      });
+
+      it.each<[string, Record<string, string>]>([
+        [
+          'a path spelled differently',
+          { viewProviderHelperPath: './app/shared/helper' },
+        ],
+        [
+          'a helper file in the helper folder',
+          {
+            viewProviderHelperPath:
+              'app/shared/helper/form-helpers.ts#formViewProviders',
+          },
+        ],
+      ])('shares the file with %s', async (_, settings) => {
+        appTree.overwrite(sharedFile, JSON.stringify(settings));
+
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(tree.exists(otherOwnFile)).toBe(false);
         expect(warnings).toEqual([]);
       });
 

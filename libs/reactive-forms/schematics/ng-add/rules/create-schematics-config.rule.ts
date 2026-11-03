@@ -18,6 +18,7 @@ import {
   ignoredSettings,
   requestedSchematicsConfigFile,
   schematicsConfigFile,
+  settingsStoppingToApply,
 } from '../schematics-config-file';
 import { posix } from 'node:path';
 import {
@@ -38,12 +39,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     const ignored = ignoredSettings(tree, configFile, ruleContext);
     const requested = requestedSchematicsConfigFile(ruleContext);
 
-    if (configFile !== requested) {
-      context.logger.info(
-        `${requested} holds other settings, so this project gets its own ${configFile}.`,
-      );
-    }
-
     if (ignored.length > 0) {
       context.logger.warn(
         `${configFile} stays as it is, so these settings of this run are ignored: ${ignored.join(', ')}. Change them in that file.`,
@@ -57,6 +52,18 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
         emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
       },
     };
+
+    if (configFile !== requested && !tree.exists(configFile)) {
+      const stopping = settingsStoppingToApply(
+        tree,
+        requested,
+        schematicConfig,
+      );
+
+      context.logger.warn(
+        `${configFile} now applies to this project instead of ${requested}.${stopping.length > 0 ? ` These settings of ${requested} stop applying: ${stopping.join(', ')}.` : ''}`,
+      );
+    }
 
     return mergeWith(
       apply(url('./ng-add/files/schematics-config'), [
