@@ -1239,6 +1239,42 @@ export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarCo
         expect(await registered()).toMatch(key('declared'));
       });
 
+      it.each<[string, string, string]>([
+        [
+          'a local alias',
+          'implements MyControl',
+          'type MyControl = formbar.ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a local interface',
+          'implements MyControl',
+          'interface MyControl extends formbar.ReactiveFormbarControl<RangeConfig> {}',
+        ],
+        [
+          'a base',
+          'extends BaseControl<RangeConfig>',
+          'export abstract class BaseControl<T> implements formbar.ReactiveFormbarControl<T> {}',
+        ],
+      ])(
+        'finds the contract of a namespace import through %s',
+        async (_, heritage, declaration) => {
+          appTree.create(
+            componentFile,
+            `import { Component } from '@angular/core';
+import * as formbar from '@ngx-formbar/reactive-forms';
+
+interface RangeConfig { type: 'declared'; }
+${declaration}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent ${heritage} {}
+`,
+          );
+
+          expect(await registered()).toMatch(key('declared'));
+        },
+      );
+
       it.each<[string, string, string, Record<string, string>]>([
         [
           'an import under another name',
@@ -1278,6 +1314,172 @@ export class RangeComponent implements ${used}<RangeConfig> {}
         );
 
         expect(await registered()).toMatch(key('declared'));
+      });
+    });
+
+    describe('through what the class builds on', () => {
+      const contractImport =
+        "import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';";
+      const config = "interface RangeConfig { type: 'declared'; }";
+
+      function component(heritage: string, declarations = '') {
+        return `import { Component, Directive } from '@angular/core';
+${contractImport}
+${declarations}
+${config}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent ${heritage} {}
+`;
+      }
+
+      const base = `@Directive()
+export abstract class BaseControl<T> implements ReactiveFormbarControl<T> {}`;
+
+      it.each<[string, string, string]>([
+        ['a direct base', 'extends BaseControl<RangeConfig>', base],
+        [
+          'a two-level base',
+          'extends MiddleControl<RangeConfig>',
+          `${base}
+@Directive()
+export abstract class MiddleControl<C> extends BaseControl<C> {}`,
+        ],
+        [
+          'a fixed base',
+          'extends FixedControl',
+          `${base}
+@Directive()
+export abstract class FixedControl extends BaseControl<RangeConfig> {}`,
+        ],
+        [
+          'a base with a default config',
+          'extends DefaultedControl',
+          `@Directive()
+export abstract class DefaultedControl<T = RangeConfig> implements ReactiveFormbarControl<T> {}`,
+        ],
+        [
+          'a local interface',
+          'implements MyControl',
+          'interface MyControl extends ReactiveFormbarControl<RangeConfig> {}',
+        ],
+        [
+          'a generic local interface',
+          'implements MyControl<RangeConfig>',
+          'interface MyControl<C> extends ReactiveFormbarControl<C> {}',
+        ],
+        [
+          'a local alias',
+          'implements MyControl',
+          'type MyControl = ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a generic local alias',
+          'implements MyControl<RangeConfig>',
+          'type MyControl<C> = ReactiveFormbarControl<C>;',
+        ],
+        [
+          'an intersection in a local alias',
+          'implements MyControl',
+          'type MyControl = { label: string } & ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a base and its own contract',
+          'extends BaseControl<{ type: string }> implements ReactiveFormbarControl<RangeConfig>',
+          base,
+        ],
+        [
+          'a base and another literal in its own contract',
+          "extends BaseControl<{ type: 'other' }> implements ReactiveFormbarControl<RangeConfig>",
+          base,
+        ],
+      ])('finds the contract through %s', async (_, heritage, declarations) => {
+        appTree.create(componentFile, component(heritage, declarations));
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it('finds the contract through a base in another file', async () => {
+        appTree.create(
+          app('widgets/base-control.ts'),
+          `${contractImport}
+import { Directive } from '@angular/core';
+
+${base}
+`,
+        );
+        appTree.create(
+          app('widgets/middle-control.ts'),
+          `import { Directive } from '@angular/core';
+import { BaseControl } from './base-control';
+
+@Directive()
+export abstract class MiddleControl<C> extends BaseControl<C> {}
+`,
+        );
+        appTree.create(
+          componentFile,
+          `import { Component } from '@angular/core';
+import { MiddleControl } from './middle-control';
+
+${config}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent extends MiddleControl<RangeConfig> {}
+`,
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it('falls back to the class name with a base that fixes no type literal', async () => {
+        appTree.create(
+          componentFile,
+          component('extends BaseControl<{ type: string }>', base),
+        );
+        const warnings: string[] = [];
+        runner.logger.subscribe((entry) => {
+          if (entry.level === 'warn') {
+            warnings.push(entry.message);
+          }
+        });
+
+        expect(await registered()).toMatch(key('range'));
+        expect(warnings).toContain(
+          'RangeComponent has no single string `type` in its config, so it is registered as "range".',
+        );
+      });
+
+      it.each<[string, string, string]>([
+        [
+          'a base without a contract',
+          'extends PlainBase',
+          '@Directive()\nexport abstract class PlainBase<T = RangeConfig> {}',
+        ],
+        [
+          'an interface without a contract',
+          'implements Plain',
+          'interface Plain { label: string; }',
+        ],
+        [
+          'an alias without a contract',
+          'implements Plain',
+          'type Plain = { label: string };',
+        ],
+        [
+          'a contract only in a type argument',
+          'implements Holder<ReactiveFormbarControl<RangeConfig>>',
+          'interface Holder<T> { held: T; }',
+        ],
+        [
+          'interfaces extending each other',
+          'implements First',
+          'interface First extends Second {}\ninterface Second extends First {}',
+        ],
+      ])('skips a component with %s', async (_, heritage, declarations) => {
+        appTree.create(componentFile, component(heritage, declarations));
+
+        expect(await registered()).not.toContain('RangeComponent');
       });
     });
 

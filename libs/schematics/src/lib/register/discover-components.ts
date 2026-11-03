@@ -6,16 +6,27 @@ import {
 import { RegisterContext } from './schema';
 import {
   ClassDeclaration,
+  ClassLikeDeclaration,
   Decorator,
-  ExpressionWithTypeArguments,
   getDecorators,
+  InterfaceDeclaration,
   isCallExpression,
   isClassDeclaration,
+  isClassLike,
   isIdentifier,
-  isPropertyAccessExpression,
+  isInterfaceDeclaration,
+  isIntersectionTypeNode,
+  isTypeAliasDeclaration,
+  isTypeReferenceNode,
+  Node,
+  NodeArray,
   SourceFile,
+  Symbol as TsSymbol,
   SymbolFlags,
+  Type,
+  TypeAliasDeclaration,
   TypeChecker,
+  TypeNode,
 } from 'typescript';
 import { normalize, strings } from '@angular-devkit/core';
 import { isWithin, resolveRequiredPath } from '@ngx-formbar/setup';
@@ -68,7 +79,7 @@ function toComponentInfo(
   const candidates = files.filter((filePath) => {
     const text = tree.read(filePath)?.toString('utf-8') ?? '';
 
-    return text.includes('@Component') && text.includes('implements');
+    return text.includes('@Component');
   });
 
   if (candidates.length === 0) {
@@ -391,13 +402,15 @@ function extractComponentInfo(
   }
 
   const className = classNode.name?.text;
-  const contract = contractOf(classNode, checker);
+  const configs = contractConfigs(classNode, new Map(), checker, new Set());
 
-  if (!className || !contract) {
+  if (!className || configs.length === 0) {
     return undefined;
   }
 
-  const configured = configTypeLiteral(contract, checker);
+  const configured = configs
+    .map((config) => configTypeLiteral(config, checker))
+    .find(Boolean);
   const key = configured ?? strings.dasherize(stripComponentSuffix(className));
 
   if (!configured) {
@@ -413,44 +426,143 @@ function extractComponentInfo(
   };
 }
 
-function contractOf(classNode: ClassDeclaration, checker: TypeChecker) {
-  return classNode.heritageClauses
-    ?.flatMap(({ types }) => [...types])
-    .find((heritage) => isContract(heritage, checker));
+/**
+ * The config of each contract a declaration reaches, `undefined` for a contract
+ * without one, and nothing at all when it reaches no contract.
+ */
+function contractConfigs(
+  declaration: BuildingDeclaration,
+  typeArguments: ReadonlyMap<Type, Type>,
+  checker: TypeChecker,
+  seen: Set<TsSymbol>,
+): (Type | undefined)[] {
+  return referencesOf(declaration).flatMap((reference) => {
+    const symbol = originalSymbol(reference.name, checker);
+
+    if (isContract(reference.name, symbol)) {
+      const config = reference.typeArguments?.at(0);
+
+      return [config && resolveType(config, typeArguments, checker)];
+    }
+
+    if (!symbol || seen.has(symbol)) {
+      return [];
+    }
+
+    seen.add(symbol);
+
+    return (symbol.declarations ?? [])
+      .filter(isBuildingDeclaration)
+      .flatMap((inner) =>
+        contractConfigs(
+          inner,
+          typeArgumentsOf(
+            inner,
+            reference.typeArguments,
+            typeArguments,
+            checker,
+          ),
+          checker,
+          seen,
+        ),
+      );
+  });
+}
+
+type BuildingDeclaration =
+  | ClassLikeDeclaration
+  | InterfaceDeclaration
+  | TypeAliasDeclaration;
+
+function isBuildingDeclaration(node: Node): node is BuildingDeclaration {
+  return (
+    isClassLike(node) ||
+    isInterfaceDeclaration(node) ||
+    isTypeAliasDeclaration(node)
+  );
+}
+
+/**
+ * The types a declaration builds on. `implements` goes first, as it states the
+ * config of this class, where `extends` passes on what a base states.
+ */
+function referencesOf(declaration: BuildingDeclaration) {
+  if (isTypeAliasDeclaration(declaration)) {
+    const { type } = declaration;
+
+    return (isIntersectionTypeNode(type) ? [...type.types] : [type])
+      .filter(isTypeReferenceNode)
+      .map(({ typeName, typeArguments }) => ({
+        name: typeName,
+        typeArguments,
+      }));
+  }
+
+  return [...(declaration.heritageClauses ?? [])]
+    .reverse()
+    .flatMap(({ types }) => [...types])
+    .map(({ expression, typeArguments }) => ({
+      name: expression,
+      typeArguments,
+    }));
+}
+
+function originalSymbol(name: Node, checker: TypeChecker) {
+  const symbol = checker.getSymbolAtLocation(name);
+
+  return symbol && symbol.flags & SymbolFlags.Alias
+    ? checker.getAliasedSymbol(symbol)
+    : symbol;
 }
 
 /**
  * The imported name stands in when the package cannot be resolved, as then the
  * checker knows nothing about the symbol.
  */
-function isContract(
-  { expression }: ExpressionWithTypeArguments,
-  checker: TypeChecker,
-) {
-  const symbol = checker.getSymbolAtLocation(expression);
-  const original =
-    symbol && symbol.flags & SymbolFlags.Alias
-      ? checker.getAliasedSymbol(symbol)
-      : symbol;
-  const written = isPropertyAccessExpression(expression)
-    ? expression.name.text
-    : isIdentifier(expression)
-      ? expression.text
-      : undefined;
+function isContract(name: Node, symbol: TsSymbol | undefined) {
+  const written = isIdentifier(name) ? name.text : undefined;
 
-  return [original?.name, written].some(
-    (name) => !!name && contracts.includes(name),
+  return [symbol?.name, written].some(
+    (candidate) => !!candidate && contracts.includes(candidate),
   );
 }
 
-/** The `type` of the config, which is the key a form refers to. */
-function configTypeLiteral(
-  contract: ExpressionWithTypeArguments,
+/** What the type parameters of a declaration stand for at one reference to it. */
+function typeArgumentsOf(
+  declaration: BuildingDeclaration,
+  written: NodeArray<TypeNode> | undefined,
+  outer: ReadonlyMap<Type, Type>,
   checker: TypeChecker,
 ) {
-  const config = contract.typeArguments?.at(0);
-  const property =
-    config && checker.getTypeFromTypeNode(config).getProperty('type');
+  const resolved = new Map<Type, Type>();
+
+  declaration.typeParameters?.forEach((parameter, index) => {
+    const argument = written?.at(index) ?? parameter.default;
+
+    if (argument) {
+      resolved.set(
+        checker.getTypeAtLocation(parameter),
+        resolveType(argument, outer, checker),
+      );
+    }
+  });
+
+  return resolved;
+}
+
+function resolveType(
+  node: TypeNode,
+  typeArguments: ReadonlyMap<Type, Type>,
+  checker: TypeChecker,
+) {
+  const type = checker.getTypeFromTypeNode(node);
+
+  return typeArguments.get(type) ?? type;
+}
+
+/** The `type` of the config, which is the key a form refers to. */
+function configTypeLiteral(config: Type | undefined, checker: TypeChecker) {
+  const property = config?.getProperty('type');
   const type = property && checker.getTypeOfSymbol(property);
 
   return type?.isStringLiteral() ? type.value : undefined;

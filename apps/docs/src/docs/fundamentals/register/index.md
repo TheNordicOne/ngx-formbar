@@ -2,17 +2,18 @@ While the Generator Schematics, by default, already register every new component
 
 ## What Does It Do
 
-This schematic registers every component whose class says `implements` with one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`. Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
+This schematic registers every component that implements one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`, directly or through a base class, an interface or a type alias. Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
 
 It looks through the source root of the project and skips any other project inside it.
 
 Each control is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
-| The component                                                                                | Registered as    |
-| -------------------------------------------------------------------------------------------- | ---------------- |
-| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`                     | `slider`         |
-| `class RatingComponent implements ReactiveFormbarControl<RatingConfig>`, with `type: string` | `rating`         |
-| `class RatingControl implements ReactiveFormbarControl<RatingConfig>`, with `type: string`   | `rating-control` |
+| The component                                                                                           | Registered as    |
+| ------------------------------------------------------------------------------------------------------- | ---------------- |
+| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`                                | `slider`         |
+| `extends BaseControl<SliderConfig>`, where `BaseControl` implements the contract, with `type: 'slider'` | `slider`         |
+| `class RatingComponent implements ReactiveFormbarControl<RatingConfig>`, with `type: string`            | `rating`         |
+| `class RatingControl implements ReactiveFormbarControl<RatingConfig>`, with `type: string`              | `rating-control` |
 
 ## Options
 

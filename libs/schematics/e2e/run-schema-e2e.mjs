@@ -51,6 +51,28 @@ export class AliasedInput implements Control<AliasedConfig> {
   readonly name = input.required<string>();
 }
 `;
+const BASE_CONTROL = `import { Directive, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+@Directive()
+export abstract class BaseInput<T extends NgxFbControl>
+  implements ReactiveFormbarControl<T>
+{
+  readonly name = input.required<string>();
+}
+`;
+const INHERITING_CONTROL = `import { Component } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { BaseInput } from './base-input';
+
+interface InheritingConfig extends NgxFbControl {
+  type: 'inheriting';
+}
+
+@Component({ selector: 'app-inheriting-input', template: '' })
+export class InheritingInput extends BaseInput<InheritingConfig> {}
+`;
 const HOST_PAGE = `import { Component } from '@angular/core';
 import { NgxFbForm } from '@ngx-formbar/core';
 
@@ -1385,6 +1407,14 @@ function runAngularJsonDefaultsFlow(appDir) {
     ALIASED_CONTROL,
   );
   writeFileSync(
+    join(sourceRoot, 'app', 'written', 'base-input.ts'),
+    BASE_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'inheriting-input.ts'),
+    INHERITING_CONTROL,
+  );
+  writeFileSync(
     join(sourceRoot, 'app', 'written', 'summary-page.ts'),
     HOST_PAGE,
   );
@@ -1420,6 +1450,10 @@ function runAngularJsonDefaultsFlow(appDir) {
   check(
     /["']?aliased["']?:\s*loadComponent\(/.test(registered),
     'register read the type of a config intersected with a type of core, through a barrel renaming the contract',
+  );
+  check(
+    /["']?inheriting["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config passed through a base class holding the contract',
   );
   check(
     !registered.includes('SummaryPage'),
