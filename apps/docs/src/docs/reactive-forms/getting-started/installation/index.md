@@ -58,19 +58,26 @@ A root NgModule has to be a named class declared in the project, and its metadat
 
 ## Which Schematics Configuration File
 
-Without `--schematicsConfigPath` and `--schematicConfigFileName`, with source root `src`:
+With source root `src`, `ng add` uses the first row that matches:
 
-| Before the run                                                        | `ng add` uses                                                                                                           |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| No such file                                                          | A new `src/app/formbar-schematic.config.json`                                                                           |
-| `src/app/formbar-schematic.config.json`                               | That file                                                                                                               |
-| `schematicsConfig` in `angular.json`, pointing at a file that exists  | That file                                                                                                               |
-| `formbar-schematic.config.json` at the workspace root, same settings  | That file, which every project without its own [shares](/fundamentals/generators#finding-the-schematics-configuration)  |
-| `formbar-schematic.config.json` at the workspace root, other settings | A new `src/app/formbar-schematic.config.json`, with a warning naming the settings of the shared file that stop applying |
+| What exists                                                                   | `ng add` uses                                                                          |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `schematicsConfig` in `angular.json`, pointing at a file that exists          | That file                                                                              |
+| `src/app/formbar-schematic.config.json`                                       | That file                                                                              |
+| `formbar-schematic.config.json` at the workspace root, with the same settings | That file                                                                              |
+| `formbar-schematic.config.json` at the workspace root, with other settings    | A new `src/app/formbar-schematic.config.json`, and a warning lists what stops applying |
+| None of these                                                                 | A new `src/app/formbar-schematic.config.json`                                          |
 
-`ng add` warns about each setting of the run that a kept file lacks. Change those in the file.
+The same settings means the same registration style, registrations file and view provider helper as this run. A kept file is not changed, and a warning names each of those settings it does not have.
 
-With those options, `ng add` uses the file they name. It removes a `schematicsConfig` the generators no longer need and warns about it. `--schematicsConfigPath=/` follows the two workspace root rows.
+To name the location yourself:
+
+| You pass                              | `ng add` uses                                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `--schematicsConfigPath=forms`        | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it |
+| `--schematicConfigFileName=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                       |
+| `--schematicsConfigPath=app`          | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning    |
+| `--schematicsConfigPath=/`            | The workspace root rows above, or a new file there if there is none                            |
 
 ## Options
 
