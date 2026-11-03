@@ -373,7 +373,7 @@ describe('control schematic', () => {
         ).toBe(true);
       });
 
-      it('uses the verbose syntax when neither the index nor a file has the helper', async () => {
+      it('declares the view providers itself when neither the index nor a file has the helper', async () => {
         writeTs(
           appTree,
           src(`${viewProviderHelperPath}/index.ts`),
@@ -1519,7 +1519,7 @@ describe('scaffold warnings', () => {
       const generated = read(tree, app(`test/test-${schematicName}.ts`));
 
       expect(warnings).toContain(
-        `View provider helper ${src('app/absent/view-provider.ts')} could not be found. Using the verbose syntax.`,
+        `View provider helper ${src('app/absent/view-provider.ts')} could not be found. The component declares the view providers itself.`,
       );
       expect(generated).toContain('ControlContainer');
     },
@@ -1545,7 +1545,7 @@ describe('scaffold warnings', () => {
     });
 
     expect(warnings).toContain(
-      'View provider helper ../../../../helper could not be found. Using the verbose syntax.',
+      'View provider helper ../../../../helper could not be found. The component declares the view providers itself.',
     );
     expect(read(tree, app('test/test-control.ts'))).toContain(
       'ControlContainer',

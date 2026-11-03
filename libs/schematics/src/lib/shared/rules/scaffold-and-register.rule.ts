@@ -334,7 +334,7 @@ function resolveImportPathAndIdentifier(
 
 function warnHelperNotFound(path: string, context: SchematicContext) {
   context.logger.warn(
-    `View provider helper ${path} could not be found. Using the verbose syntax.`,
+    `View provider helper ${path} could not be found. The component declares the view providers itself.`,
   );
 }
 
