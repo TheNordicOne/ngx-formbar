@@ -613,6 +613,42 @@ describe('ng-add schematic', () => {
     });
   });
 
+  describe('registrations the generators could not read in place', () => {
+    const inlineOptions: Schema = {
+      registrationStyle: 'config',
+      provideInline: true,
+      splitRegistrations: false,
+    };
+    const mainFile = src('main.ts');
+    const message = `Keeping registrations in ${registrations}, where the generators can add to them. They cannot read them from ${mainFile}.`;
+
+    async function messagesOfRun() {
+      const messages: string[] = [];
+
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+      await runAdd(inlineOptions);
+
+      return messages;
+    }
+
+    it('logs where they stay with registrations in the bootstrap call', async () => {
+      appTree.overwrite(
+        mainFile,
+        `import { bootstrapApplication } from '@angular/platform-browser';\nimport { App } from './app/app';\nbootstrapApplication(App, { providers: [] });\n`,
+      );
+
+      expect(await messagesOfRun()).toContain(message);
+    });
+
+    it('stays silent with registrations in a config variable', async () => {
+      const messages = await messagesOfRun();
+
+      expect(
+        messages.filter((entry) => entry.startsWith('Keeping registrations')),
+      ).toEqual([]);
+    });
+  });
+
   describe('the layout of the added providers', () => {
     function configWith(providers: string, newLine = '\n') {
       return `export const appConfig = {\n${providers}\n};\n`.replace(
