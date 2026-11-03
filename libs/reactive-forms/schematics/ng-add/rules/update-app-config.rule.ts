@@ -5,37 +5,38 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import {
-  findVariableWithObjectLiteral,
-  isObjectLiteralWithProperty,
-} from '@ngx-formbar/setup';
+import { findProvidersProperty, loadSourceFile } from '@ngx-formbar/setup';
 
 import {
   createSourceFile,
   isArrayLiteralExpression,
-  isIdentifier,
   isPropertyAssignment,
-  PropertyAssignment,
   ScriptTarget,
 } from 'typescript';
 import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
+import {
+  addMissingProviders,
+  findProvidersOwner,
+  insertNamedImport,
+} from '../root-config';
 import { REACTIVE_FORMS_PACKAGE_NAME } from '../../shared/constants';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { appConfigPath } = ruleContext;
+    const { appConfigPath, rootConfig } = ruleContext;
 
-    context.logger.info('Updating app.config.ts');
+    context.logger.info(`Updating ${appConfigPath}`);
 
-    const buffer = tree.read(appConfigPath);
-    if (!buffer) {
+    const original = loadSourceFile(tree, appConfigPath);
+    if (!original) {
       throw new SchematicsException(
         `Missing file or unreadable: ${appConfigPath}`,
       );
     }
 
-    const content = buffer.toString('utf-8');
+    addMissingProviders(tree, original, rootConfig);
+
+    const content = tree.readText(appConfigPath);
     const sourceFile = createSourceFile(
       appConfigPath,
       content,
@@ -44,37 +45,26 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
     );
 
     const changes: Change[] = [
-      insertImport(
+      insertNamedImport(
         sourceFile,
         appConfigPath,
         'provideFormbar',
         REACTIVE_FORMS_PACKAGE_NAME,
-        false,
       ),
     ];
 
-    const appConfig = findVariableWithObjectLiteral(sourceFile, (variable) =>
-      isObjectLiteralWithProperty(variable, 'providers'),
-    );
+    const owner = findProvidersOwner(sourceFile, rootConfig);
+    const providers = owner && findProvidersProperty(owner);
+    const providersInit =
+      providers && isPropertyAssignment(providers)
+        ? providers.initializer
+        : null;
 
-    const providersProp = appConfig?.properties.find(
-      (prop) =>
-        isPropertyAssignment(prop) &&
-        isIdentifier(prop.name) &&
-        prop.name.text === 'providers',
-    ) as PropertyAssignment | undefined;
-
-    const providersInit = providersProp?.initializer;
-    if (!providersInit) {
-      throw new SchematicsException(`'providers' array not found in appConfig`);
+    if (!providersInit || !isArrayLiteralExpression(providersInit)) {
+      throw new SchematicsException(
+        `'providers' array not found in ${appConfigPath}`,
+      );
     }
-    if (!isArrayLiteralExpression(providersInit)) {
-      throw new SchematicsException(`'providers' is not an array`);
-    }
-
-    context.logger.info(
-      `providerConfigPath=${ruleContext.providerConfigPath ?? ''}`,
-    );
 
     const { updatedProvidersArray, extraChanges, didChange } =
       buildProvidersUpdate(sourceFile, ruleContext, providersInit);
@@ -97,7 +87,7 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
 
-    context.logger.info('app.config.ts updated');
+    context.logger.info(`${appConfigPath} updated`);
     return tree;
   };
 }

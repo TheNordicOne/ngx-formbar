@@ -1,4 +1,5 @@
 import { RegistrationType } from '@ngx-formbar/setup';
+import { RootConfig } from './root-config';
 
 export interface Schema {
   project?: string;
@@ -23,9 +24,24 @@ export interface Schema {
   installSchematics?: boolean;
 }
 
-export interface RuleContext extends Schema {
+export interface RuleContext
+  extends Omit<
+    Schema,
+    | 'registrationsPath'
+    | 'providerConfigPath'
+    | 'helperPath'
+    | 'schematicsConfigPath'
+  > {
+  registrationStyle: RegistrationType;
+  providerConfigFileName: string;
+  schematicConfigFileName: string;
   projectRoot: string;
   appConfigPath: string;
+  rootConfig: RootConfig;
   projectName: string;
   useTokens: boolean;
+  registrationsDirectory: string;
+  providerConfigDirectory: string;
+  helperDirectory: string;
+  schematicsConfigDirectory: string;
 }

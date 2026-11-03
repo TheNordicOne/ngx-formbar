@@ -16,16 +16,24 @@ import {
 import { Change, ReplaceChange } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { JsonObject, normalize } from '@angular-devkit/core';
+import { isJsonObject, JsonObject } from '@angular-devkit/core';
+import { posix } from 'node:path';
 import {
+  DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME,
+  DEFAULT_REGISTRATION_TYPE,
+  DEFAULT_REGISTRATIONS_PATH,
   isCallee,
+  joinToSourceRoot,
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_VALIDATOR_REGISTRATIONS,
+  NgxFormbarAutomationConfig,
+  sourceRootValue,
 } from '@ngx-formbar/setup';
 import {
   CORE_PACKAGE_NAME,
   REACTIVE_FORMS_PACKAGE_NAME,
+  SCHEMATICS_PACKAGE_NAME,
 } from '../shared/constants';
 import { RuleContext } from './schema';
 import {
@@ -34,38 +42,138 @@ import {
 } from '@schematics/angular/utility';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
-export function updateSchematicConfig(
-  schematicName: string,
-  options: JsonObject,
-  projectName?: string,
+type GeneratorOptions = Record<string, string | undefined>;
+
+/**
+ * Merges each generator's options into its `@ngx-formbar/schematics:<generator>`
+ * entry in angular.json, in a single write.
+ */
+export function updateSchematicConfigs(
+  configs: Record<string, GeneratorOptions>,
+  projectName: string,
 ): Rule {
   return updateWorkspace((workspace: WorkspaceDefinition) => {
-    const targetProject =
-      projectName ?? (workspace.extensions.defaultProject as string);
+    const projectDef = workspace.projects.get(projectName);
 
-    if (!targetProject) {
-      throw new SchematicsException(
-        `No projectName provided and workspace.defaultProject is not set.`,
-      );
-    }
-
-    const projectDef = workspace.projects.get(targetProject);
     if (!projectDef) {
       throw new SchematicsException(
-        `Project "${targetProject}" does not exist in the workspace.`,
+        `Project "${projectName}" does not exist in the workspace.`,
       );
     }
 
-    projectDef.extensions.schematics ??= {};
-    const schematicsExt = projectDef.extensions.schematics as JsonObject;
+    const existing = projectDef.extensions.schematics;
+    const schematicsExt: JsonObject =
+      existing && isJsonObject(existing) ? existing : {};
 
-    const schematicKey = `${CORE_PACKAGE_NAME}:${schematicName}`;
-    const existingConfig = (schematicsExt[schematicKey] ?? {}) as JsonObject;
-    schematicsExt[schematicKey] = {
-      ...existingConfig,
-      ...options,
-    };
+    for (const [schematicName, options] of Object.entries(configs)) {
+      const schematicKey = `${SCHEMATICS_PACKAGE_NAME}:${schematicName}`;
+      const existingConfig = schematicsExt[schematicKey];
+
+      schematicsExt[schematicKey] = {
+        ...(existingConfig && isJsonObject(existingConfig)
+          ? existingConfig
+          : {}),
+        ...definedOptions(options),
+      };
+    }
+
+    projectDef.extensions.schematics = schematicsExt;
   });
+}
+
+export function removeSchematicsConfigLink(
+  generators: string[],
+  projectName: string,
+): Rule {
+  return updateWorkspace((workspace: WorkspaceDefinition) => {
+    const schematics =
+      workspace.projects.get(projectName)?.extensions.schematics;
+
+    if (!schematics || !isJsonObject(schematics)) {
+      return;
+    }
+
+    for (const generator of generators) {
+      const schematicKey = `${SCHEMATICS_PACKAGE_NAME}:${generator}`;
+      const config = schematics[schematicKey];
+
+      if (config && isJsonObject(config) && 'schematicsConfig' in config) {
+        const { schematicsConfig: _, ...others } = config;
+
+        schematics[schematicKey] = others;
+      }
+    }
+  });
+}
+
+function definedOptions(options: GeneratorOptions) {
+  return Object.fromEntries(
+    Object.entries(options).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  );
+}
+
+export type GeneratorDefaults = Pick<
+  NgxFormbarAutomationConfig,
+  'registrationType' | 'controlRegistrationsPath' | 'viewProviderHelperPath'
+>;
+
+const DEFAULT_REGISTRATIONS_FILE = `${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`;
+
+/** The generator settings that differ from what the generators assume. */
+export function generatorDefaults(ruleContext: RuleContext): GeneratorDefaults {
+  const { registrationStyle, useHelper, helperDirectory, projectRoot } =
+    ruleContext;
+  const registrationsFile = componentRegistrationsFile(ruleContext);
+  const defaults: GeneratorDefaults = {};
+
+  if (registrationStyle !== DEFAULT_REGISTRATION_TYPE) {
+    defaults.registrationType = registrationStyle;
+  }
+
+  if (
+    registrationsFile !==
+    joinToSourceRoot(DEFAULT_REGISTRATIONS_FILE, projectRoot)
+  ) {
+    defaults.controlRegistrationsPath = sourceRootValue(
+      registrationsFile,
+      projectRoot,
+    );
+  }
+
+  if (useHelper) {
+    defaults.viewProviderHelperPath = sourceRootValue(
+      helperDirectory,
+      projectRoot,
+    );
+  }
+
+  return defaults;
+}
+
+function componentRegistrationsFile(ruleContext: RuleContext) {
+  const {
+    splitRegistrations,
+    useTokens,
+    provideInline,
+    registrationsDirectory,
+    providerConfigDirectory,
+    providerConfigFileName,
+    appConfigPath,
+  } = ruleContext;
+
+  const providerFile =
+    useTokens || provideInline
+      ? appConfigPath
+      : posix.join(providerConfigDirectory, `${providerConfigFileName}.ts`);
+
+  return splitRegistrations
+    ? posix.join(
+        registrationsDirectory,
+        DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME,
+      )
+    : providerFile;
 }
 
 export interface ProvidersUpdateResult {
@@ -80,11 +188,10 @@ export function buildProvidersUpdate(
   providersArray: ArrayLiteralExpression,
 ): ProvidersUpdateResult {
   const {
-    projectRoot,
     appConfigPath,
     registrationStyle,
-    registrationsPath,
-    providerConfigPath,
+    registrationsDirectory,
+    providerConfigDirectory,
     providerConfigFileName,
     splitRegistrations,
   } = ruleContext;
@@ -93,19 +200,14 @@ export function buildProvidersUpdate(
   const existingElements = [...providersArray.elements];
   const newElements = [...existingElements];
 
-  const formattedProviderConfigPath =
-    providerConfigPath && providerConfigFileName
-      ? `${providerConfigPath}/${providerConfigFileName}`
-      : (providerConfigPath ?? '');
-
-  const registrationsImportPath = createRelativePath(
+  const registrationsImportPath = buildRelativePath(
     appConfigPath,
-    `${projectRoot}/${registrationsPath ?? ''}`,
+    registrationsDirectory,
   );
 
-  const providerConfigImportPath = createRelativePath(
+  const providerConfigImportPath = buildRelativePath(
     appConfigPath,
-    `${projectRoot}/${formattedProviderConfigPath}`,
+    posix.join(providerConfigDirectory, providerConfigFileName),
   );
 
   const hasProvideCall = existingElements.some(isProvideFormbarCall);
@@ -204,17 +306,6 @@ function compareElements(
   return el !== existingElements[i];
 }
 
-function ensureAbsolutePath(path: string) {
-  const pathWithLeadingSlash = path.startsWith('/') ? path : `/${path}`;
-  return normalize(pathWithLeadingSlash);
-}
-
-function createRelativePath(from: string, to: string) {
-  const absoluteFrom = ensureAbsolutePath(from);
-  const absoluteTo = ensureAbsolutePath(to);
-  return buildRelativePath(absoluteFrom, absoluteTo);
-}
-
 function createArgsForConfig(
   sourceFile: SourceFile,
   ruleContext: RuleContext,
@@ -228,7 +319,13 @@ function createArgsForConfig(
     appConfigPath,
     includeSyncValidators,
     includeAsyncValidators,
+    useTokens,
   } = ruleContext;
+
+  // Token providers hold the registrations, next to this call.
+  if (provideInline && useTokens) {
+    return [];
+  }
 
   if (provideInline && !splitRegistrations) {
     const additionalProperties: PropertyAssignment[] = [];
@@ -340,25 +437,18 @@ function checkTokenProviderExists(
   existingElements: Expression[],
   tokenName: string,
 ) {
-  return existingElements.some((el) => {
-    if (!isCallExpression(el)) {
-      return false;
-    }
-
-    const objectArg = el.arguments[0];
-    if (el.arguments.length === 0 || !isObjectLiteralExpression(objectArg)) {
-      return false;
-    }
-
-    return objectArg.properties.some(
-      (prop) =>
-        isPropertyAssignment(prop) &&
-        isIdentifier(prop.name) &&
-        prop.name.text === 'provide' &&
-        isIdentifier(prop.initializer) &&
-        prop.initializer.text === tokenName,
-    );
-  });
+  return existingElements.some(
+    (el) =>
+      isObjectLiteralExpression(el) &&
+      el.properties.some(
+        (prop) =>
+          isPropertyAssignment(prop) &&
+          isIdentifier(prop.name) &&
+          prop.name.text === 'provide' &&
+          isIdentifier(prop.initializer) &&
+          prop.initializer.text === tokenName,
+      ),
+  );
 }
 
 function createMapProviderExpression(
@@ -372,11 +462,9 @@ function createMapProviderExpression(
     ),
     factory.createPropertyAssignment(
       factory.createIdentifier('useValue'),
-      factory.createNewExpression(
-        factory.createIdentifier('Map'),
-        undefined,
-        [factory.createArrayLiteralExpression([], false)],
-      ),
+      factory.createNewExpression(factory.createIdentifier('Map'), undefined, [
+        factory.createArrayLiteralExpression([], false),
+      ]),
     ),
   ];
 
@@ -449,20 +537,17 @@ function handleSplitRegistrations(
   newElements: Expression[],
   extraChanges: Change[],
 ) {
-  const { registrationsPath, includeSyncValidators, includeAsyncValidators } =
-    ruleContext;
+  const { includeSyncValidators, includeAsyncValidators } = ruleContext;
 
-  if (registrationsPath) {
-    addSplitRegistrationProvider(
-      'componentRegistrationsProvider',
-      sourceFile,
-      ruleContext,
-      registrationsImportPath,
-      existingElements,
-      newElements,
-      extraChanges,
-    );
-  }
+  addSplitRegistrationProvider(
+    'componentRegistrationsProvider',
+    sourceFile,
+    ruleContext,
+    registrationsImportPath,
+    existingElements,
+    newElements,
+    extraChanges,
+  );
 
   if (includeSyncValidators) {
     addSplitRegistrationProvider(

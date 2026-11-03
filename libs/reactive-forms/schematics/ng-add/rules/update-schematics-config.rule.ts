@@ -1,16 +1,17 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { Rule } from '@angular-devkit/schematics';
+import { findSchematicsConfig } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
-import { updateSchematicConfig } from '../helper';
-import { JsonObject } from '@angular-devkit/core';
+import { generatorDefaults, updateSchematicConfigs } from '../helper';
+import { SCAFFOLD_GENERATORS } from '../../shared/constants';
 
 /**
- * Update angular.json for ngx-formbar schematics
+ * Without a schematics configuration file, its settings become generator defaults in
+ * angular.json.
  */
 export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
-  return (_, context) => {
-    const { useHelper, helperPath, projectName, useSchematicConfig } =
-      ruleContext;
+  return (tree, context) => {
+    const { projectName, projectRoot, useSchematicConfig } = ruleContext;
 
     if (useSchematicConfig) {
       return;
@@ -18,16 +19,27 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
 
     context.logger.info('Updating schematics configuration');
 
-    const config: JsonObject = {};
+    const overridingConfig = findSchematicsConfig(tree, projectRoot);
 
-    if (useHelper && helperPath) {
-      config.viewProviderHelperPath = helperPath;
+    if (overridingConfig) {
+      context.logger.warn(
+        `${overridingConfig} overrides the settings written to angular.json, as the generators prefer a schematics configuration file.`,
+      );
     }
 
-    return chain([
-      updateSchematicConfig('control', config, projectName),
-      updateSchematicConfig('group', config, projectName),
-      updateSchematicConfig('block', config, projectName),
-    ]);
+    const defaults = generatorDefaults(ruleContext);
+
+    return updateSchematicConfigs(
+      {
+        ...Object.fromEntries(
+          SCAFFOLD_GENERATORS.map((generator) => [generator, defaults]),
+        ),
+        register: {
+          registrationType: defaults.registrationType,
+          controlRegistrations: defaults.controlRegistrationsPath,
+        },
+      },
+      projectName,
+    );
   };
 }

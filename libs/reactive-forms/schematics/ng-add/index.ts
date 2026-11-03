@@ -2,6 +2,7 @@ import {
   chain,
   Rule,
   SchematicContext,
+  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
@@ -23,13 +24,17 @@ import {
   DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
   DEFAULT_SCHEMATICS_CONFIG_PATH,
   getProjectDefinition,
+  joinToSourceRoot,
   resolveProjectName,
+  resolveRequiredPath,
 } from '@ngx-formbar/setup';
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
+import { linkSchematicsConfig } from './rules/link-schematics-config.rule';
 import { createFormbarRegistrationsConfig } from './rules/create-formbar-registration-config.rule';
 import { createContentTypeFile } from './rules/create-content-type-file.rule';
+import { locateRootConfig } from './root-config';
 
 // noinspection JSUnusedGlobalSymbols
 export function ngAdd(options: Schema): Rule {
@@ -44,31 +49,82 @@ export function ngAdd(options: Schema): Rule {
       `📦 Setting up ngx-formbar in project "${projectName}"...`,
     );
 
-    options.registrationStyle ??= DEFAULT_REGISTRATION_TYPE;
-    options.registrationsPath ??= DEFAULT_REGISTRATIONS_PATH;
+    const registrationStyle =
+      options.registrationStyle ?? DEFAULT_REGISTRATION_TYPE;
 
-    options.providerConfigPath ??= DEFAULT_PROVIDER_CONFIG_PATH;
-    options.providerConfigFileName ??= DEFAULT_PROVIDER_CONFIG_FILE_NAME;
-    if (options.providerConfigFileName.endsWith('.ts')) {
-      options.providerConfigFileName =
-        options.providerConfigFileName.split('.ts')[0];
-    }
+    const registrationsDirectory = locate(
+      'registrationsPath',
+      options.registrationsPath,
+      DEFAULT_REGISTRATIONS_PATH,
+      projectRoot,
+    );
+    const providerConfigDirectory = locate(
+      'providerConfigPath',
+      options.providerConfigPath,
+      DEFAULT_PROVIDER_CONFIG_PATH,
+      projectRoot,
+    );
+    const helperDirectory = locate(
+      'helperPath',
+      options.helperPath,
+      DEFAULT_HELPER_PATH,
+      projectRoot,
+    );
+    const schematicsConfigDirectory = locate(
+      'schematicsConfigPath',
+      options.schematicsConfigPath,
+      DEFAULT_SCHEMATICS_CONFIG_PATH,
+      projectRoot,
+    );
 
-    options.helperPath ??= DEFAULT_HELPER_PATH;
+    const rootConfig = locateRootConfig(
+      tree,
+      workspace,
+      project,
+      projectRoot,
+      context,
+    );
 
-    options.schematicsConfigPath ??= DEFAULT_SCHEMATICS_CONFIG_PATH;
-    options.schematicConfigFileName ??= DEFAULT_SCHEMATIC_CONFIG_FILE_NAME;
-    if (options.schematicConfigFileName.endsWith('json')) {
-      options.schematicConfigFileName =
-        options.schematicConfigFileName.split('.json')[0];
+    // A generator reads registrations inside provideFormbar only from a config
+    // declared in a variable, so anywhere else they need a file of their own.
+    const unreadableInline =
+      rootConfig.holder !== 'variable' &&
+      registrationStyle === 'config' &&
+      !!options.provideInline &&
+      !options.splitRegistrations;
+    const splitRegistrations = unreadableInline || options.splitRegistrations;
+
+    if (unreadableInline) {
+      context.logger.info(
+        `Keeping registrations in ${registrationsDirectory}, where the generators can add to them. They cannot read them from ${rootConfig.filePath}.`,
+      );
     }
 
     const ruleContext: RuleContext = {
       ...options,
-      appConfigPath: `${projectRoot}/app/app.config.ts`,
+      registrationStyle,
+      providerConfigFileName: fileNameOrDefault(
+        'providerConfigFileName',
+        options.providerConfigFileName,
+        DEFAULT_PROVIDER_CONFIG_FILE_NAME,
+        '.ts',
+      ),
+      schematicConfigFileName: fileNameOrDefault(
+        'schematicConfigFileName',
+        options.schematicConfigFileName,
+        DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
+        '.json',
+      ),
+      splitRegistrations,
+      appConfigPath: rootConfig.filePath,
+      rootConfig,
+      registrationsDirectory,
+      providerConfigDirectory,
+      helperDirectory,
+      schematicsConfigDirectory,
       projectRoot,
       projectName,
-      useTokens: options.registrationStyle === 'token',
+      useTokens: registrationStyle === 'token',
     };
 
     return chain([
@@ -78,9 +134,52 @@ export function ngAdd(options: Schema): Rule {
       createHelperFiles(ruleContext),
       createContentTypeFile(ruleContext),
       createSchematicsConfig(ruleContext),
+      linkSchematicsConfig(ruleContext),
       updateSchematicsConfig(ruleContext),
       updateAppConfig(ruleContext),
       installDependencies(ruleContext),
     ]);
   };
+}
+
+/**
+ * A default is always joined to the source root. Only a supplied value can
+ * already lie inside it.
+ */
+function locate(
+  option: string,
+  value: string | undefined,
+  fallback: string,
+  sourceRoot: string,
+) {
+  return value
+    ? resolveRequiredPath(option, value, sourceRoot)
+    : joinToSourceRoot(fallback, sourceRoot);
+}
+
+/** An empty name, or one that is only the extension, falls back too. */
+function fileNameOrDefault(
+  option: string,
+  value: string | undefined,
+  fallback: string,
+  extension: string,
+) {
+  const fileName = stripExtension(
+    stripExtension(value ?? '', extension) || fallback,
+    extension,
+  );
+
+  if (fileName.split('/').includes('..')) {
+    throw new SchematicsException(
+      `"${option}" must be a file name inside its directory: ${fileName}`,
+    );
+  }
+
+  return fileName;
+}
+
+function stripExtension(fileName: string, extension: string) {
+  return fileName.endsWith(extension)
+    ? fileName.slice(0, -extension.length)
+    : fileName;
 }

@@ -6,26 +6,25 @@ import {
   Rule,
   url,
 } from '@angular-devkit/schematics';
-import { normalize } from '@angular-devkit/core';
 import { RuleContext } from '../schema';
+import { skipExistingFiles } from './skip-existing-files.rule';
 
 /**
  * Optionally create helper files at specified helperPath
  */
 export function createHelperFiles(ruleContext: RuleContext): Rule {
-  return (_, context) => {
-    const { useHelper, helperPath, projectRoot } = ruleContext;
+  return (tree, context) => {
+    const { useHelper, helperDirectory } = ruleContext;
 
-    if (!useHelper || !helperPath) {
+    if (!useHelper) {
       return;
     }
-
-    context.logger.info('Creating helper files');
 
     return mergeWith(
       apply(url('./ng-add/files/helper'), [
         applyTemplates({}),
-        move(normalize(`${projectRoot}/${helperPath}`)),
+        move(helperDirectory),
+        skipExistingFiles(tree, context, 'helper files'),
       ]),
     );
   };

@@ -6,13 +6,14 @@ import {
   Rule,
   url,
 } from '@angular-devkit/schematics';
-import { normalize } from '@angular-devkit/core';
 import { RuleContext } from '../schema';
+import { skipExistingFiles } from './skip-existing-files.rule';
 import {
-  DEFAULT_REGISTRATION_TYPE,
-  DEFAULT_REGISTRATIONS_PATH,
+  joinToSourceRoot,
   NgxFormbarAutomationConfig,
+  sourceRootValue,
 } from '@ngx-formbar/setup';
+import { generatorDefaults } from '../helper';
 import {
   DEFAULT_CONTENT_TYPE_EXPORT_NAME,
   DEFAULT_CONTENT_TYPE_FILE_NAME,
@@ -20,41 +21,24 @@ import {
 } from '../../shared/constants';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
-  return (_, context) => {
+  return (tree, context) => {
     const {
       useSchematicConfig,
-      schematicsConfigPath,
+      schematicsConfigDirectory,
       schematicConfigFileName,
       projectRoot,
-      helperPath,
-      useHelper,
-      registrationsPath,
-      registrationStyle,
     } = ruleContext;
 
-    if (!useSchematicConfig || !schematicsConfigPath) {
+    if (!useSchematicConfig) {
       return;
     }
 
-    context.logger.info('Creating schematics config file');
-
-    const schematicConfig: NgxFormbarAutomationConfig = {};
-
-    if (registrationStyle !== DEFAULT_REGISTRATION_TYPE) {
-      schematicConfig.registrationType = registrationStyle;
-    }
-
-    if (registrationsPath !== DEFAULT_REGISTRATIONS_PATH) {
-      schematicConfig.controlRegistrationsPath = registrationsPath;
-    }
-
-    if (useHelper) {
-      schematicConfig.viewProviderHelperPath = helperPath;
-    }
-
-    schematicConfig.schema = {
-      type: `${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
-      emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+    const schematicConfig: NgxFormbarAutomationConfig = {
+      ...generatorDefaults(ruleContext),
+      schema: {
+        type: `${sourceRootValue(joinToSourceRoot(`${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`, projectRoot), projectRoot)}#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
+        emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+      },
     };
 
     return mergeWith(
@@ -63,7 +47,8 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
           schematicConfigFileName,
           schematicConfig: JSON.stringify(schematicConfig, null, 2),
         }),
-        move(normalize(`${projectRoot}/${schematicsConfigPath}`)),
+        move(schematicsConfigDirectory),
+        skipExistingFiles(tree, context, 'schematics configuration file'),
       ]),
     );
   };
