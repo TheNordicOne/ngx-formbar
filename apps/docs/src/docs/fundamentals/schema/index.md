@@ -7,16 +7,16 @@ The `schema` section of `formbar-schematic.config.json` configures the generator
 ```json name="formbar-schematic.config.json"
 {
   "schema": {
-    "type": "path/to/content-union.ts#AppContent",
+    "type": "app/types/content.type.ts#AppContent",
     "emitters": [{ "use": "json-schema-2020-12", "output": "form.schema.json" }]
   }
 }
 ```
 
-| Key      | Type   | Required | Description                                                                      |
-| -------- | ------ | -------- | -------------------------------------------------------------------------------- |
-| type     | string | Yes      | The content union, as `path/to/file.ts#ExportName`. See [Paths](#paths).         |
-| emitters | array  | No       | Emitter entries to run, in order. Without entries, the generator writes nothing. |
+| Key      | Type   | Required | Description                                                                                             |
+| -------- | ------ | -------- | ------------------------------------------------------------------------------------------------------- |
+| type     | string | Yes      | The content union as file and export, like `app/types/content.type.ts#AppContent`. See [Paths](#paths). |
+| emitters | array  | No       | Emitter entries to run, in order. Without entries, the generator writes nothing.                        |
 
 Each `emitters` entry, with paths as described in [Paths](#paths):
 
@@ -44,7 +44,7 @@ The generator reads your project's TypeScript configuration, so path aliases in 
 | ------------------ | ------ | -------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | --project          | string | No       | workspace default project | Angular project name where files are generated.                                                                                                       |
 | --schematicsConfig | string | No       | -                         | The schematics configuration file, relative to the source root. Without it, the generator searches the workspace for `formbar-schematic.config.json`. |
-| --type             | string | No       | -                         | The content union, as `path/to/file.ts#ExportName`. Overrides `schema.type`. See [Paths](#paths).                                                     |
+| --type             | string | No       | -                         | The content union as file and export, like `app/types/content.type.ts#AppContent`. Overrides `schema.type`. See [Paths](#paths).                      |
 | --emitter          | array  | No       | -                         | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                                      |
 | --output           | string | No       | -                         | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.                                 |
 
@@ -93,13 +93,13 @@ To use an emitter someone else published, point `use` at the package name:
 ```json name="formbar-schematic.config.json"
 {
   "schema": {
-    "type": "path/to/content-union.ts#AppContent",
-    "emitters": [{ "use": "<emitter-package>" }]
+    "type": "app/types/content.type.ts#AppContent",
+    "emitters": [{ "use": "@acme/formbar-markdown-emitter" }]
   }
 }
 ```
 
-The package's default export is used. To use a named export, write `use: "<emitter-package>#<export-name>"`. The part after `#` is the module export name, not the emitter's `name` property.
+This uses the package's default export. To use a named export, add its name after `#`, like `@acme/formbar-markdown-emitter#tableEmitter`.
 
 ## Custom Emitters
 
@@ -139,7 +139,7 @@ Register it in the configuration by path:
 ```json name="formbar-schematic.config.json"
 {
   "schema": {
-    "type": "path/to/content-union.ts#AppContent",
+    "type": "app/types/content.type.ts#AppContent",
     "emitters": [{ "use": "./tools/content-overview-emitter.ts", "output": "content-overview.md" }]
   }
 }
@@ -198,11 +198,11 @@ Template literal types, `Uppercase<string>` and branded primitives such as `stri
 
 `ctx.paths` holds three values:
 
-| Key             | Description                                                                                                                      | Example                                    |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `workspaceRoot` | The workspace's absolute path on disk. Use it to resolve packages from `node_modules`.                                           | `/home/me/my-workspace`                    |
-| `projectRoot`   | The project's source root, or its root when it has none. Relative to the workspace, with no leading `/`.                         | `projects/<project>/src`                   |
-| `output`        | The file to write, as a `/`-rooted path in `ctx.tree`. `null` when the entry sets no `output`, so fall back to your own default. | `/projects/<project>/src/form.schema.json` |
+| Key             | Description                                                                                                                      | Example                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `workspaceRoot` | The workspace's absolute path on disk. Use it to resolve packages from `node_modules`.                                           | `/home/me/my-workspace`               |
+| `projectRoot`   | The project's source root, or its root when it has none. Relative to the workspace, with no leading `/`.                         | `projects/shop/src`                   |
+| `output`        | The file to write, as a `/`-rooted path in `ctx.tree`. `null` when the entry sets no `output`, so fall back to your own default. | `/projects/shop/src/form.schema.json` |
 
 `toJsonTypes(type)` projects a `TypeNode` onto its JSON part, dropping `function` arms and collapsing one-arm unions. It returns `null` when no JSON value satisfies the type. Use it when producing JSON-shaped output.
 
