@@ -8,13 +8,12 @@ import {
   isIdentifier,
   isObjectLiteralExpression,
   isPropertyAssignment,
-  Node,
   PropertyAssignment,
   ShorthandPropertyAssignment,
   SourceFile,
 } from 'typescript';
-import { Change, ReplaceChange } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
+import { Change, InsertChange } from '@schematics/angular/utility/change';
+import { isImported } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { isJsonObject, JsonObject, strings } from '@angular-devkit/core';
 import { posix } from 'node:path';
@@ -36,6 +35,7 @@ import {
   REACTIVE_FORMS_PACKAGE_NAME,
   SCHEMATICS_PACKAGE_NAME,
 } from '../shared/constants';
+import { insertNamedImport } from './root-providers';
 import { RuleContext } from './schema';
 import {
   updateWorkspace,
@@ -223,10 +223,14 @@ export function registrationImportStatements(
     .join('\n');
 }
 
+interface RequestedImport {
+  symbol: string;
+  from: string;
+}
+
 export interface ProvidersUpdateResult {
-  updatedProvidersArray: ArrayLiteralExpression;
-  extraChanges: Change[];
-  didChange: boolean;
+  addedElements: Expression[];
+  importChanges: Change[];
 }
 
 export function buildProvidersUpdate(
@@ -244,9 +248,11 @@ export function buildProvidersUpdate(
     splitRegistrations,
   } = ruleContext;
 
-  const extraChanges: Change[] = [];
+  const imports: RequestedImport[] = [
+    { symbol: 'provideFormbar', from: REACTIVE_FORMS_PACKAGE_NAME },
+  ];
   const existingElements = [...providersArray.elements];
-  const newElements = [...existingElements];
+  const addedElements: Expression[] = [];
 
   const registrationImport = (symbol: string) =>
     registrationImportPath(tree, appConfigPath, registrationsDirectory, symbol);
@@ -256,81 +262,109 @@ export function buildProvidersUpdate(
     posix.join(providerConfigDirectory, providerConfigFileName),
   );
 
-  const hasProvideCall = existingElements.some(isProvideFormbarCall);
-  if (!hasProvideCall) {
-    const callArgs = createArgsForConfig(
-      sourceFile,
-      ruleContext,
-      registrationImport,
-      providerConfigImportPath,
-      extraChanges,
-    );
-
-    newElements.push(
+  if (!existingElements.some(isProvideFormbarCall)) {
+    addedElements.push(
       factory.createCallExpression(
         factory.createIdentifier('provideFormbar'),
         undefined,
-        callArgs,
+        createArgsForConfig(
+          ruleContext,
+          registrationImport,
+          providerConfigImportPath,
+          imports,
+        ),
       ),
     );
   }
 
-  if (registrationStyle !== 'token') {
-    return buildResult(
-      providersArray,
-      newElements,
-      existingElements,
-      extraChanges,
-    );
-  }
-
-  if (splitRegistrations) {
+  if (registrationStyle === 'token' && splitRegistrations) {
     handleSplitRegistrations(
-      sourceFile,
       ruleContext,
       registrationImport,
       existingElements,
-      newElements,
-      extraChanges,
-    );
-
-    return buildResult(
-      providersArray,
-      newElements,
-      existingElements,
-      extraChanges,
+      addedElements,
+      imports,
     );
   }
 
-  handleStandaloneTokens(
-    sourceFile,
-    ruleContext,
-    existingElements,
-    newElements,
-    extraChanges,
-  );
+  if (registrationStyle === 'token' && !splitRegistrations) {
+    handleStandaloneTokens(
+      ruleContext,
+      existingElements,
+      addedElements,
+      imports,
+    );
+  }
 
-  return buildResult(
-    providersArray,
-    newElements,
-    existingElements,
-    extraChanges,
-  );
+  return {
+    addedElements,
+    importChanges: importChanges(sourceFile, appConfigPath, imports),
+  };
 }
 
-export function replaceNodeWithPrinted(
-  sf: SourceFile,
+/** One import statement per module, leaving out what is imported already. */
+function importChanges(
+  sourceFile: SourceFile,
   filePath: string,
-  fileText: string,
-  original: Node,
-  replacement: Node,
-): ReplaceChange[] {
+  imports: RequestedImport[],
+) {
+  return [...new Set(imports.map(({ from }) => from))].flatMap((from) => {
+    const symbols = imports
+      .filter((requested) => requested.from === from)
+      .map(({ symbol }) => symbol)
+      .filter((symbol) => !isImported(sourceFile, symbol, from));
+
+    return symbols.length > 0
+      ? [insertNamedImport(sourceFile, filePath, symbols.join(', '), from)]
+      : [];
+  });
+}
+
+/**
+ * Inserts instead of reprinting the array, as printing reformats what is there.
+ * New elements go after a comment on the last line, keeping it with its element.
+ */
+export function appendToArray(
+  sourceFile: SourceFile,
+  filePath: string,
+  array: ArrayLiteralExpression,
+  elements: Expression[],
+): Change[] {
+  const { elements: existing } = array;
+  const text = sourceFile.text;
+  const closing = array.getEnd() - 1;
+  const lineStart = text.lastIndexOf('\n', array.getStart(sourceFile)) + 1;
+  const indent = /^[ \t]*/.exec(text.slice(lineStart))?.[0] ?? '';
+  const elementIndent = `${indent}  `;
   const printer = createPrinter({});
-  const printed = printer.printNode(EmitHint.Unspecified, replacement, sf);
-  const start = original.getStart(sf);
-  const end = original.getEnd();
+  const lines = elements
+    .map((element) =>
+      printer
+        .printNode(EmitHint.Unspecified, element, sourceFile)
+        .replace(
+          /\n( *)/g,
+          (_, spaces: string) =>
+            `\n${elementIndent}${' '.repeat(spaces.length / 2)}`,
+        ),
+    )
+    .map((printed) => `\n${elementIndent}${printed}`)
+    .join(',');
+  const trailingComma = existing.hasTrailingComma ? ',' : '';
+  const last = existing.at(-1);
+  const closingOnOwnLine =
+    !!last && text.slice(existing.end, closing).includes('\n');
+
   return [
-    new ReplaceChange(filePath, start, fileText.slice(start, end), printed),
+    ...(last && !existing.hasTrailingComma
+      ? [new InsertChange(filePath, last.getEnd(), ',')]
+      : []),
+    closingOnOwnLine
+      ? new InsertChange(
+          filePath,
+          text.lastIndexOf('\n', closing),
+          `${lines}${trailingComma}`,
+        )
+      : new InsertChange(filePath, closing, `${lines}\n${indent}`),
   ];
 }
 
@@ -344,25 +378,15 @@ function hasIdentifier(name: string) {
   };
 }
 
-function compareElements(
-  el: Expression,
-  i: number,
-  existingElements: Expression[],
-) {
-  return el !== existingElements[i];
-}
-
 function createArgsForConfig(
-  sourceFile: SourceFile,
   ruleContext: RuleContext,
   registrationImport: (symbol: string) => string,
   providerConfigImportPath: string,
-  extraChanges: Change[],
+  imports: RequestedImport[],
 ) {
   const {
     provideInline,
     splitRegistrations,
-    appConfigPath,
     includeSyncValidators,
     includeAsyncValidators,
     useTokens,
@@ -409,42 +433,27 @@ function createArgsForConfig(
   }
 
   if (provideInline && splitRegistrations) {
-    extraChanges.push(
-      insertImport(
-        sourceFile,
-        appConfigPath,
-        'componentRegistrations',
-        registrationImport('componentRegistrations'),
-        false,
-      ),
-    );
+    imports.push({
+      symbol: 'componentRegistrations',
+      from: registrationImport('componentRegistrations'),
+    });
     const additionalProperties: ShorthandPropertyAssignment[] = [];
 
     if (includeSyncValidators) {
-      extraChanges.push(
-        insertImport(
-          sourceFile,
-          appConfigPath,
-          'validatorRegistrations',
-          registrationImport('validatorRegistrations'),
-          false,
-        ),
-      );
+      imports.push({
+        symbol: 'validatorRegistrations',
+        from: registrationImport('validatorRegistrations'),
+      });
       additionalProperties.push(
         factory.createShorthandPropertyAssignment('validatorRegistrations'),
       );
     }
 
     if (includeAsyncValidators) {
-      extraChanges.push(
-        insertImport(
-          sourceFile,
-          appConfigPath,
-          'asyncValidatorRegistrations',
-          registrationImport('asyncValidatorRegistrations'),
-          false,
-        ),
-      );
+      imports.push({
+        symbol: 'asyncValidatorRegistrations',
+        from: registrationImport('asyncValidatorRegistrations'),
+      });
       additionalProperties.push(
         factory.createShorthandPropertyAssignment(
           'asyncValidatorRegistrations',
@@ -463,17 +472,7 @@ function createArgsForConfig(
     ];
   }
 
-  if (providerConfigImportPath) {
-    extraChanges.push(
-      insertImport(
-        sourceFile,
-        appConfigPath,
-        'formbarConfig',
-        providerConfigImportPath,
-        false,
-      ),
-    );
-  }
+  imports.push({ symbol: 'formbarConfig', from: providerConfigImportPath });
   return [factory.createIdentifier('formbarConfig')];
 }
 
@@ -527,125 +526,99 @@ function createMapProviderExpression(
 function addStandaloneRegistrationProvider(
   tokenName: string,
   packageName: string,
-  sourceFile: SourceFile,
-  ruleContext: RuleContext,
   existingElements: Expression[],
-  newElements: Expression[],
-  extraChanges: Change[],
+  addedElements: Expression[],
+  imports: RequestedImport[],
   isMultiProvider = false,
 ) {
-  const { appConfigPath } = ruleContext;
-
-  extraChanges.push(
-    insertImport(sourceFile, appConfigPath, tokenName, packageName, false),
-  );
+  imports.push({ symbol: tokenName, from: packageName });
 
   if (!checkTokenProviderExists(existingElements, tokenName)) {
     const provider = createMapProviderExpression(tokenName, isMultiProvider);
-    newElements.push(provider);
+    addedElements.push(provider);
   }
 }
 
 function addSplitRegistrationProvider(
   providerName: string,
-  sourceFile: SourceFile,
-  ruleContext: RuleContext,
   registrationImport: (symbol: string) => string,
   existingElements: Expression[],
-  newElements: Expression[],
-  extraChanges: Change[],
+  addedElements: Expression[],
+  imports: RequestedImport[],
 ) {
-  const { appConfigPath } = ruleContext;
   const hasProvider = existingElements.some(hasIdentifier(providerName));
 
   if (!hasProvider) {
-    extraChanges.push(
-      insertImport(
-        sourceFile,
-        appConfigPath,
-        providerName,
-        registrationImport(providerName),
-        false,
-      ),
-    );
+    imports.push({
+      symbol: providerName,
+      from: registrationImport(providerName),
+    });
 
-    newElements.push(factory.createIdentifier(providerName));
+    addedElements.push(factory.createIdentifier(providerName));
   }
 }
 
 function handleSplitRegistrations(
-  sourceFile: SourceFile,
   ruleContext: RuleContext,
   registrationImport: (symbol: string) => string,
   existingElements: Expression[],
-  newElements: Expression[],
-  extraChanges: Change[],
+  addedElements: Expression[],
+  imports: RequestedImport[],
 ) {
   const { includeSyncValidators, includeAsyncValidators } = ruleContext;
 
   addSplitRegistrationProvider(
     'componentRegistrationsProvider',
-    sourceFile,
-    ruleContext,
     registrationImport,
     existingElements,
-    newElements,
-    extraChanges,
+    addedElements,
+    imports,
   );
 
   if (includeSyncValidators) {
     addSplitRegistrationProvider(
       'validatorRegistrationsProvider',
-      sourceFile,
-      ruleContext,
       registrationImport,
       existingElements,
-      newElements,
-      extraChanges,
+      addedElements,
+      imports,
     );
   }
 
   if (includeAsyncValidators) {
     addSplitRegistrationProvider(
       'asyncValidatorRegistrationsProvider',
-      sourceFile,
-      ruleContext,
       registrationImport,
       existingElements,
-      newElements,
-      extraChanges,
+      addedElements,
+      imports,
     );
   }
 }
 
 function handleStandaloneTokens(
-  sourceFile: SourceFile,
   ruleContext: RuleContext,
   existingElements: Expression[],
-  newElements: Expression[],
-  extraChanges: Change[],
+  addedElements: Expression[],
+  imports: RequestedImport[],
 ) {
   const { includeSyncValidators, includeAsyncValidators } = ruleContext;
 
   addStandaloneRegistrationProvider(
     NGX_FW_COMPONENT_REGISTRATIONS,
     CORE_PACKAGE_NAME,
-    sourceFile,
-    ruleContext,
     existingElements,
-    newElements,
-    extraChanges,
+    addedElements,
+    imports,
   );
 
   if (includeSyncValidators) {
     addStandaloneRegistrationProvider(
       NGX_FW_VALIDATOR_REGISTRATIONS,
       REACTIVE_FORMS_PACKAGE_NAME,
-      sourceFile,
-      ruleContext,
       existingElements,
-      newElements,
-      extraChanges,
+      addedElements,
+      imports,
       true,
     );
   }
@@ -654,29 +627,10 @@ function handleStandaloneTokens(
     addStandaloneRegistrationProvider(
       NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
       REACTIVE_FORMS_PACKAGE_NAME,
-      sourceFile,
-      ruleContext,
       existingElements,
-      newElements,
-      extraChanges,
+      addedElements,
+      imports,
       true,
     );
   }
-}
-
-function buildResult(
-  providersArray: ArrayLiteralExpression,
-  newElements: Expression[],
-  existingElements: Expression[],
-  extraChanges: Change[],
-) {
-  const didChange =
-    newElements.length !== existingElements.length ||
-    newElements.some((el, i) => compareElements(el, i, existingElements));
-
-  const updatedProvidersArray = didChange
-    ? factory.updateArrayLiteralExpression(providersArray, newElements)
-    : providersArray;
-
-  return { updatedProvidersArray, extraChanges, didChange };
 }

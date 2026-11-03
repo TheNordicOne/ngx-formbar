@@ -1,10 +1,7 @@
 import { RuleContext } from '../schema';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
-import {
-  applyToUpdateRecorder,
-  Change,
-} from '@schematics/angular/utility/change';
+import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
 import { findProvidersProperty, loadSourceFile } from '@ngx-formbar/setup';
 
 import {
@@ -13,13 +10,8 @@ import {
   isPropertyAssignment,
   ScriptTarget,
 } from 'typescript';
-import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
-import {
-  addMissingProviders,
-  findProvidersOwner,
-  insertNamedImport,
-} from '../root-providers';
-import { REACTIVE_FORMS_PACKAGE_NAME } from '../../shared/constants';
+import { appendToArray, buildProvidersUpdate } from '../helper';
+import { addMissingProviders, findProvidersOwner } from '../root-providers';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
@@ -44,15 +36,6 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       true,
     );
 
-    const changes: Change[] = [
-      insertNamedImport(
-        sourceFile,
-        appConfigPath,
-        'provideFormbar',
-        REACTIVE_FORMS_PACKAGE_NAME,
-      ),
-    ];
-
     const owner = findProvidersOwner(sourceFile, rootConfig);
     const providers = owner && findProvidersProperty(owner);
     const providersInit =
@@ -66,22 +49,18 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
       );
     }
 
-    const { updatedProvidersArray, extraChanges, didChange } =
-      buildProvidersUpdate(tree, sourceFile, ruleContext, providersInit);
-
-    changes.push(...extraChanges);
-
-    if (didChange) {
-      changes.push(
-        ...replaceNodeWithPrinted(
-          sourceFile,
-          appConfigPath,
-          content,
-          providersInit,
-          updatedProvidersArray,
-        ),
-      );
-    }
+    const { addedElements, importChanges } = buildProvidersUpdate(
+      tree,
+      sourceFile,
+      ruleContext,
+      providersInit,
+    );
+    const changes = [
+      ...importChanges,
+      ...(addedElements.length > 0
+        ? appendToArray(sourceFile, appConfigPath, providersInit, addedElements)
+        : []),
+    ];
 
     const recorder = tree.beginUpdate(appConfigPath);
     applyToUpdateRecorder(recorder, changes);

@@ -347,6 +347,141 @@ describe('ng-add schematic', () => {
     ).rejects.toThrow(/registrationStyle/);
   });
 
+  describe('the edited root providers', () => {
+    it('imports all registrations in one statement', async () => {
+      const tree = await runAdd();
+
+      expect(read(tree, appConfigPath)).toContain(
+        "import { componentRegistrationsProvider, validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from './registrations';",
+      );
+    });
+
+    it('imports the registrations of config style in one statement', async () => {
+      const tree = await runAdd({
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(read(tree, appConfigPath)).toContain(
+        "import { componentRegistrations, validatorRegistrations, asyncValidatorRegistrations } from './registrations';",
+      );
+    });
+
+    it('indents what it adds like the array it adds to', async () => {
+      const tree = await runAdd();
+
+      expect(read(tree, appConfigPath)).toContain(
+        [
+          '    provideRouter(routes),',
+          '    provideFormbar(formbarConfig),',
+          '    componentRegistrationsProvider,',
+          '    validatorRegistrationsProvider,',
+          '    asyncValidatorRegistrationsProvider',
+          '  ]',
+        ].join('\n'),
+      );
+    });
+
+    it('indents nested objects', async () => {
+      const tree = await runAdd({
+        splitRegistrations: false,
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+      });
+
+      expect(read(tree, appConfigPath)).toContain(
+        [
+          '    {',
+          '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
+          '      useValue: new Map([])',
+          '    }',
+          '  ]',
+        ].join('\n'),
+      );
+    });
+
+    it.each([
+      ['an empty array', 'providers: []', ''],
+      [
+        'an array on one line',
+        'providers: [provideRouter(routes)]',
+        '[provideRouter(routes),',
+      ],
+      [
+        'a trailing comma on one line',
+        'providers: [provideRouter(routes),]',
+        '[provideRouter(routes),',
+      ],
+    ])('stays valid and multi-line with %s', async (_, providers, start) => {
+      appTree.overwrite(
+        appConfigPath,
+        `export const appConfig = {\n  ${providers},\n};\n`,
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(syntaxErrors(code)).toEqual([]);
+      expect(code).toContain(start);
+      expect(code).toContain('    provideFormbar(formbarConfig),\n');
+      expect(code).toContain('    asyncValidatorRegistrationsProvider\n  ]');
+    });
+
+    it('keeps comments and a trailing comma', async () => {
+      appTree.overwrite(
+        appConfigPath,
+        [
+          'export const appConfig = {',
+          '  providers: [',
+          '    // routing goes first',
+          '    provideRouter(routes), // trailing',
+          '    /* block */',
+          '    provideOther(),',
+          '  ],',
+          '};',
+          '',
+        ].join('\n'),
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(code).toContain(
+        [
+          '  providers: [',
+          '    // routing goes first',
+          '    provideRouter(routes), // trailing',
+          '    /* block */',
+          '    provideOther(),',
+          '    provideFormbar(formbarConfig),',
+          '    componentRegistrationsProvider,',
+          '    validatorRegistrationsProvider,',
+          '    asyncValidatorRegistrationsProvider,',
+          '  ],',
+        ].join('\n'),
+      );
+    });
+
+    it('keeps a comment on the last line with its element', async () => {
+      appTree.overwrite(
+        appConfigPath,
+        [
+          'export const appConfig = {',
+          '  providers: [',
+          '    provideRouter(routes) // last',
+          '  ],',
+          '};',
+          '',
+        ].join('\n'),
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(code).toContain(
+        '    provideRouter(routes), // last\n    provideFormbar(formbarConfig),',
+      );
+      expect(syntaxErrors(code)).toEqual([]);
+    });
+  });
+
   describe('Registration Style Token', () => {
     it('generates config-based registration files and formbar.config.ts', async () => {
       const tree = await runAdd({ registrationStyle: 'token' });
