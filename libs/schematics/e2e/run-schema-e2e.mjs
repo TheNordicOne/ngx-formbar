@@ -55,40 +55,61 @@ const BASE_CONTROL = `import { Directive, input } from '@angular/core';
 import { NgxFbControl } from '@ngx-formbar/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 
-@Directive()
-export abstract class BaseInput<T extends NgxFbControl>
-  implements ReactiveFormbarControl<T>
-{
-  readonly name = input.required<string>();
-}
-`;
-const INHERITING_CONTROL = `import { Component } from '@angular/core';
-import { NgxFbControl } from '@ngx-formbar/core';
-import { BaseInput } from './base-input';
-
 interface InheritingConfig extends NgxFbControl {
   type: 'inheriting';
 }
 
-@Component({ selector: 'app-inheriting-input', template: '' })
-export class InheritingInput extends BaseInput<InheritingConfig> {}
+@Directive()
+export abstract class BaseInput implements ReactiveFormbarControl<InheritingConfig> {
+  readonly name = input.required<string>();
+}
+
+@Directive()
+export abstract class MiddleInput extends BaseInput {}
 `;
-const UNREGISTRABLE_CONTROLS = `import { Component } from '@angular/core';
+const INHERITING_CONTROL = `import { Component } from '@angular/core';
+import { MiddleInput } from './base-input';
+
+@Component({ selector: 'app-inheriting-input', template: '' })
+export class InheritingInput extends MiddleInput {}
+`;
+const GENERIC_ALIAS_CONTROL = `import { Component, input } from '@angular/core';
 import { NgxFbControl } from '@ngx-formbar/core';
-import { BaseInput } from './base-input';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<C>;
+
+interface GenericAliasConfig extends NgxFbControl {
+  type: 'generic-alias';
+}
+
+@Component({ selector: 'app-generic-alias-input', template: '' })
+export class GenericAliasInput implements MyControl<GenericAliasConfig> {
+  readonly name = input.required<string>();
+}
+`;
+const UNREGISTRABLE_CONTROLS = `import { Component, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 
 interface UnregistrableConfig extends NgxFbControl {
   type: 'unregistrable';
 }
 
 @Component({ selector: 'app-abstract-input', template: '' })
-export abstract class AbstractInput extends BaseInput<UnregistrableConfig> {}
+export abstract class AbstractInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
 
 @Component({ selector: 'app-hidden-input', template: '' })
-class HiddenInput extends BaseInput<UnregistrableConfig> {}
+class HiddenInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
 
 @Component({ selector: 'app-default-input', template: '' })
-export default class DefaultInput extends BaseInput<UnregistrableConfig> {}
+export default class DefaultInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
 `;
 const HOST_PAGE = `import { Component } from '@angular/core';
 import { NgxFbForm } from '@ngx-formbar/core';
@@ -1432,6 +1453,10 @@ function runAngularJsonDefaultsFlow(appDir) {
     INHERITING_CONTROL,
   );
   writeFileSync(
+    join(sourceRoot, 'app', 'written', 'generic-alias-input.ts'),
+    GENERIC_ALIAS_CONTROL,
+  );
+  writeFileSync(
     join(sourceRoot, 'app', 'written', 'unregistrable-inputs.ts'),
     UNREGISTRABLE_CONTROLS,
   );
@@ -1474,7 +1499,11 @@ function runAngularJsonDefaultsFlow(appDir) {
   );
   check(
     /["']?inheriting["']?:\s*loadComponent\(/.test(registered),
-    'register read the type of a config passed through a base class holding the contract',
+    'register read the type of a config fixed by a base class two levels up, in a file without the word implements',
+  );
+  check(
+    /["']?generic-alias["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config passed through a generic local alias of the contract',
   );
   check(
     !/["']?unregistrable["']?:/.test(registered),

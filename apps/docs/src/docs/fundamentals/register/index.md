@@ -10,12 +10,12 @@ It skips abstract classes. It also skips a class that is not a named export, suc
 
 Each control is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
-| The component                                                                                           | Registered as    |
-| ------------------------------------------------------------------------------------------------------- | ---------------- |
-| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`                                | `slider`         |
-| `extends BaseControl<SliderConfig>`, where `BaseControl` implements the contract, with `type: 'slider'` | `slider`         |
-| `class RatingComponent implements ReactiveFormbarControl<RatingConfig>`, with `type: string`            | `rating`         |
-| `class RatingControl implements ReactiveFormbarControl<RatingConfig>`, with `type: string`              | `rating-control` |
+| The component                                                                                                       | Registered as    |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`                                            | `slider`         |
+| `extends BaseControl`, where `BaseControl` implements `ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'` | `slider`         |
+| `class RatingComponent implements ReactiveFormbarControl<RatingConfig>`, with `type: string`                        | `rating`         |
+| `class RatingControl implements ReactiveFormbarControl<RatingConfig>`, with `type: string`                          | `rating-control` |
 
 ## Options
 

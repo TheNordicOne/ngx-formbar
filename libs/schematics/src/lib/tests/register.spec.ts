@@ -1488,17 +1488,35 @@ export class RangeComponent ${heritage} {}
       const base = `@Directive()
 export abstract class BaseControl<T> implements ReactiveFormbarControl<T> {}`;
 
+      const stated = `@Directive()
+export abstract class StatedControl implements ReactiveFormbarControl<RangeConfig> {}`;
+
       it.each<[string, string, string]>([
-        ['a direct base', 'extends BaseControl<RangeConfig>', base],
+        ['a generic base', 'extends BaseControl<RangeConfig>', base],
+        ['a base stating the config', 'extends StatedControl', stated],
         [
-          'a two-level base',
+          'a two-level base stating the config',
+          'extends MiddleControl',
+          `${stated}
+@Directive()
+export abstract class MiddleControl extends StatedControl {}`,
+        ],
+        [
+          'a generic base over one stating the config',
+          'extends MiddleControl<string>',
+          `${stated}
+@Directive()
+export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
+        ],
+        [
+          'a two-level generic base',
           'extends MiddleControl<RangeConfig>',
           `${base}
 @Directive()
 export abstract class MiddleControl<C> extends BaseControl<C> {}`,
         ],
         [
-          'a fixed base',
+          'a base fixing a generic base',
           'extends FixedControl',
           `${base}
 @Directive()
