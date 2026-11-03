@@ -586,9 +586,9 @@ function findFile(directory, fileName) {
 
 /**
  * The tarball is installed beforehand, so `ng add` uses it as is. ng-add then
- * queues installs of core and the schematics by package name, which could
- * replace the tarballs with whatever the registry has. Those installs run as
- * npm dry runs, so the app keeps the packages under test.
+ * queues installs of core by package name and of what it adds to package.json,
+ * which could replace the tarballs with whatever the registry has. Those
+ * installs run as npm dry runs, so the app keeps the packages under test.
  */
 function ngAdd(appDir, project, args = []) {
   return run(
@@ -1259,6 +1259,45 @@ function runNgModuleFlow(appParent, tarballs) {
   return appDir;
 }
 
+/**
+ * Without the schematics package in package.json, as a consumer starts out.
+ * The dry run leaves node_modules alone, so package.json alone gets restored.
+ */
+function runDevDependencyFlow(appDir) {
+  const project = 'dev-dependency-app';
+  const manifestPath = join(appDir, 'package.json');
+  const original = readFileSync(manifestPath, 'utf8');
+  const { [SCHEMATICS_PACKAGE_NAME]: _, ...devDependencies } =
+    JSON.parse(original).devDependencies;
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+  writeFileSync(
+    manifestPath,
+    `${JSON.stringify({ ...JSON.parse(original), devDependencies }, null, 2)}\n`,
+  );
+
+  ngAdd(appDir, project);
+
+  const manifest = readJson(manifestPath);
+
+  writeFileSync(manifestPath, original);
+
+  console.log('dev dependency assertions:');
+
+  check(
+    /^\^/.test(manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME] ?? ''),
+    'ng add saved the schematics package as a dev dependency',
+  );
+  check(
+    !manifest.dependencies?.[SCHEMATICS_PACKAGE_NAME],
+    'ng add did not save the schematics package as a dependency',
+  );
+}
+
 function runNgAddFlow(appParent, tarballs) {
   const appDir = createApp('formbar', appParent);
 
@@ -1477,6 +1516,8 @@ function main() {
   runMovedConfigFlow(appDir);
   runRootConfigFlow(appDir);
   runKeptIndexFlow(appDir);
+
+  runDevDependencyFlow(appDir);
 
   const ngModuleAppDir = runNgModuleFlow(appParent, tarballs);
   const formbarAppDir = runNgAddFlow(appParent, tarballs);

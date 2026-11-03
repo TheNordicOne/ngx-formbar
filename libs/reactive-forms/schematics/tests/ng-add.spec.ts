@@ -7,6 +7,7 @@ import { isJsonObject, JsonObject } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
+import { readFileSync } from 'node:fs';
 import { join } from 'path';
 import {
   CompilerHost,
@@ -181,6 +182,63 @@ describe('ng-add schematic', () => {
 
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     appTree = await setupWorkspace(runner);
+  });
+
+  describe('installing the schematics package', () => {
+    const version = (
+      JSON.parse(
+        readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
+      ) as { version: string }
+    ).version;
+
+    function manifest(tree: UnitTestTree) {
+      return JSON.parse(read(tree, '/package.json')) as {
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
+    }
+
+    it('saves it as a dev dependency in the released version', async () => {
+      const { dependencies, devDependencies } = manifest(await runAdd());
+
+      expect(devDependencies?.['@ngx-formbar/schematics']).toBe(`^${version}`);
+      expect(dependencies).not.toHaveProperty('@ngx-formbar/schematics');
+    });
+
+    it.each(['dependencies', 'devDependencies'])(
+      'keeps an existing entry in %s',
+      async (section) => {
+        const before = JSON.parse(read(appTree, '/package.json')) as Record<
+          string,
+          Record<string, string>
+        >;
+
+        before[section]['@ngx-formbar/schematics'] = '1.2.3';
+        appTree.overwrite('/package.json', JSON.stringify(before));
+
+        const after = manifest(await runAdd());
+
+        expect(
+          section === 'dependencies'
+            ? after.dependencies?.['@ngx-formbar/schematics']
+            : after.devDependencies?.['@ngx-formbar/schematics'],
+        ).toBe('1.2.3');
+        expect(
+          section === 'dependencies'
+            ? after.devDependencies
+            : after.dependencies,
+        ).not.toHaveProperty('@ngx-formbar/schematics');
+      },
+    );
+
+    it('leaves it out with installSchematics set to false', async () => {
+      const { dependencies, devDependencies } = manifest(
+        await runAdd({ installSchematics: false }),
+      );
+
+      expect(dependencies).not.toHaveProperty('@ngx-formbar/schematics');
+      expect(devDependencies).not.toHaveProperty('@ngx-formbar/schematics');
+    });
   });
 
   describe('project lookup', () => {
