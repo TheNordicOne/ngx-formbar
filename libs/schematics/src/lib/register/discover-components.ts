@@ -54,7 +54,7 @@ export function discoverComponents(
   );
 
   context.logger.info(
-    `${registerContext.components.length.toString()} components discovered`,
+    `${registerContext.components.length.toString()} components discovered in ${normalize(`/${registerContext.sourceRoot}`)}`,
   );
 
   return registerContext;
@@ -169,7 +169,15 @@ function compileGlobs(
       );
     }
 
-    const rx = globToRegExp(resolveRequiredPath(kind, raw, sourceRoot));
+    const resolved = resolveRequiredPath(kind, raw, sourceRoot);
+
+    if (kind === 'include' && !canMatchWithin(resolved, sourceRoot)) {
+      throw new SchematicsException(
+        `"include" points outside the source root ${sourceRoot}: ${raw}`,
+      );
+    }
+
+    const rx = globToRegExp(resolved);
     if (!rx) {
       throw new SchematicsException(`Invalid ${kind} glob "${raw}".`);
     }
@@ -178,6 +186,20 @@ function compileGlobs(
   }
 
   return regs;
+}
+
+/** Whether the fixed folders a glob starts with lie in or above the source root. */
+function canMatchWithin(glob: string, sourceRoot: string) {
+  const segments = glob.slice(1).split('/');
+  const firstPattern = segments.findIndex((segment) => /[*?[]/.test(segment));
+  const fixed = segments
+    .slice(0, firstPattern === -1 ? undefined : firstPattern)
+    .join('/');
+
+  return (
+    isWithin(fixed, sourceRoot) ||
+    isWithin(normalize(`/${sourceRoot}`).slice(1), fixed)
+  );
 }
 
 function someRegMatch(regs: readonly RegExp[], input: string) {

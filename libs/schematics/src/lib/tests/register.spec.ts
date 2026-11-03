@@ -956,6 +956,54 @@ export class TagsInput implements ${contract}<TagsConfig> {}
       expect(registrations).toContain('TopComponent');
     });
 
+    it.each([
+      ['with a leading /', '/tools/**'],
+      ['climbing out of the source root', '../tools/**'],
+    ])('fails on an include %s outside the source root', async (_, glob) => {
+      await expect(registered({ include: [glob] })).rejects.toThrow(
+        `"include" points outside the source root projects/test-app/src: ${glob}`,
+      );
+    });
+
+    it('fails on the same glob from discovery.include', async () => {
+      writeJson(appTree, src(schematicsConfigPath), {
+        discovery: { include: ['/tools/**'] },
+      });
+
+      await expect(registered({})).rejects.toThrow(
+        '"include" points outside the source root',
+      );
+    });
+
+    it('accepts an exclude outside the source root', async () => {
+      expect(await registered({ exclude: ['/tools/**'] })).toContain(
+        'InComponent',
+      );
+    });
+
+    it('only walks the source root, with a glob covering more', async () => {
+      appTree.create(
+        '/projects/test-app/tools/tool.ts',
+        createControlComponent('tool', inlineProviders, 'ToolComponent'),
+      );
+
+      const registrations = await registered({ include: ['/**/*.ts'] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('ToolComponent');
+    });
+
+    it('logs where it looked', async () => {
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+
+      await registered({ include: ['app/absent/**'] });
+
+      expect(messages).toContain(
+        '0 components discovered in /projects/test-app/src',
+      );
+    });
+
     it('fails on a glob above the workspace root', async () => {
       await expect(registered({ include: ['../../../../**'] })).rejects.toThrow(
         '"include" points outside the workspace root',
