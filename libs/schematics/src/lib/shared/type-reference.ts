@@ -1,5 +1,5 @@
 import { SchematicsException } from '@angular-devkit/schematics';
-import { resolveProjectPath } from '../schema/project-path';
+import { resolveWithinWorkspace } from '@ngx-formbar/setup';
 
 /**
  * Splits a "path/to/file.ts#ExportName" config value on its first "#". This is
@@ -43,7 +43,7 @@ export function parseTypeReference(reference: string): {
 }
 
 export function resolveTypeFile(filePath: string, sourceRoot: string): string {
-  const resolved = resolveProjectPath(filePath, sourceRoot);
+  const resolved = resolveWithinWorkspace(filePath, sourceRoot);
 
   if (!resolved) {
     throw new SchematicsException(`Type file not found: ${filePath}`);

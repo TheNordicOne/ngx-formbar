@@ -11,11 +11,11 @@
     },
     "schematicsConfig": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic"
+      "description": "The schematics configuration file to use"
     },
     "type": {
       "type": "string",
-      "description": "Reference to the content union type, as 'path/to/file.ts#ExportName', relative to the project source root."
+      "description": "The content union, as 'app/types/content.type.ts#AppContent'."
     },
     "emitter": {
       "type": "array",

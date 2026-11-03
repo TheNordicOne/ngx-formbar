@@ -4,7 +4,7 @@ import {
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { COLLECTION_PATH, setupWorkspace } from './workspace-setup';
-import { readCompilerOptions } from '../schema/program';
+import { readCompilerOptions } from '@ngx-formbar/setup';
 
 const TS_CONFIG_PATH = 'projects/test-app/tsconfig.app.json';
 

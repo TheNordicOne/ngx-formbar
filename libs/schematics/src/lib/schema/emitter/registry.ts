@@ -2,10 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { Emitter, EmitPaths } from './define-emitter';
 import { loadFromPackage, loadFromPath } from './load';
 import { draft07Emitter, draft202012Emitter } from './json-schema/dialects';
-import {
-  resolveProjectPath,
-  resolveRequiredProjectPath,
-} from '../project-path';
+import { joinToSourceRoot, resolveRequiredPath } from '@ngx-formbar/setup';
 
 const BUILT_INS = [draft202012Emitter, draft07Emitter];
 
@@ -19,9 +16,7 @@ export function builtInDefaultOutput(
 ): string | null {
   const builtIn = findBuiltIn(spec);
 
-  return builtIn
-    ? resolveProjectPath(builtIn.defaultOutput, projectRoot)
-    : null;
+  return builtIn ? joinToSourceRoot(builtIn.defaultOutput, projectRoot) : null;
 }
 
 export function resolveEmitter(
@@ -36,7 +31,7 @@ export function resolveEmitter(
     (isPath
       ? loadFromPath(
           { tree, workspaceRoot: paths.workspaceRoot },
-          resolveRequiredProjectPath('use', spec, paths.projectRoot),
+          resolveRequiredPath('use', spec, paths.projectRoot),
         )
       : loadFromPackage(spec, paths.workspaceRoot))
   );

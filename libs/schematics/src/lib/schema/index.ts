@@ -6,8 +6,10 @@ import {
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '@schematics/angular/utility/workspace';
 import {
+  findTsConfigPath,
   getProjectDefinition,
   loadAutomationConfig,
+  resolveRequiredPath,
   SchemaEmitterEntry,
 } from '@ngx-formbar/setup';
 import { Schema } from './schema';
@@ -16,8 +18,6 @@ import { buildModel } from './build-model';
 import { toJsonTypes } from './json-types';
 import { EmitPaths } from './emitter/define-emitter';
 import { builtInDefaultOutput, resolveEmitter } from './emitter/registry';
-import { findTsConfigPath } from './program';
-import { resolveRequiredProjectPath } from './project-path';
 import { findWorkspaceRoot } from './workspace-root';
 import { FormModel } from './model';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
@@ -28,6 +28,7 @@ export function schema(options: Schema): Rule {
       options,
       await getWorkspace(tree),
       tree,
+      context,
     );
     const entries = selectEntries(schemaContext.entries, options.emitter ?? []);
 
@@ -55,11 +56,7 @@ export function schema(options: Schema): Rule {
           workspaceRoot: schemaContext.workspaceRoot,
           projectRoot: schemaContext.projectRoot,
           output: output
-            ? resolveRequiredProjectPath(
-                'output',
-                output,
-                schemaContext.projectRoot,
-              )
+            ? resolveRequiredPath('output', output, schemaContext.projectRoot)
             : builtInDefaultOutput(entry.use, schemaContext.projectRoot),
         },
       };
@@ -186,6 +183,7 @@ function buildSchemaContext(
   options: Schema,
   workspace: Awaited<ReturnType<typeof getWorkspace>>,
   tree: Tree,
+  context: SchematicContext,
 ) {
   const project = getProjectDefinition(workspace, options.project);
   const projectRoot = project.sourceRoot ?? project.root;
@@ -193,6 +191,7 @@ function buildSchemaContext(
   const automationConfig = loadAutomationConfig(
     tree,
     projectRoot,
+    context.logger,
     options.schematicsConfig,
   );
 

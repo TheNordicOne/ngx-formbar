@@ -41,6 +41,24 @@ describe('scaffolding updates the content union', () => {
     expect(union).toContain('export type AppContent = SliderControlConfig;');
   });
 
+  it('reads a type reference that already starts with the source root as given', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: {
+        type: 'projects/test-app/src/app/types/content.type.ts#AppContent',
+      },
+    });
+
+    const result = await runner.runSchematic(
+      'control',
+      { key: 'slider', project: 'test-app' },
+      tree,
+    );
+
+    expect(read(result, app('types/content.type.ts'))).toContain(
+      'export type AppContent = SliderControlConfig;',
+    );
+  });
+
   it('imports a camelCase key from the dasherized directory it is written to', async () => {
     const result = await runner.runSchematic(
       'control',

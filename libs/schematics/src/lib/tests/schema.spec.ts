@@ -359,6 +359,94 @@ export type AppContent = TextControl;
     });
   });
 
+  describe('in a project with source root "src"', () => {
+    beforeEach(() => {
+      addProject(tree, 'root-app', '', 'src');
+      addCoreStub(tree);
+      tree.create(
+        '/src/app/types/content.type.ts',
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+      writeJson(tree, '/src/app/formbar-schematic.config.json', {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [{ use: 'json-schema-2020-12' }],
+        },
+      });
+    });
+
+    it.each([
+      ['app/form.json', '/src/app/form.json'],
+      ['src/app/form.json', '/src/app/form.json'],
+      ['/schemas/form.json', '/schemas/form.json'],
+    ])('writes --output %s to %s', async (output, expected) => {
+      const result = await runner.runSchematic(
+        'schema',
+        { project: 'root-app', output },
+        tree,
+      );
+
+      expect(result.exists(expected)).toBe(true);
+    });
+  });
+
+  describe('in a workspace with several projects', () => {
+    const union = `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`;
+
+    beforeEach(() => {
+      addCoreStub(tree);
+      addProject(tree, 'other', 'projects/other', 'projects/other/src');
+      tree.create(app('types/content.type.ts'), union);
+      tree.create('/projects/other/src/app/types/content.type.ts', union);
+    });
+
+    it('reads the workspace root config for every project without its own', async () => {
+      writeJson(tree, '/formbar-schematic.config.json', {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [
+            { use: 'json-schema-2020-12', output: 'form.schema.json' },
+          ],
+        },
+      });
+
+      const first = await runner.runSchematic(
+        'schema',
+        { project: 'test-app' },
+        tree,
+      );
+      const second = await runner.runSchematic(
+        'schema',
+        { project: 'other' },
+        first,
+      );
+
+      expect(second.exists(src('form.schema.json'))).toBe(true);
+      expect(second.exists('/projects/other/src/form.schema.json')).toBe(true);
+    });
+
+    it("never reads another project's config", async () => {
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [
+            { use: 'json-schema-2020-12', output: 'form.schema.json' },
+          ],
+        },
+      });
+
+      await expect(
+        runner.runSchematic('schema', { project: 'other' }, tree),
+      ).rejects.toThrow('No content type configured');
+    });
+  });
+
   describe('emitter entries sharing an output', () => {
     const OUTPUT = '/projects/test-app/src/form.schema.json';
     const DEFAULT_DRAFT_07_OUTPUT =
