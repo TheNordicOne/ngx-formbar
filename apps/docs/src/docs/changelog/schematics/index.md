@@ -13,14 +13,26 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 - `interfaceFileSuffix` option to control the interface file's name segment.
 - `schema` generator: emits documents such as JSON Schema from the content union. See [Schema Generation](/fundamentals/schema).
+- `--registrationType` and `--controlRegistrationsPath` options on the scaffold generators.
 
 ### Changed
 
 - Generated control, group, block, and array components now implement the corresponding `@ngx-formbar/reactive-forms` interface and expose inputs as signals.
 - Generated components follow Angular's component naming, with no `.component`/`Component` suffix by default.
 - Config interfaces are generated with a `Config` suffix.
+- `--path` inside the project is relative to the workspace root, as in Angular's generators.
+- A `--path` inside another project fails.
+- The schematics configuration file is looked up in fixed places, with the workspace root as the default for every project. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
+- Each schematic logs which schematics configuration file it used.
+- A leading `/` in a path means the workspace root, in every schematic.
 - Group templates render children through `<ngxfb-control-outlet />`.
 - Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`staticComponent()` / `loadComponent()`).
+
+### Fixed
+
+- `register` honors `--controlRegistrations` and `--registrationType`.
+- A scaffold warns when the registrations file is missing or holds no registrations.
+- Paths above the workspace root give a clear error.
 
 ### Removed
 

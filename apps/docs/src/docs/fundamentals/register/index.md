@@ -6,14 +6,14 @@ This schematic tries to find all relevant controls and registers them at the app
 
 ## Options
 
-| Option                 | Type                | Required | Default (control/group/block) | Description                                                                                                                                                                                                                                                                                          |
-| ---------------------- | ------------------- | -------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --project              | string              | No       | workspace default project     | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
-| --registrationType     | 'token' \| 'config' | No       | 'token'                       | Which registration type is used.                                                                                                                                                                                                                                                                     |
-| --controlRegistrations | string              | No       | -                             | Path to the registration file that should be used. If this is not provided, the schematic will try to resolve it from the default locations.                                                                                                                                                         |
-| --schematicsConfig     | string              | No       | -                             | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
-| --include              | array               | No       | `["\*\*/*.ts"]`               | Glob patterns to include when searching for components                                                                                                                                                                                                                                               |
-| --exclude              | array               | No       | `[]`                          | Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                                                                                                                                                                                         |
+| Option                 | Type                | Required | Default (control/group/block) | Description                                                                                                                  |
+| ---------------------- | ------------------- | -------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| --project              | string              | No       | workspace default project     | Angular project name where files are generated.                                                                              |
+| --registrationType     | 'token' \| 'config' | No       | 'token'                       | Which registration type is used.                                                                                             |
+| --controlRegistrations | string              | No       | -                             | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
+| --schematicsConfig     | string              | No       | -                             | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
+| --include              | array               | No       | `["\*\*/*.ts"]`               | Glob patterns to include when searching for components                                                                       |
+| --exclude              | array               | No       | `[]`                          | Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                 |
 
 ## Setting Options
 
@@ -22,6 +22,8 @@ There are two ways to set custom default options, avoiding repeated parameters o
 ### In formbar-schematic.config.json
 
 All options are optional, but are listed here in full. You can put any combination of them.
+
+Every path in this file follows [Paths](#paths).
 
 ```json name="formbar-schematic.config.json"
 {
@@ -48,7 +50,7 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
       "schematics": {
         "@ngx-formbar/schematics:register": {
           "registrationType": "token",
-          "controlRegistrationsPath": "app/form/registrations.ts",
+          "controlRegistrations": "app/form/registrations.ts",
           "include": ["**/components/form/controls/**"],
           "exclude": ["**/components/form/controls/secret/**"]
         }
@@ -57,6 +59,18 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
   }
 }
 ```
+
+## Paths
+
+{% include "../../shared/paths.md" %}
+
+## Default Registration Locations
+
+{% include "../../shared/default-registrations.md" %}
+
+## Finding the Schematics Configuration
+
+{% include "../../shared/config-discovery.md" %}
 
 ## Resolving Options
 

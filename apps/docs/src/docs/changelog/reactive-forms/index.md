@@ -19,6 +19,8 @@ New package containing all reactive forms functionality previously in `@ngx-form
 - Form-level lifecycle cache. Values from destroyed controls are restored when the control is recreated, and cleared on form reset.
 - Schematics: `ng-add` schematic for automated project setup.
 - `ng-add` sets up the schema generator. See [Schema Generation](/fundamentals/schema).
+- `ng-add` finds the root providers from the bootstrap call. See [Root Providers](/reactive-forms/getting-started/installation#root-providers).
+- `ng-add` never overwrites a file it seeded.
 - Form arrays. Repeating rows from a single `rowControl`, backed by a native `FormArray`. See [Arrays](/reactive-forms/guides/arrays).
 
 ### Changed

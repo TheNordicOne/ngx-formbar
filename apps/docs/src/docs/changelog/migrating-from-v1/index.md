@@ -59,7 +59,58 @@ ng generate @ngx-formbar/schematics:register
 
 The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
 
+`--path` inside the project is relative to the workspace root, as in Angular's generators. In a project rooted at the workspace root (the default `ng new` layout), `--path app/forms` now writes to `app/forms`, where v1 wrote to `src/app/forms`. A path outside the project goes under the source root, a leading `/` means the workspace root, and a path inside another project fails.
+
+A schematics configuration file anywhere other than the `app` folder of the source root or the workspace root is no longer found, so set `schematicsConfig` to its path. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
+
 Generated file and class names now follow Angular's `@schematics/angular:component` config, so by default there is no `.component`/`Component` suffix. The config interface is named with a `Config` suffix. See [Naming](/fundamentals/generators#naming) for the full behavior.
+
+### Generator settings written by v1's `ng add`
+
+The generators read their `angular.json` defaults from keys such as `@ngx-formbar/schematics:control`. With `--useSchematicConfig=false`, v1's `ng add` wrote them under `@ngx-formbar/core:control`, `@ngx-formbar/core:group` and `@ngx-formbar/core:block`, and the `2.0.0-next.x` prereleases did the same. Rename these keys in the project's `schematics` section and remove `hostDirectiveHelperPath`:
+
+**Before:**
+
+```json name="angular.json"
+{
+  "schematics": {
+    "@ngx-formbar/core:control": {
+      "hostDirectiveHelperPath": "app/shared/helper",
+      "viewProviderHelperPath": "app/shared/helper"
+    }
+  }
+}
+```
+
+**After:**
+
+```json name="angular.json"
+{
+  "schematics": {
+    "@ngx-formbar/schematics:control": {
+      "viewProviderHelperPath": "app/shared/helper"
+    }
+  }
+}
+```
+
+`controlRegistrationsPath` names the registrations file. With a custom `--registrationsPath`, v1's `ng add` set it to the registrations directory in the schematics configuration file. Append the file name:
+
+**Before:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/forms/registrations"
+}
+```
+
+**After:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/forms/registrations/component-registrations.ts"
+}
+```
 
 ## Step 4: Move runtime imports to `@ngx-formbar/reactive-forms`
 
@@ -137,7 +188,7 @@ This is the biggest change. In v1 your components attached library directives vi
 The three contracts live in `@ngx-formbar/reactive-forms`:
 
 | Contract                    | Use for                               | `T extends`      |
-|-----------------------------|---------------------------------------|------------------|
+| --------------------------- | ------------------------------------- | ---------------- |
 | `ReactiveFormbarControl<T>` | Leaf form controls (input, select, …) | `NgxFbControl`   |
 | `ReactiveFormbarGroup<T>`   | Container nodes that hold children    | `NgxFbFormGroup` |
 | `FormbarBlock<T>`           | Non-control content (notes, dividers) | `NgxFbBlock`     |
@@ -346,7 +397,7 @@ The v1 `visibilityHandling` registration option has been renamed to `hiddenHandl
 Two registration options replace any in-component lifecycle wiring you may have done in v1:
 
 | Option             | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
-|--------------------|----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------ | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `hiddenHandling`   | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
 | `disabledHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
 
@@ -389,7 +440,7 @@ The parser has also been switched from `acorn` to an in-tree allow-list parser a
 Loose equality coercion is no longer applied. `==` behaves identically to `===` and `!=` identically to `!==`. The following return `false` in v2.0.0:
 
 | Expression                                    | v1      | v2.0.0  |
-|-----------------------------------------------|---------|---------|
+| --------------------------------------------- | ------- | ------- |
 | `age == "18"` (when `age` is a number)        | `true`  | `false` |
 | `value != null` (when `value` is `undefined`) | `false` | `true`  |
 | `"" == 0`                                     | `true`  | `false` |
@@ -464,6 +515,28 @@ const flag = service.evaluateExpression<boolean>(ast, ctx);
 
 The default `T = unknown` keeps existing call sites working.
 
+## Step 11: Drop the leading `/` from source-root paths
+
+A leading `/` in a schematics path now means the workspace root. This applies to the options, the schematics configuration file and `angular.json`, and it also changes values written for the `2.0.0-next.x` prereleases. Drop it from values such as `controlRegistrationsPath`, `viewProviderHelperPath` and `schematicsConfig` that were meant relative to the source root:
+
+**Before:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "/app/registrations/component-registrations.ts"
+}
+```
+
+**After:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/registrations/component-registrations.ts"
+}
+```
+
+A `schematicsConfig` that still has it fails with `Schematics configuration file not found`. A `controlRegistrationsPath` or `viewProviderHelperPath` that still has it logs a warning naming the path it resolved to.
+
 ## What stays in `@ngx-formbar/core`
 
 The following remain in `@ngx-formbar/core` and need no path change:
@@ -481,7 +554,7 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 ## Quick reference
 
 | Symbol                                                           | v1                                                   | v2.0.0                                                          |
-|------------------------------------------------------------------|------------------------------------------------------|-----------------------------------------------------------------|
+| ---------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
 | `NgxFbFormComponent`                                             | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
 | `provideFormbar`                                                 | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
 | `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
