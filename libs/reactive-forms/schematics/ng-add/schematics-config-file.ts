@@ -90,6 +90,23 @@ export function schematicsConfigFile(
   );
 }
 
+/** Whether the file this run keeps takes its content union from another file. */
+export function keptConfigUsesOtherUnion(
+  tree: Tree,
+  ruleContext: RuleContext,
+  union: string,
+): boolean {
+  const file = schematicsConfigFile(tree, ruleContext);
+  const kept = tree.exists(file) ? tree.readJson(file) : null;
+  const schema = isJsonObject(kept) ? kept.schema : null;
+  const type = schema && isJsonObject(schema) ? schema.type : null;
+
+  return (
+    typeof type === 'string' &&
+    resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) !== union
+  );
+}
+
 /** The settings of this run that a kept file does not hold, as `name: value`. */
 export function ignoredSettings(
   tree: Tree,

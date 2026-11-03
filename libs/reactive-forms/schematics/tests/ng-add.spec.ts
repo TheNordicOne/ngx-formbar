@@ -6,10 +6,14 @@ import {
 import { isJsonObject, JsonObject } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { getWorkspace } from '@schematics/angular/utility/workspace';
+import {
+  getWorkspace,
+  updateWorkspace,
+} from '@schematics/angular/utility/workspace';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
+import { lastValueFrom } from 'rxjs';
 import {
   CompilerHost,
   createProgram,
@@ -4275,6 +4279,64 @@ describe('ng-add schematic', () => {
     const result = await runAdd();
 
     expect(read(result, contentTypePath)).toBe(existing);
+  });
+
+  describe('with a kept config whose schema.type points elsewhere', () => {
+    const elsewhere = {
+      viewProviderHelperPath: 'app/shared/helper',
+      schema: { type: 'forms/union.ts#Forms' },
+    };
+    const sharedConfig = '/formbar-schematic.config.json';
+
+    it.each<[string, string]>([
+      ['its own file', schematicsConfigPath],
+      ['the shared file', sharedConfig],
+    ])('seeds no union with %s', async (_, configPath) => {
+      appTree.create(configPath, JSON.stringify(elsewhere));
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('seeds no union with a linked file', async () => {
+      const linked = src('forms/formbar-schematic.config.json');
+
+      appTree.create(linked, JSON.stringify(elsewhere));
+      await lastValueFrom(
+        runner.callRule(
+          updateWorkspace(({ projects }) => {
+            const project = projects.get('test-app');
+
+            if (project) {
+              project.extensions.schematics = {
+                '@ngx-formbar/schematics:control': {
+                  schematicsConfig: 'forms/formbar-schematic.config.json',
+                },
+              };
+            }
+          }),
+          appTree,
+        ),
+      );
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('seeds the union with a kept config pointing at it', async () => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          schema: { type: 'app/types/content.type.ts#AppContent' },
+        }),
+      );
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(true);
+    });
+
+    it('seeds the union with a kept config without a schema', async () => {
+      appTree.create(schematicsConfigPath, JSON.stringify({}));
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(true);
+    });
   });
 
   it('reports creating a seeded file that does not exist yet', async () => {
