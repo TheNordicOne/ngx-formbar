@@ -40,6 +40,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 ### Removed
 
 - `--hostDirectiveHelperPath` CLI option from the `control`, `group`, and `block` generators. The `--viewProviderHelperPath` option applies to `control`, `group` and `array`.
+- `--viewProviderHelperPath` from the `block` generator.
 - Generated components no longer reference `hostDirectives` or `inject(NgxfbControlDirective)`.
 
 ### Migration
@@ -50,4 +51,4 @@ Install as a dev dependency to replace the generators previously in `@ngx-formba
 npm install -D @ngx-formbar/schematics
 ```
 
-Update any scripts using `@ngx-formbar/core:<generator>` to `@ngx-formbar/schematics:<generator>`, and drop the `--hostDirectiveHelperPath` flag. Existing v1-generated components continue to work; see [Migrating from v1](/changelog/migrating-from-v1) to convert them.
+Update any scripts using `@ngx-formbar/core:<generator>` to `@ngx-formbar/schematics:<generator>`, and drop the `--hostDirectiveHelperPath` flag, and `--viewProviderHelperPath` from `block`. Existing v1-generated components continue to work; see [Migrating from v1](/changelog/migrating-from-v1) to convert them.
