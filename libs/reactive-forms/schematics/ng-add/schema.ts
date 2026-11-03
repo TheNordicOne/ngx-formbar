@@ -44,4 +44,6 @@ export interface RuleContext
   providerConfigDirectory: string;
   helperDirectory: string;
   schematicsConfigDirectory: string;
+  /** Whether this run says where the schematics configuration file goes. */
+  schematicsConfigNamed: boolean;
 }

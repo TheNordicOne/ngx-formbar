@@ -16,9 +16,10 @@ import {
 import { generatorDefaults } from '../helper';
 import {
   ignoredSettings,
-  requestedSchematicsConfigFile,
+  ownSchematicsConfigFile,
   schematicsConfigFile,
   settingsStoppingToApply,
+  SHARED_CONFIG_FILE,
 } from '../schematics-config-file';
 import { posix } from 'node:path';
 import {
@@ -37,7 +38,6 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
 
     const configFile = schematicsConfigFile(tree, ruleContext);
     const ignored = ignoredSettings(tree, configFile, ruleContext);
-    const requested = requestedSchematicsConfigFile(ruleContext);
 
     if (ignored.length > 0) {
       context.logger.warn(
@@ -53,15 +53,19 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       },
     };
 
-    if (configFile !== requested && !tree.exists(configFile)) {
+    if (
+      configFile === ownSchematicsConfigFile(ruleContext) &&
+      !tree.exists(configFile) &&
+      tree.exists(SHARED_CONFIG_FILE)
+    ) {
       const stopping = settingsStoppingToApply(
         tree,
-        requested,
+        SHARED_CONFIG_FILE,
         schematicConfig,
       );
 
       context.logger.warn(
-        `${configFile} now applies to this project instead of ${requested}.${stopping.length > 0 ? ` These settings of ${requested} stop applying: ${stopping.join(', ')}.` : ''}`,
+        `${configFile} now applies to this project instead of ${SHARED_CONFIG_FILE}.${stopping.length > 0 ? ` These settings of ${SHARED_CONFIG_FILE} stop applying: ${stopping.join(', ')}.` : ''}`,
       );
     }
 

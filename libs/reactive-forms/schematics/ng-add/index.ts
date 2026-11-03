@@ -100,6 +100,13 @@ export function ngAdd(options: Schema): Rule {
       );
     }
 
+    const schematicConfigFileName = fileNameOrDefault(
+      'schematicConfigFileName',
+      options.schematicConfigFileName,
+      DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
+      '.json',
+    );
+
     const ruleContext: RuleContext = {
       ...options,
       registrationStyle,
@@ -109,12 +116,12 @@ export function ngAdd(options: Schema): Rule {
         DEFAULT_PROVIDER_CONFIG_FILE_NAME,
         '.ts',
       ),
-      schematicConfigFileName: fileNameOrDefault(
-        'schematicConfigFileName',
-        options.schematicConfigFileName,
-        DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
-        '.json',
-      ),
+      schematicConfigFileName,
+      // The CLI always passes the file name, as its schema has a default.
+      schematicsConfigNamed:
+        !!options.schematicsConfigPath ||
+        `${schematicConfigFileName}.json` !==
+          DEFAULT_SCHEMATIC_CONFIG_FILE_NAME,
       splitRegistrations,
       appConfigPath: rootConfig.filePath,
       rootConfig,

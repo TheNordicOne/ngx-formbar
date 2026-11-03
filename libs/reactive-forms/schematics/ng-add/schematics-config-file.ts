@@ -16,7 +16,7 @@ import {
 } from './helper';
 import { RuleContext } from './schema';
 
-const SHARED_CONFIG_FILE = `/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
+export const SHARED_CONFIG_FILE = `/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
 
 /** What a setting means when neither this run nor the file states it. */
 const UNSTATED: Required<GeneratorDefaults> = {
@@ -40,6 +40,14 @@ export function requestedSchematicsConfigFile({
   );
 }
 
+/** Where the lookup looks first in a project. */
+export function ownSchematicsConfigFile({ projectRoot }: RuleContext): string {
+  return joinToSourceRoot(
+    `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
+    projectRoot,
+  );
+}
+
 /**
  * The file holding the settings of this run. The lookup prefers a project's own
  * file and does not merge it with the shared one, so that is where settings go
@@ -50,13 +58,16 @@ export function schematicsConfigFile(
   ruleContext: RuleContext,
 ): string {
   const requested = requestedSchematicsConfigFile(ruleContext);
+  const own = ownSchematicsConfigFile(ruleContext);
+  const keepsSharedDefault =
+    !ruleContext.schematicsConfigNamed &&
+    !tree.exists(own) &&
+    tree.exists(SHARED_CONFIG_FILE);
 
-  return requested === SHARED_CONFIG_FILE &&
-    ignoredSettings(tree, requested, ruleContext).length > 0
-    ? joinToSourceRoot(
-        `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
-        ruleContext.projectRoot,
-      )
+  return requested === SHARED_CONFIG_FILE || keepsSharedDefault
+    ? ignoredSettings(tree, SHARED_CONFIG_FILE, ruleContext).length > 0
+      ? own
+      : SHARED_CONFIG_FILE
     : requested;
 }
 

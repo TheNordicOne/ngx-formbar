@@ -3681,6 +3681,114 @@ describe('ng-add schematic', () => {
         expect(warnings).toEqual([]);
       });
 
+      describe('with no location given', () => {
+        const otherDirectory = '/projects/other/src/app';
+
+        it('uses it while the settings are the same', async () => {
+          const kept = read(appTree, sharedFile);
+          const { tree, warnings } = await warningsOfRun({}, 'other');
+          const defaults = await generatorDefaults(tree, 'other');
+          const messages: string[] = [];
+          const scaffoldRunner = new SchematicTestRunner(
+            'scaffold',
+            SCAFFOLD_COLLECTION_PATH,
+          );
+
+          scaffoldRunner.logger.subscribe(({ message }) =>
+            messages.push(message),
+          );
+          await scaffoldRunner.runSchematic(
+            'control',
+            { key: 'slider', project: 'other' },
+            tree,
+          );
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+          expect(read(tree, sharedFile)).toBe(kept);
+          expect(warnings).toEqual([]);
+          expect(defaults).toEqual(generators.map(() => undefined));
+          expect(messages).toContain(
+            `Using schematics configuration file ${sharedFile}`,
+          );
+        });
+
+        it('uses one written by hand with the same settings', async () => {
+          const handWritten = JSON.stringify({
+            viewProviderHelperPath: './app/shared/helper',
+            control: { interfaceSuffix: 'Type' },
+          });
+
+          appTree.overwrite(sharedFile, handWritten);
+
+          const { tree, warnings } = await warningsOfRun({}, 'other');
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+          expect(read(tree, sharedFile)).toBe(handWritten);
+          expect(warnings).toEqual([]);
+        });
+
+        it('writes the own file and warns when the settings differ', async () => {
+          appTree.overwrite(
+            sharedFile,
+            JSON.stringify({
+              viewProviderHelperPath: 'app/shared/helper',
+              control: { interfaceSuffix: 'Type' },
+            }),
+          );
+
+          const { tree, warnings } = await warningsOfRun(
+            { registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(tree.readJson(otherOwnFile)).toHaveProperty(
+            'registrationType',
+            'config',
+          );
+          expect(warnings).toEqual([
+            `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: control.`,
+          ]);
+        });
+
+        it('stays with the own file on a further run', async () => {
+          appTree = (
+            await warningsOfRun({ registrationStyle: 'config' }, 'other')
+          ).tree;
+
+          const own = read(appTree, otherOwnFile);
+          const { tree, warnings } = await warningsOfRun(
+            { registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(read(tree, otherOwnFile)).toBe(own);
+          expect(warnings).toEqual([]);
+        });
+
+        it('writes the own file when the app folder is named', async () => {
+          const { tree, warnings } = await warningsOfRun(
+            { schematicsConfigPath: 'app' },
+            'other',
+          );
+
+          expect(
+            tree.exists(`${otherDirectory}/formbar-schematic.config.json`),
+          ).toBe(true);
+          expect(warnings).toEqual([
+            `${otherOwnFile} now applies to this project instead of ${sharedFile}.`,
+          ]);
+        });
+
+        it('does not count the default file name as a location', async () => {
+          const { tree } = await warningsOfRun(
+            { schematicConfigFileName: 'formbar-schematic.config.json' },
+            'other',
+          );
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+        });
+      });
+
       it('keeps the own file on a further run with the same settings', async () => {
         const options: Schema = {
           schematicsConfigPath: '/',
