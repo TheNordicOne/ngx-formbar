@@ -6,12 +6,7 @@ New internal utility package providing shared helpers for schematics. It is a de
 
 ### Added
 
-- TypeScript AST parsing and manipulation utilities.
-- Import statement detection and validation.
-- Decorator inspection helpers (Component, hostDirectives).
-- Component registration node discovery and updates.
-- File and workspace operation helpers.
-- Configuration type definitions: `NgxFormbarAutomationConfig`, `BaseGenerateSchematicConfig`, `DiscoveryConfig`.
+- Helpers shared by the schematics.
 
 ### Migration
 
