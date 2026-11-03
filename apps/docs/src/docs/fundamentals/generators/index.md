@@ -41,7 +41,19 @@ When the helper file cannot be found, the generator logs a warning naming the re
 
 ## Where Components Go
 
-With a project at `projects/my-app` and its source root at `projects/my-app/src`, `ng generate @ngx-formbar/schematics:control --key slider` writes here:
+`--path` follows these tables, not [Paths](#paths). They show where `ng generate @ngx-formbar/schematics:control --key slider` writes.
+
+With the default `ng new` layout, where the project is the workspace root and its source root is `src`:
+
+| Run                         | The component goes in  |
+| --------------------------- | ---------------------- |
+| From the workspace root     | `src/app/slider`       |
+| From `src/app/forms`        | `src/app/forms/slider` |
+| With `--path src/app/forms` | `src/app/forms/slider` |
+| With `--path app/forms`     | `app/forms/slider`     |
+| With `--path /forms`        | `forms/slider`         |
+
+With a project at `projects/my-app` and its source root at `projects/my-app/src`:
 
 | Run                                     | The component goes in                           |
 | --------------------------------------- | ----------------------------------------------- |
@@ -187,6 +199,8 @@ You can set default values for any _ngx-formbar_ schematic option in your `angul
 
 All options are optional, but are listed here in full. You can put any combination of them.
 Note, that compared to the schematics configuration file, you have to repeat all values.
+
+This example is for a project at `projects/my-app`. `path` is a value for `--path`, so it follows [Where Components Go](#where-components-go). The other paths follow [Paths](#paths).
 
 ```json name="angular.json"
 {
