@@ -1799,7 +1799,7 @@ export class RangeComponent extends MiddleControl {}
       async (registrationType, provide) => {
         appTree.create(
           app('one/one-control.ts'),
-          createControlComponent('one', inlineProviders, 'OneControl'),
+          createControlComponent('one', inlineProviders, 'OneInput'),
         );
         provide();
         appTree = await runSchematic({ registrationType });
@@ -1810,7 +1810,7 @@ export class RangeComponent extends MiddleControl {}
         await runSchematic({ registrationType });
 
         const alreadyUsed =
-          'A component with the name "OneControl" is already used';
+          'A component with the name "OneInput" is already used';
 
         expect(warnings).not.toContain(alreadyUsed);
         expect(infos).toContain(alreadyUsed);
