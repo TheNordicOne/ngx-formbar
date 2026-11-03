@@ -1274,8 +1274,9 @@ function runDevDependencyFlow(appDir) {
   const project = 'dev-dependency-app';
   const manifestPath = join(appDir, 'package.json');
   const original = readFileSync(manifestPath, 'utf8');
-  const { [SCHEMATICS_PACKAGE_NAME]: _, ...devDependencies } =
-    JSON.parse(original).devDependencies;
+  const withoutSchematics = JSON.parse(original);
+
+  delete withoutSchematics.devDependencies[SCHEMATICS_PACKAGE_NAME];
 
   run(
     'npx',
@@ -1284,7 +1285,7 @@ function runDevDependencyFlow(appDir) {
   );
   writeFileSync(
     manifestPath,
-    `${JSON.stringify({ ...JSON.parse(original), devDependencies }, null, 2)}\n`,
+    `${JSON.stringify(withoutSchematics, null, 2)}\n`,
   );
 
   ngAdd(appDir, project);
