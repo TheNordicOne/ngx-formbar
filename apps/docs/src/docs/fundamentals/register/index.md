@@ -23,8 +23,8 @@ Each control is registered under the `type` of its config interface, as a form r
 | --controlRegistrationsPath | string              | No       | -                         | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
 | --controlRegistrations     | string              | No       | -                         | The same as `--controlRegistrationsPath`.                                                                                    |
 | --schematicsConfig         | string              | No       | -                         | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --include                  | array               | No       | `["\*\*/*.ts"]`           | Glob patterns to include when searching for components                                                                       |
-| --exclude                  | array               | No       | `[]`                      | Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded.                 |
+| --include                  | array               | No       | `["\*\*/*.ts"]`           | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
+| --exclude                  | array               | No       | `[]`                      | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                               |
 
 ## Setting Options
 
@@ -74,6 +74,16 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
 ## Paths
 
 {% include "../../shared/paths.md" %}
+
+## Discovery Globs
+
+`--include`, `--exclude` and `discovery` take paths with `*`, `**`, `?` and `[]`, so they follow [Paths](#paths) too:
+
+| With source root `src`, you write | It matches                                    |
+| --------------------------------- | --------------------------------------------- |
+| `app/slider/**`                   | Everything in `src/app/slider`                |
+| `src/app/slider/**`               | Everything in `src/app/slider`                |
+| `**/slider/**`                    | Everything in any `slider` folder below `src` |
 
 ## Default Registration Locations
 

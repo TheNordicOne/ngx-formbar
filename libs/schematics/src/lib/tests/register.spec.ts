@@ -784,6 +784,99 @@ describe('register schematic', () => {
     });
   });
 
+  describe('the base of the discovery globs', () => {
+    const spellings = [
+      ['relative to the source root', 'app/widgets/**'],
+      ['with a leading ./', './app/widgets/**'],
+      ['from the workspace root', 'projects/test-app/src/app/widgets/**'],
+      ['with a leading /', '/projects/test-app/src/app/widgets/**'],
+    ];
+
+    beforeEach(() => {
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+      appTree.create(
+        app('widgets/in.ts'),
+        createControlComponent('in', inlineProviders, 'InComponent'),
+      );
+      appTree.create(
+        app('other/out.ts'),
+        createControlComponent('out', inlineProviders, 'OutComponent'),
+      );
+    });
+
+    async function registered(options: Partial<DiscoverOptions>) {
+      return read(
+        await runSchematic({ registrationType: 'config', ...options }),
+        src(registrationsPath),
+      );
+    }
+
+    it.each(spellings)('--include %s', async (_, glob) => {
+      const registrations = await registered({ include: [glob] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it.each(spellings)('--exclude %s', async (_, glob) => {
+      const registrations = await registered({ exclude: [glob] });
+
+      expect(registrations).not.toContain('InComponent');
+      expect(registrations).toContain('OutComponent');
+    });
+
+    it.each(spellings)('discovery.include %s', async (_, glob) => {
+      writeJson(appTree, src(schematicsConfigPath), {
+        discovery: { include: [glob] },
+      });
+
+      const registrations = await registered({});
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it.each([
+      ['--include', { include: ['**/*.ts'] }],
+      ['--exclude', { exclude: [] }],
+      ['no pattern', {}],
+    ])(
+      'finds a file directly in the source root with %s',
+      async (_, options) => {
+        appTree.create(
+          src('top.ts'),
+          createControlComponent('top', inlineProviders, 'TopComponent'),
+        );
+
+        expect(await registered(options)).toContain('TopComponent');
+      },
+    );
+
+    it('matches a folder directly in the source root with a leading **', async () => {
+      appTree.create(
+        src('controls/top.ts'),
+        createControlComponent('top', inlineProviders, 'TopComponent'),
+      );
+
+      const registrations = await registered({
+        include: ['**/controls/**'],
+      });
+
+      expect(registrations).toContain('TopComponent');
+    });
+
+    it('fails on a glob above the workspace root', async () => {
+      await expect(registered({ include: ['../../../../**'] })).rejects.toThrow(
+        '"include" points outside the workspace root',
+      );
+    });
+  });
+
   describe('the registration key', () => {
     const componentFile = app('widgets/range.ts');
     const key = (name: string) =>

@@ -32,6 +32,7 @@ import {
   isWithin,
   loadSourceFile,
   relativeModuleFile,
+  resolveRequiredPath,
 } from '@ngx-formbar/setup';
 import { FormbarComponentInfo } from './component-info.type';
 
@@ -137,7 +138,7 @@ function toComponentInfo(
  *   - []  : character class / ranges (e.g., [a-zA-Z0-9_])
  *
  * Notes:
- *   - Matching is done against the full POSIX-like path from Tree (e.g., "/src/app/a.ts").
+ *   - Patterns are paths as well, so "app/**" and "src/app/**" both match "/src/app/a.ts".
  *   - Patterns are compiled once to RegExp for speed.
  *   - No extra dependencies.
  */
@@ -154,8 +155,8 @@ export function findPotentialControlComponents(
     return [];
   }
 
-  const includeRegs = compileGlobs(include, 'include');
-  const excludeRegs = compileGlobs(exclude, 'exclude');
+  const includeRegs = compileGlobs(include, 'include', sourceRoot);
+  const excludeRegs = compileGlobs(exclude, 'exclude', sourceRoot);
 
   const out = new Set<string>();
 
@@ -189,6 +190,7 @@ export function findPotentialControlComponents(
 function compileGlobs(
   patterns: readonly string[],
   kind: 'include' | 'exclude',
+  sourceRoot: string,
 ) {
   const regs: RegExp[] = [];
 
@@ -203,7 +205,7 @@ function compileGlobs(
       );
     }
 
-    const rx = globToRegExp(raw);
+    const rx = globToRegExp(resolveRequiredPath(kind, raw, sourceRoot));
     if (!rx) {
       throw new SchematicsException(`Invalid ${kind} glob "${raw}".`);
     }
@@ -232,6 +234,7 @@ function someRegMatch(regs: readonly RegExp[], input: string) {
  * Convert a glob into a **path-aware** RegExp.
  * Rules:
  *   - '**'  -> '.*'  (may cross '/')
+ *   - a whole segment '**\/' may also match no segment at all
  *   - '*'   -> '[^/]*'
  *   - '?'   -> '[^/]'
  *   - '[]'  -> preserved (with minimal validation)
@@ -251,11 +254,19 @@ function globToRegExp(glob: string) {
 
     // Handle '**' specially (before '*').
     if (ch === '*' && i + 1 < glob.length && glob[i + 1] === '*') {
+      const startsSegment = i === 0 || glob[i - 1] === '/';
+
       while (i + 1 < glob.length && glob[i] === '*' && glob[i + 1] === '*') {
         i += 1;
       }
-      rx += '.*';
-      i += 2;
+      i += 1;
+
+      if (startsSegment && glob[i] === '/') {
+        rx += '(?:.*/)?';
+        i += 1;
+      } else {
+        rx += '.*';
+      }
       continue;
     }
 
