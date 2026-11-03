@@ -6,10 +6,10 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Added
 
-- `control` generator: scaffolds a control component implementing `ReactiveFormbarControl<T>`, with signal `input()` bindings, and registers itself automatically.
-- `group` generator: scaffolds a group component implementing `ReactiveFormbarGroup<T>` using `<ngxfb-control-outlet />`, and registers itself automatically.
-- `block` generator: scaffolds a block component implementing `FormbarBlock<T>`, and registers itself automatically.
-- `array` generator: scaffolds an array component implementing `ReactiveFormbarArray<T>` with a minimal `<ngxfb-form-array-outlet />` row template, and registers itself automatically.
+- `control` generator: scaffolds and registers a control.
+- `group` generator: scaffolds and registers a group.
+- `block` generator: scaffolds and registers a block.
+- `array` generator: scaffolds and registers an array.
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 - `interfaceFileSuffix` option to control the interface file's name segment.
 - `schema` generator: emits documents such as JSON Schema from the content union. See [Schema Generation](/fundamentals/schema).
@@ -25,8 +25,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - The schematics configuration file is looked up in fixed places, with the workspace root as the default for every project. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
 - Each schematic logs which schematics configuration file it used.
 - A leading `/` in a path means the workspace root, in every schematic.
-- Group templates render children through `<ngxfb-control-outlet />`.
-- Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`loadComponent()`).
+- Generated registrations use `loadComponent()`.
 - `register` takes each key from the `type` of the component's config.
 - `register` only searches the source root.
 - `register` only registers components implementing a contract.
