@@ -2,7 +2,7 @@ While the Generator Schematics, by default, already register every new component
 
 ## What Does It Do
 
-This schematic registers every component that implements one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`, directly or through a base class, a mixin, an interface or a type alias. Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
+This schematic registers every component that implements one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`, directly or through a base class, a mixin, an interface, a type alias or a TypeScript utility type such as `Partial`. Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
 
 It looks through the source root of the project and skips any other project inside it.
 

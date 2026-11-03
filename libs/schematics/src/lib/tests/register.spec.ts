@@ -1550,6 +1550,31 @@ export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
           `const Base = class implements ReactiveFormbarControl<RangeConfig> { ${nameInput} };`,
         ],
         [
+          'a utility type',
+          'implements Partial<ReactiveFormbarControl<RangeConfig>>',
+          '',
+        ],
+        [
+          'nested utility types',
+          'implements Readonly<Partial<ReactiveFormbarControl<RangeConfig>>>',
+          '',
+        ],
+        [
+          'a utility type in a local alias',
+          'implements MyControl',
+          "type MyControl = Omit<ReactiveFormbarControl<RangeConfig>, 'errors'>;",
+        ],
+        [
+          'a utility type in a local interface',
+          'implements MyControl',
+          "interface MyControl extends Omit<ReactiveFormbarControl<RangeConfig>, 'errors'> {}",
+        ],
+        [
+          'a utility type in a generic local alias',
+          'implements MyControl<RangeConfig>',
+          "type MyControl<C extends NgxFbControl> = Omit<ReactiveFormbarControl<C>, 'errors'>;",
+        ],
+        [
           'a local interface',
           'implements MyControl',
           'interface MyControl extends ReactiveFormbarControl<RangeConfig> {}',
@@ -1683,6 +1708,11 @@ export class RangeComponent extends MiddleControl {}
           'a contract only in a type argument',
           'implements Holder<ReactiveFormbarControl<RangeConfig>>',
           'interface Holder<T> { readonly name: unknown; held?: T; }',
+        ],
+        [
+          'a contract only in a local generic named like a utility type',
+          'implements Partial<ReactiveFormbarControl<RangeConfig>>',
+          'interface Partial<T> { readonly name: unknown; held?: T; }',
         ],
         [
           'interfaces extending each other',

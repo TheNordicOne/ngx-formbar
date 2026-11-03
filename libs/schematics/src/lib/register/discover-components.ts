@@ -42,6 +42,14 @@ const contracts = [
   'ReactiveFormbarArray',
   'FormbarBlock',
 ];
+const utilityTypes = [
+  'Partial',
+  'Required',
+  'Readonly',
+  'NonNullable',
+  'Pick',
+  'Omit',
+];
 
 export function discoverComponents(
   tree: Tree,
@@ -442,7 +450,8 @@ function contractConfigs(
   checker: TypeChecker,
   seen: Set<TsSymbol>,
 ): (Type | undefined)[] {
-  return referencesOf(declaration).flatMap((reference) => {
+  return referencesOf(declaration).flatMap((written) => {
+    const reference = withoutUtilityTypes(written, checker);
     const symbol = originalSymbol(reference.name, checker);
 
     if (isContract(reference.name, symbol)) {
@@ -512,6 +521,38 @@ function referencesOf(declaration: BuildingDeclaration) {
       name: expression,
       typeArguments,
     }));
+}
+
+interface TypeReference {
+  name: Node;
+  typeArguments?: NodeArray<TypeNode>;
+}
+
+/** `Omit<Contract<Config>, 'x'>` still states the config of the contract. */
+function withoutUtilityTypes(
+  reference: TypeReference,
+  checker: TypeChecker,
+): TypeReference {
+  const wrapped = reference.typeArguments?.at(0);
+
+  return wrapped &&
+    isTypeReferenceNode(wrapped) &&
+    isUtilityType(originalSymbol(reference.name, checker), checker)
+    ? withoutUtilityTypes(
+        { name: wrapped.typeName, typeArguments: wrapped.typeArguments },
+        checker,
+      )
+    : reference;
+}
+
+/** A local generic of the same name could do anything with its argument. */
+function isUtilityType(symbol: TsSymbol | undefined, checker: TypeChecker) {
+  return (
+    !!symbol &&
+    utilityTypes.includes(symbol.name) &&
+    checker.resolveName(symbol.name, undefined, SymbolFlags.Type, false) ===
+      symbol
+  );
 }
 
 function originalSymbol(name: Node, checker: TypeChecker) {
