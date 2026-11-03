@@ -1541,6 +1541,11 @@ export abstract class DefaultedControl<T = RangeConfig> implements ReactiveFormb
           base,
         ],
         [
+          'a base when its own contract has no literal',
+          'extends BaseControl<RangeConfig> implements ReactiveFormbarControl<{ type: string }>',
+          base,
+        ],
+        [
           'a base and another literal in its own contract',
           "extends BaseControl<{ type: 'other' }> implements ReactiveFormbarControl<RangeConfig>",
           base,
