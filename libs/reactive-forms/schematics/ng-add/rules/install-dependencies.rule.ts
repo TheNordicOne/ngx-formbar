@@ -16,6 +16,11 @@ import {
 } from '../../shared/constants';
 import { RuleContext } from '../schema';
 
+interface OwnManifest {
+  version?: string;
+  peerDependencies?: Record<string, string>;
+}
+
 export function installDependencies(ruleContext: RuleContext): Rule {
   return chain([
     installPackage(CORE_PACKAGE_NAME, DependencyType.Default, coreRange),
@@ -50,48 +55,32 @@ function installPackage(
 
 /** The release writes the range of the matching core into the peer dependencies. */
 function coreRange() {
-  const manifest = ownManifest();
-  const peers = isRecord(manifest) ? manifest.peerDependencies : undefined;
-
-  return readableRange(
+  return requiredRange(
     CORE_PACKAGE_NAME,
-    isRecord(peers) ? peers[CORE_PACKAGE_NAME] : undefined,
+    ownManifest().peerDependencies?.[CORE_PACKAGE_NAME],
   );
 }
 
 /** All packages of this repository are released under one version. */
 function schematicsRange() {
-  const manifest = ownManifest();
-  const version = readableRange(
-    SCHEMATICS_PACKAGE_NAME,
-    isRecord(manifest) ? manifest.version : undefined,
-  );
-
-  return `^${version}`;
+  return `^${requiredRange(SCHEMATICS_PACKAGE_NAME, ownManifest().version)}`;
 }
 
-function readableRange(packageName: string, value: unknown) {
-  if (typeof value !== 'string' || value === '') {
+function requiredRange(packageName: string, range: string | undefined) {
+  if (!range) {
     throw new SchematicsException(
       `Could not read the version range of ${packageName} from the manifest of @ngx-formbar/reactive-forms.`,
     );
   }
 
-  return value;
+  return range;
 }
 
 function ownManifest() {
-  try {
-    const manifest: unknown = JSON.parse(
-      readFileSync(join(__dirname, '../package.json'), 'utf8'),
-    );
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const manifest: OwnManifest = JSON.parse(
+    readFileSync(join(__dirname, '../package.json'), 'utf8'),
+  );
 
-    return manifest;
-  } catch {
-    return undefined;
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return manifest;
 }

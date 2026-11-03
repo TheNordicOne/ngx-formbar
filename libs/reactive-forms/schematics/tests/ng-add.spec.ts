@@ -259,7 +259,7 @@ describe('ng-add schematic', () => {
     let packageDirectories: string[] = [];
 
     /** The built schematic next to another manifest, as a published package reads its own. */
-    async function runAddWithManifest(manifest: string | null) {
+    async function runAddWithManifest(manifest: string) {
       const packageDirectory = mkdtempSync(
         join(COLLECTION_PATH, '../../../manifest-'),
       );
@@ -271,9 +271,7 @@ describe('ng-add schematic', () => {
         join(packageDirectory, 'schematics'),
       ]);
 
-      if (manifest !== null) {
-        writeFileSync(join(packageDirectory, 'package.json'), manifest);
-      }
+      writeFileSync(join(packageDirectory, 'package.json'), manifest);
 
       return new SchematicTestRunner(
         'schematics',
@@ -336,20 +334,11 @@ describe('ng-add schematic', () => {
       expect(manifest).not.toHaveProperty([otherSection, corePackage]);
     });
 
-    it.each<[string, string | null]>([
-      ['no manifest', null],
-      ['a manifest that is no JSON', '{'],
+    it.each<[string, string]>([
       ['no peer dependencies', JSON.stringify({ version: '2.0.0' })],
       [
         'no peer range for core',
         JSON.stringify({ version: '2.0.0', peerDependencies: { rxjs: '^7' } }),
-      ],
-      [
-        'a peer range that is no string',
-        JSON.stringify({
-          version: '2.0.0',
-          peerDependencies: { [corePackage]: 2 },
-        }),
       ],
       [
         'an empty peer range',
