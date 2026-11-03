@@ -36,7 +36,7 @@ ng generate @ngx-formbar/schematics:schema
 
 This runs the configured emitters and writes their output. An empty union fails with a message telling you to scaffold a node first (see [Generators](/fundamentals/generators)).
 
-The content union is compiled with the `tsConfig` of the project's `build` target, so its `paths` and `baseUrl` apply. Without one, the generator uses `tsconfig.app.json`, `tsconfig.lib.json` or `tsconfig.json` in the project root, then the workspace's `tsconfig.json`, then its `tsconfig.base.json`.
+The generator reads your project's TypeScript configuration, so path aliases in your content union work.
 
 ## Options
 
