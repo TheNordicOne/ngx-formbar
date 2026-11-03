@@ -54,10 +54,10 @@ export function schema(options: Schema): Rule {
         entry,
         paths: {
           workspaceRoot: schemaContext.workspaceRoot,
-          projectRoot: schemaContext.projectRoot,
+          projectRoot: schemaContext.sourceRoot,
           output: output
-            ? resolveRequiredPath('output', output, schemaContext.projectRoot)
-            : builtInDefaultOutput(entry.use, schemaContext.projectRoot),
+            ? resolveRequiredPath('output', output, schemaContext.sourceRoot)
+            : builtInDefaultOutput(entry.use, schemaContext.sourceRoot),
         },
       };
     });
@@ -186,11 +186,11 @@ function buildSchemaContext(
   context: SchematicContext,
 ) {
   const project = getProjectDefinition(workspace, options.project);
-  const projectRoot = project.sourceRoot ?? project.root;
+  const sourceRoot = project.sourceRoot ?? project.root;
 
   const automationConfig = loadAutomationConfig(
     tree,
-    projectRoot,
+    sourceRoot,
     context.logger,
     options.schematicsConfig,
   );
@@ -206,7 +206,7 @@ function buildSchemaContext(
   return {
     typeReference,
     entries: automationConfig?.schema?.emitters ?? [],
-    projectRoot,
+    sourceRoot,
     // Tree paths are '/'-rooted and virtual; this is the real on-disk root,
     // needed to resolve emitter packages out of the consumer's node_modules.
     workspaceRoot: findWorkspaceRoot(process.cwd()),

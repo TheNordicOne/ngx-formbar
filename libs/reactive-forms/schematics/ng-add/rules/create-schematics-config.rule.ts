@@ -30,7 +30,7 @@ import {
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { useSchematicConfig, projectRoot } = ruleContext;
+    const { useSchematicConfig, sourceRoot } = ruleContext;
 
     if (!useSchematicConfig) {
       return;
@@ -48,7 +48,7 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     const schematicConfig: NgxFormbarAutomationConfig = {
       ...generatorDefaults(ruleContext),
       schema: {
-        type: `${sourceRootValue(joinToSourceRoot(`${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`, projectRoot), projectRoot)}#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
+        type: `${sourceRootValue(joinToSourceRoot(`${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts`, sourceRoot), sourceRoot)}#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
         emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
       },
     };

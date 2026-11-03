@@ -75,13 +75,13 @@ function buildScaffoldContext(
   tree: Tree,
   context: SchematicContext,
 ) {
-  const projectRoot = project.sourceRoot ?? project.root;
+  const sourceRoot = project.sourceRoot ?? project.root;
 
   const { automationConfig, typeConfig, mergedConfig } = loadMergedConfig(
     options,
     type,
     tree,
-    projectRoot,
+    sourceRoot,
     context,
   );
 
@@ -89,14 +89,14 @@ function buildScaffoldContext(
   const names = deriveNames(resolvedName, mergedConfig, componentNaming);
 
   const directory = typeConfig?.path
-    ? resolveRequiredPath(`${type}.path`, typeConfig.path, projectRoot)
+    ? resolveRequiredPath(`${type}.path`, typeConfig.path, sourceRoot)
     : resolvePathOption(options.path, project, workspace);
   const componentPath = `${directory}/${dasherize(resolvedName)}`;
   const componentFilePath = `${componentPath}/${names.componentFileName}`;
 
   const viewProvider = resolveViewProvider(
     tree,
-    projectRoot,
+    sourceRoot,
     automationConfig,
     mergedConfig,
     componentFilePath,
@@ -106,7 +106,7 @@ function buildScaffoldContext(
 
   const controlRegistrationsPath = findControlRegistrationsPath(
     tree,
-    projectRoot,
+    sourceRoot,
     automationConfig?.controlRegistrationsPath ??
       options.controlRegistrationsPath,
     context,
@@ -125,7 +125,7 @@ function buildScaffoldContext(
     resolvedName,
     componentPath,
     componentFilePath,
-    projectRoot,
+    sourceRoot,
     controlRegistrationsPath,
   };
 
@@ -236,7 +236,7 @@ function resolvePathOption(
 
 function resolveViewProvider(
   tree: Tree,
-  projectRoot: string,
+  sourceRoot: string,
   automationConfig: NgxFormbarAutomationConfig | null,
   config: Schema,
   componentFilePath: string,
@@ -253,7 +253,7 @@ function resolveViewProvider(
   const [viewProviderHelperPath, viewProviderIdentifier] =
     resolveImportPathAndIdentifier(
       tree,
-      projectRoot,
+      sourceRoot,
       componentFilePath,
       pathOption,
       DEFAULT_VIEW_PROVIDER_HELPER,
@@ -269,12 +269,12 @@ function resolveViewProvider(
 
 function findControlRegistrationsPath(
   tree: Tree,
-  projectRoot: string,
+  sourceRoot: string,
   configuredPath: string | undefined,
   context: SchematicContext,
 ) {
   const controlRegistrationsPath =
-    resolveRegistrationsPath(tree, projectRoot, configuredPath) ?? undefined;
+    resolveRegistrationsPath(tree, sourceRoot, configuredPath) ?? undefined;
 
   if (!controlRegistrationsPath) {
     context.logger.warn(
@@ -289,7 +289,7 @@ function findControlRegistrationsPath(
 
 function resolveImportPathAndIdentifier(
   tree: Tree,
-  projectRoot: string,
+  sourceRoot: string,
   componentFilePath: string,
   pathOption: string | undefined,
   defaultFileOption: string,
@@ -303,7 +303,7 @@ function resolveImportPathAndIdentifier(
     defaultFileOption,
   );
 
-  const resolvedDirectory = resolveWithinWorkspace(directory, projectRoot);
+  const resolvedDirectory = resolveWithinWorkspace(directory, sourceRoot);
 
   if (!resolvedDirectory) {
     warnHelperNotFound(pathOption, context);

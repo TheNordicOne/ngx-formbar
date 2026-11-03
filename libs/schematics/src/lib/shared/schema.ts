@@ -28,7 +28,7 @@ export interface ScaffoldContext extends Schema {
   componentFileName: string;
   componentPath: string;
   componentFilePath: string;
-  projectRoot: string;
+  sourceRoot: string;
   hasViewProviderHelper: boolean;
   viewProviderHelperPath?: string;
   viewProviderIdentifier?: string;

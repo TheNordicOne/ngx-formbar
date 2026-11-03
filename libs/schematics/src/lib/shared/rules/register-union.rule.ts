@@ -23,7 +23,7 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
   }
 
   return (tree: Tree, context: SchematicContext) => {
-    const parsed = parseReference(reference, ruleContext.projectRoot, context);
+    const parsed = parseReference(reference, ruleContext.sourceRoot, context);
 
     if (!parsed) {
       return tree;
@@ -67,14 +67,14 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
 
 function parseReference(
   reference: string,
-  projectRoot: string,
+  sourceRoot: string,
   context: SchematicContext,
 ) {
   try {
     const { filePath, exportName } = parseTypeReference(reference);
 
     return {
-      unionPath: resolveTypeFile(filePath, projectRoot),
+      unionPath: resolveTypeFile(filePath, sourceRoot),
       exportName,
     };
   } catch (error) {

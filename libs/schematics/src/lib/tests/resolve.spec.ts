@@ -16,7 +16,7 @@ function context(overrides: Partial<SchemaContext> = {}): SchemaContext {
   return {
     typeReference: 'app/types/content.type.ts#AppContent',
     entries: [],
-    projectRoot: 'projects/test-app/src',
+    sourceRoot: 'projects/test-app/src',
     workspaceRoot: '/',
     tsConfigPath: 'projects/test-app/tsconfig.app.json',
     ...overrides,

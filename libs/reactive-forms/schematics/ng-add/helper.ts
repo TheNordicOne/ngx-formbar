@@ -147,7 +147,7 @@ export const DEFAULT_REGISTRATIONS_FILE = `${DEFAULT_REGISTRATIONS_PATH}/${DEFAU
 
 /** The generator settings that differ from what the generators assume. */
 export function generatorDefaults(ruleContext: RuleContext): GeneratorDefaults {
-  const { registrationStyle, useHelper, helperDirectory, projectRoot } =
+  const { registrationStyle, useHelper, helperDirectory, sourceRoot } =
     ruleContext;
   const registrationsFile = componentRegistrationsFile(ruleContext);
   const defaults: GeneratorDefaults = {};
@@ -158,18 +158,18 @@ export function generatorDefaults(ruleContext: RuleContext): GeneratorDefaults {
 
   if (
     registrationsFile !==
-    joinToSourceRoot(DEFAULT_REGISTRATIONS_FILE, projectRoot)
+    joinToSourceRoot(DEFAULT_REGISTRATIONS_FILE, sourceRoot)
   ) {
     defaults.controlRegistrationsPath = sourceRootValue(
       registrationsFile,
-      projectRoot,
+      sourceRoot,
     );
   }
 
   if (useHelper) {
     defaults.viewProviderHelperPath = sourceRootValue(
       helperDirectory,
-      projectRoot,
+      sourceRoot,
     );
   }
 

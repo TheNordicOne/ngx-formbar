@@ -12,11 +12,11 @@ function findBuiltIn(spec: string) {
 
 export function builtInDefaultOutput(
   spec: string,
-  projectRoot: string,
+  sourceRoot: string,
 ): string | null {
   const builtIn = findBuiltIn(spec);
 
-  return builtIn ? joinToSourceRoot(builtIn.defaultOutput, projectRoot) : null;
+  return builtIn ? joinToSourceRoot(builtIn.defaultOutput, sourceRoot) : null;
 }
 
 export function resolveEmitter(

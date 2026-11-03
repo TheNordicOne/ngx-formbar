@@ -19,12 +19,12 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
     const {
       useSchematicConfig,
       projectName,
-      projectRoot,
+      sourceRoot,
       schematicsConfigLink,
     } = ruleContext;
 
     const configFilePath = schematicsConfigFile(tree, ruleContext);
-    const found = findSchematicsConfig(tree, projectRoot);
+    const found = findSchematicsConfig(tree, sourceRoot);
 
     if (
       useSchematicConfig &&
@@ -43,7 +43,7 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
       return removeSchematicsConfigLink(SCHEMATICS_GENERATORS, projectName);
     }
 
-    const configPath = sourceRootValue(configFilePath, projectRoot);
+    const configPath = sourceRootValue(configFilePath, sourceRoot);
 
     context.logger.info(
       `Pointing the generators at ${configPath}, ${found ? `as they would find ${found} first` : 'where they would not find it'}`,

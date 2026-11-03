@@ -35,7 +35,7 @@ export interface RuleContext
   registrationStyle: RegistrationType;
   providerConfigFileName: string;
   schematicConfigFileName: string;
-  projectRoot: string;
+  sourceRoot: string;
   appConfigPath: string;
   rootConfig: RootConfig;
   projectName: string;

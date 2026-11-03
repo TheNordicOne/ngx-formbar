@@ -41,20 +41,20 @@ export function requestedSchematicsConfigFile({
 }
 
 /** Where the lookup looks first in a project. */
-export function ownSchematicsConfigFile({ projectRoot }: RuleContext): string {
+export function ownSchematicsConfigFile({ sourceRoot }: RuleContext): string {
   return joinToSourceRoot(
     `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
-    projectRoot,
+    sourceRoot,
   );
 }
 
 /** Where `schematicsConfig` in angular.json points, if that file exists. */
 export function linkedSchematicsConfigFile(
   tree: Tree,
-  { schematicsConfigLink, projectRoot }: RuleContext,
+  { schematicsConfigLink, sourceRoot }: RuleContext,
 ): string | null {
   const linked = schematicsConfigLink
-    ? resolveWithinWorkspace(schematicsConfigLink, projectRoot)
+    ? resolveWithinWorkspace(schematicsConfigLink, sourceRoot)
     : null;
 
   return linked && tree.exists(linked) ? linked : null;
@@ -112,7 +112,7 @@ export function ignoredSettings(
         setting,
         kept[setting] ?? UNSTATED[setting],
         stated(setting),
-        ruleContext.projectRoot,
+        ruleContext.sourceRoot,
       ),
   ).map((setting) => `${setting}: ${stated(setting)}`);
 }

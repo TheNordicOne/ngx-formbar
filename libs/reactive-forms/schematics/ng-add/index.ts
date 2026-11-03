@@ -45,7 +45,7 @@ export function ngAdd(options: Schema): Rule {
     const projectName = resolveProjectName(workspace, options.project);
     const project = getProjectDefinition(workspace, projectName);
 
-    const projectRoot = project.sourceRoot ?? project.root;
+    const sourceRoot = project.sourceRoot ?? project.root;
 
     context.logger.info(
       `📦 Setting up ngx-formbar in project "${projectName}"...`,
@@ -58,32 +58,32 @@ export function ngAdd(options: Schema): Rule {
       'registrationsPath',
       options.registrationsPath,
       DEFAULT_REGISTRATIONS_PATH,
-      projectRoot,
+      sourceRoot,
     );
     const providerConfigDirectory = locate(
       'providerConfigPath',
       options.providerConfigPath,
       DEFAULT_PROVIDER_CONFIG_PATH,
-      projectRoot,
+      sourceRoot,
     );
     const helperDirectory = locate(
       'helperPath',
       options.helperPath,
       DEFAULT_HELPER_PATH,
-      projectRoot,
+      sourceRoot,
     );
     const schematicsConfigDirectory = locate(
       'schematicsConfigPath',
       options.schematicsConfigPath,
       DEFAULT_SCHEMATICS_CONFIG_PATH,
-      projectRoot,
+      sourceRoot,
     );
 
     const rootConfig = locateRootConfig(
       tree,
       workspace,
       project,
-      projectRoot,
+      sourceRoot,
       context,
     );
 
@@ -135,7 +135,7 @@ export function ngAdd(options: Schema): Rule {
       providerConfigDirectory,
       helperDirectory,
       schematicsConfigDirectory,
-      projectRoot,
+      sourceRoot,
       projectName,
       useTokens: registrationStyle === 'token',
     };

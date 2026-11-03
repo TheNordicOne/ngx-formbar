@@ -42,7 +42,7 @@ async function modelFor(source: string): Promise<FormModel> {
   const { type, checker, coreRoot } = resolveContentType(tree, {
     typeReference: 'app/types/content.type.ts#AppContent',
     entries: [],
-    projectRoot: 'projects/test-app/src',
+    sourceRoot: 'projects/test-app/src',
     workspaceRoot: '/',
     tsConfigPath: 'projects/test-app/tsconfig.app.json',
   });

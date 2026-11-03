@@ -10,7 +10,7 @@ export function resolveContentType(
   ctx: SchemaContext,
 ): { type: Type; checker: TypeChecker; coreRoot: string } {
   const { filePath, exportName } = parseTypeReference(ctx.typeReference);
-  const absolutePath = resolveTypeFile(filePath, ctx.projectRoot);
+  const absolutePath = resolveTypeFile(filePath, ctx.sourceRoot);
 
   if (!tree.exists(absolutePath)) {
     throw new SchematicsException(`Type file not found: ${absolutePath}`);

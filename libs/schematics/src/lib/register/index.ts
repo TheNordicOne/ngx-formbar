@@ -50,11 +50,11 @@ function mergeOptions(
   tree: Tree,
   context: SchematicContext,
 ) {
-  const projectRoot = project.sourceRoot ?? project.root;
+  const sourceRoot = project.sourceRoot ?? project.root;
 
   const automationConfig = loadAutomationConfig(
     tree,
-    projectRoot,
+    sourceRoot,
     context.logger,
     options.schematicsConfig,
   );
@@ -68,7 +68,7 @@ function mergeOptions(
 
   const controlRegistrations = resolveRegistrationsPath(
     tree,
-    projectRoot,
+    sourceRoot,
     configuredRegistrations,
   );
 
@@ -82,7 +82,7 @@ function mergeOptions(
       options.registrationType ??
       DEFAULT_REGISTRATION_TYPE,
     components: [],
-    sourceRoot: projectRoot,
+    sourceRoot,
     otherProjectDirectories: otherProjectDirectories(project, workspace),
   };
 

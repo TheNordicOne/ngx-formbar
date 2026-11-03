@@ -18,7 +18,7 @@ const NG_ADD_SETTINGS = [
  */
 export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { projectName, projectRoot, useSchematicConfig } = ruleContext;
+    const { projectName, sourceRoot, useSchematicConfig } = ruleContext;
 
     if (useSchematicConfig) {
       return;
@@ -26,7 +26,7 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
 
     context.logger.info('Updating schematics configuration');
 
-    const overridingConfig = findSchematicsConfig(tree, projectRoot);
+    const overridingConfig = findSchematicsConfig(tree, sourceRoot);
 
     if (overridingConfig) {
       context.logger.warn(

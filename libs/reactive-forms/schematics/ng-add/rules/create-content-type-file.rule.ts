@@ -23,7 +23,7 @@ import {
  */
 export function createContentTypeFile(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { projectRoot, useSchematicConfig } = ruleContext;
+    const { sourceRoot, useSchematicConfig } = ruleContext;
 
     if (!useSchematicConfig) {
       return;
@@ -32,7 +32,7 @@ export function createContentTypeFile(ruleContext: RuleContext): Rule {
     return mergeWith(
       apply(url('./ng-add/files/content-type'), [
         applyTemplates({ contentTypeFileName: DEFAULT_CONTENT_TYPE_FILE_NAME }),
-        move(joinToSourceRoot(DEFAULT_CONTENT_TYPE_PATH, projectRoot)),
+        move(joinToSourceRoot(DEFAULT_CONTENT_TYPE_PATH, sourceRoot)),
         skipExistingFiles(tree, context, 'content union file'),
       ]),
     );
