@@ -370,6 +370,8 @@ import { ReactiveFormbarControl } from '${REACTIVE_FORMS_PACKAGE_NAME}';
 import { ReactiveFormsModule } from '@angular/forms';
 ${imports}
 
+interface ${classifiedName}Control { type: string; }
+
 @Component({
   selector: 'app-${name}-control',
   imports: [ReactiveFormsModule],

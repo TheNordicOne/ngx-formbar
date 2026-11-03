@@ -775,7 +775,8 @@ export class OtherPage implements OnInit {
     });
 
     describe('what a registration cannot import', () => {
-      const header = `import { Component } from '@angular/core';
+      const nameInput = 'readonly name = input.required<string>();';
+      const header = `import { Component, input } from '@angular/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 
 interface TagsConfig { type: 'tags'; }
@@ -799,7 +800,7 @@ interface TagsConfig { type: 'tags'; }
         const registrations = await registeredAfterCreating(
           app('tags/tags-input.ts'),
           `${header}
-export abstract class TagsInput implements ReactiveFormbarControl<TagsConfig> {}
+export abstract class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
 `,
         );
 
@@ -811,10 +812,10 @@ export abstract class TagsInput implements ReactiveFormbarControl<TagsConfig> {}
         const registrations = await registeredAfterCreating(
           app('tags/tags-input.ts'),
           `${header}
-export abstract class BaseInput<T> implements ReactiveFormbarControl<T> {}
+export abstract class BaseInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
 
 @Component({ selector: 'app-tags', template: '' })
-export class TagsInput extends BaseInput<TagsConfig> {}
+export class TagsInput extends BaseInput {}
 `,
         );
 
@@ -825,15 +826,15 @@ export class TagsInput extends BaseInput<TagsConfig> {}
       it.each<[string, string]>([
         [
           'a class without an export',
-          'class TagsInput implements ReactiveFormbarControl<TagsConfig> {}',
+          `class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }`,
         ],
         [
           'a default export',
-          'export default class TagsInput implements ReactiveFormbarControl<TagsConfig> {}',
+          `export default class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }`,
         ],
         [
           'an export under another name',
-          'class TagsInput implements ReactiveFormbarControl<TagsConfig> {}\nexport { TagsInput as Tags };',
+          `class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }\nexport { TagsInput as Tags };`,
         ],
       ])('skips %s with a warning', async (_, declaration) => {
         const warnings = collectWarnings();
@@ -853,7 +854,7 @@ export class TagsInput extends BaseInput<TagsConfig> {}
         const registrations = await registeredAfterCreating(
           app('tags/tags-input.ts'),
           `${header}
-class TagsInput implements ReactiveFormbarControl<TagsConfig> {}
+class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
 export { TagsInput };
 `,
         );
@@ -885,11 +886,11 @@ export default class TagsPage {}
         })) {
           appTree.create(
             app(`tags/${name.toLowerCase()}.ts`),
-            `import { Component } from '@angular/core';
+            `import { Component, input } from '@angular/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 
 @Component({ selector: 'app-${name}', template: '' })
-${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' }> {}
+${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' }> { ${nameInput} }
 `,
           );
         }
@@ -908,31 +909,37 @@ ${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' 
       });
     });
 
-    it.each([
-      'ReactiveFormbarControl',
-      'ReactiveFormbarGroup',
-      'ReactiveFormbarArray',
-      'FormbarBlock',
-    ])('finds %s imported through a local barrel', async (contract) => {
-      appTree.create(
-        app('shared/index.ts'),
-        `export { ${contract} } from '@ngx-formbar/reactive-forms';\n`,
-      );
+    it.each<[string, string, string]>([
+      ['ReactiveFormbarControl', 'NgxFbControl', 'name'],
+      ['ReactiveFormbarGroup', 'NgxFbFormGroup', 'name'],
+      ['ReactiveFormbarArray', 'NgxFbArray', 'name'],
+      ['FormbarBlock', 'NgxFbBlock', ''],
+    ])(
+      'finds %s imported through a local barrel',
+      async (contract, config, input) => {
+        appTree.create(
+          app('shared/index.ts'),
+          `export { ${contract} } from '@ngx-formbar/reactive-forms';\n`,
+        );
 
-      const registrations = await registeredAfterCreating(
-        app('tags/tags-input.ts'),
-        `import { Component } from '@angular/core';
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `import { Component, input } from '@angular/core';
+import { ${config} } from '@ngx-formbar/core';
 import { ${contract} } from '../shared';
 
-interface TagsConfig { type: 'tags'; }
+interface TagsConfig extends ${config} { type: 'tags'; }
 
 @Component({ selector: 'app-tags-input', template: '' })
-export class TagsInput implements ${contract}<TagsConfig> {}
+export class TagsInput implements ${contract}<TagsConfig> {
+  ${input && `readonly ${input} = input.required<string>();`}
+}
 `,
-      );
+        );
 
-      expect(registrations).toContain('TagsInput');
-    });
+        expect(registrations).toContain('TagsInput');
+      },
+    );
   });
 
   describe('the project it looks in', () => {
@@ -1168,13 +1175,22 @@ export class TagsInput implements ${contract}<TagsConfig> {}
     const key = (name: string) =>
       new RegExp(`["']?${name}["']?:\\s*loadComponent\\(`);
 
+    const nameInput = 'readonly name = input.required<string>();';
+    const inheritsOrDeclaresName = (heritage: string) =>
+      heritage.startsWith('extends') ? '' : nameInput;
+
     function componentImplementing(contract: string, importLine = '') {
-      return `import { Component } from '@angular/core';
+      return `import { Component, input, OnInit } from '@angular/core';
 import { ${contract.split('<')[0]} } from '@ngx-formbar/reactive-forms';
 ${importLine}
 
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent implements OnInit, ${contract} {}
+export class RangeComponent implements OnInit, ${contract} {
+  ${nameInput}
+  ngOnInit() {
+    return undefined;
+  }
+}
 `;
     }
 
@@ -1264,7 +1280,7 @@ export interface RangeConfig { type: 'from-same-file'; }
       appTree.create(
         componentFile,
         componentImplementing(
-          'ReactiveFormbarGroup<RangeConfig>',
+          'ReactiveFormbarControl<RangeConfig>',
           `import { Config as RangeConfig } from '${specifier}';`,
         ),
       );
@@ -1281,7 +1297,7 @@ export interface RangeConfig { type: 'from-same-file'; }
         componentFile,
         componentImplementing(
           'ReactiveFormbarControl<RangeConfig>',
-          "interface RangeConfig { kind: 'other'; type: 'after-kind'; }",
+          "interface RangeConfig { kind?: 'other'; type: 'after-kind'; }",
         ),
       );
 
@@ -1291,15 +1307,18 @@ export interface RangeConfig { type: 'from-same-file'; }
     it('reads the config of the contract past another generic', async () => {
       appTree.create(
         componentFile,
-        `import { Component } from '@angular/core';
+        `import { Component, input } from '@angular/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 
-interface Elsewhere<T> { value: T; }
+interface Elsewhere<T> { value?: T; }
 interface OtherConfig { type: 'wrong'; }
 interface RangeConfig { type: 'right'; }
 
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarControl<RangeConfig> {}
+export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarControl<RangeConfig> {
+  ${nameInput}
+  value?: OtherConfig;
+}
 `,
       );
 
@@ -1404,22 +1423,22 @@ export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarCo
         ],
         [
           'a base',
-          'extends BaseControl<RangeConfig>',
-          'export abstract class BaseControl<T> implements formbar.ReactiveFormbarControl<T> {}',
+          'extends BaseControl',
+          `export abstract class BaseControl implements formbar.ReactiveFormbarControl<RangeConfig> { ${nameInput} }`,
         ],
       ])(
         'finds the contract of a namespace import through %s',
         async (_, heritage, declaration) => {
           appTree.create(
             componentFile,
-            `import { Component } from '@angular/core';
+            `import { Component, input } from '@angular/core';
 import * as formbar from '@ngx-formbar/reactive-forms';
 
 interface RangeConfig { type: 'declared'; }
 ${declaration}
 
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent ${heritage} {}
+export class RangeComponent ${heritage} { ${inheritsOrDeclaresName(heritage)} }
 `,
           );
 
@@ -1455,13 +1474,13 @@ export class RangeComponent ${heritage} {}
         }
         appTree.create(
           componentFile,
-          `import { Component } from '@angular/core';
+          `import { Component, input } from '@angular/core';
 ${line}
 
 interface RangeConfig { type: 'declared'; }
 
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent implements ${used}<RangeConfig> {}
+export class RangeComponent implements ${used}<RangeConfig> { ${nameInput} }
 `,
         );
 
@@ -1475,24 +1494,24 @@ export class RangeComponent implements ${used}<RangeConfig> {}
       const config = "interface RangeConfig { type: 'declared'; }";
 
       function component(heritage: string, declarations = '') {
-        return `import { Component, Directive } from '@angular/core';
+        return `import { Component, Directive, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
 ${contractImport}
 ${declarations}
 ${config}
 
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent ${heritage} {}
+export class RangeComponent ${heritage} { ${inheritsOrDeclaresName(heritage)} }
 `;
       }
 
-      const base = `@Directive()
-export abstract class BaseControl<T> implements ReactiveFormbarControl<T> {}`;
+      const stating = (name: string, stated: string) => `@Directive()
+export abstract class ${name} implements ReactiveFormbarControl<${stated}> { ${nameInput} }`;
 
-      const stated = `@Directive()
-export abstract class StatedControl implements ReactiveFormbarControl<RangeConfig> {}`;
+      const stated = stating('StatedControl', 'RangeConfig');
+      const loose = stating('LooseControl', '{ type: string }');
 
       it.each<[string, string, string]>([
-        ['a generic base', 'extends BaseControl<RangeConfig>', base],
         ['a base stating the config', 'extends StatedControl', stated],
         [
           'a two-level base stating the config',
@@ -1509,34 +1528,9 @@ export abstract class MiddleControl extends StatedControl {}`,
 export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
         ],
         [
-          'a two-level generic base',
-          'extends MiddleControl<RangeConfig>',
-          `${base}
-@Directive()
-export abstract class MiddleControl<C> extends BaseControl<C> {}`,
-        ],
-        [
-          'a base fixing a generic base',
-          'extends FixedControl',
-          `${base}
-@Directive()
-export abstract class FixedControl extends BaseControl<RangeConfig> {}`,
-        ],
-        [
-          'a base with a default config',
-          'extends DefaultedControl',
-          `@Directive()
-export abstract class DefaultedControl<T = RangeConfig> implements ReactiveFormbarControl<T> {}`,
-        ],
-        [
           'a local interface',
           'implements MyControl',
           'interface MyControl extends ReactiveFormbarControl<RangeConfig> {}',
-        ],
-        [
-          'a generic local interface',
-          'implements MyControl<RangeConfig>',
-          'interface MyControl<C> extends ReactiveFormbarControl<C> {}',
         ],
         [
           'a local alias',
@@ -1546,27 +1540,32 @@ export abstract class DefaultedControl<T = RangeConfig> implements ReactiveFormb
         [
           'a generic local alias',
           'implements MyControl<RangeConfig>',
-          'type MyControl<C> = ReactiveFormbarControl<C>;',
+          'type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<C>;',
+        ],
+        [
+          'a local alias with a default config',
+          'implements MyControl',
+          'type MyControl<C extends NgxFbControl = RangeConfig> = ReactiveFormbarControl<C>;',
         ],
         [
           'an intersection in a local alias',
           'implements MyControl',
-          'type MyControl = { label: string } & ReactiveFormbarControl<RangeConfig>;',
+          'type MyControl = { label?: string } & ReactiveFormbarControl<RangeConfig>;',
         ],
         [
           'a base and its own contract',
-          'extends BaseControl<{ type: string }> implements ReactiveFormbarControl<RangeConfig>',
-          base,
+          'extends LooseControl implements ReactiveFormbarControl<RangeConfig>',
+          loose,
         ],
         [
           'a base when its own contract has no literal',
-          'extends BaseControl<RangeConfig> implements ReactiveFormbarControl<{ type: string }>',
-          base,
+          'extends StatedControl implements ReactiveFormbarControl<{ type: string }>',
+          stated,
         ],
         [
           'a base and another literal in its own contract',
-          "extends BaseControl<{ type: 'other' }> implements ReactiveFormbarControl<RangeConfig>",
-          base,
+          'extends OtherControl implements ReactiveFormbarControl<RangeConfig>',
+          stating('OtherControl', "{ type: 'other' }"),
         ],
       ])('finds the contract through %s', async (_, heritage, declarations) => {
         appTree.create(componentFile, component(heritage, declarations));
@@ -1578,18 +1577,20 @@ export abstract class DefaultedControl<T = RangeConfig> implements ReactiveFormb
         appTree.create(
           app('widgets/base-control.ts'),
           `${contractImport}
-import { Directive } from '@angular/core';
+import { Directive, input } from '@angular/core';
 
-${base}
+${config}
+
+${stated}
 `,
         );
         appTree.create(
           app('widgets/middle-control.ts'),
           `import { Directive } from '@angular/core';
-import { BaseControl } from './base-control';
+import { StatedControl } from './base-control';
 
 @Directive()
-export abstract class MiddleControl<C> extends BaseControl<C> {}
+export abstract class MiddleControl extends StatedControl {}
 `,
         );
         appTree.create(
@@ -1597,33 +1598,38 @@ export abstract class MiddleControl<C> extends BaseControl<C> {}
           `import { Component } from '@angular/core';
 import { MiddleControl } from './middle-control';
 
-${config}
-
 @Component({ selector: 'app-range', template: '' })
-export class RangeComponent extends MiddleControl<RangeConfig> {}
+export class RangeComponent extends MiddleControl {}
 `,
         );
 
         expect(await registered()).toMatch(key('declared'));
       });
 
-      it('falls back to the class name with a base that fixes no type literal', async () => {
-        appTree.create(
-          componentFile,
-          component('extends BaseControl<{ type: string }>', base),
-        );
-        const warnings: string[] = [];
-        runner.logger.subscribe((entry) => {
-          if (entry.level === 'warn') {
-            warnings.push(entry.message);
-          }
-        });
+      it.each<[string, string, string]>([
+        ['a base that fixes no type literal', 'extends LooseControl', loose],
+        [
+          'a type argument wrapped in the alias',
+          'implements MyControl<RangeConfig>',
+          'type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<Readonly<C>>;',
+        ],
+      ])(
+        'falls back to the class name with %s',
+        async (_, heritage, declarations) => {
+          appTree.create(componentFile, component(heritage, declarations));
+          const warnings: string[] = [];
+          runner.logger.subscribe((entry) => {
+            if (entry.level === 'warn') {
+              warnings.push(entry.message);
+            }
+          });
 
-        expect(await registered()).toMatch(key('range'));
-        expect(warnings).toContain(
-          'RangeComponent has no single string `type` in its config, so it is registered as "range".',
-        );
-      });
+          expect(await registered()).toMatch(key('range'));
+          expect(warnings).toContain(
+            'RangeComponent has no single string `type` in its config, so it is registered as "range".',
+          );
+        },
+      );
 
       it.each<[string, string, string]>([
         [
@@ -1634,17 +1640,17 @@ export class RangeComponent extends MiddleControl<RangeConfig> {}
         [
           'an interface without a contract',
           'implements Plain',
-          'interface Plain { label: string; }',
+          'interface Plain { readonly name: unknown; }',
         ],
         [
           'an alias without a contract',
           'implements Plain',
-          'type Plain = { label: string };',
+          'type Plain = { readonly name: unknown };',
         ],
         [
           'a contract only in a type argument',
           'implements Holder<ReactiveFormbarControl<RangeConfig>>',
-          'interface Holder<T> { held: T; }',
+          'interface Holder<T> { readonly name: unknown; held?: T; }',
         ],
         [
           'interfaces extending each other',
