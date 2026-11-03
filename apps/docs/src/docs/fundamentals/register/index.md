@@ -6,13 +6,13 @@ This schematic registers every component whose class says `implements` with one 
 
 It looks through the source root of the project and skips any other project inside it.
 
-Each control is registered under the `type` of its config interface, as a form refers to it:
+Each control is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
-| The component                                                                     | Registered as    |
-| --------------------------------------------------------------------------------- | ---------------- |
-| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`          | `slider`         |
-| `class RatingComponent implements ReactiveFormbarControl`, with no such interface | `rating`         |
-| `class RatingControl implements ReactiveFormbarControl`, with no such interface   | `rating-control` |
+| The component                                                                                | Registered as    |
+| -------------------------------------------------------------------------------------------- | ---------------- |
+| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'`                     | `slider`         |
+| `class RatingComponent implements ReactiveFormbarControl<RatingConfig>`, with `type: string` | `rating`         |
+| `class RatingControl implements ReactiveFormbarControl<RatingConfig>`, with `type: string`   | `rating-control` |
 
 ## Options
 

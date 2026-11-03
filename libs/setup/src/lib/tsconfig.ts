@@ -3,13 +3,17 @@ import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { existsSync, readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import {
+  CompilerHost,
   CompilerOptions,
+  createSourceFile,
+  getDefaultLibFilePath,
   ModuleKind,
   ModuleResolutionKind,
   ParseConfigHost,
   parseConfigFileTextToJson,
   parseJsonConfigFileContent,
   ScriptTarget,
+  sys,
 } from 'typescript';
 
 /**
@@ -74,6 +78,66 @@ function createTreeParseConfigHost(tree: Tree) {
     fileExists: (fileName) => tree.exists(fileName) || existsSync(fileName),
     readFile: (fileName) => readTreeOrDisk(tree, fileName),
   } satisfies ParseConfigHost;
+}
+
+/**
+ * A compiler host over the Tree. With `ownFilesOnly`, nothing in `node_modules`
+ * or on disk is read, which is for a program that only needs the symbols of the
+ * application's own files and takes `noLib`.
+ */
+export function createTreeCompilerHost(
+  tree: Tree,
+  { ownFilesOnly = false }: { ownFilesOnly?: boolean } = {},
+): CompilerHost {
+  const fileExists = (fileName: string) =>
+    ownFilesOnly
+      ? !fileName.includes('/node_modules/') && tree.exists(fileName)
+      : tree.exists(fileName) || existsSync(fileName);
+  const readFile = (fileName: string) =>
+    fileExists(fileName) ? readTreeOrDisk(tree, fileName) : undefined;
+
+  return {
+    fileExists,
+    readFile,
+    getSourceFile: (fileName, languageVersion) => {
+      const content = readFile(fileName);
+
+      return content === undefined
+        ? undefined
+        : createSourceFile(fileName, content, languageVersion, true);
+    },
+    getDefaultLibFileName: (compilerOptions) =>
+      getDefaultLibFilePath(compilerOptions),
+    writeFile: () => undefined,
+    getCurrentDirectory: () => '/',
+    getCanonicalFileName: (fileName) => fileName,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+    directoryExists: (directoryName) =>
+      treeDirectoryExists(tree, directoryName),
+    getDirectories: (directoryName) => treeDirectories(tree, directoryName),
+  };
+}
+
+/** A Tree directory "exists" once it has any child file or subdirectory;
+ * `getDir` never throws for unknown paths, it just comes back empty. */
+function treeDirectoryExists(tree: Tree, directoryName: string) {
+  const dir = tree.getDir(directoryName);
+
+  return (
+    dir.subfiles.length > 0 ||
+    dir.subdirs.length > 0 ||
+    sys.directoryExists(directoryName)
+  );
+}
+
+function treeDirectories(tree: Tree, directoryName: string) {
+  const dir = tree.getDir(directoryName);
+  const diskDirs = sys.directoryExists(directoryName)
+    ? sys.getDirectories(directoryName)
+    : [];
+
+  return [...new Set([...dir.subdirs, ...diskDirs])];
 }
 
 /** Tree is consulted first, disk is a fallback. `getCurrentDirectory()` is

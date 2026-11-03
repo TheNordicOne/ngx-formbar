@@ -1076,6 +1076,133 @@ export interface RangeConfig { type: 'from-same-file'; }
       expect(await registered()).toMatch(key('followed'));
     });
 
+    it('reads a config behind a path alias', async () => {
+      writeJson(appTree, '/tsconfig.json', {
+        compilerOptions: { baseUrl: '.', paths: { '@forms/*': ['forms/*'] } },
+      });
+      appTree.create(
+        '/forms/range.config.ts',
+        "export interface RangeConfig { type: 'from-alias'; }\n",
+      );
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "import { RangeConfig } from '@forms/range.config';",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('from-alias'));
+    });
+
+    it.each<[string, string]>([
+      ['an object type', "type RangeConfig = { type: 'declared' };"],
+      [
+        'an intersection',
+        "interface Base { label: string; }\ntype RangeConfig = Base & { type: 'declared' };",
+      ],
+      [
+        'a utility type',
+        "interface Base { label: string; type: 'declared'; }\ntype RangeConfig = Omit<Base, 'label'>;",
+      ],
+    ])('reads a type alias of %s', async (_, line) => {
+      appTree.create(
+        componentFile,
+        componentImplementing('ReactiveFormbarControl<RangeConfig>', line),
+      );
+
+      expect(await registered()).toMatch(key('declared'));
+    });
+
+    it('reads a type inherited from another interface', async () => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "interface Base { type: 'inherited'; }\ninterface RangeConfig extends Base {}",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('inherited'));
+    });
+
+    describe('with the package installed', () => {
+      beforeEach(() => {
+        appTree.create(
+          '/node_modules/@ngx-formbar/reactive-forms/index.d.ts',
+          'export type ReactiveFormbarControl<T = unknown> = { readonly name: T };\n',
+        );
+        appTree.create(
+          '/node_modules/@ngx-formbar/reactive-forms/package.json',
+          JSON.stringify({
+            name: '@ngx-formbar/reactive-forms',
+            types: 'index.d.ts',
+          }),
+        );
+        appTree.create(
+          '/node_modules/@ngx-formbar/core/index.d.ts',
+          'export interface NgxFbControl { type: string; label?: string; }\n',
+        );
+        appTree.create(
+          '/node_modules/@ngx-formbar/core/package.json',
+          JSON.stringify({ name: '@ngx-formbar/core', types: 'index.d.ts' }),
+        );
+      });
+
+      it('reads an intersection with a type of the package', async () => {
+        appTree.create(
+          componentFile,
+          componentImplementing(
+            'ReactiveFormbarControl<RangeConfig>',
+            "import { NgxFbControl } from '@ngx-formbar/core';\ntype RangeConfig = NgxFbControl & { type: 'declared' };",
+          ),
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it.each<[string, string, string, Record<string, string>]>([
+        [
+          'an import under another name',
+          "import { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';",
+          'Control',
+          {},
+        ],
+        [
+          'a namespace import',
+          "import * as formbar from '@ngx-formbar/reactive-forms';",
+          'formbar.ReactiveFormbarControl',
+          {},
+        ],
+        [
+          'a barrel renaming it',
+          "import { Control } from '../shared';",
+          'Control',
+          {
+            'shared/index.ts':
+              "export { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';\n",
+          },
+        ],
+      ])('finds the contract through %s', async (_, line, used, files) => {
+        for (const [file, content] of Object.entries(files)) {
+          appTree.create(app(file), content);
+        }
+        appTree.create(
+          componentFile,
+          `import { Component } from '@angular/core';
+${line}
+
+interface RangeConfig { type: 'declared'; }
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements ${used}<RangeConfig> {}
+`,
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+    });
+
     it.each<[string, string, string]>([
       [
         'an interface it cannot find',
@@ -1092,10 +1219,25 @@ export interface RangeConfig { type: 'from-same-file'; }
         'ReactiveFormbarControl<PackageConfig>',
         "import { PackageConfig } from 'some-package';",
       ],
+      [
+        'several possible types',
+        'ReactiveFormbarControl<LooseConfig>',
+        "interface LooseConfig { type: 'a' | 'b'; }",
+      ],
+      ['no config type', 'ReactiveFormbarControl', ''],
     ])('falls back to the class name with %s', async (_, contract, line) => {
       appTree.create(componentFile, componentImplementing(contract, line));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
 
       expect(await registered()).toMatch(key('range'));
+      expect(warnings).toContain(
+        'RangeComponent has no single string `type` in its config, so it is registered as "range".',
+      );
     });
   });
 

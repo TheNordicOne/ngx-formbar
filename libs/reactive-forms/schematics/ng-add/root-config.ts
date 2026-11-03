@@ -9,6 +9,7 @@ import {
   WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import {
+  createTreeCompilerHost,
   findProvidersProperty,
   findTsConfigPath,
   isInsideProject,
@@ -21,7 +22,6 @@ import {
   CompilerHost,
   CompilerOptions,
   createProgram,
-  createSourceFile,
   Expression,
   ImportSpecifier,
   isArrayLiteralExpression,
@@ -107,7 +107,7 @@ function fromBootstrapCall(
     noLib: true,
     types: [],
   };
-  const host = createTreeHost(tree);
+  const host = createTreeCompilerHost(tree, { ownFilesOnly: true });
   const program = createProgram([main], options, host);
   const found = findBootstrapCall(program, main, options, host);
 
@@ -134,35 +134,6 @@ function fromBootstrapCall(
         program.getTypeChecker(),
         inProject,
       );
-}
-
-/**
- * Only symbols of the application's own files matter, so nothing in
- * `node_modules` gets parsed. A config from a package counts as out of reach.
- */
-function createTreeHost(tree: Tree) {
-  const fileExists = (fileName: string) =>
-    !fileName.includes('/node_modules/') && tree.exists(fileName);
-  const readFile = (fileName: string) =>
-    fileExists(fileName) ? tree.readText(fileName) : undefined;
-
-  return {
-    fileExists,
-    readFile,
-    getSourceFile: (fileName, languageVersion) => {
-      const text = readFile(fileName);
-
-      return text === undefined
-        ? undefined
-        : createSourceFile(fileName, text, languageVersion, true);
-    },
-    getDefaultLibFileName: () => 'lib.d.ts',
-    writeFile: () => undefined,
-    getCurrentDirectory: () => '/',
-    getCanonicalFileName: (fileName) => fileName,
-    useCaseSensitiveFileNames: () => true,
-    getNewLine: () => '\n',
-  } satisfies CompilerHost;
 }
 
 /** Breadth-first, so the call nearest to the main file wins. */

@@ -38,6 +38,28 @@ const REACTIVE_FORMS_PACKAGE_NAME = '@ngx-formbar/reactive-forms';
 const DRAFT_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
 const DRAFT_07 = 'http://json-schema.org/draft-07/schema#';
 
+const WRITTEN_BARREL = `export type { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';
+`;
+const ALIASED_CONTROL = `import { Component, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { Control } from './index';
+
+type AliasedConfig = NgxFbControl & { type: 'aliased' };
+
+@Component({ selector: 'app-aliased-input', template: '' })
+export class AliasedInput implements Control<AliasedConfig> {
+  readonly name = input.required<string>();
+}
+`;
+const HOST_PAGE = `import { Component } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-summary-page', template: '' })
+export class SummaryPage {
+  readonly form: NgxFbForm = { content: {} };
+}
+`;
+
 const CONTENT_TYPE = `import {
   NgxFbArray,
   NgxFbBlock,
@@ -1341,6 +1363,17 @@ function runAngularJsonDefaultsFlow(appDir) {
 
   const registeredByControl = readFileSync(registrationsPath, 'utf8');
 
+  mkdirSync(join(sourceRoot, 'app', 'written'), { recursive: true });
+  writeFileSync(join(sourceRoot, 'app', 'written', 'index.ts'), WRITTEN_BARREL);
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'aliased-input.ts'),
+    ALIASED_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'summary-page.ts'),
+    HOST_PAGE,
+  );
+
   generate(appDir, project, 'register');
   run('npx', ['ng', 'build', project], appDir);
 
@@ -1368,6 +1401,14 @@ function runAngularJsonDefaultsFlow(appDir) {
   check(
     /["']?rating["']?:\s*loadComponent\(/.test(registered),
     'register used the key the control was scaffolded with',
+  );
+  check(
+    /["']?aliased["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config intersected with a type of core, through a barrel renaming the contract',
+  );
+  check(
+    !registered.includes('SummaryPage'),
+    'register skipped a page that only uses a type of the package',
   );
 }
 

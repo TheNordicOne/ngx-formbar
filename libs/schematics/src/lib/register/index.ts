@@ -16,6 +16,7 @@ import {
 import {
   loadAutomationConfig,
   DEFAULT_REGISTRATION_TYPE,
+  findTsConfigPath,
   getProjectDefinition,
   otherProjectDirectories,
   resolveRegistrationsPath,
@@ -83,6 +84,7 @@ function mergeOptions(
       DEFAULT_REGISTRATION_TYPE,
     components: [],
     sourceRoot,
+    tsConfigPath: findTsConfigPath(tree, project),
     otherProjectDirectories: otherProjectDirectories(project, workspace),
   };
 

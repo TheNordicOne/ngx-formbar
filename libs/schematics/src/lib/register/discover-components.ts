@@ -6,35 +6,21 @@ import {
 import { RegisterContext } from './schema';
 import {
   ClassDeclaration,
-  createSourceFile,
   Decorator,
   ExpressionWithTypeArguments,
   getDecorators,
   isCallExpression,
   isClassDeclaration,
-  isExportDeclaration,
   isIdentifier,
-  isImportDeclaration,
-  isInterfaceDeclaration,
-  isLiteralTypeNode,
-  isNamedExports,
-  isNamedImports,
-  isPropertySignature,
-  isStringLiteral,
-  isTypeReferenceNode,
-  InterfaceDeclaration,
-  ScriptTarget,
+  isPropertyAccessExpression,
   SourceFile,
-  Statement,
+  SymbolFlags,
   SyntaxKind,
+  TypeChecker,
 } from 'typescript';
-import { JsonObject, normalize, strings } from '@angular-devkit/core';
-import {
-  isWithin,
-  loadSourceFile,
-  relativeModuleFile,
-  resolveRequiredPath,
-} from '@ngx-formbar/setup';
+import { normalize, strings } from '@angular-devkit/core';
+import { isWithin, resolveRequiredPath } from '@ngx-formbar/setup';
+import { createTreeProgram } from '../schema/program';
 import { FormbarComponentInfo } from './component-info.type';
 
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
@@ -60,7 +46,12 @@ export function discoverComponents(
     include,
     resolvedExcludes,
   );
-  registerContext.components = toComponentInfo(tree, files, context);
+  registerContext.components = toComponentInfo(
+    tree,
+    files,
+    registerContext.tsConfigPath,
+    context,
+  );
 
   context.logger.info(
     `${registerContext.components.length.toString()} components discovered`,
@@ -72,51 +63,32 @@ export function discoverComponents(
 function toComponentInfo(
   tree: Tree,
   files: string[],
+  tsConfigPath: string,
   context: SchematicContext,
 ) {
-  const components: FormbarComponentInfo[] = [];
+  const candidates = files.filter((filePath) => {
+    const text = tree.read(filePath)?.toString('utf-8') ?? '';
 
-  for (const filePath of files) {
-    try {
-      const buffer = tree.read(filePath);
-      if (!buffer) {
-        continue;
-      }
+    return text.includes('@Component') && text.includes('implements');
+  });
 
-      const fileContent = buffer.toString('utf-8');
-
-      // Fast prefilter: only parse likely candidates
-      if (
-        !fileContent.includes('@Component') ||
-        !fileContent.includes('implements')
-      ) {
-        continue;
-      }
-
-      const sourceFile = createSourceFile(
-        filePath,
-        fileContent,
-        ScriptTarget.Latest,
-        false,
-      );
-
-      const discoveredComponents = analyzeSourceFile(
-        tree,
-        sourceFile,
-        filePath,
-      );
-      if (discoveredComponents.length > 0) {
-        components.push(...discoveredComponents);
-      }
-    } catch (error) {
-      context.logger.error(
-        `Error processing file ${filePath}:`,
-        error as JsonObject,
-      );
-    }
+  if (candidates.length === 0) {
+    return [];
   }
 
-  return components;
+  const { program, checker } = createTreeProgram(
+    tree,
+    tsConfigPath,
+    candidates,
+  );
+
+  return candidates.flatMap((filePath) => {
+    const sourceFile = program.getSourceFile(filePath);
+
+    return sourceFile
+      ? analyzeSourceFile(sourceFile, filePath, checker, context)
+      : [];
+  });
 }
 
 /**
@@ -327,9 +299,10 @@ function globToRegExp(glob: string) {
  * Analyzes a TypeScript source file to find components with Ngx Formbar directives
  */
 function analyzeSourceFile(
-  tree: Tree,
   sourceFile: SourceFile,
   filePath: string,
+  checker: TypeChecker,
+  context: SchematicContext,
 ) {
   const components: FormbarComponentInfo[] = [];
 
@@ -353,10 +326,11 @@ function analyzeSourceFile(
     }
 
     const componentInfo = extractComponentInfo(
-      tree,
       stmt,
       componentDecorator,
       filePath,
+      checker,
+      context,
     );
 
     if (componentInfo) {
@@ -385,25 +359,31 @@ function getDecoratorName(decorator: Decorator) {
  * Extracts component information from a component declaration.
  */
 function extractComponentInfo(
-  tree: Tree,
   classNode: ClassDeclaration,
   componentDecorator: Decorator,
   filePath: string,
+  checker: TypeChecker,
+  context: SchematicContext,
 ): FormbarComponentInfo | undefined {
   if (!isCallExpression(componentDecorator.expression)) {
     return undefined;
   }
 
   const className = classNode.name?.text;
-  const contract = contractOf(classNode);
+  const contract = contractOf(classNode, checker);
 
   if (!className || !contract) {
     return undefined;
   }
 
-  const key =
-    configTypeLiteral(tree, contract, filePath) ??
-    strings.dasherize(stripComponentSuffix(className));
+  const configured = configTypeLiteral(contract, checker);
+  const key = configured ?? strings.dasherize(stripComponentSuffix(className));
+
+  if (!configured) {
+    context.logger.warn(
+      `${className} has no single string \`type\` in its config, so it is registered as "${key}".`,
+    );
+  }
 
   return {
     componentFilePath: filePath,
@@ -412,114 +392,48 @@ function extractComponentInfo(
   };
 }
 
-/** The contract a form component implements, whatever it is imported through. */
-function contractOf(classNode: ClassDeclaration) {
+function contractOf(classNode: ClassDeclaration, checker: TypeChecker) {
   return classNode.heritageClauses
     ?.filter(({ token }) => token === SyntaxKind.ImplementsKeyword)
     .flatMap(({ types }) => [...types])
-    .find(
-      ({ expression }) =>
-        isIdentifier(expression) && contracts.includes(expression.text),
-    );
+    .find((heritage) => isContract(heritage, checker));
 }
 
-/** The `type` of the config interface, which is the key a form refers to. */
-function configTypeLiteral(
-  tree: Tree,
-  contract: ExpressionWithTypeArguments,
-  filePath: string,
+/**
+ * The imported name stands in when the package cannot be resolved, as then the
+ * checker knows nothing about the symbol.
+ */
+function isContract(
+  { expression }: ExpressionWithTypeArguments,
+  checker: TypeChecker,
 ) {
-  const configType = contract.typeArguments?.at(0);
-
-  const name =
-    configType &&
-    isTypeReferenceNode(configType) &&
-    isIdentifier(configType.typeName)
-      ? configType.typeName.text
+  const symbol = checker.getSymbolAtLocation(expression);
+  const original =
+    symbol && symbol.flags & SymbolFlags.Alias
+      ? checker.getAliasedSymbol(symbol)
+      : symbol;
+  const written = isPropertyAccessExpression(expression)
+    ? expression.name.text
+    : isIdentifier(expression)
+      ? expression.text
       : undefined;
-  const declaration = name
-    ? findInterface(tree, filePath, name, new Set())
-    : undefined;
 
-  return declaration?.members.flatMap((member) =>
-    isPropertySignature(member) &&
-    isIdentifier(member.name) &&
-    member.name.text === 'type' &&
-    member.type &&
-    isLiteralTypeNode(member.type) &&
-    isStringLiteral(member.type.literal)
-      ? [member.type.literal.text]
-      : [],
-  )[0];
-}
-
-function findInterface(
-  tree: Tree,
-  filePath: string,
-  name: string,
-  visited: Set<string>,
-): InterfaceDeclaration | undefined {
-  const sourceFile = visited.has(filePath)
-    ? undefined
-    : loadSourceFile(tree, filePath);
-
-  visited.add(filePath);
-
-  const local = sourceFile?.statements
-    .filter(isInterfaceDeclaration)
-    .find((declaration) => declaration.name.text === name);
-
-  if (local || !sourceFile) {
-    return local;
-  }
-
-  for (const [specifier, exportedName] of sourcesOf(sourceFile, name)) {
-    const target = relativeModuleFile(tree, filePath, specifier);
-    const found = target && findInterface(tree, target, exportedName, visited);
-
-    if (found) {
-      return found;
-    }
-  }
-
-  return undefined;
-}
-
-/** Where a file gets `name` from, as module specifier and name in that module. */
-function sourcesOf(sourceFile: SourceFile, name: string) {
-  return sourceFile.statements.flatMap((statement) =>
-    sourceOf(statement, name),
+  return [original?.name, written].some(
+    (name) => !!name && contracts.includes(name),
   );
 }
 
-function sourceOf(statement: Statement, name: string): [string, string][] {
-  const specifier =
-    (isImportDeclaration(statement) || isExportDeclaration(statement)) &&
-    statement.moduleSpecifier &&
-    isStringLiteral(statement.moduleSpecifier)
-      ? statement.moduleSpecifier.text
-      : undefined;
+/** The `type` of the config, which is the key a form refers to. */
+function configTypeLiteral(
+  contract: ExpressionWithTypeArguments,
+  checker: TypeChecker,
+) {
+  const config = contract.typeArguments?.at(0);
+  const property =
+    config && checker.getTypeFromTypeNode(config).getProperty('type');
+  const type = property && checker.getTypeOfSymbol(property);
 
-  if (!specifier) {
-    return [];
-  }
-
-  const bindings = isImportDeclaration(statement)
-    ? statement.importClause?.namedBindings
-    : isExportDeclaration(statement)
-      ? statement.exportClause
-      : undefined;
-  const elements =
-    bindings && (isNamedImports(bindings) || isNamedExports(bindings))
-      ? [...bindings.elements]
-      : [];
-  const named = elements.find((element) => element.name.text === name);
-
-  return named
-    ? [[specifier, (named.propertyName ?? named.name).text]]
-    : isExportDeclaration(statement) && !statement.exportClause
-      ? [[specifier, name]]
-      : [];
+  return type?.isStringLiteral() ? type.value : undefined;
 }
 
 function stripComponentSuffix(name: string): string {

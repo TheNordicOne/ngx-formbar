@@ -15,6 +15,7 @@ export interface RegisterContext extends DiscoverOptions {
   configuredRegistrations?: string | null;
   components: FormbarComponentInfo[];
   sourceRoot: string;
+  tsConfigPath: string;
   otherProjectDirectories: string[];
   registrationType: RegistrationType;
 }
