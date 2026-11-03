@@ -4,6 +4,8 @@ While the Generator Schematics, by default, already register every new component
 
 This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those must always be registered manually.
 
+It looks through the source root of the project and skips any other project inside it.
+
 Each control is registered under the `type` of its config interface, as a form refers to it:
 
 | The component                                                            | Registered as    |

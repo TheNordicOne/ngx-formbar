@@ -6,6 +6,8 @@ import {
 
 import {
   addComponentFiles,
+  addProject,
+  addRootProject,
   COLLECTION_PATH,
   createControlComponent,
   createUnrelatedComponent,
@@ -709,6 +711,78 @@ describe('register schematic', () => {
       );
     },
   );
+
+  describe('the project it looks in', () => {
+    function controlAt(path: string, className: string) {
+      appTree.create(
+        path,
+        createControlComponent('x', inlineProviders, className),
+      );
+    }
+
+    async function registeredIn(file: string, options: DiscoverOptions = {}) {
+      appTree.create(file, 'export const componentRegistrations = {};\n');
+
+      return read(
+        await runSchematic({
+          registrationType: 'config',
+          controlRegistrations: `/${file}`,
+          ...options,
+        }),
+        `/${file}`,
+      );
+    }
+
+    it('skips the other projects of the workspace', async () => {
+      appTree = await runner.runExternalSchematic(
+        '@schematics/angular',
+        'application',
+        { name: 'other', standalone: true },
+        appTree,
+      );
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/other/src/app/foreign.ts', 'ForeignComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+
+    it('skips what lies outside the source root', async () => {
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/test-app/tools/tool.ts', 'ToolComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ToolComponent');
+    });
+
+    it('skips a project nested in the source root', async () => {
+      addProject(appTree, 'nested', 'projects/test-app/src/nested');
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/test-app/src/nested/foreign.ts', 'ForeignComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+
+    it('skips other projects from a project at the workspace root', async () => {
+      addRootProject(appTree, 'root-app');
+      controlAt('/lib/mine.ts', 'MineComponent');
+      controlAt(app('foreign.ts'), 'ForeignComponent');
+
+      const registrations = await registeredIn('registrations.ts', {
+        project: 'root-app',
+      });
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+  });
 
   describe('the registration key', () => {
     const componentFile = app('widgets/range.ts');

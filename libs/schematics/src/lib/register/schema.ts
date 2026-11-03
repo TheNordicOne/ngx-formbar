@@ -14,5 +14,7 @@ export interface DiscoverOptions {
 export interface RegisterContext extends DiscoverOptions {
   configuredRegistrations?: string | null;
   components: FormbarComponentInfo[];
+  sourceRoot: string;
+  otherProjectDirectories: string[];
   registrationType: RegistrationType;
 }

@@ -11,11 +11,13 @@ import { registerComponents } from './register-components';
 import {
   getWorkspace,
   ProjectDefinition,
+  WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import {
   loadAutomationConfig,
   DEFAULT_REGISTRATION_TYPE,
   getProjectDefinition,
+  otherProjectDirectories,
   resolveRegistrationsPath,
 } from '@ngx-formbar/setup';
 
@@ -25,7 +27,7 @@ export function register(options: DiscoverOptions): Rule {
   const mergeConfigs: Rule = async (tree: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
     const project = getProjectDefinition(workspace, options.project);
-    registerContext = mergeOptions(options, project, tree, context);
+    registerContext = mergeOptions(options, project, workspace, tree, context);
     return tree;
   };
 
@@ -44,6 +46,7 @@ export function register(options: DiscoverOptions): Rule {
 function mergeOptions(
   options: DiscoverOptions,
   project: ProjectDefinition,
+  workspace: WorkspaceDefinition,
   tree: Tree,
   context: SchematicContext,
 ) {
@@ -79,6 +82,8 @@ function mergeOptions(
       options.registrationType ??
       DEFAULT_REGISTRATION_TYPE,
     components: [],
+    sourceRoot: projectRoot,
+    otherProjectDirectories: otherProjectDirectories(project, workspace),
   };
 
   return mergedConfig;

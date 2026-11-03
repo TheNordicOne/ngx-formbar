@@ -27,8 +27,12 @@ import {
   Statement,
   SyntaxKind,
 } from 'typescript';
-import { JsonObject, strings } from '@angular-devkit/core';
-import { loadSourceFile, relativeModuleFile } from '@ngx-formbar/setup';
+import { JsonObject, normalize, strings } from '@angular-devkit/core';
+import {
+  isWithin,
+  loadSourceFile,
+  relativeModuleFile,
+} from '@ngx-formbar/setup';
 import { FormbarComponentInfo } from './component-info.type';
 
 const alwaysExclude = ['**/node_modules/**', '**/*.spec.ts'];
@@ -48,7 +52,12 @@ export function discoverComponents(
   const { exclude = [], include = [...defaultIncludes] } = registerContext;
   const resolvedExcludes = [...exclude, ...alwaysExclude];
 
-  const files = findPotentialControlComponents(tree, include, resolvedExcludes);
+  const files = findPotentialControlComponents(
+    tree,
+    registerContext,
+    include,
+    resolvedExcludes,
+  );
   registerContext.components = toComponentInfo(tree, files, context);
 
   context.logger.info(
@@ -134,6 +143,10 @@ function toComponentInfo(
  */
 export function findPotentialControlComponents(
   tree: Tree,
+  {
+    sourceRoot,
+    otherProjectDirectories,
+  }: Pick<RegisterContext, 'sourceRoot' | 'otherProjectDirectories'>,
   include: readonly string[],
   exclude: readonly string[] = [],
 ): string[] {
@@ -146,14 +159,14 @@ export function findPotentialControlComponents(
 
   const out = new Set<string>();
 
-  const quickReject = (p: string) => {
-    if (p.includes('/node_modules/')) {
-      return true;
-    }
-    return p.endsWith('.spec.ts');
-  };
+  const quickReject = (p: string) =>
+    p.includes('/node_modules/') ||
+    p.endsWith('.spec.ts') ||
+    otherProjectDirectories.some((directory) =>
+      isWithin(p.slice(1), directory),
+    );
 
-  tree.getDir('/').visit((path) => {
+  tree.getDir(normalize(`/${sourceRoot}`)).visit((path) => {
     if (quickReject(path)) {
       return;
     }
