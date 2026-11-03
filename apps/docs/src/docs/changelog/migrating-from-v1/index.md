@@ -239,6 +239,7 @@ import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
 import { NgxFbControl } from '@ngx-formbar/core';
 
 interface TextControl extends NgxFbControl {
+  type: 'text';
   placeholder?: string;
 }
 
@@ -364,6 +365,7 @@ import { FormbarBlock } from '@ngx-formbar/reactive-forms';
 import { NgxFbBlock } from '@ngx-formbar/core';
 
 interface NoteBlock extends NgxFbBlock {
+  type: 'note';
   message: string;
   severity?: 'info' | 'warn' | 'danger';
 }
