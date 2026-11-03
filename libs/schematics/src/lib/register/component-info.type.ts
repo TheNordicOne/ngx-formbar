@@ -8,4 +8,6 @@ export interface FormbarComponentInfo {
   componentClassName: string;
   /** The key under which to register the component */
   key: string;
+  /** Logged once the entry is added, which a re-run or a taken key prevents */
+  addedWarning?: string;
 }

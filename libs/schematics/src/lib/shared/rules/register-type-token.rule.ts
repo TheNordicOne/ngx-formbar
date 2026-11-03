@@ -26,6 +26,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       componentFilePath,
       componentClassName,
       tsConfigPath,
+      addedWarning,
       alreadyRegisteredLevel,
     } = ruleContext;
 
@@ -107,6 +108,11 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
+
+    if (addedWarning) {
+      context.logger.warn(addedWarning);
+    }
+
     return tree;
   };
 }

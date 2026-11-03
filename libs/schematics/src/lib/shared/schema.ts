@@ -41,6 +41,7 @@ export interface RegisterComponentContext {
   componentFilePath: string;
   componentClassName: string;
   tsConfigPath: string;
+  addedWarning?: string;
   /** A `register` run meets every component it registered before. */
   alreadyRegisteredLevel: 'info' | 'warn';
 }

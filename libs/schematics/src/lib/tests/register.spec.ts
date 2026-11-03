@@ -2125,6 +2125,83 @@ export class Slider implements ReactiveFormbarControl<SliderConfig> {
       }
     });
 
+    describe('the warning about a key from the class name', () => {
+      const fallback = (className: string, key: string) =>
+        `${className} has no single string \`type\` in its config, so it is registered as "${key}".`;
+      const component = (className: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+@Component({ selector: 'app-rating', template: '' })
+export class ${className} implements ReactiveFormbarControl {
+  readonly name = input.required<string>();
+}
+`;
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'appears when the %s entry is added',
+        async (registrationType) => {
+          appTree.create(app('rating.ts'), component('RatingControl'));
+          if (registrationType === 'token') {
+            provideToken(appTree, appConfigPathRaw, registrationsPath);
+          } else {
+            provideMap(
+              appTree,
+              appConfigPathRaw,
+              registrationsPath,
+              formbarConfigPath,
+            );
+          }
+          const warnings = logged('warn');
+
+          await runSchematic({ registrationType });
+
+          expect(warnings).toEqual([
+            fallback('RatingControl', 'rating-control'),
+          ]);
+        },
+      );
+
+      it('stays away on a re-run', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+        appTree = await runSchematic();
+        const warnings = logged('warn');
+
+        await runSchematic();
+
+        expect(warnings).toEqual([]);
+      });
+
+      it('stays away when the key is taken', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['rating-control', loadComponent(() => import('../other').then((m) => m.Other))]",
+        );
+        const warnings = logged('warn');
+
+        await runSchematic();
+
+        expect(warnings).toEqual([
+          'A key with the name "rating-control" is already used',
+        ]);
+      });
+
+      it('stays away when there is no registrations file', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        const warnings = logged('warn');
+
+        await runSchematic({ controlRegistrations: './absent.ts' });
+
+        expect(warnings).not.toContain(
+          fallback('RatingControl', 'rating-control'),
+        );
+      });
+    });
+
     it('still warns when another component holds the key', async () => {
       const component = (className: string) =>
         `import { Component, input } from '@angular/core';

@@ -404,16 +404,13 @@ function extractComponentInfo(
   const key =
     configured ?? strings.dasherize(className.replace(/Component$/, ''));
 
-  if (!configured) {
-    context.logger.warn(
-      `${className} has no single string \`type\` in its config, so it is registered as "${key}".`,
-    );
-  }
-
   return {
     componentFilePath: filePath,
     componentClassName: className,
     key,
+    addedWarning: configured
+      ? undefined
+      : `${className} has no single string \`type\` in its config, so it is registered as "${key}".`,
   };
 }
 

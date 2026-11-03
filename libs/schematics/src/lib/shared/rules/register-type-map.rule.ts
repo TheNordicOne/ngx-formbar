@@ -26,6 +26,7 @@ export function registerTypeConfig(
       componentFilePath,
       componentClassName,
       tsConfigPath,
+      addedWarning,
       alreadyRegisteredLevel,
     } = ruleContext;
 
@@ -113,6 +114,10 @@ export function registerTypeConfig(
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
+
+    if (addedWarning) {
+      context.logger.warn(addedWarning);
+    }
 
     return tree;
   };

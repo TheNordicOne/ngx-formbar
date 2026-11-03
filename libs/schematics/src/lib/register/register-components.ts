@@ -36,7 +36,8 @@ function registerComponentsByComponentInfo(
     registerContext;
 
   const registrations: Rule[] = components.map((component) => {
-    const { key, componentFilePath, componentClassName } = component;
+    const { key, componentFilePath, componentClassName, addedWarning } =
+      component;
 
     const registerComponentContext: RegisterComponentContext = {
       controlRegistrationsPath: controlRegistrations,
@@ -44,6 +45,7 @@ function registerComponentsByComponentInfo(
       componentFilePath,
       componentClassName,
       tsConfigPath,
+      addedWarning,
       alreadyRegisteredLevel: 'info',
     };
 
