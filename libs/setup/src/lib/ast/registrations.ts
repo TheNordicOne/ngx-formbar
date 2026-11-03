@@ -448,20 +448,22 @@ function declaringFile(
 }
 
 function registrationTarget(value: Node) {
-  if (isCallExpression(value)) {
-    return isIdentifier(value.expression) &&
-      registrationHelpers.includes(value.expression.text)
-      ? value.arguments.at(0)
-      : undefined;
-  }
+  return isCallExpression(value)
+    ? helperArgument(value)
+    : isObjectLiteralExpression(value)
+      ? value.properties.find(
+          (property): property is PropertyAssignment =>
+            isPropertyWithName(property, 'component') ||
+            isPropertyWithName(property, 'loadComponent'),
+        )?.initializer
+      : value;
+}
 
-  return isObjectLiteralExpression(value)
-    ? value.properties.find(
-        (property): property is PropertyAssignment =>
-          isPropertyWithName(property, 'component') ||
-          isPropertyWithName(property, 'loadComponent'),
-      )?.initializer
-    : value;
+function helperArgument({ expression, arguments: args }: CallExpression) {
+  return isIdentifier(expression) &&
+    registrationHelpers.includes(expression.text)
+    ? args.at(0)
+    : undefined;
 }
 
 interface RegisteredClass {
