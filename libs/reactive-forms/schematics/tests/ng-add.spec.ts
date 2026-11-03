@@ -4065,6 +4065,22 @@ describe('ng-add schematic', () => {
         });
       });
 
+      it('stays with its own file over a shared one with the same settings', async () => {
+        const settings = JSON.stringify({
+          viewProviderHelperPath: 'app/shared/helper',
+        });
+
+        appTree.create(otherOwnFile, settings);
+        appTree.overwrite(sharedFile, settings);
+
+        const { tree } = await warningsOfRun({}, 'other');
+
+        expect(await generatorDefaults(tree, 'other')).toEqual(
+          generators.map(() => undefined),
+        );
+        expect(read(tree, otherOwnFile)).toBe(settings);
+      });
+
       it('keeps the own file on a further run with the same settings', async () => {
         const options: Schema = {
           schematicsConfigPath: '/',

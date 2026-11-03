@@ -1124,6 +1124,36 @@ export interface RangeConfig { type: 'from-same-file'; }
       expect(await registered()).toMatch(key('followed'));
     });
 
+    it('reads `type` past another literal property', async () => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "interface RangeConfig { kind: 'other'; type: 'after-kind'; }",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('after-kind'));
+    });
+
+    it('reads the config of the contract past another generic', async () => {
+      appTree.create(
+        componentFile,
+        `import { Component } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface Elsewhere<T> { value: T; }
+interface OtherConfig { type: 'wrong'; }
+interface RangeConfig { type: 'right'; }
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarControl<RangeConfig> {}
+`,
+      );
+
+      expect(await registered()).toMatch(key('right'));
+    });
+
     it('reads a config behind a path alias', async () => {
       writeJson(appTree, '/tsconfig.json', {
         compilerOptions: { baseUrl: '.', paths: { '@forms/*': ['forms/*'] } },
