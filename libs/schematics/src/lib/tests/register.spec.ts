@@ -710,6 +710,142 @@ describe('register schematic', () => {
     },
   );
 
+  describe('the registration key', () => {
+    const componentFile = app('widgets/range.ts');
+    const key = (name: string) =>
+      new RegExp(`["']?${name}["']?:\\s*loadComponent\\(`);
+
+    function componentImplementing(contract: string, importLine = '') {
+      return `import { Component } from '@angular/core';
+import { ${contract.split('<')[0]} } from '@ngx-formbar/reactive-forms';
+${importLine}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements OnInit, ${contract} {}
+`;
+    }
+
+    async function registered() {
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+
+      const tree = await runSchematic({ registrationType: 'config' });
+
+      return read(tree, src(registrationsPath));
+    }
+
+    it.each([
+      ['control', 'SliderControl'],
+      ['group', 'SliderGroup'],
+      ['block', 'SliderBlock'],
+      ['array', 'SliderArray'],
+    ])(
+      'is the key a %s was scaffolded with',
+      async (schematic, componentClassName) => {
+        appTree = await runner.runSchematic(
+          schematic,
+          { ...baseOptions, key: 'slider', skipRegistration: true },
+          appTree,
+        );
+
+        const registrations = await registered();
+
+        expect(registrations).toContain(componentClassName);
+        expect(registrations).toMatch(key('slider'));
+        expect(registrations).not.toMatch(key('slider-[a-z]+'));
+      },
+    );
+
+    it('is the key of a control named differently', async () => {
+      appTree = await runner.runSchematic(
+        'control',
+        {
+          ...baseOptions,
+          key: 'slider',
+          name: 'fancy',
+          skipRegistration: true,
+        },
+        appTree,
+      );
+
+      const registrations = await registered();
+
+      expect(registrations).toContain('FancyControl');
+      expect(registrations).toMatch(key('slider'));
+    });
+
+    it('reads an interface in the component file', async () => {
+      appTree.create(
+        componentFile,
+        `${componentImplementing('ReactiveFormbarControl<RangeConfig>')}
+export interface RangeConfig { type: 'from-same-file'; }
+`,
+      );
+
+      expect(await registered()).toMatch(key('from-same-file'));
+    });
+
+    it.each<[string, string, Record<string, string>]>([
+      [
+        'an import under another name',
+        './range.type',
+        {
+          'range.type.ts': "export interface Config { type: 'followed'; }\n",
+        },
+      ],
+      [
+        'a barrel with export * and a cycle',
+        './types',
+        {
+          'types/index.ts':
+            "export * from './index';\nexport * from './one';\n",
+          'types/one.ts': "export { Config } from './two';\n",
+          'types/two.ts': "export interface Config { type: 'followed'; }\n",
+        },
+      ],
+    ])('follows %s', async (_, specifier, files) => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarGroup<RangeConfig>',
+          `import { Config as RangeConfig } from '${specifier}';`,
+        ),
+      );
+
+      for (const [file, content] of Object.entries(files)) {
+        appTree.create(app(`widgets/${file}`), content);
+      }
+
+      expect(await registered()).toMatch(key('followed'));
+    });
+
+    it.each<[string, string, string]>([
+      [
+        'an interface it cannot find',
+        'ReactiveFormbarControl<MissingConfig>',
+        "import { MissingConfig } from './missing';",
+      ],
+      [
+        'an interface without a type literal',
+        'ReactiveFormbarControl<LooseConfig>',
+        'interface LooseConfig { type: string; }',
+      ],
+      [
+        'a package interface',
+        'ReactiveFormbarControl<PackageConfig>',
+        "import { PackageConfig } from 'some-package';",
+      ],
+    ])('falls back to the class name with %s', async (_, contract, line) => {
+      appTree.create(componentFile, componentImplementing(contract, line));
+
+      expect(await registered()).toMatch(key('range'));
+    });
+  });
+
   it('honors the registrationType option when no config file is present', async () => {
     const files: TestComponentDetails[] = [
       {

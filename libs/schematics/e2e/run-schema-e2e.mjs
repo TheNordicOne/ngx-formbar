@@ -1365,6 +1365,10 @@ function runAngularJsonDefaultsFlow(appDir) {
       registered.includes('RatingControl'),
     'register found the control and the file through the angular.json defaults',
   );
+  check(
+    /["']?rating["']?:\s*loadComponent\(/.test(registered),
+    'register used the key the control was scaffolded with',
+  );
 }
 
 function generateFailure(cwd, project, args) {

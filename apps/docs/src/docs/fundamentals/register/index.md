@@ -4,6 +4,14 @@ While the Generator Schematics, by default, already register every new component
 
 This schematic tries to find all relevant controls and registers them at the appropriate place. It does **not** discover validators. Those must always be registered manually.
 
+Each control is registered under the `type` of its config interface, as a form refers to it:
+
+| The component                                                            | Registered as    |
+| ------------------------------------------------------------------------ | ---------------- |
+| `implements ReactiveFormbarControl<SliderConfig>`, with `type: 'slider'` | `slider`         |
+| `class RatingComponent`, with no such interface                          | `rating`         |
+| `class RatingControl`, with no such interface                            | `rating-control` |
+
 ## Options
 
 | Option                     | Type                | Required | Default                   | Description                                                                                                                  |

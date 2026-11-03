@@ -6,6 +6,6 @@ export interface FormbarComponentInfo {
   componentFilePath: string;
   /** The name of the component class */
   componentClassName: string;
-  /** The key under which to register the component (equals the dasherized class name minus Component suffix */
+  /** The key under which to register the component */
   key: string;
 }

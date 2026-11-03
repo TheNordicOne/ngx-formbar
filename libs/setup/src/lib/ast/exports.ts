@@ -13,6 +13,7 @@ import {
   NamedExportBindings,
   Statement,
 } from 'typescript';
+import { posix } from 'node:path';
 import { loadSourceFile } from './parse';
 
 /** By name or through `export *`, which is taken at its word. */
@@ -29,6 +30,21 @@ export function exportsIdentifier(
       statementExports(statement, identifier),
     )
   );
+}
+
+/** The file of a relative module specifier, as a TypeScript path lookup finds it. */
+export function relativeModuleFile(
+  tree: Tree,
+  fromFile: string,
+  specifier: string,
+): string | undefined {
+  const target = posix.join(posix.dirname(fromFile), specifier);
+
+  return specifier.startsWith('.')
+    ? [`${target}.ts`, posix.join(target, 'index.ts')].find((file) =>
+        tree.exists(file),
+      )
+    : undefined;
 }
 
 function statementExports(statement: Statement, identifier: string) {

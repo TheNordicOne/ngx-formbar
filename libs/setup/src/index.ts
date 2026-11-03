@@ -4,7 +4,7 @@ export {
   unwrapToObjectLiteral,
 } from './lib/ast';
 export { isCallee } from './lib/ast/decorators';
-export { exportsIdentifier } from './lib/ast/exports';
+export { exportsIdentifier, relativeModuleFile } from './lib/ast/exports';
 export { loadSourceFile } from './lib/ast/parse';
 export {
   addComponentRegistration,
