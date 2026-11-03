@@ -300,6 +300,65 @@ export type AppContent = TextControl;
     ).toBe(true);
   });
 
+  describe('paths that already start with the source root', () => {
+    const SOURCE_ROOT = 'projects/test-app/src';
+
+    beforeEach(() => {
+      addCoreStub(tree);
+      tree.create(
+        app('types/content.type.ts'),
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [{ use: 'json-schema-2020-12' }],
+        },
+      });
+    });
+
+    it.each([`${SOURCE_ROOT}/app/a2.json`, `./${SOURCE_ROOT}/app/a2.json`])(
+      'writes --output %s without adding the source root again',
+      async (output) => {
+        const result = await runner.runSchematic(
+          'schema',
+          { project: 'test-app', output },
+          tree,
+        );
+
+        expect(result.exists(app('a2.json'))).toBe(true);
+      },
+    );
+
+    it.each([
+      `${SOURCE_ROOT}/app/types/content.type.ts#AppContent`,
+      `./${SOURCE_ROOT}/app/types/content.type.ts#AppContent`,
+    ])('finds --type %s without adding the source root again', async (type) => {
+      const result = await runner.runSchematic(
+        'schema',
+        { project: 'test-app', type },
+        tree,
+      );
+
+      expect(readSchema(result, src('form.schema.json')).$defs).toHaveProperty(
+        'TextControl',
+      );
+    });
+
+    it('still adds the source root to a sibling sharing its name as a prefix', async () => {
+      const result = await runner.runSchematic(
+        'schema',
+        { project: 'test-app', output: `${SOURCE_ROOT}-extra/a.json` },
+        tree,
+      );
+
+      expect(result.exists(src(`${SOURCE_ROOT}-extra/a.json`))).toBe(true);
+    });
+  });
+
   describe('emitter entries sharing an output', () => {
     const OUTPUT = '/projects/test-app/src/form.schema.json';
     const DEFAULT_DRAFT_07_OUTPUT =

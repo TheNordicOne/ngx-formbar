@@ -4,17 +4,25 @@ import { SchematicsException } from '@angular-devkit/schematics';
 /**
  * Turns a path out of the schema config (`schema.type`, an entry's `output`, or
  * a `use` pointing at a file) into a Tree path. Such paths are relative to the
- * source root, and a leading `/` means the workspace root. Resolving here rather
- * than in each emitter keeps every emitter, ours and a consumer's, from having
- * to know the convention. `null` marks a path above the workspace root, the only
- * input `normalize` rejects.
+ * source root, unless they already start with it, and a leading `/` means the
+ * workspace root. Resolving here rather than in each emitter keeps every
+ * emitter, ours and a consumer's, from having to know the convention. `null`
+ * marks a path above the workspace root, the only input `normalize` rejects.
  */
 export function resolveProjectPath(
   path: string,
   projectRoot: string,
 ): string | null {
+  const withoutDot = path.replace(/^\.\//, '');
+  const isFromWorkspaceRoot =
+    path.startsWith('/') ||
+    withoutDot === projectRoot ||
+    withoutDot.startsWith(`${projectRoot}/`);
+
   try {
-    return normalize(path.startsWith('/') ? path : `/${projectRoot}/${path}`);
+    return normalize(
+      isFromWorkspaceRoot ? `/${path}` : `/${projectRoot}/${path}`,
+    );
   } catch {
     return null;
   }
