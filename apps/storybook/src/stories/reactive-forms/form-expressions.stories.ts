@@ -316,7 +316,7 @@ export const UndefinedComparisonForPresentField: Story = {
     docs: {
       description: {
         story:
-          'An expression using === undefined on a field that exists — should evaluate to false.',
+          'An expression using === undefined on a field that exists. It should evaluate to false.',
       },
     },
   },
@@ -443,7 +443,7 @@ export const UndefinedComparisonAfterStructuralAddition: Story = {
     });
     await expect(observer).toBeDisabled();
 
-    // Clear trigger — checked reappears
+    // Clear trigger: checked reappears
     const trigger = await canvas.findByRole('textbox', {
       name: 'Clear to show the checked field',
     });
@@ -453,7 +453,7 @@ export const UndefinedComparisonAfterStructuralAddition: Story = {
       name: 'Removed when trigger is "hide"',
     });
 
-    // Observer should now be enabled — checked exists in the form
+    // Observer should now be enabled because checked exists in the form
     const observerAfter = await canvas.findByRole('textbox', {
       name: 'Disabled when checked field is absent',
     });
@@ -637,7 +637,7 @@ export const DisabledExpressionAfterStructuralRemoval: Story = {
     });
     await expect(target).toBeDisabled();
 
-    // Remove source by typing "hide" — source is gone, expression should
+    // Remove source by typing "hide". Source is gone, so the expression should
     // no longer match (source is undefined, not "lock")
     const trigger = await canvas.findByRole('textbox', {
       name: 'Type "hide" to remove the source field',

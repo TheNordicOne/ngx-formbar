@@ -274,7 +274,7 @@ export const PatchAndReset: Story = {
       await canvas.findByRole('textbox', { name: 'Fifth' }),
     ).toHaveValue('patched-fifth');
 
-    // Reset — nullable controls clear, nonNullable controls revert to defaults
+    // Reset: nullable controls clear, nonNullable controls revert to defaults
     await userEvent.click(await canvas.findByRole('button', { name: 'Reset' }));
 
     await expect(
@@ -749,7 +749,7 @@ export const PatchGrowsArrays: Story = {
     // Starts empty
     await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
 
-    // Load data — arrays grow to match, then values are patched in
+    // Load data: arrays grow to match, then values are patched in
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
     // Scalar rows

@@ -36,12 +36,12 @@ export const SingleValidator: Story = {
   play: async ({ canvas, userEvent }) => {
     const input = await canvas.findByRole('textbox', { name: 'First label' });
 
-    // Initial state: control is pristine — error not shown
+    // Initial state: control is pristine, so the error is not shown
     await expect(
       canvas.queryByText('Minimum 3 characters required'),
     ).not.toBeInTheDocument();
 
-    // Type a single character — too short for minLength(3)
+    // Type a single character: too short for minLength(3)
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
@@ -85,7 +85,7 @@ export const MultipleValidators: Story = {
   play: async ({ canvas, userEvent }) => {
     const input = await canvas.findByRole('textbox', { name: 'First label' });
 
-    // Initial state: control is pristine — errors not shown
+    // Initial state: control is pristine, so the errors are not shown
     await expect(
       canvas.queryByText('Minimum 3 characters required'),
     ).not.toBeInTheDocument();
@@ -155,7 +155,7 @@ export const CombinedValidator: Story = {
   play: async ({ canvas, userEvent }) => {
     const input = await canvas.findByRole('textbox', { name: 'First label' });
 
-    // Initial state: control is pristine — errors not shown
+    // Initial state: control is pristine, so the errors are not shown
     await expect(
       canvas.queryByText('Minimum 3 characters required'),
     ).not.toBeInTheDocument();
@@ -164,7 +164,7 @@ export const CombinedValidator: Story = {
     ).not.toBeInTheDocument();
     await expect(canvas.queryByText('Required')).not.toBeInTheDocument();
 
-    // Type a single character that does not contain 'a' — triggers minlength + letter
+    // Type a single character that does not contain 'a': triggers minlength + letter
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
@@ -175,7 +175,7 @@ export const CombinedValidator: Story = {
       await canvas.findByText('Must contain the letter "a"'),
     ).toBeInTheDocument();
 
-    // Clear the input — triggers required (from combined) as well
+    // Clear the input: triggers required (from combined) as well
     await userEvent.clear(input);
 
     await expect(await canvas.findByText('Required')).toBeInTheDocument();
@@ -220,7 +220,7 @@ export const AsyncValidator: Story = {
   play: async ({ canvas, userEvent }) => {
     const input = await canvas.findByRole('textbox', { name: 'First label' });
 
-    // Initial state: control is pristine — errors not shown
+    // Initial state: control is pristine, so the errors are not shown
     await expect(
       canvas.queryByText('Minimum 3 characters required'),
     ).not.toBeInTheDocument();
@@ -231,7 +231,7 @@ export const AsyncValidator: Story = {
       canvas.queryByText('Value must contain "async"'),
     ).not.toBeInTheDocument();
 
-    // Type a short value without 'a' — sync errors appear
+    // Type a short value without 'a': sync errors appear
     await userEvent.type(input, 'X');
     await userEvent.tab();
 
@@ -318,7 +318,7 @@ export const GroupValidator: Story = {
       name: 'Second label',
     });
 
-    // Initial state: group is pristine — errors not shown
+    // Initial state: group is pristine, so the errors are not shown
     await expect(
       canvas.queryByText('No duplicate values allowed'),
     ).not.toBeInTheDocument();
@@ -395,12 +395,12 @@ export const GroupAsyncValidator: Story = {
       name: 'First label',
     });
 
-    // Initial state: group is pristine — error not shown
+    // Initial state: group is pristine, so the error is not shown
     await expect(
       canvas.queryByText('At least one value must contain "sync"'),
     ).not.toBeInTheDocument();
 
-    // Type a value that does not contain 'sync' — async group validator fails
+    // Type a value that does not contain 'sync': async group validator fails
     await userEvent.type(firstInput, 'X');
     await userEvent.tab();
 
@@ -413,7 +413,7 @@ export const GroupAsyncValidator: Story = {
       { timeout: 3000 },
     );
 
-    // Type a value containing 'sync' — async group validator passes
+    // Type a value containing 'sync': async group validator passes
     await userEvent.clear(firstInput);
     await userEvent.type(firstInput, 'sync');
 

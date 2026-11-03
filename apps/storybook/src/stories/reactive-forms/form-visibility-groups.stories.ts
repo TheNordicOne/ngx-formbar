@@ -34,7 +34,7 @@ export const GroupKeepLast: Story = {
     docs: {
       description: {
         story:
-          'Keep parent — group is removed from the DOM but kept in the form model. Each leaf applies its own (or inherited) valueStrategy.',
+          'Keep parent: group is removed from the DOM but kept in the form model. Each leaf applies its own (or inherited) valueStrategy.',
       },
     },
   },
@@ -121,7 +121,7 @@ export const GroupKeepLast: Story = {
     );
     await expect(getFormPath('keepLastGroup', 'childResetField')).toBeNull();
 
-    // Re-show — values are unchanged
+    // Re-show: values are unchanged
     await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Child field' }),
@@ -143,7 +143,7 @@ export const GroupKeepDefault: Story = {
     docs: {
       description: {
         story:
-          'Keep parent with default — children that inherit revert to defaultValue, child overrides take effect.',
+          'Keep parent with default: children that inherit revert to defaultValue, child overrides take effect.',
       },
     },
   },
@@ -243,7 +243,7 @@ export const GroupKeepReset: Story = {
     docs: {
       description: {
         story:
-          'Keep parent with reset — children that inherit clear to null, child overrides take effect.',
+          'Keep parent with reset: children that inherit clear to null, child overrides take effect.',
       },
     },
   },
@@ -353,7 +353,7 @@ export const GroupRemoveLast: Story = {
     docs: {
       description: {
         story:
-          'Remove parent — group is gone from both DOM and form model while hidden, leaves restore on show per their strategies.',
+          'Remove parent: group is gone from both DOM and form model while hidden, leaves restore on show per their strategies.',
       },
     },
   },
@@ -434,7 +434,7 @@ export const GroupRemoveLast: Story = {
     // Group is gone from the form model
     await expect(getFormValue()['removeLastGroup']).toBeUndefined();
 
-    // Re-show — leaves apply their strategies
+    // Re-show: leaves apply their strategies
     await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Child field' }),
@@ -456,7 +456,7 @@ export const GroupRemoveDefault: Story = {
     docs: {
       description: {
         story:
-          'Remove parent with default — leaves render their (inherited or own) strategy on re-show.',
+          'Remove parent with default: leaves render their (inherited or own) strategy on re-show.',
       },
     },
   },
@@ -549,7 +549,7 @@ export const GroupRemoveReset: Story = {
     docs: {
       description: {
         story:
-          'Remove parent with reset — leaves render their (inherited or own) strategy on re-show.',
+          'Remove parent with reset: leaves render their (inherited or own) strategy on re-show.',
       },
     },
   },
@@ -643,7 +643,7 @@ export const GroupRemoveReset: Story = {
 };
 
 export const GroupRemoveLastResetClearsCache: Story = {
-  name: 'Remove & Last — Reset clears cache',
+  name: 'Remove & Last: Reset clears cache',
   parameters: {
     docs: {
       description: {
@@ -706,7 +706,7 @@ export const GroupRemoveLastResetClearsCache: Story = {
         await canvas.findByRole('button', { name: 'Reset' }),
       );
 
-      // Re-show — leaves render their defaults, NOT the stale cached values
+      // Re-show: leaves render their defaults, NOT the stale cached values
       await expect(
         await canvas.findByRole('textbox', { name: 'Cached child A' }),
       ).toHaveValue('default-a');
@@ -727,7 +727,7 @@ export const ParentRemovePrecedence: Story = {
     docs: {
       description: {
         story:
-          'Parent remove takes precedence — a keep child inside a remove parent is gone with the parent regardless of its own strategy.',
+          'Parent remove takes precedence: a keep child inside a remove parent is gone with the parent regardless of its own strategy.',
       },
     },
   },
@@ -798,7 +798,7 @@ export const ParentRemovePrecedence: Story = {
     // Whole subtree gone from form model
     await expect(getFormValue()['parentRemove']).toBeUndefined();
 
-    // Re-show — last values restored
+    // Re-show: last values restored
     await userEvent.clear(triggerInput);
     await expect(
       await canvas.findByRole('textbox', { name: 'Parent field' }),
@@ -972,7 +972,7 @@ export const StrategyOverride: Story = {
       canvas.queryByText('Parent Group - Keep & Last'),
     ).not.toBeInTheDocument();
 
-    // Parent leaf preserved (last); child leaf reverts (default — overridden by child group)
+    // Parent leaf preserved (last); child leaf reverts (default, overridden by child group)
     await expect(getFormPath('parentGroup', 'parentField')).toBe(
       'Custom parent value',
     );
@@ -996,7 +996,7 @@ export const ThreeLevelInheritance: Story = {
     docs: {
       description: {
         story:
-          'Three-level hierarchy with strategy overrides at each level — each leaf resolves to the closest declared valueStrategy.',
+          'Three-level hierarchy with strategy overrides at each level: each leaf resolves to the closest declared valueStrategy.',
       },
     },
   },
@@ -1214,7 +1214,7 @@ export const MixedChildStrategies: Story = {
       'remove value',
     );
 
-    // Hide only the keep child — remove child untouched
+    // Hide only the keep child: remove child untouched
     await userEvent.type(toggleA, 'hide');
 
     await expect(
@@ -1241,7 +1241,7 @@ export const MixedChildStrategies: Story = {
     await expect(getFormPath('parentVisible', 'childKeep')).toBe('keep value');
     await expect(getFormPath('parentVisible', 'childRemove')).toBeUndefined();
 
-    // Show only the remove child — childKeep stays hidden
+    // Show only the remove child: childKeep stays hidden
     await userEvent.clear(toggleB);
     await expect(
       canvas.queryByRole('textbox', { name: 'Child keep' }),

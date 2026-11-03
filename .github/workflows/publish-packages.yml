@@ -175,7 +175,7 @@ jobs:
       - name: Dry-run summary
         if: inputs.dry-run
         run: |
-          echo "::notice::Dry-run mode — skipped tagging, GitHub releases, and npm publish"
+          echo "::notice::Dry-run mode: skipped tagging, GitHub releases, and npm publish"
           echo "::group::Package versions"
           for pkg_json in libs/core/package.json libs/reactive-forms/package.json libs/schematics/package.json libs/setup/package.json; do
             name=$(node -p "require('./${pkg_json}').name")
