@@ -3465,6 +3465,35 @@ describe('ng-add schematic', () => {
       );
     });
 
+    it.each<[string, Schema, () => void, string]>([
+      [
+        'a file the lookup does not look for',
+        { schematicConfigFileName: 'custom.json' },
+        () => undefined,
+        'Pointing the generators at app/custom.json, where they would not find it',
+      ],
+      [
+        'a shared file behind an own one',
+        { schematicsConfigPath: '/' },
+        () => {
+          appTree.create(schematicsConfigPath, '{}');
+        },
+        `Pointing the generators at /formbar-schematic.config.json, as they would find ${schematicsConfigPath} first`,
+      ],
+    ])(
+      'says why it points them at %s',
+      async (_, options, arrange, message) => {
+        arrange();
+
+        const messages: string[] = [];
+
+        runner.logger.subscribe((entry) => messages.push(entry.message));
+        await runAdd(options);
+
+        expect(messages).toContain(message);
+      },
+    );
+
     it.each<[string, Schema]>([
       ['the default location', {}],
       ['the workspace root', { schematicsConfigPath: '/' }],

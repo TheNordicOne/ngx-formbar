@@ -24,6 +24,7 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
     } = ruleContext;
 
     const configFilePath = schematicsConfigFile(tree, ruleContext);
+    const found = findSchematicsConfig(tree, projectRoot);
 
     if (
       useSchematicConfig &&
@@ -32,10 +33,7 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
       return;
     }
 
-    if (
-      !useSchematicConfig ||
-      findSchematicsConfig(tree, projectRoot) === configFilePath
-    ) {
+    if (!useSchematicConfig || found === configFilePath) {
       if (schematicsConfigLink) {
         context.logger.warn(
           `Removed the schematicsConfig link to ${schematicsConfigLink} from angular.json, as ${useSchematicConfig ? `the generators find ${configFilePath} without it` : 'this run uses no schematics configuration file'}.`,
@@ -48,7 +46,7 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
     const configPath = sourceRootValue(configFilePath, projectRoot);
 
     context.logger.info(
-      `Pointing the generators at ${configPath}, where they would not find it`,
+      `Pointing the generators at ${configPath}, ${found ? `as they would find ${found} first` : 'where they would not find it'}`,
     );
 
     return updateSchematicConfigs(
