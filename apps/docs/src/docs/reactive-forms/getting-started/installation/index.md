@@ -29,9 +29,6 @@ By default, this does the following.
 - Install dependencies
 
 > **Note**
-> The schematics configuration file only contains values that differ from the defaults.
-
-> **Note**
 > `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. See [Which Schematics Configuration File](#which-schematics-configuration-file).
 
 > **Note**
