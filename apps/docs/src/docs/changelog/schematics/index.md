@@ -27,6 +27,8 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - A leading `/` in a path means the workspace root, in every schematic.
 - Group templates render children through `<ngxfb-control-outlet />`.
 - Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`staticComponent()` / `loadComponent()`).
+- `register` takes each key from the `type` of the component's config.
+- `register` only searches the source root.
 
 ### Fixed
 
