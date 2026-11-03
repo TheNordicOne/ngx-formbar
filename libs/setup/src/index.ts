@@ -10,7 +10,6 @@ export {
   addComponentRegistration,
   componentRegistrationsObjectHasKey,
   componentRegistrationsObjectUsesIdentifier,
-  extractComponentNameFromLazyImport,
   findComponentRegistrationsNode,
   findComponentRegistrationsObject,
   findMapArrayLiteral,

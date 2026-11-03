@@ -415,7 +415,7 @@ function createLazyImportExpression(
   );
 }
 
-export function extractComponentNameFromLazyImport(node: Node): string | null {
+function extractComponentNameFromLazyImport(node: Node): string | null {
   // Handle loadComponent(() => import(...).then(m => m.Component))
   if (
     isCallExpression(node) &&

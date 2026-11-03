@@ -5,6 +5,7 @@ import {
   forEachChild,
   ImportSpecifier,
   isArrayLiteralExpression,
+  isArrowFunction,
   isCallExpression,
   isClassDeclaration,
   isIdentifier,
@@ -13,6 +14,7 @@ import {
   isLiteralTypeNode,
   isNamedImports,
   isObjectLiteralExpression,
+  isPropertyAccessExpression,
   isPropertyAssignment,
   isPropertySignature,
   isStringLiteral,
@@ -29,11 +31,7 @@ import {
   VariableDeclaration,
 } from 'typescript';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import {
-  extractComponentNameFromLazyImport,
-  isCallee,
-  NGX_FW_COMPONENT_REGISTRATIONS,
-} from '@ngx-formbar/setup';
+import { isCallee, NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/setup';
 import { normalize } from '@angular-devkit/core';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 
@@ -333,6 +331,32 @@ export function callObjectArgHasProp(
 
   sf.forEachChild(visit);
   return found;
+}
+
+function extractComponentNameFromLazyImport(node: Node): string | null {
+  if (
+    isCallExpression(node) &&
+    isIdentifier(node.expression) &&
+    node.expression.text === 'loadComponent' &&
+    node.arguments.length > 0
+  ) {
+    return extractComponentNameFromLazyImport(node.arguments[0]);
+  }
+
+  const thenCallback =
+    isArrowFunction(node) && isCallExpression(node.body)
+      ? node.body.arguments.at(0)
+      : undefined;
+  const component =
+    thenCallback && isArrowFunction(thenCallback)
+      ? thenCallback.body
+      : undefined;
+
+  return component &&
+    isPropertyAccessExpression(component) &&
+    isIdentifier(component.name)
+    ? component.name.text
+    : null;
 }
 
 export function hasDynamicImportOf(
