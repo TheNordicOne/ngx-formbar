@@ -425,7 +425,7 @@ function configTypeLiteral(
   classNode: ClassDeclaration,
   filePath: string,
 ) {
-  const interfaceName = classNode.heritageClauses
+  const configType = classNode.heritageClauses
     ?.filter(({ token }) => token === SyntaxKind.ImplementsKeyword)
     .flatMap(({ types }) => [...types])
     .filter(
@@ -436,10 +436,10 @@ function configTypeLiteral(
     .find((argument) => !!argument);
 
   const name =
-    interfaceName &&
-    isTypeReferenceNode(interfaceName) &&
-    isIdentifier(interfaceName.typeName)
-      ? interfaceName.typeName.text
+    configType &&
+    isTypeReferenceNode(configType) &&
+    isIdentifier(configType.typeName)
+      ? configType.typeName.text
       : undefined;
   const declaration = name
     ? findInterface(tree, filePath, name, new Set())

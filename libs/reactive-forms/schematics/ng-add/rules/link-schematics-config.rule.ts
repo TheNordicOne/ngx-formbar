@@ -1,4 +1,4 @@
-import { Rule } from '@angular-devkit/schematics';
+import { Rule, SchematicContext } from '@angular-devkit/schematics';
 import { findSchematicsConfig, sourceRootValue } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
@@ -16,12 +16,7 @@ import { SCHEMATICS_GENERATORS } from '../../shared/constants';
  */
 export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const {
-      useSchematicConfig,
-      projectName,
-      sourceRoot,
-      schematicsConfigLink,
-    } = ruleContext;
+    const { useSchematicConfig, projectName, sourceRoot } = ruleContext;
 
     const configFilePath = schematicsConfigFile(tree, ruleContext);
     const found = findSchematicsConfig(tree, sourceRoot);
@@ -34,11 +29,7 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
     }
 
     if (!useSchematicConfig || found === configFilePath) {
-      if (schematicsConfigLink) {
-        context.logger.warn(
-          `Removed the schematicsConfig link to ${schematicsConfigLink} from angular.json, as ${useSchematicConfig ? `the generators find ${configFilePath} without it` : 'this run uses no schematics configuration file'}.`,
-        );
-      }
+      warnAboutRemovedLink(ruleContext, configFilePath, context);
 
       return removeSchematicsConfigLink(SCHEMATICS_GENERATORS, projectName);
     }
@@ -59,4 +50,16 @@ export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
       projectName,
     );
   };
+}
+
+function warnAboutRemovedLink(
+  { useSchematicConfig, schematicsConfigLink }: RuleContext,
+  configFilePath: string,
+  context: SchematicContext,
+) {
+  if (schematicsConfigLink) {
+    context.logger.warn(
+      `Removed the schematicsConfig link to ${schematicsConfigLink} from angular.json, as ${useSchematicConfig ? `the generators find ${configFilePath} without it` : 'this run uses no schematics configuration file'}.`,
+    );
+  }
 }
