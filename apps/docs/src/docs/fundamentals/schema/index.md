@@ -2,7 +2,7 @@ The `schema` generator produces documents from your [content union](/fundamental
 
 ## Configuration
 
-The `schema` section of `formbar-schematic.config.json` configures the generator. `ng add` creates this section, unless you pass `--useSchematicConfig=false`:
+The `schema` section of `formbar-schematic.config.json` configures the generator. `ng add` normally creates it. If yours has no such section, add it:
 
 ```json name="formbar-schematic.config.json"
 {
