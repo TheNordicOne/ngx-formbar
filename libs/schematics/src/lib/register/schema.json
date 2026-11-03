@@ -39,7 +39,7 @@
     },
     "exclude": {
       "type": "array",
-      "description": "Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded",
+      "description": "Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded)",
       "default": [],
       "items": {
         "type": "string"

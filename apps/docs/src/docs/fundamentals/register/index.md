@@ -23,7 +23,7 @@ Each control is registered under the `type` of its config interface, as a form r
 | --controlRegistrationsPath | string              | No       | -                                   | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
 | --controlRegistrations     | string              | No       | -                                   | The same as `--controlRegistrationsPath`.                                                                                    |
 | --schematicsConfig         | string              | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --include                  | array               | No       | `["\*\*/*.ts"]`                     | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
+| --include                  | array               | No       | `["**/*.ts"]`                       | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
 | --exclude                  | array               | No       | `[]`                                | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                               |
 
 ## Setting Options
@@ -52,7 +52,6 @@ Every path in this file follows [Paths](#paths).
 You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
 All options are optional, but are listed here in full. You can put any combination of them.
-Note, that compared to `formbar-schematic.config.json`, you have to repeat all values.
 
 ```json name="angular.json"
 {
