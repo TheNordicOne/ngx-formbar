@@ -29,6 +29,7 @@ export interface ScaffoldContext extends Schema {
   componentPath: string;
   componentFilePath: string;
   sourceRoot: string;
+  tsConfigPath: string;
   hasViewProviderHelper: boolean;
   viewProviderHelperPath?: string;
   viewProviderIdentifier?: string;
@@ -39,6 +40,7 @@ export interface RegisterComponentContext {
   key: string;
   componentFilePath: string;
   componentClassName: string;
+  tsConfigPath: string;
   /** A `register` run meets every component it registered before. */
   alreadyRegisteredLevel: 'info' | 'warn';
 }

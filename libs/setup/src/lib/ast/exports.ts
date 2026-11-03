@@ -44,6 +44,58 @@ export function exportsIdentifier(
   );
 }
 
+/**
+ * The file that declares what `identifier` of a module stands for, following
+ * re-exports. `resolve` finds the file of a module specifier.
+ */
+export function fileDeclaring(
+  tree: Tree,
+  identifier: string,
+  resolve: (specifier: string, fromFile: string) => string | undefined,
+  specifier: string,
+  fromFile: string,
+  visited = new Set<string>(),
+): string | undefined {
+  const filePath = resolve(specifier, fromFile);
+  const sourceFile =
+    filePath && !visited.has(filePath)
+      ? loadSourceFile(tree, filePath)
+      : undefined;
+
+  if (!filePath || !sourceFile) {
+    return undefined;
+  }
+
+  visited.add(filePath);
+
+  const declaredHere = sourceFile.statements.some(
+    (statement) =>
+      !hasModuleSpecifier(statement) && statementExports(statement, identifier),
+  );
+
+  return declaredHere
+    ? filePath
+    : sourceFile.statements
+        .filter(isExportDeclaration)
+        .filter(
+          ({ exportClause }) =>
+            !exportClause || exportClauseHas(exportClause, identifier),
+        )
+        .flatMap(({ moduleSpecifier, isTypeOnly }) =>
+          moduleSpecifier && isStringLiteral(moduleSpecifier) && !isTypeOnly
+            ? [moduleSpecifier.text]
+            : [],
+        )
+        .map((next) =>
+          fileDeclaring(tree, identifier, resolve, next, filePath, visited),
+        )
+        .find(Boolean);
+}
+
+function hasModuleSpecifier(statement: Statement) {
+  return isExportDeclaration(statement) && !!statement.moduleSpecifier;
+}
+
 function isStarExport(statement: Statement): statement is ExportDeclaration {
   return (
     isExportDeclaration(statement) &&

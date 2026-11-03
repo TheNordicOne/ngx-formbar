@@ -12,6 +12,7 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
     } = ruleContext;
 
     if (skipRegistration) {
@@ -30,6 +31,7 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
       alreadyRegisteredLevel: 'warn',
     };
 

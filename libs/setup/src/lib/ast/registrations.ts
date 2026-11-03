@@ -7,6 +7,7 @@ import {
   Expression,
   factory,
   Identifier,
+  ImportClause,
   isArrowFunction,
   isArrayLiteralExpression,
   isCallExpression,
@@ -18,11 +19,13 @@ import {
   isPropertyAccessExpression,
   isPropertyAssignment,
   isStringLiteral,
+  isStringLiteralLike,
   isVariableDeclaration,
   isVariableStatement,
   Node,
   ObjectLiteralExpression,
   PropertyAssignment,
+  resolveModuleName,
   SourceFile,
   SyntaxKind,
   VariableDeclaration,
@@ -30,8 +33,18 @@ import {
 import { ReplaceChange } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
 import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
+import { createTreeCompilerHost, readCompilerOptions } from '../tsconfig';
+import { fileDeclaring } from './exports';
 
 const registrationHelpers = ['staticComponent', 'loadComponent'];
+
+/** The component a registrations file is searched for. */
+export interface RegisteredComponentQuery {
+  tree: Tree;
+  tsConfigPath: string;
+  className: string;
+  filePath: string;
+}
 
 export function findComponentRegistrationsNode(
   sourceFile: SourceFile,
@@ -182,20 +195,20 @@ export function registrationNodeHasKey(node: Node, key: string): boolean {
   return false;
 }
 
-export function registrationNodeUsesIdentifier(
+export function registrationNodeUsesComponent(
   node: Node,
-  identifierName: string,
+  component: RegisteredComponentQuery,
 ): boolean {
   if (isNewExpression(node)) {
     const arr = findMapArrayLiteral(node);
     if (!arr) {
       return false;
     }
-    return arrayLiteralUsesIdentifier(arr, identifierName);
+    return arrayLiteralUsesComponent(arr, component);
   }
 
   if (isObjectLiteralExpression(node)) {
-    return objectLiteralUsesIdentifier(node, identifierName);
+    return objectLiteralUsesComponent(node, component);
   }
 
   return false;
@@ -222,22 +235,6 @@ function registrationsObjectHasKey(
   return false;
 }
 
-function registrationsObjectUsesIdentifier(
-  obj: ObjectLiteralExpression,
-  identifierName: string,
-): boolean {
-  for (const p of obj.properties) {
-    if (!isPropertyAssignment(p)) {
-      continue;
-    }
-    if (registeredClassName(p.initializer) === identifierName) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 export function componentRegistrationsObjectHasKey(
   node: Node | null,
   key: string,
@@ -253,9 +250,9 @@ export function componentRegistrationsObjectHasKey(
   return registrationsObjectHasKey(node, key);
 }
 
-export function componentRegistrationsObjectUsesIdentifier(
+export function componentRegistrationsObjectUsesComponent(
   node: Node | null,
-  identifierName: string,
+  component: RegisteredComponentQuery,
 ): boolean {
   if (!node) {
     return false;
@@ -265,7 +262,7 @@ export function componentRegistrationsObjectUsesIdentifier(
     return false;
   }
 
-  return registrationsObjectUsesIdentifier(node, identifierName);
+  return objectLiteralUsesComponent(node, component);
 }
 
 function findMapNodeInTokenRegistration(node: Node) {
@@ -418,13 +415,39 @@ function createLazyImportExpression(
   );
 }
 
-/** The class of a registration value, in any form a registration can take. */
-function registeredClassName(value: Node) {
+/** Whether a registration value, in any form it can take, holds the component. */
+function registers(value: Node, component: RegisteredComponentQuery) {
   const target = registrationTarget(value);
+  const registered =
+    target && isIdentifier(target) ? importedClass(target) : lazyClass(target);
 
-  return target && isIdentifier(target)
-    ? importedClassName(target)
-    : lazyClassName(target);
+  return (
+    registered?.className === component.className &&
+    declaringFile(value.getSourceFile(), registered, component) ===
+      component.filePath
+  );
+}
+
+/** Without a `specifier`, the class is declared in the registrations file. */
+function declaringFile(
+  { fileName }: SourceFile,
+  { className, specifier }: RegisteredClass,
+  { tree, tsConfigPath }: RegisteredComponentQuery,
+) {
+  const options = readCompilerOptions(tree, tsConfigPath);
+  const host = createTreeCompilerHost(tree);
+
+  return specifier === undefined
+    ? fileName
+    : fileDeclaring(
+        tree,
+        className,
+        (moduleSpecifier, fromFile) =>
+          resolveModuleName(moduleSpecifier, fromFile, options, host)
+            .resolvedModule?.resolvedFileName,
+        specifier,
+        fileName,
+      );
 }
 
 function registrationTarget(value: Node) {
@@ -444,32 +467,61 @@ function registrationTarget(value: Node) {
     : value;
 }
 
-function importedClassName(local: Identifier) {
-  const renamed = local
-    .getSourceFile()
-    .statements.filter(isImportDeclaration)
-    .flatMap(({ importClause }) => {
-      const bindings = importClause?.namedBindings;
-
-      return bindings && isNamedImports(bindings) ? [...bindings.elements] : [];
-    })
-    .find(({ name }) => name.text === local.text)?.propertyName;
-
-  return renamed?.text ?? local.text;
+interface RegisteredClass {
+  className: string;
+  specifier?: string;
 }
 
-function lazyClassName(target: Node | undefined) {
-  const load = target && isArrowFunction(target) ? target.body : undefined;
-  const callback =
-    load && isCallExpression(load) ? load.arguments.at(0) : undefined;
+function importedClass(local: Identifier): RegisteredClass {
+  const imported = local
+    .getSourceFile()
+    .statements.filter(isImportDeclaration)
+    .flatMap(({ importClause }) => namedImportsOf(importClause))
+    .find(({ name }) => name.text === local.text);
+  const moduleSpecifier = imported?.parent.parent.parent.moduleSpecifier;
+
+  return imported && moduleSpecifier && isStringLiteral(moduleSpecifier)
+    ? {
+        className: (imported.propertyName ?? imported.name).text,
+        specifier: moduleSpecifier.text,
+      }
+    : { className: local.text };
+}
+
+function namedImportsOf(importClause: ImportClause | undefined) {
+  const bindings = importClause?.namedBindings;
+
+  return bindings && isNamedImports(bindings) ? [...bindings.elements] : [];
+}
+
+function lazyClass(target: Node | undefined): RegisteredClass | null {
+  const then =
+    target && isArrowFunction(target) && isCallExpression(target.body)
+      ? target.body
+      : undefined;
+  const callback = then?.arguments.at(0);
   const picked =
     callback && isArrowFunction(callback) ? callback.body : undefined;
+  const specifier = then && dynamicImportSpecifier(then);
 
-  return picked &&
+  return specifier &&
+    picked &&
     isPropertyAccessExpression(picked) &&
     isIdentifier(picked.name)
-    ? picked.name.text
+    ? { className: picked.name.text, specifier }
     : null;
+}
+
+function dynamicImportSpecifier({ expression }: CallExpression) {
+  const load = isPropertyAccessExpression(expression)
+    ? expression.expression
+    : undefined;
+  const specifier =
+    load && isCallExpression(load) ? load.arguments.at(0) : undefined;
+
+  return specifier && isStringLiteralLike(specifier)
+    ? specifier.text
+    : undefined;
 }
 
 function createNewMapEntry(
@@ -671,20 +723,16 @@ function arrayLiteralHasKey(arr: ArrayLiteralExpression, key: string) {
   return false;
 }
 
-function arrayLiteralUsesIdentifier(
+function arrayLiteralUsesComponent(
   arr: ArrayLiteralExpression,
-  identifierName: string,
+  component: RegisteredComponentQuery,
 ) {
-  for (const el of arr.elements) {
-    if (!isArrayLiteralExpression(el) || el.elements.length !== 2) {
-      continue;
-    }
-    const [, v] = el.elements;
-    if (registeredClassName(v) === identifierName) {
-      return true;
-    }
-  }
-  return false;
+  return arr.elements.some(
+    (el) =>
+      isArrayLiteralExpression(el) &&
+      el.elements.length === 2 &&
+      registers(el.elements[1], component),
+  );
 }
 
 function objectLiteralHasKey(obj: ObjectLiteralExpression, key: string) {
@@ -703,17 +751,11 @@ function objectLiteralHasKey(obj: ObjectLiteralExpression, key: string) {
   return false;
 }
 
-function objectLiteralUsesIdentifier(
+function objectLiteralUsesComponent(
   obj: ObjectLiteralExpression,
-  identifierName: string,
+  component: RegisteredComponentQuery,
 ) {
-  for (const p of obj.properties) {
-    if (!isPropertyAssignment(p)) {
-      continue;
-    }
-    if (registeredClassName(p.initializer) === identifierName) {
-      return true;
-    }
-  }
-  return false;
+  return obj.properties.some(
+    (p) => isPropertyAssignment(p) && registers(p.initializer, component),
+  );
 }

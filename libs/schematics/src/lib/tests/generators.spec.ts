@@ -1457,22 +1457,43 @@ describe('scaffold warnings', () => {
     );
   }
 
-  it('warns when the registrations already use the name of the component', async () => {
+  it('warns when the registrations already hold the component', async () => {
     appTree = await scaffold('control', {
       path: 'app/first',
       registrationType: 'config',
     });
+    appTree.delete(app('first/test/test-control.ts'));
+    appTree.delete(app('first/test/test-control-config.ts'));
 
     await scaffold('control', {
       key: 'other',
       name: 'test',
-      path: 'app/second',
+      path: 'app/first',
       registrationType: 'config',
     });
 
     expect(warnings).toContain(
       'A component with the name "TestControl" is already used',
     );
+  });
+
+  it('registers a component named like another one in a second folder', async () => {
+    appTree = await scaffold('control', {
+      path: 'app/first',
+      registrationType: 'config',
+    });
+
+    const tree = await scaffold('control', {
+      key: 'other',
+      name: 'test',
+      path: 'app/second',
+      registrationType: 'config',
+    });
+    const registrations = read(tree, app('app.config.ts'));
+
+    expect(registrations).toContain('first/test/test-control');
+    expect(registrations).toContain('second/test/test-control');
+    expect(warnings.filter((w) => w.includes('already used'))).toEqual([]);
   });
 
   it.each<'token' | 'config'>(['token', 'config'])(

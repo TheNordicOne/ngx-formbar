@@ -14,7 +14,7 @@ import {
   findComponentRegistrationsNode,
   findMapArrayLiteral,
   registrationNodeHasKey,
-  registrationNodeUsesIdentifier,
+  registrationNodeUsesComponent,
   updateMapEntries,
 } from '@ngx-formbar/setup';
 
@@ -25,6 +25,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
       alreadyRegisteredLevel,
     } = ruleContext;
 
@@ -55,12 +56,14 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       return tree;
     }
 
-    const identifierAlreadyUsed = registrationNodeUsesIdentifier(
-      mapNode,
-      componentClassName,
-    );
+    const componentAlreadyUsed = registrationNodeUsesComponent(mapNode, {
+      tree,
+      tsConfigPath,
+      className: componentClassName,
+      filePath: componentFilePath,
+    });
 
-    if (identifierAlreadyUsed) {
+    if (componentAlreadyUsed) {
       context.logger.log(
         alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,

@@ -9,12 +9,12 @@ export { loadSourceFile } from './lib/ast/parse';
 export {
   addComponentRegistration,
   componentRegistrationsObjectHasKey,
-  componentRegistrationsObjectUsesIdentifier,
+  componentRegistrationsObjectUsesComponent,
   findComponentRegistrationsNode,
   findComponentRegistrationsObject,
   findMapArrayLiteral,
   registrationNodeHasKey,
-  registrationNodeUsesIdentifier,
+  registrationNodeUsesComponent,
   updateMapEntries,
 } from './lib/ast/registrations';
 export { addUnionMember } from './lib/ast/unions';

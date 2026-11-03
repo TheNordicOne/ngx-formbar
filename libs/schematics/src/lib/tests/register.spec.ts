@@ -39,6 +39,7 @@ import { SourceFile } from 'typescript';
 import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 
 const PROPERTY_DOES_NOT_EXIST = 2339;
+const CANNOT_FIND_MODULE = 2307;
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
@@ -1936,6 +1937,192 @@ export class OneControl implements ReactiveFormbarControl<OneConfig> {
         expect(read(tree, src(registrationsPath))).toBe(before);
         expect(warnings).toEqual([]);
       });
+    });
+
+    describe('a class name used in two folders', () => {
+      const sliderOne = app('one/slider.ts');
+      const sliderTwo = app('two/slider.ts');
+      const component = (type: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface SliderConfig { type: '${type}'; }
+
+@Component({ selector: 'app-slider', template: '' })
+export class Slider implements ReactiveFormbarControl<SliderConfig> {
+  readonly name = input.required<string>();
+}
+`;
+      const provideFor: Record<'token' | 'config', () => void> = {
+        token: () => {
+          provideToken(appTree, appConfigPathRaw, registrationsPath);
+        },
+        config: () => {
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+          );
+        },
+      };
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'registers each under its own key in %s registrations',
+        async (registrationType) => {
+          appTree.create(sliderOne, component('slider-one'));
+          appTree.create(sliderTwo, component('slider-two'));
+          provideFor[registrationType]();
+
+          const registrations = read(
+            await runSchematic({ registrationType }),
+            src(registrationsPath),
+          );
+
+          expect(registrations).toContain('slider-one');
+          expect(registrations).toContain('../one/slider');
+          expect(registrations).toContain('slider-two');
+          expect(registrations).toContain('../two/slider');
+        },
+      );
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'changes nothing on a %s re-run',
+        async (registrationType) => {
+          appTree.create(sliderOne, component('slider-one'));
+          appTree.create(sliderTwo, component('slider-two'));
+          provideFor[registrationType]();
+          appTree = await runSchematic({ registrationType });
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic({ registrationType });
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it('warns when both want the same key', async () => {
+        appTree.create(sliderOne, component('slider'));
+        appTree.create(sliderTwo, component('slider'));
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+        const warnings = logged('warn');
+
+        const registrations = read(
+          await runSchematic(),
+          src(registrationsPath),
+        );
+
+        expect(warnings).toEqual([
+          'A key with the name "slider" is already used',
+        ]);
+        expect(registrations).toContain('../one/slider');
+        expect(registrations).not.toContain('../two/slider');
+      });
+
+      it('compiles next to a hand-written static import of the other class', async () => {
+        appTree.create(sliderOne, component('slider-one'));
+        appTree.create(sliderTwo, component('slider-two'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['slider-one', staticComponent(Slider)]",
+          "import { staticComponent } from '@ngx-formbar/core';\nimport { Slider } from '../one/slider';",
+        );
+
+        const tree = await runSchematic();
+        const file = src(registrationsPath);
+        const { program } = createTreeProgram(tree, '/tsconfig.json', [file]);
+        const sourceFile = program.getSourceFile(file);
+        const problems = [
+          ...program.getSyntacticDiagnostics(sourceFile),
+          ...program.getSemanticDiagnostics(sourceFile),
+        ]
+          .filter(({ code }) => code !== CANNOT_FIND_MODULE)
+          .map(({ messageText }) => messageText);
+
+        expect(read(tree, file)).toContain('../two/slider');
+        expect(problems).toEqual([]);
+      });
+
+      it.each<[string, string, string, () => void]>([
+        [
+          'a barrel',
+          'staticComponent(Slider)',
+          "import { Slider } from '../one';",
+          () => {
+            appTree.create(app('one/index.ts'), "export * from './slider';\n");
+          },
+        ],
+        [
+          'a barrel naming the class',
+          "loadComponent(() => import('../one').then((m) => m.Slider))",
+          '',
+          () => {
+            appTree.create(
+              app('one/index.ts'),
+              "export { Slider } from './slider';\n",
+            );
+          },
+        ],
+        [
+          'a tsconfig path',
+          "loadComponent(() => import('@app/one/slider').then((m) => m.Slider))",
+          '',
+          () => {
+            setTsconfigPaths({ '@app/*': ['./projects/test-app/src/app/*'] });
+          },
+        ],
+        [
+          'a static import through a tsconfig path',
+          'staticComponent(Slider)',
+          "import { Slider } from '@app/one/slider';",
+          () => {
+            setTsconfigPaths({ '@app/*': ['./projects/test-app/src/app/*'] });
+          },
+        ],
+      ])(
+        'recognizes the class imported through %s',
+        async (_, entry, imports, arrange) => {
+          appTree.create(sliderOne, component('slider'));
+          arrange();
+          provideToken(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            `['custom', ${entry}]`,
+            imports,
+          );
+          const before = read(appTree, src(registrationsPath));
+
+          const tree = await runSchematic();
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+        },
+      );
+
+      it('registers the class when the entry points at another file of that name', async () => {
+        appTree.create(sliderOne, component('slider'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['custom', loadComponent(() => import('../gone/slider').then((m) => m.Slider))]",
+        );
+
+        const tree = await runSchematic();
+
+        expect(read(tree, src(registrationsPath))).toContain('../one/slider');
+      });
+
+      function setTsconfigPaths(paths: Record<string, string[]>) {
+        appTree.overwrite(
+          '/tsconfig.json',
+          JSON.stringify({ compilerOptions: { baseUrl: '.', paths } }),
+        );
+      }
     });
 
     it('still warns when another component holds the key', async () => {

@@ -13,6 +13,7 @@ import {
   AngularComponentNaming,
   DEFAULT_REGISTRATION_TYPE,
   exportsIdentifier,
+  findTsConfigPath,
   getAngularComponentNaming,
   getProjectDefinition,
   isWithin,
@@ -126,6 +127,7 @@ function buildScaffoldContext(
     componentPath,
     componentFilePath,
     sourceRoot,
+    tsConfigPath: findTsConfigPath(tree, project),
     controlRegistrationsPath,
   };
 

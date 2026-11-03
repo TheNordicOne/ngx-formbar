@@ -32,7 +32,7 @@ export function registerComponents(
 function registerComponentsByComponentInfo(
   registerContext: RegisterContext,
 ): Rule {
-  const { components, registrationType, controlRegistrations } =
+  const { components, registrationType, controlRegistrations, tsConfigPath } =
     registerContext;
 
   const registrations: Rule[] = components.map((component) => {
@@ -43,6 +43,7 @@ function registerComponentsByComponentInfo(
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
       alreadyRegisteredLevel: 'info',
     };
 

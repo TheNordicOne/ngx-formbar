@@ -12,7 +12,7 @@ import {
   registrationsNotFoundMessage,
   addComponentRegistration,
   componentRegistrationsObjectHasKey,
-  componentRegistrationsObjectUsesIdentifier,
+  componentRegistrationsObjectUsesComponent,
   findComponentRegistrationsObject,
 } from '@ngx-formbar/setup';
 
@@ -25,6 +25,7 @@ export function registerTypeConfig(
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
       alreadyRegisteredLevel,
     } = ruleContext;
 
@@ -55,12 +56,17 @@ export function registerTypeConfig(
       return tree;
     }
 
-    const identifierAlreadyUsed = componentRegistrationsObjectUsesIdentifier(
+    const componentAlreadyUsed = componentRegistrationsObjectUsesComponent(
       registrationsObject,
-      componentClassName,
+      {
+        tree,
+        tsConfigPath,
+        className: componentClassName,
+        filePath: componentFilePath,
+      },
     );
 
-    if (identifierAlreadyUsed) {
+    if (componentAlreadyUsed) {
       context.logger.log(
         alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,
