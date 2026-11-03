@@ -73,7 +73,7 @@ function bootstrapApplicationCall(sourceFile: SourceFile) {
   );
 }
 
-function moduleMetadata(sourceFile: SourceFile, className: string | undefined) {
+function moduleMetadata(sourceFile: SourceFile, className: string) {
   const declaration = findClass(sourceFile, className);
   const decorators =
     declaration && canHaveDecorators(declaration)
@@ -100,7 +100,7 @@ function isObjectLiteralArgument(
 
 function findClass(
   node: Node,
-  className: string | undefined,
+  className: string,
 ): ClassDeclaration | undefined {
   return node.forEachChild((child) =>
     isClassDeclaration(child) && child.name?.text === className
@@ -135,13 +135,13 @@ export function addMissingProviders(
 function moduleChanges(
   sourceFile: SourceFile,
   filePath: string,
-  className: string | undefined,
+  className: string,
 ) {
   const owner = moduleMetadata(sourceFile, className);
 
   if (!owner) {
     throw new SchematicsException(
-      `Could not find the @NgModule metadata of "${className ?? 'default'}" in ${filePath}. It has to be an object in the decorator.`,
+      `Could not find the @NgModule metadata of "${className}" in ${filePath}. It has to be an object in the decorator.`,
     );
   }
 

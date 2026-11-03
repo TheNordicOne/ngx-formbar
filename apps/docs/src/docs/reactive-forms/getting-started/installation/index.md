@@ -58,7 +58,7 @@ By default, this does the following.
 | `platformBrowser().bootstrapModule(AppModule)`      | The `providers` of `AppModule`, also through a barrel or a path alias                                          |
 | None                                                | `app/app.config.ts` in the source root, with a warning naming it. If that file is missing too, `ng add` fails. |
 
-A root NgModule has to be declared in the project, and its metadata has to be an object in the decorator without a spread. Otherwise `ng add` fails naming the file.
+A root NgModule has to be a named class declared in the project, and its metadata has to be an object in the decorator, with no spread or with a `providers` array after it. Otherwise `ng add` fails naming the file.
 
 ## Options
 

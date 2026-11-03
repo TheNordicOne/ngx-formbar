@@ -3006,6 +3006,19 @@ describe('ng-add schematic', () => {
         expect(read(tree, moduleFile)).toContain('provideFormbar(');
       });
 
+      it('fails on an anonymous default-exported NgModule', async () => {
+        await expect(
+          add(
+            workspace('src', {
+              '/src/main.ts': `import { platformBrowser } from '@angular/platform-browser';\nimport AppModule from './app/app.module';\nplatformBrowser().bootstrapModule(AppModule);\n`,
+              '/src/app/app.module.ts': `import { NgModule } from '@angular/core';\n@NgModule({ providers: [] })\nexport default class {}\n`,
+            }),
+          ),
+        ).rejects.toThrow(
+          'Could not edit the root NgModule in /src/app/app.module.ts. It has to be a named class.',
+        );
+      });
+
       it('edits the bootstrapped one of two NgModules in a file', async () => {
         const tree = await add(
           workspace('src', {

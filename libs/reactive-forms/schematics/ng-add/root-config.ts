@@ -60,7 +60,7 @@ import { DEFAULT_APP_CONFIG_FILE } from '../shared/constants';
  */
 export type RootConfig =
   | { holder: 'variable'; filePath: string; variable?: string }
-  | { holder: 'module'; filePath: string; className?: string }
+  | { holder: 'module'; filePath: string; className: string }
   | { holder: 'bootstrap'; filePath: string };
 
 const BOOTSTRAP_PACKAGE = '@angular/platform-browser';
@@ -374,11 +374,16 @@ function fromBootstrapModule(
     );
   }
 
-  return {
-    holder: 'module',
-    filePath: declaration.getSourceFile().fileName,
-    className: declaration.name?.text,
-  };
+  const moduleFile = declaration.getSourceFile().fileName;
+  const className = declaration.name?.text;
+
+  if (!className) {
+    throw new SchematicsException(
+      `Could not edit the root NgModule in ${moduleFile}. It has to be a named class.`,
+    );
+  }
+
+  return { holder: 'module', filePath: moduleFile, className };
 }
 
 function fromDefaultLocation(
