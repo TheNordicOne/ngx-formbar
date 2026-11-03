@@ -8,7 +8,7 @@ It looks through the source root of the project and skips any other project insi
 
 It skips abstract classes. It also skips a class that is not a named export, such as `export default class`, with a warning naming the class, as a registration imports it by name.
 
-Each control is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
+Each component is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 
 | The component                                                                                                       | Registered as    |
 | ------------------------------------------------------------------------------------------------------------------- | ---------------- |
@@ -19,15 +19,15 @@ Each control is registered under the `type` of its config, as a form refers to i
 
 ## Options
 
-| Option                     | Type                | Required | Default                             | Description                                                                                                                  |
-| -------------------------- | ------------------- | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| --project                  | string              | No       | [Default Project](#default-project) | Angular project to register components in.                                                                                   |
-| --registrationType         | 'token' \| 'config' | No       | 'token'                             | Which registration type is used.                                                                                             |
-| --controlRegistrationsPath | string              | No       | -                                   | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations). |
-| --controlRegistrations     | string              | No       | -                                   | The same as `--controlRegistrationsPath`.                                                                                    |
-| --schematicsConfig         | string              | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration). |
-| --include                  | array               | No       | `["**/*.ts"]`                       | Files to search. See [Discovery Globs](#discovery-globs).                                                                    |
-| --exclude                  | array               | No       | `[]`                                | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                               |
+| Option                     | Type                | Required | Default                             | Description                                                                                                                                                                                                            |
+| -------------------------- | ------------------- | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --project                  | string              | No       | [Default Project](#default-project) | Angular project to register components in.                                                                                                                                                                             |
+| --registrationType         | 'token' \| 'config' | No       | 'token'                             | How components are registered. `token` adds them to an injection token, `config` adds them to the config passed to `provideFormbar()`. See [Registration Types](/fundamentals/configuring-formbar#registration-types). |
+| --controlRegistrationsPath | string              | No       | -                                   | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations).                                                                                           |
+| --controlRegistrations     | string              | No       | -                                   | The same as `--controlRegistrationsPath`.                                                                                                                                                                              |
+| --schematicsConfig         | string              | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).                                                                                           |
+| --include                  | array               | No       | `["**/*.ts"]`                       | Files to search. See [Discovery Globs](#discovery-globs).                                                                                                                                                              |
+| --exclude                  | array               | No       | `[]`                                | Files to skip, on top of node_modules and spec files. See [Discovery Globs](#discovery-globs).                                                                                                                         |
 
 ## Setting Options
 
