@@ -96,17 +96,14 @@ export function unwrapToObjectLiteral(
   }
 }
 
-function nameOfProperty(propertyName: PropertyName | undefined): string | null {
-  if (!propertyName) {
-    return null;
-  }
-  return isIdentifier(propertyName)
+function nameOfProperty(propertyName: PropertyName | undefined) {
+  // Computed names don't count for this check.
+  return propertyName &&
+    (isIdentifier(propertyName) ||
+      isStringLiteral(propertyName) ||
+      isNumericLiteral(propertyName))
     ? propertyName.text
-    : isStringLiteral(propertyName)
-      ? propertyName.text
-      : isNumericLiteral(propertyName)
-        ? propertyName.text
-        : null; // ignore computed names for this check
+    : null;
 }
 
 export function findProvidersProperty(

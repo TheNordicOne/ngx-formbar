@@ -120,11 +120,7 @@ function starTargetExports(
 }
 
 /** The file of a relative module specifier, as a TypeScript path lookup finds it. */
-function relativeModuleFile(
-  tree: Tree,
-  fromFile: string,
-  specifier: string,
-): string | undefined {
+function relativeModuleFile(tree: Tree, fromFile: string, specifier: string) {
   const target = posix.join(posix.dirname(fromFile), specifier);
 
   return specifier.startsWith('.')

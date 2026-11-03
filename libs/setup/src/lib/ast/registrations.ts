@@ -214,10 +214,7 @@ export function registrationNodeUsesComponent(
   return false;
 }
 
-function registrationsObjectHasKey(
-  obj: ObjectLiteralExpression,
-  key: string,
-): boolean {
+function registrationsObjectHasKey(obj: ObjectLiteralExpression, key: string) {
   for (const p of obj.properties) {
     if (!isPropertyAssignment(p)) {
       continue;
@@ -472,7 +469,7 @@ interface RegisteredClass {
   specifier?: string;
 }
 
-function importedClass(local: Identifier): RegisteredClass {
+function importedClass(local: Identifier) {
   const imported = local
     .getSourceFile()
     .statements.filter(isImportDeclaration)
@@ -494,7 +491,7 @@ function namedImportsOf(importClause: ImportClause | undefined) {
   return bindings && isNamedImports(bindings) ? [...bindings.elements] : [];
 }
 
-function lazyClass(target: Node | undefined): RegisteredClass | null {
+function lazyClass(target: Node | undefined) {
   const then =
     target && isArrowFunction(target) && isCallExpression(target.body)
       ? target.body
