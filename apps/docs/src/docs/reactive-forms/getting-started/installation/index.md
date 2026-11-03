@@ -32,7 +32,7 @@ By default, this does the following.
 > The schematics configuration file only contains values that differ from the defaults.
 
 > **Note**
-> `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. When the options of that run differ from a kept schematics configuration file, `ng add` logs a warning naming each ignored setting. When that file is the shared one at the workspace root, the project gets its own file in the `app` folder of its source root instead.
+> `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. See [Which Schematics Configuration File](#which-schematics-configuration-file).
 
 > **Note**
 > With `--registrationStyle=config --provideInline --splitRegistrations=false`, registrations go in the root providers only for `bootstrapApplication(App, appConfig)`. With any other bootstrap call they go in `--registrationsPath`, where the generators can add to them.
@@ -59,6 +59,22 @@ By default, this does the following.
 | None                                                | `app/app.config.ts` in the source root, with a warning naming it. If that file is missing too, `ng add` fails. |
 
 A root NgModule has to be a named class declared in the project, and its metadata has to be an object in the decorator, with no spread or with a `providers` array after it. Otherwise `ng add` fails naming the file.
+
+## Which Schematics Configuration File
+
+Without `--schematicsConfigPath` and `--schematicConfigFileName`, with source root `src`:
+
+| Before the run                                                        | `ng add` uses                                                                                                           |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| No such file                                                          | A new `src/app/formbar-schematic.config.json`                                                                           |
+| `src/app/formbar-schematic.config.json`                               | That file                                                                                                               |
+| `schematicsConfig` in `angular.json`, pointing at a file that exists  | That file                                                                                                               |
+| `formbar-schematic.config.json` at the workspace root, same settings  | That file, which every project without its own [shares](/fundamentals/generators#finding-the-schematics-configuration)  |
+| `formbar-schematic.config.json` at the workspace root, other settings | A new `src/app/formbar-schematic.config.json`, with a warning naming the settings of the shared file that stop applying |
+
+`ng add` warns about each setting of the run that a kept file lacks. Change those in the file.
+
+With those options, `ng add` uses the file they name. It removes a `schematicsConfig` the generators no longer need and warns about it. `--schematicsConfigPath=/` follows the two workspace root rows.
 
 ## Options
 
