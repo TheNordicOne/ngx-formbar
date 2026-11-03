@@ -154,7 +154,7 @@ function findBootstrapCall(
     }
 
     const imported = sourceFile
-      ? relativeImports(sourceFile).flatMap(
+      ? importedModules(sourceFile).flatMap(
           (specifier) =>
             resolveModuleName(specifier, filePath, options, host).resolvedModule
               ?.resolvedFileName ?? [],
@@ -245,7 +245,7 @@ export function isBootstrapModuleCall({ expression }: CallExpression): boolean {
   );
 }
 
-function relativeImports(sourceFile: SourceFile) {
+function importedModules(sourceFile: SourceFile) {
   const specifiers: string[] = [];
 
   function visit(node: Node) {
@@ -257,11 +257,7 @@ function relativeImports(sourceFile: SourceFile) {
           ? node.arguments.at(0)
           : undefined;
 
-    if (
-      specifier &&
-      isStringLiteralLike(specifier) &&
-      specifier.text.startsWith('.')
-    ) {
+    if (specifier && isStringLiteralLike(specifier)) {
       specifiers.push(specifier.text);
     }
     node.forEachChild(visit);

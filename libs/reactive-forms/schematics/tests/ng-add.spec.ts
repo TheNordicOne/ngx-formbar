@@ -3237,6 +3237,38 @@ describe('ng-add schematic', () => {
         expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
       });
 
+      it('follows a path alias from the main file', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/tsconfig.json': aliasTsConfig,
+            '/src/main.ts': `import '@shared/start';\n`,
+            '/src/bootstrap/start.ts': bootstrapFile,
+            '/src/bootstrap/real.ts': `export const real = { providers: [] };\n`,
+            '/src/app/app.config.ts': decoy,
+          }),
+        );
+
+        expect(read(tree, '/src/bootstrap/real.ts')).toContain(
+          'provideFormbar(',
+        );
+        expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
+      });
+
+      it('does not follow an import into a package', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': `import 'bootstrapping-package';\n`,
+            '/node_modules/bootstrapping-package/index.ts': bootstrapFile,
+            '/node_modules/bootstrapping-package/real.ts': `export const real = { providers: [] };\n`,
+            '/src/app/app.config.ts': config,
+          }),
+        );
+
+        expect(read(tree, '/src/app/app.config.ts')).toContain(
+          'provideFormbar(',
+        );
+      });
+
       describe('mergeApplicationConfig under another name', () => {
         const aliasedMerge = `import { bootstrapApplication } from '@angular/platform-browser';\nimport { mergeApplicationConfig as m } from '@angular/core';\n`;
 
