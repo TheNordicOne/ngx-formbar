@@ -120,7 +120,7 @@ export type GeneratorDefaults = Pick<
   'registrationType' | 'controlRegistrationsPath' | 'viewProviderHelperPath'
 >;
 
-const DEFAULT_REGISTRATIONS_FILE = `${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`;
+export const DEFAULT_REGISTRATIONS_FILE = `${DEFAULT_REGISTRATIONS_PATH}/${DEFAULT_COMPONENT_REGISTRATIONS_FILE_NAME}`;
 
 /** The generator settings that differ from what the generators assume. */
 export function generatorDefaults(ruleContext: RuleContext): GeneratorDefaults {

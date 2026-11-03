@@ -1,9 +1,9 @@
 import { Rule } from '@angular-devkit/schematics';
-import { posix } from 'node:path';
 import { findSchematicsConfig, sourceRootValue } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
 import { removeSchematicsConfigLink, updateSchematicConfigs } from '../helper';
+import { schematicsConfigFile } from '../schematics-config-file';
 import { SCHEMATICS_GENERATORS } from '../../shared/constants';
 
 /**
@@ -13,16 +13,9 @@ import { SCHEMATICS_GENERATORS } from '../../shared/constants';
  */
 export function linkSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const {
-      useSchematicConfig,
-      schematicsConfigDirectory,
-      schematicConfigFileName,
-      projectName,
-      projectRoot,
-    } = ruleContext;
+    const { useSchematicConfig, projectName, projectRoot } = ruleContext;
 
-    const configFile = `${schematicConfigFileName}.json`;
-    const configFilePath = posix.join(schematicsConfigDirectory, configFile);
+    const configFilePath = schematicsConfigFile(tree, ruleContext);
 
     if (
       !useSchematicConfig ||

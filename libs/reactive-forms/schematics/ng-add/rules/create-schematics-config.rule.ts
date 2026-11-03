@@ -15,6 +15,12 @@ import {
 } from '@ngx-formbar/setup';
 import { generatorDefaults } from '../helper';
 import {
+  ignoredSettings,
+  requestedSchematicsConfigFile,
+  schematicsConfigFile,
+} from '../schematics-config-file';
+import { posix } from 'node:path';
+import {
   DEFAULT_CONTENT_TYPE_EXPORT_NAME,
   DEFAULT_CONTENT_TYPE_FILE_NAME,
   DEFAULT_CONTENT_TYPE_PATH,
@@ -22,15 +28,26 @@ import {
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const {
-      useSchematicConfig,
-      schematicsConfigDirectory,
-      schematicConfigFileName,
-      projectRoot,
-    } = ruleContext;
+    const { useSchematicConfig, projectRoot } = ruleContext;
 
     if (!useSchematicConfig) {
       return;
+    }
+
+    const configFile = schematicsConfigFile(tree, ruleContext);
+    const ignored = ignoredSettings(tree, configFile, ruleContext);
+    const requested = requestedSchematicsConfigFile(ruleContext);
+
+    if (configFile !== requested) {
+      context.logger.info(
+        `${requested} holds other settings, so this project gets its own ${configFile}.`,
+      );
+    }
+
+    if (ignored.length > 0) {
+      context.logger.warn(
+        `${configFile} stays as it is, so these settings of this run are ignored: ${ignored.join(', ')}. Change them in that file.`,
+      );
     }
 
     const schematicConfig: NgxFormbarAutomationConfig = {
@@ -44,10 +61,10 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
     return mergeWith(
       apply(url('./ng-add/files/schematics-config'), [
         applyTemplates({
-          schematicConfigFileName,
+          schematicConfigFileName: posix.basename(configFile, '.json'),
           schematicConfig: JSON.stringify(schematicConfig, null, 2),
         }),
-        move(schematicsConfigDirectory),
+        move(posix.dirname(configFile)),
         skipExistingFiles(tree, context, 'schematics configuration file'),
       ]),
     );

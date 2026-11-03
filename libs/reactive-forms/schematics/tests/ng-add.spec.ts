@@ -2855,6 +2855,180 @@ describe('ng-add schematic', () => {
     });
   });
 
+  describe('a re-run with settings a kept schematics configuration file lacks', () => {
+    async function warningsOfRun(options: Schema, project = 'test-app') {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+      const tree = await runAdd({ project, ...options });
+
+      subscription.unsubscribe();
+
+      return { tree, warnings };
+    }
+
+    it.each<[string, Schema, Schema, string[]]>([
+      [
+        'a helper the file lacks',
+        { useHelper: false },
+        {},
+        ['viewProviderHelperPath: app/shared/helper'],
+      ],
+      [
+        'no helper where the file has one',
+        {},
+        { useHelper: false },
+        ['viewProviderHelperPath: none'],
+      ],
+      [
+        'another style',
+        {},
+        { registrationStyle: 'config' },
+        ['registrationType: config'],
+      ],
+      [
+        'the default style',
+        { registrationStyle: 'config' },
+        {},
+        ['registrationType: token'],
+      ],
+      [
+        'several settings',
+        {},
+        { registrationStyle: 'config', registrationsPath: 'app/other' },
+        [
+          'registrationType: config',
+          'controlRegistrationsPath: app/other/component-registrations.ts',
+        ],
+      ],
+    ])(
+      'keeps the file and warns about %s',
+      async (_, firstRun, secondRun, settings) => {
+        appTree = await runAdd(firstRun);
+
+        const kept = read(appTree, schematicsConfigPath);
+        const { tree, warnings } = await warningsOfRun(secondRun);
+
+        expect(read(tree, schematicsConfigPath)).toBe(kept);
+        expect(warnings).toEqual([
+          `${schematicsConfigPath} stays as it is, so these settings of this run are ignored: ${settings.join(', ')}. Change them in that file.`,
+        ]);
+      },
+    );
+
+    it('does not warn about the same settings', async () => {
+      const options: Schema = { registrationStyle: 'config', useHelper: false };
+
+      appTree = await runAdd(options);
+
+      const { warnings } = await warningsOfRun(options);
+
+      expect(warnings).toEqual([]);
+    });
+
+    it('does not warn about a default the file states', async () => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          registrationType: 'token',
+          viewProviderHelperPath: 'app/shared/helper',
+        }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([]);
+    });
+
+    describe('in the shared file at the workspace root', () => {
+      const sharedFile = '/formbar-schematic.config.json';
+      const otherOwnFile =
+        '/projects/other/src/app/formbar-schematic.config.json';
+
+      beforeEach(async () => {
+        appTree = await runner.runExternalSchematic(
+          '@schematics/angular',
+          'application',
+          { name: 'other', standalone: true },
+          await runAdd({ schematicsConfigPath: '/' }),
+        );
+      });
+
+      it('writes the settings to the own file of the project', async () => {
+        const kept = read(appTree, sharedFile);
+        const { tree, warnings } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            helperPath: 'app/h2',
+          },
+          'other',
+        );
+        const ownConfig = JSON.parse(
+          read(tree, otherOwnFile),
+        ) as NgxFormbarAutomationConfig;
+
+        expect(read(tree, sharedFile)).toBe(kept);
+        expect(ownConfig.registrationType).toBe('config');
+        expect(ownConfig.viewProviderHelperPath).toBe('app/h2');
+        expect(ownConfig.schema?.type).toBe(
+          'app/types/content.type.ts#AppContent',
+        );
+        expect(warnings).toEqual([]);
+      });
+
+      it('points the generators at the own file by the lookup alone', async () => {
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+        const defaults = await generatorDefaults(tree, 'other');
+        const scaffolded = await new SchematicTestRunner(
+          'scaffold',
+          SCAFFOLD_COLLECTION_PATH,
+        ).runSchematic('control', { key: 'slider', project: 'other' }, tree);
+
+        expect(
+          defaults.map((generator) => generator?.schematicsConfig),
+        ).toEqual(generators.map(() => undefined));
+        expect(
+          read(
+            scaffolded,
+            '/projects/other/src/app/registrations/component-registrations.ts',
+          ),
+        ).toMatch(/slider["']?:\s*loadComponent\(/);
+      });
+
+      it('shares the file while the settings are the same', async () => {
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(tree.exists(otherOwnFile)).toBe(false);
+        expect(warnings).toEqual([]);
+      });
+
+      it('keeps the own file on a further run with the same settings', async () => {
+        const options: Schema = {
+          schematicsConfigPath: '/',
+          registrationStyle: 'config',
+        };
+
+        appTree = (await warningsOfRun(options, 'other')).tree;
+
+        const own = read(appTree, otherOwnFile);
+        const { tree, warnings } = await warningsOfRun(options, 'other');
+
+        expect(read(tree, otherOwnFile)).toBe(own);
+        expect(warnings).toEqual([]);
+      });
+    });
+  });
+
   describe('a stale schematicsConfig link', () => {
     it.each<[string, Schema]>([
       ['the lookup finds the config now', {}],
