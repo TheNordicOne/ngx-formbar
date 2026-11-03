@@ -35,7 +35,7 @@ By default, this does the following.
 > `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. When the options of that run differ from a kept schematics configuration file, `ng add` logs a warning naming each ignored setting. When that file is the shared one at the workspace root, the project gets its own file in the `app` folder of its source root instead.
 
 > **Note**
-> With `--registrationStyle=config --provideInline --splitRegistrations=false`, registrations stay in their own files unless the [root providers](#root-providers) are a config variable.
+> With `--registrationStyle=config --provideInline --splitRegistrations=false`, registrations go in the root providers only for `bootstrapApplication(App, appConfig)`. With any other bootstrap call they go in `--registrationsPath`, where the generators can add to them.
 
 > **Note**
 > A schematics configuration file wins over the `angular.json` settings written with `--useSchematicConfig=false`. `ng add` logs a warning naming the file when there is one.
