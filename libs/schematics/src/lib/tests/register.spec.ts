@@ -1510,6 +1510,17 @@ export abstract class ${name} implements ReactiveFormbarControl<${stated}> { ${n
 
       const stated = stating('StatedControl', 'RangeConfig');
       const loose = stating('LooseControl', '{ type: string }');
+      const mixin = (body: string, heritage = '') =>
+        `type Constructor = abstract new (...args: any[]) => object;
+abstract class Plain {}
+function withMixin<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base ${heritage} { ${body} }
+  return Mixed;
+}`;
+      const contractMixin = mixin(
+        nameInput,
+        'implements ReactiveFormbarControl<RangeConfig>',
+      );
 
       it.each<[string, string, string]>([
         ['a base stating the config', 'extends StatedControl', stated],
@@ -1526,6 +1537,17 @@ export abstract class MiddleControl extends StatedControl {}`,
           `${stated}
 @Directive()
 export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
+        ],
+        ['a mixin call', 'extends withMixin(Plain)', contractMixin],
+        [
+          'a variable holding a mixin call',
+          'extends Mixin',
+          `${contractMixin}\nconst Mixin = withMixin(Plain);`,
+        ],
+        [
+          'a variable holding a class',
+          'extends Base',
+          `const Base = class implements ReactiveFormbarControl<RangeConfig> { ${nameInput} };`,
         ],
         [
           'a local interface',
@@ -1636,6 +1658,16 @@ export class RangeComponent extends MiddleControl {}
           'a base without a contract',
           'extends PlainBase',
           '@Directive()\nexport abstract class PlainBase<T = RangeConfig> {}',
+        ],
+        [
+          'a mixin without a contract',
+          `extends withMixin(Plain)`,
+          mixin(nameInput),
+        ],
+        [
+          'a variable holding a class without a contract',
+          'extends Base',
+          `const Base = class { ${nameInput} };`,
         ],
         [
           'an interface without a contract',

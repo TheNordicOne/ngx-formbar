@@ -88,6 +88,63 @@ export class GenericAliasInput implements MyControl<GenericAliasConfig> {
   readonly name = input.required<string>();
 }
 `;
+const MIXIN_CONTROLS = `import { Component, input, InputSignal } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface MixinCallConfig extends NgxFbControl {
+  type: 'mixin-call';
+}
+
+interface MixinVariableConfig extends NgxFbControl {
+  type: 'mixin-variable';
+}
+
+interface ClassExpressionConfig extends NgxFbControl {
+  type: 'class-expression';
+}
+
+type Constructor = abstract new (...args: any[]) => object;
+
+abstract class PlainInput {}
+
+function withCallConfig<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base implements ReactiveFormbarControl<MixinCallConfig> {
+    abstract readonly name: InputSignal<string>;
+  }
+
+  return Mixed;
+}
+
+function withVariableConfig<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base implements ReactiveFormbarControl<MixinVariableConfig> {
+    abstract readonly name: InputSignal<string>;
+  }
+
+  return Mixed;
+}
+
+@Component({ selector: 'app-mixin-call-input', template: '' })
+export class MixinCallInput extends withCallConfig(PlainInput) {
+  readonly name = input.required<string>();
+}
+
+const VariableBase = withVariableConfig(PlainInput);
+
+@Component({ selector: 'app-mixin-variable-input', template: '' })
+export class MixinVariableInput extends VariableBase {
+  readonly name = input.required<string>();
+}
+
+const ExpressionBase = class implements ReactiveFormbarControl<ClassExpressionConfig> {
+  declare readonly name: InputSignal<string>;
+};
+
+@Component({ selector: 'app-class-expression-input', template: '' })
+export class ClassExpressionInput extends ExpressionBase {
+  override readonly name = input.required<string>();
+}
+`;
 const UNREGISTRABLE_CONTROLS = `import { Component, input } from '@angular/core';
 import { NgxFbControl } from '@ngx-formbar/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
@@ -1457,6 +1514,10 @@ function runAngularJsonDefaultsFlow(appDir) {
     GENERIC_ALIAS_CONTROL,
   );
   writeFileSync(
+    join(sourceRoot, 'app', 'written', 'mixin-inputs.ts'),
+    MIXIN_CONTROLS,
+  );
+  writeFileSync(
     join(sourceRoot, 'app', 'written', 'unregistrable-inputs.ts'),
     UNREGISTRABLE_CONTROLS,
   );
@@ -1504,6 +1565,12 @@ function runAngularJsonDefaultsFlow(appDir) {
   check(
     /["']?generic-alias["']?:\s*loadComponent\(/.test(registered),
     'register read the type of a config passed through a generic local alias of the contract',
+  );
+  check(
+    /["']?mixin-call["']?:\s*loadComponent\(/.test(registered) &&
+      /["']?mixin-variable["']?:\s*loadComponent\(/.test(registered) &&
+      /["']?class-expression["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config behind a mixin call and a variable, and the app still builds',
   );
   check(
     !/["']?unregistrable["']?:/.test(registered),

@@ -451,13 +451,14 @@ function contractConfigs(
       return [config && resolveType(config, typeArguments, checker)];
     }
 
-    if (!symbol || seen.has(symbol)) {
-      return [];
-    }
+    const unseen = symbolsBehind(reference.name, symbol, checker).filter(
+      (behind) => !seen.has(behind),
+    );
 
-    seen.add(symbol);
+    unseen.forEach((behind) => seen.add(behind));
 
-    return (symbol.declarations ?? [])
+    return unseen
+      .flatMap((behind) => behind.declarations ?? [])
       .filter(isBuildingDeclaration)
       .flatMap((inner) =>
         contractConfigs(
@@ -519,6 +520,26 @@ function originalSymbol(name: Node, checker: TypeChecker) {
   return symbol && symbol.flags & SymbolFlags.Alias
     ? checker.getAliasedSymbol(symbol)
     : symbol;
+}
+
+/**
+ * A name without a building declaration is a value, such as a mixin call or a
+ * variable holding a class, so its type tells what it builds on.
+ */
+function symbolsBehind(
+  name: Node,
+  symbol: TsSymbol | undefined,
+  checker: TypeChecker,
+) {
+  if (symbol?.declarations?.some(isBuildingDeclaration)) {
+    return [symbol];
+  }
+
+  const type = checker.getTypeAtLocation(name);
+
+  return (type.isIntersection() ? type.types : [type]).flatMap(
+    (part) => part.getSymbol() ?? [],
+  );
 }
 
 /**
