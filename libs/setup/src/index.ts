@@ -5,6 +5,12 @@ export {
 } from './lib/ast';
 export { isCallee } from './lib/ast/decorators';
 export { exportsIdentifier } from './lib/ast/exports';
+export {
+  appendToLiteral,
+  insertNamedImport,
+  textLayout,
+} from './lib/ast/insert';
+export type { TextLayout } from './lib/ast/insert';
 export { loadSourceFile } from './lib/ast/parse';
 export {
   addComponentRegistration,

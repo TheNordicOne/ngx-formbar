@@ -2932,6 +2932,21 @@ describe('ng-add schematic', () => {
       },
     );
 
+    it('imports mergeApplicationConfig separately from a type-only @angular/core import', async () => {
+      const typeImport = `import type { ApplicationConfig } from '@angular/core';`;
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': mainWithCall(
+            `${typeImport}\nconst config: ApplicationConfig = make();\nbootstrapApplication(App, makeConfig());`,
+          ),
+        }),
+      );
+
+      expect(read(tree, '/src/main.ts')).toContain(
+        `${typeImport}\nimport { mergeApplicationConfig } from '@angular/core';`,
+      );
+    });
+
     it('adds the import to an existing @angular/core import when wrapping', async () => {
       const tree = await add(
         workspace('src', {

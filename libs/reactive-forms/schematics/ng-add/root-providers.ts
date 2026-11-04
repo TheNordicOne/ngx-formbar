@@ -1,17 +1,15 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import {
   applyToUpdateRecorder,
-  Change,
   InsertChange,
 } from '@schematics/angular/utility/change';
 import {
-  insertImport,
-  isImported,
-} from '@schematics/angular/utility/ast-utils';
-import {
   findProvidersProperty,
   findVariableWithObjectLiteral,
+  insertNamedImport,
   isCallee,
+  TextLayout,
+  textLayout,
 } from '@ngx-formbar/setup';
 import {
   CallExpression,
@@ -23,7 +21,6 @@ import {
   isClassDeclaration,
   isIdentifier,
   isImportSpecifier,
-  isNamespaceImport,
   isObjectLiteralExpression,
   isPropertyAssignment,
   isSpreadAssignment,
@@ -43,19 +40,6 @@ import {
 
 const ANGULAR_CORE = '@angular/core';
 const MERGE_FUNCTION = 'mergeApplicationConfig';
-
-interface TextLayout {
-  newLine: string;
-  indentUnit: string;
-}
-
-/** How a file breaks lines and indents, for what gets inserted into it. */
-export function textLayout(text: string): TextLayout {
-  return {
-    newLine: text.includes('\r\n') ? '\r\n' : '\n',
-    indentUnit: /^([ \t]+)[^ \t*\r\n]/m.exec(text)?.[1] ?? '  ',
-  };
-}
 
 function emptyProviders({ newLine, indentUnit }: TextLayout) {
   return `{${newLine}${indentUnit}providers: []${newLine}}`;
@@ -272,29 +256,6 @@ function wrapInMergeCall(
     new InsertChange(filePath, config.getStart(), `${mergeFunction}(`),
     new InsertChange(filePath, config.getEnd(), `, ${emptyProviders(layout)})`),
   ];
-}
-
-/**
- * `insertImport` takes a namespace import as already providing the symbol, but
- * the call it is imported for uses the bare name.
- */
-export function insertNamedImport(
-  sourceFile: SourceFile,
-  filePath: string,
-  symbol: string,
-  packageName: string,
-): Change {
-  const namespace = importBindings(sourceFile, packageName).find(
-    isNamespaceImport,
-  );
-
-  return namespace && !isImported(sourceFile, symbol, packageName)
-    ? new InsertChange(
-        filePath,
-        namespace.parent.parent.getEnd(),
-        `${textLayout(sourceFile.text).newLine}import { ${symbol} } from '${packageName}';`,
-      )
-    : insertImport(sourceFile, filePath, symbol, packageName);
 }
 
 function bootstrapConfigObject(call: CallExpression | null) {

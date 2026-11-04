@@ -1912,6 +1912,128 @@ export class RangeComponent extends MiddleControl {}
     });
   });
 
+  describe('a registrations file written by hand', () => {
+    const coreImport = (clause: string) =>
+      `import ${clause} from '@ngx-formbar/core';`;
+    const tokenFile = (imports: string, entries: string) => `${imports}
+
+export const componentRegistrationsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+${entries}
+  ]),
+};
+`;
+    const configFile = (imports: string, entries: string) => `${imports}
+
+export const componentRegistrations: ComponentRegistrationConfig = {
+${entries}
+};
+`;
+
+    function createComponent() {
+      appTree.create(
+        app('one/one-control.ts'),
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface OneConfig { type: 'one'; }
+
+@Component({ selector: 'app-one', template: '' })
+export class OneControl implements ReactiveFormbarControl<OneConfig> {
+  readonly name = input.required<string>();
+}
+`,
+      );
+    }
+
+    async function runToken(content: string) {
+      createComponent();
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+      appTree.overwrite(src(registrationsPath), content);
+
+      return read(await runSchematic(), src(registrationsPath));
+    }
+
+    async function runConfig(content: string) {
+      createComponent();
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+      appTree.overwrite(src(registrationsPath), content);
+
+      return read(
+        await runSchematic({ registrationType: 'config' }),
+        src(registrationsPath),
+      );
+    }
+
+    it('keeps comments and layout of a token file', async () => {
+      const entries = `    ['a', A], // trailing
+    // ['old', Old],`;
+
+      const result = await runToken(
+        tokenFile(coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS }'), entries),
+      );
+
+      expect(result).toBe(
+        tokenFile(
+          coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS, loadComponent }'),
+          `${entries}
+    ["one", loadComponent(() => import("../one/one-control").then(m => m.OneControl))],`,
+        ),
+      );
+    });
+
+    it('keeps comments and layout of a config file', async () => {
+      const entries = `  a: A, // legacy
+  // b: B,`;
+
+      const result = await runConfig(
+        configFile(coreImport('{ ComponentRegistrationConfig }'), entries),
+      );
+
+      expect(result).toBe(
+        configFile(
+          coreImport('{ ComponentRegistrationConfig, loadComponent }'),
+          `${entries}
+  "one": loadComponent(() => import("../one/one-control").then(m => m.OneControl)),`,
+        ),
+      );
+    });
+
+    it.each([
+      [
+        'a type-only import',
+        coreImport('type { ComponentRegistrationConfig }'),
+      ],
+      ['a namespace import', coreImport('* as core')],
+      ['a default import', coreImport('core')],
+    ])('imports loadComponent separately from %s', async (_, imports) => {
+      const result = await runConfig(configFile(imports, ''));
+
+      expect(result).toContain(
+        `${imports}\n${coreImport('{ loadComponent }')}`,
+      );
+    });
+
+    it('adds loadComponent to the value import next to a type-only import', async () => {
+      const value = '{ NGX_FW_COMPONENT_REGISTRATIONS }';
+      const typeOnly = coreImport('type { ComponentRegistrationConfig }');
+
+      const result = await runToken(
+        tokenFile(`${coreImport(value)}\n${typeOnly}`, ''),
+      );
+
+      expect(result).toContain(
+        `${coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS, loadComponent }')}\n${typeOnly}`,
+      );
+    });
+  });
+
   describe('a component that is already registered', () => {
     function logged(level: string) {
       const messages: string[] = [];

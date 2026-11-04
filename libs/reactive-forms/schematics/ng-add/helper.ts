@@ -1,7 +1,5 @@
 import {
   ArrayLiteralExpression,
-  createPrinter,
-  EmitHint,
   Expression,
   factory,
   isCallExpression,
@@ -12,7 +10,7 @@ import {
   ShorthandPropertyAssignment,
   SourceFile,
 } from 'typescript';
-import { Change, InsertChange } from '@schematics/angular/utility/change';
+import { Change } from '@schematics/angular/utility/change';
 import { isImported } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { isJsonObject, JsonObject, strings } from '@angular-devkit/core';
@@ -22,6 +20,7 @@ import {
   DEFAULT_REGISTRATION_TYPE,
   DEFAULT_REGISTRATIONS_PATH,
   exportsIdentifier,
+  insertNamedImport,
   isCallee,
   joinToSourceRoot,
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
@@ -35,7 +34,6 @@ import {
   REACTIVE_FORMS_PACKAGE_NAME,
   SCHEMATICS_PACKAGE_NAME,
 } from '../shared/constants';
-import { insertNamedImport, textLayout } from './root-providers';
 import { RuleContext } from './schema';
 import {
   ProjectDefinition,
@@ -338,73 +336,6 @@ function importChanges(
       ? [insertNamedImport(sourceFile, filePath, symbols.join(', '), from)]
       : [];
   });
-}
-
-/**
- * Inserts instead of reprinting the array, as printing reformats what is there.
- * New elements go after a comment on the last line, keeping it with its element.
- */
-export function appendToArray(
-  sourceFile: SourceFile,
-  filePath: string,
-  array: ArrayLiteralExpression,
-  elements: Expression[],
-): Change[] {
-  const { elements: existing } = array;
-  const text = sourceFile.text;
-  const closing = array.getEnd() - 1;
-  const layout = textLayout(text);
-  const { indentUnit } = layout;
-  const lastLineFeed = text.lastIndexOf('\n', closing);
-  const closingLineBreak =
-    text[lastLineFeed - 1] === '\r' ? lastLineFeed - 1 : lastLineFeed;
-  const newLine =
-    lastLineFeed === -1
-      ? layout.newLine
-      : text.slice(closingLineBreak, lastLineFeed + 1);
-  const indent = lineIndent(text, array.getStart(sourceFile));
-  const inner = text.slice(existing.end, closing);
-  const last = existing.at(-1);
-  const firstAfterElements = /\S/.exec(inner)?.index;
-  const anchor =
-    last?.getStart(sourceFile) ??
-    (firstAfterElements === undefined
-      ? undefined
-      : existing.end + firstAfterElements);
-  const elementIndent =
-    anchor !== undefined &&
-    text.slice(array.getStart(sourceFile), anchor).includes('\n')
-      ? lineIndent(text, anchor)
-      : `${indent}${indentUnit}`;
-  const printer = createPrinter({});
-  const lines = elements
-    .map((element) =>
-      printer
-        .printNode(EmitHint.Unspecified, element, sourceFile)
-        .replace(
-          /\n( *)/g,
-          (_, spaces: string) =>
-            `${newLine}${elementIndent}${indentUnit.repeat(spaces.length / 4)}`,
-        ),
-    )
-    .map((printed) => `${newLine}${elementIndent}${printed}`)
-    .join(',');
-  const trailingComma = existing.hasTrailingComma ? ',' : '';
-
-  return [
-    ...(last && !existing.hasTrailingComma
-      ? [new InsertChange(filePath, last.getEnd(), ',')]
-      : []),
-    inner.includes('\n')
-      ? new InsertChange(filePath, closingLineBreak, `${lines}${trailingComma}`)
-      : new InsertChange(filePath, closing, `${lines}${newLine}${indent}`),
-  ];
-}
-
-function lineIndent(text: string, position: number) {
-  const lineStart = text.lastIndexOf('\n', position - 1) + 1;
-
-  return /^[ \t]*/.exec(text.slice(lineStart))?.[0] ?? '';
 }
 
 function isProvideFormbarCall(n: Expression) {

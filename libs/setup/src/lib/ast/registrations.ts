@@ -1,10 +1,8 @@
-import { SchematicsException, Tree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import {
   ArrayLiteralExpression,
   ArrowFunction,
   CallExpression,
-  createPrinter,
-  EmitHint,
   Expression,
   factory,
   Identifier,
@@ -34,11 +32,12 @@ import {
   SyntaxKind,
   VariableDeclaration,
 } from 'typescript';
-import { ReplaceChange } from '@schematics/angular/utility/change';
+import { Change } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
 import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
 import { createTreeCompilerHost, readCompilerOptions } from '../tsconfig';
 import { fileDeclaring } from './exports';
+import { appendToLiteral } from './insert';
 
 const registrationHelpers = ['staticComponent', 'loadComponent'];
 
@@ -94,33 +93,19 @@ export function findMapArrayLiteral(
 }
 
 export function updateMapEntries(
-  tree: Tree,
   sourceFile: SourceFile,
   filePath: string,
   mapArrayLiteral: ArrayLiteralExpression,
   key: string,
   componentClassName: string,
   importPath: string,
-): ReplaceChange[] {
-  const printer = createPrinter({});
-
-  const buffer = tree.read(filePath);
-  if (!buffer) {
-    throw new SchematicsException(`Missing file or unreadable: ${filePath}`);
-  }
-  const fileContent = buffer.toString('utf-8');
-
-  const newEntry = createNewMapEntry(key, componentClassName, importPath);
-  const updatedArray = createUpdatedArray(mapArrayLiteral, newEntry);
-
-  return createChangeForArrayUpdate(
-    printer,
-    sourceFile,
-    filePath,
-    mapArrayLiteral,
-    updatedArray,
-    fileContent,
-  );
+): Change[] {
+  return appendToLiteral(sourceFile, filePath, mapArrayLiteral, [
+    factory.createArrayLiteralExpression([
+      factory.createStringLiteral(key),
+      createLazyImportExpression(importPath, componentClassName),
+    ]),
+  ]);
 }
 
 export function findComponentRegistrationsObject(
@@ -150,37 +135,19 @@ export function findComponentRegistrationsObject(
 }
 
 export function addComponentRegistration(
-  tree: Tree,
   sourceFile: SourceFile,
   filePath: string,
   registrationsObject: ObjectLiteralExpression,
   key: string,
   componentClassName: string,
   importPath: string,
-): ReplaceChange[] {
-  const printer = createPrinter({});
-
-  const buffer = tree.read(filePath);
-  if (!buffer) {
-    throw new SchematicsException(`Missing file or unreadable: ${filePath}`);
-  }
-  const fileContent = buffer.toString('utf-8');
-
-  const updatedObject = createUpdatedRegistrationsObject(
-    registrationsObject,
-    key,
-    componentClassName,
-    importPath,
-  );
-
-  return createChangeForObjectUpdate(
-    printer,
-    sourceFile,
-    filePath,
-    registrationsObject,
-    updatedObject,
-    fileContent,
-  );
+): Change[] {
+  return appendToLiteral(sourceFile, filePath, registrationsObject, [
+    factory.createPropertyAssignment(
+      factory.createStringLiteral(key),
+      createLazyImportExpression(importPath, componentClassName),
+    ),
+  ]);
 }
 
 export function registrationNodeHasKey(node: Node, key: string): boolean {
@@ -560,42 +527,6 @@ function dynamicImportSpecifier(load: Node | undefined) {
     : undefined;
 }
 
-function createNewMapEntry(
-  key: string,
-  componentClassName: string,
-  importPath: string,
-) {
-  return factory.createArrayLiteralExpression([
-    factory.createStringLiteral(key),
-    createLazyImportExpression(importPath, componentClassName),
-  ]);
-}
-
-function createUpdatedArray(
-  original: ArrayLiteralExpression,
-  newEntry: ArrayLiteralExpression,
-) {
-  const elements = [...original.elements, newEntry];
-  return factory.updateArrayLiteralExpression(original, elements);
-}
-
-function createChangeForArrayUpdate(
-  printer: ReturnType<typeof createPrinter>,
-  sourceFile: SourceFile,
-  filePath: string,
-  original: ArrayLiteralExpression,
-  updated: ArrayLiteralExpression,
-  fileContent: string,
-) {
-  const start = original.getStart();
-  const end = original.getEnd();
-  const newText = printer.printNode(EmitHint.Unspecified, updated, sourceFile);
-
-  return [
-    new ReplaceChange(filePath, start, fileContent.slice(start, end), newText),
-  ];
-}
-
 function findStandaloneComponentRegistrations(node: Node) {
   if (!isVariableStatement(node)) {
     return null;
@@ -685,42 +616,6 @@ function providersOf({ initializer }: VariableDeclaration) {
     isArrayLiteralExpression(providers.initializer)
     ? providers.initializer.elements
     : [];
-}
-
-function createUpdatedRegistrationsObject(
-  registrationsObject: ObjectLiteralExpression,
-  key: string,
-  componentClassName: string,
-  importPath: string,
-) {
-  const existingProperties = [...registrationsObject.properties];
-
-  const newProperty = factory.createPropertyAssignment(
-    factory.createStringLiteral(key),
-    createLazyImportExpression(importPath, componentClassName),
-  );
-
-  return factory.updateObjectLiteralExpression(registrationsObject, [
-    ...existingProperties,
-    newProperty,
-  ]);
-}
-
-function createChangeForObjectUpdate(
-  printer: ReturnType<typeof createPrinter>,
-  sourceFile: SourceFile,
-  filePath: string,
-  original: ObjectLiteralExpression,
-  updated: ObjectLiteralExpression,
-  fileContent: string,
-) {
-  const start = original.getStart();
-  const end = original.getEnd();
-  const newText = printer.printNode(EmitHint.Unspecified, updated, sourceFile);
-
-  return [
-    new ReplaceChange(filePath, start, fileContent.slice(start, end), newText),
-  ];
 }
 
 function getComponentRegistrationExpression(configArg: Expression) {

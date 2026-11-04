@@ -6,8 +6,8 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
+  insertNamedImport,
   loadSourceFile,
   registrationsMissingMessage,
   registrationsNotFoundMessage,
@@ -85,7 +85,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
 
     const changes: Change[] = [];
 
-    const loadComponentImport = insertImport(
+    const loadComponentImport = insertNamedImport(
       registrationsSourceFile,
       controlRegistrationsPath,
       'loadComponent',
@@ -94,7 +94,6 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     changes.push(loadComponentImport);
 
     const updateChanges = updateMapEntries(
-      tree,
       registrationsSourceFile,
       controlRegistrationsPath,
       mapArrayLiteral,

@@ -5,8 +5,8 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
+  insertNamedImport,
   loadSourceFile,
   registrationsMissingMessage,
   registrationsNotFoundMessage,
@@ -91,7 +91,7 @@ export function registerTypeConfig(
 
     const changes: Change[] = [];
 
-    const loadComponentImport = insertImport(
+    const loadComponentImport = insertNamedImport(
       registrationsSourceFile,
       controlRegistrationsPath,
       'loadComponent',
@@ -100,7 +100,6 @@ export function registerTypeConfig(
     changes.push(loadComponentImport);
 
     const updateChanges = addComponentRegistration(
-      tree,
       registrationsSourceFile,
       controlRegistrationsPath,
       registrationsObject,
