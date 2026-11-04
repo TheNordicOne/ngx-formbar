@@ -168,35 +168,9 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
     skipControlRegistration: this.ownership.isDirectFormArrayChild,
   });
 
-  private setValueByStrategy() {
-    const valueStrategy = this.valueStrategy();
-
-    switch (valueStrategy) {
-      case 'last':
-        break;
-      case 'default':
-        break;
-      default:
-        // Instead of resetting the group, we need to reset the controls individually
-        // to allow them to overwrite the value strategy
-        // If a control doesn't have a value strategy, we reset it
-        Object.entries(this.controlConfig().controls).forEach(
-          ([name, control]) => {
-            if (!('valueStrategy' in control)) {
-              return;
-            }
-
-            if (control.valueStrategy) {
-              return;
-            }
-            const formControl = this.formGroupInstance().get(name);
-            if (formControl) {
-              formControl.reset(undefined, { emitEvent: false });
-            }
-          },
-        );
-        break;
-    }
+  private setValueByStrategy(): void {
+    // The controls inside the group apply their own value strategies on
+    // show/hide, and they inherit the strategy of the group.
   }
 
   ngOnDestroy(): void {

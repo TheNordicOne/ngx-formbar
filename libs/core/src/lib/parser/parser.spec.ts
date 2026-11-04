@@ -635,6 +635,13 @@ describe('parse', () => {
     ])('rejects %j with %j', (source, message) => {
       expect(errorOf(source)).toHaveProperty('message', message);
     });
+
+    it('keeps an exponent out of an arrow head', () => {
+      expect(errorOf('a ** b => c')).toHaveProperty(
+        'message',
+        'Arrow function parameters must be plain identifiers, got BinaryExpression',
+      );
+    });
   });
 
   describe('template literals', () => {

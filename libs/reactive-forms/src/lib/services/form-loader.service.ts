@@ -24,7 +24,11 @@ import { RowFactoryService } from './row-factory.service';
 export class FormLoaderService {
   private readonly rowFactory = inject(RowFactoryService);
 
-  load(root: FormGroup, config: NgxFbForm, data: Record<string, unknown>): void {
+  load(
+    root: FormGroup,
+    config: NgxFbForm,
+    data: Record<string, unknown>,
+  ): void {
     this.sizeRecord(config.content, root, data);
     root.patchValue(data);
   }
@@ -55,20 +59,17 @@ export class FormLoaderService {
   }
 
   private sizeArray(node: NgxFbArray, array: FormArray, value: unknown): void {
-    const target = Array.isArray(value) ? value.length : 0;
+    const rows: unknown[] = Array.isArray(value) ? value : [];
 
-    while (array.length < target) {
+    while (array.length < rows.length) {
       array.push(this.rowFactory.build(node.rowControl));
     }
-    while (array.length > target) {
+    while (array.length > rows.length) {
       array.removeAt(array.length - 1);
     }
 
-    if (!Array.isArray(value)) {
-      return;
-    }
     array.controls.forEach((row, index) => {
-      this.sizeNode(node.rowControl, row, value[index]);
+      this.sizeNode(node.rowControl, row, rows[index]);
     });
   }
 }
