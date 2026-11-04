@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect } from 'vitest';
+import { beforeEach, describe, expect, vi } from 'vitest';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -35,6 +35,9 @@ import {
   hasNamedImport,
 } from './helper';
 import { DiscoverOptions } from '../register/schema';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createTreeProgram } from '../schema/program';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { SourceFile } from 'typescript';
@@ -2512,6 +2515,42 @@ export class Slider implements ReactiveFormbarControl<SliderConfig> {
         const tree = await runSchematic();
 
         expect(read(tree, src(registrationsPath))).toContain('../one/slider');
+      });
+
+      it('recognizes the class imported through a path in a tsconfig above the workspace root', async () => {
+        const monorepo = mkdtempSync(join(tmpdir(), 'ngx-formbar-monorepo-'));
+        const cwd = vi
+          .spyOn(process, 'cwd')
+          .mockReturnValue(join(monorepo, 'apps/web'));
+
+        writeFileSync(
+          join(monorepo, 'tsconfig.base.json'),
+          JSON.stringify({
+            compilerOptions: {
+              paths: { '@app/*': ['./apps/web/projects/test-app/src/app/*'] },
+            },
+          }),
+        );
+        appTree.overwrite(
+          '/tsconfig.json',
+          JSON.stringify({ extends: '../../tsconfig.base.json' }),
+        );
+        appTree.create(sliderOne, component('slider'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          `['custom', staticComponent(Slider)]`,
+          "import { Slider } from '@app/one/slider';",
+        );
+        const before = read(appTree, src(registrationsPath));
+
+        const tree = await runSchematic();
+
+        cwd.mockRestore();
+        rmSync(monorepo, { recursive: true, force: true });
+
+        expect(read(tree, src(registrationsPath))).toBe(before);
       });
 
       function setTsconfigPaths(paths: Record<string, string[]>) {

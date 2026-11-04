@@ -131,6 +131,15 @@ describe('createTreeProgram', () => {
     expect(loadedFiles()).toContain(join(monorepo, inArchive));
   });
 
+  it('takes an import of a file that is not a module', () => {
+    tree.create('/projects/test-app/src/app/styles.css', '');
+    tree.create(file, "import './styles.css';\nexport const a = 1;\n");
+
+    expect(loadedFiles()).toContain(
+      join(monorepo, 'apps/web/projects/test-app/src/app/uses-hoisted.ts'),
+    );
+  });
+
   it('prefers the Tree over the disk inside the workspace root', () => {
     tree.create(file, "export { Fresh } from './fresh';\n");
     tree.create(

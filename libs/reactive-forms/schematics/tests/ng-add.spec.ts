@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -12,6 +12,7 @@ import {
 } from '@schematics/angular/utility/workspace';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'path';
 import { lastValueFrom } from 'rxjs';
 import {
@@ -2146,6 +2147,41 @@ describe('ng-add schematic', () => {
     });
   });
 
+  it('follows an alias of a tsconfig above the workspace root to the root config', async () => {
+    const monorepo = mkdtempSync(join(tmpdir(), 'ngx-formbar-monorepo-'));
+    const cwd = vi
+      .spyOn(process, 'cwd')
+      .mockReturnValue(join(monorepo, 'apps/web'));
+    const mainFile = src('main.ts');
+
+    writeFileSync(
+      join(monorepo, 'tsconfig.base.json'),
+      JSON.stringify({
+        compilerOptions: {
+          paths: { '@web/*': ['./apps/web/projects/test-app/src/app/*'] },
+        },
+      }),
+    );
+    appTree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({ extends: '../../tsconfig.base.json' }),
+    );
+    appTree.overwrite(
+      mainFile,
+      read(appTree, mainFile).replace('./app/app.config', '@web/app.config'),
+    );
+    const main = read(appTree, mainFile);
+
+    const tree = await runAdd();
+
+    cwd.mockRestore();
+    rmSync(monorepo, { recursive: true, force: true });
+
+    expect(main).toContain('@web/app.config');
+    expect(read(tree, mainFile)).toBe(main);
+    expect(read(tree, app('app.config.ts'))).toContain('provideFormbar');
+  });
+
   describe.each(['src/', './src'])(
     'in a source root spelled %s',
     (sourceRoot) => {
@@ -3906,6 +3942,44 @@ describe('ng-add schematic', () => {
           'registrationType',
           'token',
         );
+      });
+
+      describe('in a terminal', () => {
+        const { argv } = process;
+        const { isTTY: stdoutTty } = process.stdout;
+        const { isTTY: stdinTty } = process.stdin;
+
+        beforeEach(() => {
+          process.stdout.isTTY = true;
+          process.stdin.isTTY = true;
+          vi.stubEnv('CI', '');
+        });
+
+        afterEach(() => {
+          process.argv = argv;
+          process.stdout.isTTY = stdoutTty;
+          process.stdin.isTTY = stdinTty;
+          vi.unstubAllEnvs();
+        });
+
+        it.each([
+          '--no-interactive',
+          '--interactive=false',
+          '--interactive false',
+          '--defaults',
+          '--defaults=true',
+          '--defaults true',
+        ])('does not ask with %s', async (flags) => {
+          appTree = await runAdd({});
+          process.argv = [...argv, ...flags.split(' ')];
+
+          const { warnings } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(warnings).toHaveLength(1);
+        });
       });
 
       it('leaves another project alone and warns without a terminal', async () => {

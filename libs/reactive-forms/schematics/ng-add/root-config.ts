@@ -10,11 +10,14 @@ import {
 } from '@schematics/angular/utility/workspace';
 import {
   createTreeCompilerHost,
+  findWorkspaceRoot,
   findProvidersProperty,
   findTsConfigPath,
   isInsideProject,
   joinToSourceRoot,
+  pathUnderRoot,
   readCompilerOptions,
+  treePath,
   unwrapToObjectLiteral,
 } from '@ngx-formbar/setup';
 import {
@@ -102,35 +105,42 @@ function fromBootstrapCall(
   project: ProjectDefinition,
   context: SchematicContext,
 ) {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
   const options = {
-    ...readCompilerOptions(tree, findTsConfigPath(tree, project)),
+    ...readCompilerOptions(
+      tree,
+      findTsConfigPath(tree, project),
+      workspaceRoot,
+    ),
     noLib: true,
     types: [],
   };
-  const host = createTreeCompilerHost(tree, { ownFilesOnly: true });
-  const program = createProgram([main], options, host);
-  const found = findBootstrapCall(program, main, options, host);
+  const host = createTreeCompilerHost(tree, {
+    ownFilesOnly: true,
+    workspaceRoot,
+  });
+  const mainOnDisk = pathUnderRoot(main, workspaceRoot);
+  const program = createProgram([mainOnDisk], options, host);
+  const found = findBootstrapCall(program, mainOnDisk, options, host);
 
   if (!found) {
     return null;
   }
 
   const { sourceFile, call } = found;
+  const fileOf = (node: Node) =>
+    treePath(node.getSourceFile().fileName, workspaceRoot) ??
+    node.getSourceFile().fileName;
   const inProject = (filePath: string) =>
     isInsideProject(filePath.slice(1), project, workspace);
 
-  warnAboutFurtherCalls(sourceFile, call, context);
+  warnAboutFurtherCalls(sourceFile, fileOf(sourceFile), call, context);
 
   return isBootstrapModuleCall(call)
-    ? fromBootstrapModule(
-        call,
-        sourceFile.fileName,
-        program.getTypeChecker(),
-        inProject,
-      )
+    ? fromBootstrapModule(call, fileOf, program.getTypeChecker(), inProject)
     : fromBootstrapApplication(
         call,
-        sourceFile.fileName,
+        fileOf,
         program.getTypeChecker(),
         inProject,
       );
@@ -270,6 +280,7 @@ function importedModules(sourceFile: SourceFile) {
 
 function warnAboutFurtherCalls(
   sourceFile: SourceFile,
+  filePath: string,
   call: CallExpression,
   context: SchematicContext,
 ) {
@@ -277,14 +288,14 @@ function warnAboutFurtherCalls(
     const { line } = sourceFile.getLineAndCharacterOfPosition(call.getStart());
 
     context.logger.warn(
-      `${sourceFile.fileName} has several bootstrap calls. Using the one in line ${String(line + 1)}.`,
+      `${filePath} has several bootstrap calls. Using the one in line ${String(line + 1)}.`,
     );
   }
 }
 
 function fromBootstrapApplication(
   call: CallExpression,
-  filePath: string,
+  fileOf: (node: Node) => string,
   checker: TypeChecker,
   inProject: (filePath: string) => boolean,
 ): RootConfig {
@@ -292,11 +303,11 @@ function fromBootstrapApplication(
   const declaration =
     config && isIdentifier(config) ? declarationOf(config, checker) : undefined;
   const variable = declaration && editableVariableName(declaration);
-  const variableFile = declaration?.getSourceFile().fileName;
+  const variableFile = declaration && fileOf(declaration);
 
   return variable && variableFile && inProject(variableFile)
     ? { holder: 'variable', filePath: variableFile, variable }
-    : { holder: 'bootstrap', filePath };
+    : { holder: 'bootstrap', filePath: fileOf(call) };
 }
 
 function declarationOf(identifier: Expression, checker: TypeChecker) {
@@ -321,7 +332,7 @@ function editableVariableName(declaration: Node) {
 
 function fromBootstrapModule(
   call: CallExpression,
-  filePath: string,
+  fileOf: (node: Node) => string,
   checker: TypeChecker,
   inProject: (filePath: string) => boolean,
 ): RootConfig {
@@ -334,14 +345,14 @@ function fromBootstrapModule(
   if (
     !declaration ||
     !isClassDeclaration(declaration) ||
-    !inProject(declaration.getSourceFile().fileName)
+    !inProject(fileOf(declaration))
   ) {
     throw new SchematicsException(
-      `Could not edit the root NgModule "${argument?.getText() ?? ''}" bootstrapped in ${filePath}. It has to be a class declared in this project.`,
+      `Could not edit the root NgModule "${argument?.getText() ?? ''}" bootstrapped in ${fileOf(call)}. It has to be a class declared in this project.`,
     );
   }
 
-  const moduleFile = declaration.getSourceFile().fileName;
+  const moduleFile = fileOf(declaration);
   const className = declaration.name?.text;
 
   if (!className) {

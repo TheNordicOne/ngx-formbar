@@ -70,4 +70,6 @@ export {
   findTsConfigPath,
   pathUnderRoot,
   readCompilerOptions,
+  treePath,
 } from './lib/tsconfig';
+export { findWorkspaceRoot } from './lib/workspace-root';

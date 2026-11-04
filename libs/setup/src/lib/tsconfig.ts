@@ -50,7 +50,10 @@ function rootPrefix(workspaceRoot: string) {
 }
 
 /** `null` for a file above the root, which only the disk has. */
-function treePath(fileName: string, workspaceRoot: string) {
+export function treePath(
+  fileName: string,
+  workspaceRoot: string,
+): string | null {
   const prefix = rootPrefix(workspaceRoot);
 
   return fileName.startsWith(`${prefix}/`)
@@ -158,13 +161,24 @@ export function createTreeCompilerHost(
   };
 }
 
-/** `getDir` throws below a file, which is what a Yarn archive is to the Tree. */
+/**
+ * `getDir` throws at or below a file. TypeScript asks for a file when an import
+ * names one that is not a module, and for what is below a Yarn archive.
+ */
 function treeDir(tree: Tree, directoryName: string, workspaceRoot: string) {
   const path = treePath(directoryName, workspaceRoot);
 
-  return path === null || `${path}/`.includes('.zip/')
+  return path === null || isAtOrBelowFile(tree, path)
     ? null
     : tree.getDir(path);
+}
+
+function isAtOrBelowFile(tree: Tree, path: string) {
+  const segments = path.split('/').filter(Boolean);
+
+  return segments.some((_, index) =>
+    tree.exists(`/${segments.slice(0, index + 1).join('/')}`),
+  );
 }
 
 /** A Tree directory "exists" once it has any child file or subdirectory;

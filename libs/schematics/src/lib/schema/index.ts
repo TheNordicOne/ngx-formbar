@@ -11,6 +11,7 @@ import {
   loadAutomationConfig,
   resolveRequiredPath,
   SchemaEmitterEntry,
+  findWorkspaceRoot,
 } from '@ngx-formbar/setup';
 import { Schema } from './schema';
 import { resolveContentType } from './resolve';
@@ -18,7 +19,6 @@ import { buildModel } from './build-model';
 import { toJsonTypes } from './json-types';
 import { EmitPaths } from './emitter/define-emitter';
 import { builtInDefaultOutput, resolveEmitter } from './emitter/registry';
-import { findWorkspaceRoot } from './workspace-root';
 import { FormModel } from './model';
 import { CORE_PACKAGE_NAME } from '../shared/constants';
 

@@ -35,7 +35,13 @@ import {
 import { Change } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
 import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
-import { createTreeCompilerHost, readCompilerOptions } from '../tsconfig';
+import {
+  createTreeCompilerHost,
+  pathUnderRoot,
+  readCompilerOptions,
+  treePath,
+} from '../tsconfig';
+import { findWorkspaceRoot } from '../workspace-root';
 import { fileDeclaring } from './exports';
 import { appendToLiteral } from './insert';
 
@@ -402,20 +408,23 @@ function declaringFile(
   { className, specifier }: RegisteredClass,
   { tree, tsConfigPath }: RegisteredComponentQuery,
 ) {
-  const options = readCompilerOptions(tree, tsConfigPath);
-  const host = createTreeCompilerHost(tree);
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const options = readCompilerOptions(tree, tsConfigPath, workspaceRoot);
+  const host = createTreeCompilerHost(tree, { workspaceRoot });
+  const resolve = (moduleSpecifier: string, fromFile: string) => {
+    const resolved = resolveModuleName(
+      moduleSpecifier,
+      pathUnderRoot(fromFile, workspaceRoot),
+      options,
+      host,
+    ).resolvedModule?.resolvedFileName;
+
+    return resolved && (treePath(resolved, workspaceRoot) ?? undefined);
+  };
 
   return specifier === undefined
     ? fileName
-    : fileDeclaring(
-        tree,
-        className,
-        (moduleSpecifier, fromFile) =>
-          resolveModuleName(moduleSpecifier, fromFile, options, host)
-            .resolvedModule?.resolvedFileName,
-        specifier,
-        fileName,
-      );
+    : fileDeclaring(tree, className, resolve, specifier, fileName);
 }
 
 function registrationTarget(value: Node) {

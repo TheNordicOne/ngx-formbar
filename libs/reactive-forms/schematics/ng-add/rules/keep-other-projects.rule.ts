@@ -15,12 +15,6 @@ import {
 } from '../schematics-config-file';
 import { SCHEMATICS_GENERATORS } from '../../shared/constants';
 
-const NON_INTERACTIVE_FLAGS = [
-  '--defaults',
-  '--no-interactive',
-  '--interactive=false',
-];
-
 interface AffectedFile {
   file: string;
   settings: [string, string | null][];
@@ -116,8 +110,25 @@ function isInteractive() {
     process.stdout.isTTY &&
     process.stdin.isTTY &&
     !process.env.CI &&
-    !process.argv.some((argument) => NON_INTERACTIVE_FLAGS.includes(argument))
+    flagValue('interactive') !== false &&
+    flagValue('defaults') !== true
   );
+}
+
+/** The CLI does not hand a schematic these flags, so they are read like it reads them. */
+function flagValue(flag: string) {
+  const { argv } = process;
+  const index = argv.findIndex(
+    (argument) =>
+      argument === `--${flag}` ||
+      argument === `--no-${flag}` ||
+      argument.startsWith(`--${flag}=`),
+  );
+
+  return index < 0
+    ? undefined
+    : argv[index] !== `--no-${flag}` &&
+        (argv[index].split('=').at(1) ?? argv.at(index + 1)) !== 'false';
 }
 
 function confirm(question: string) {

@@ -1,11 +1,11 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
   createTreeCompilerHost,
+  findWorkspaceRoot,
   pathUnderRoot,
   readCompilerOptions,
 } from '@ngx-formbar/setup';
 import { createProgram, Program, SourceFile, TypeChecker } from 'typescript';
-import { findWorkspaceRoot } from './workspace-root';
 
 /**
  * The program sees the real location of every file, so `sourceFileAt` takes the
