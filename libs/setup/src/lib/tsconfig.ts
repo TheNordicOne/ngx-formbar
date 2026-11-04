@@ -1,17 +1,19 @@
 import { Tree } from '@angular-devkit/schematics';
 import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import { existsSync, readFileSync } from 'node:fs';
-import { posix } from 'node:path';
+import { join, posix } from 'node:path';
 import {
   CompilerHost,
   CompilerOptions,
   createSourceFile,
   getDefaultLibFilePath,
+  getModeForUsageLocation,
   ModuleKind,
   ModuleResolutionKind,
   ParseConfigHost,
   parseConfigFileTextToJson,
   parseJsonConfigFileContent,
+  resolveModuleName,
   ScriptTarget,
   sys,
 } from 'typescript';
@@ -83,11 +85,16 @@ function createTreeParseConfigHost(tree: Tree) {
 /**
  * A compiler host over the Tree. With `ownFilesOnly`, nothing in `node_modules`
  * or on disk is read, which is for a program that only needs the symbols of the
- * application's own files and takes `noLib`.
+ * application's own files and takes `noLib`. With `workspaceRoot`, a module the
+ * Tree does not reach is looked for from the real location of the importing file,
+ * as the Tree ends at the workspace root and a package manager can install above it.
  */
 export function createTreeCompilerHost(
   tree: Tree,
-  { ownFilesOnly = false }: { ownFilesOnly?: boolean } = {},
+  {
+    ownFilesOnly = false,
+    workspaceRoot,
+  }: { ownFilesOnly?: boolean; workspaceRoot?: string } = {},
 ): CompilerHost {
   const fileExists = (fileName: string) =>
     ownFilesOnly
@@ -96,7 +103,7 @@ export function createTreeCompilerHost(
   const readFile = (fileName: string) =>
     fileExists(fileName) ? readTreeOrDisk(tree, fileName) : undefined;
 
-  return {
+  const host: CompilerHost = {
     fileExists,
     readFile,
     getSourceFile: (fileName, languageVersion) => {
@@ -116,6 +123,70 @@ export function createTreeCompilerHost(
     directoryExists: (directoryName) =>
       treeDirectoryExists(tree, directoryName),
     getDirectories: (directoryName) => treeDirectories(tree, directoryName),
+    ...(workspaceRoot
+      ? {
+          resolveModuleNameLiterals: (
+            literals,
+            containingFile,
+            redirected,
+            options,
+            containingSourceFile,
+          ) =>
+            literals.map((literal) => {
+              const mode = getModeForUsageLocation(
+                containingSourceFile,
+                literal,
+                options,
+              );
+              const inTree = resolveModuleName(
+                literal.text,
+                containingFile,
+                options,
+                host,
+                undefined,
+                redirected,
+                mode,
+              );
+
+              return inTree.resolvedModule
+                ? inTree
+                : resolveModuleName(
+                    literal.text,
+                    tree.exists(containingFile)
+                      ? onDisk(containingFile, workspaceRoot)
+                      : containingFile,
+                    optionsOnDisk(options, workspaceRoot),
+                    host,
+                    undefined,
+                    redirected,
+                    mode,
+                  );
+            }),
+        }
+      : {}),
+  };
+
+  return host;
+}
+
+/** TypeScript takes forward slashes on every platform. */
+function onDisk(path: string, workspaceRoot: string) {
+  return join(workspaceRoot, path).replace(/\\/g, '/');
+}
+
+/** `paths` resolve against these, which `readCompilerOptions` roots in the Tree. */
+function optionsOnDisk(
+  options: CompilerOptions,
+  workspaceRoot: string,
+): CompilerOptions {
+  const { baseUrl, pathsBasePath } = options;
+
+  return {
+    ...options,
+    ...(baseUrl ? { baseUrl: onDisk(baseUrl, workspaceRoot) } : {}),
+    ...(typeof pathsBasePath === 'string'
+      ? { pathsBasePath: onDisk(pathsBasePath, workspaceRoot) }
+      : {}),
   };
 }
 

@@ -8,7 +8,7 @@
  * providers can have. A second one starts from `ng new --no-standalone`. A
  * third one goes through `ng add`, scaffolds into the seeded union, re-runs
  * `ng add`, runs `schema` and builds. Two more do this on Angular 20.0 and 20.3
- * with TypeScript 5.8. The rows of "Where Components Go" and a run without a
+ * with TypeScript 5.8, and one is a member of an npm workspace. The rows of "Where Components Go" and a run without a
  * schematics configuration file go through the CLI too. Every
  * other test in these libraries runs inside this workspace against a virtual
  * Tree, which is the shape of test that passes while the shipped artifact is
@@ -1725,6 +1725,63 @@ function runAngular20Flow(appParent, tarballs, cliVersion) {
   return appDir;
 }
 
+/**
+ * npm installs the packages of a workspace member at the monorepo root, above
+ * `angular.json` and so above the Tree the schematics run on.
+ */
+function runNpmWorkspaceFlow(appParent, tarballs) {
+  const monorepo = join(appParent, 'monorepo');
+  const appsDir = join(monorepo, 'apps');
+
+  mkdirSync(appsDir, { recursive: true });
+  writeFileSync(
+    join(monorepo, 'package.json'),
+    JSON.stringify({ name: 'monorepo', private: true, workspaces: ['apps/*'] }),
+  );
+
+  const appDir = createApp('web', appsDir);
+
+  check(
+    !existsSync(join(appDir, 'node_modules', '@angular', 'core')),
+    'the monorepo hoists the packages above angular.json',
+  );
+
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, 'web');
+  generate(appDir, 'web', 'control', [
+    '--key',
+    'slider',
+    '--skip-registration',
+  ]);
+  generate(appDir, 'web', 'register');
+  generate(appDir, 'web', 'schema');
+  run('npx', ['ng', 'build'], appDir);
+
+  check(
+    readFileSync(
+      join(appDir, 'src/app/registrations/component-registrations.ts'),
+      'utf8',
+    ).includes("'slider'"),
+    'register finds a control when the packages are installed above angular.json',
+  );
+
+  return appDir;
+}
+
 function runNgAddFlow(appParent, tarballs) {
   const appDir = createApp('formbar', appParent);
 
@@ -1853,6 +1910,7 @@ function main() {
     }
   }
 
+  runNpmWorkspaceFlow(appParent, tarballs);
   runAngular20Flow(appParent, tarballs, '20.0');
   runAngular20Flow(appParent, tarballs, '20.3');
 
