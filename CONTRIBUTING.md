@@ -101,6 +101,7 @@ npx nx run-many -t lint test build
 
 - **Library unit tests:** `npx nx run-many -t test`
 - **Storybook tests:** `npx nx run storybook:test-storybook` (requires Storybook to be running on port 4400)
+- **Mutation tests:** `npx nx mutation @ngx-formbar/core`, also for `setup`, `schematics` and `reactive-forms`, plus `npx nx mutation-schematics @ngx-formbar/reactive-forms` for `ng add`. Reports land in `reports/mutation`. A run takes hours.
 
 ## Release Process
 

@@ -56,6 +56,8 @@
     "@storybook/addon-docs": "^10.6.5",
     "@storybook/angular": "10.6.5",
     "@storybook/test-runner": "^0.26.0",
+    "@stryker-mutator/api": "^9.6.1",
+    "@stryker-mutator/core": "^9.6.1",
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",

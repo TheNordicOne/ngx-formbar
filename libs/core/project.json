@@ -44,6 +44,12 @@
           "externalDependencies": ["eslint"]
         }
       ]
+    },
+    "mutation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "stryker run stryker/core.conf.mjs"
+      }
     }
   }
 }

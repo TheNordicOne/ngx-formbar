@@ -111,6 +111,18 @@
           ]
         }
       ]
+    },
+    "mutation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "stryker run stryker/reactive-forms.conf.mjs"
+      }
+    },
+    "mutation-schematics": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "stryker run stryker/ng-add.conf.mjs"
+      }
     }
   }
 }
