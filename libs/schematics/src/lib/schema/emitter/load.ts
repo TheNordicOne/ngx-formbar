@@ -208,16 +208,24 @@ function evaluate(
     return resolved;
   }
 
-  // `runInThisContext` is untyped; the signature is fixed by the wrapper compiled here.
-  const wrapped: unknown = runInThisContext(
-    `(function (exports, require, module, __filename, __dirname) {${javaScript}\n})`,
-    { filename },
-  );
-  const run = wrapped as ModuleWrapper;
-
+  const run = wrapInFunction(javaScript, filename);
   const diskPath = join(context.host.workspaceRoot, filename);
 
   run(record.exports, localRequire, record, diskPath, dirname(diskPath));
+}
+
+function wrapInFunction(javaScript: string, filename: string) {
+  try {
+    // `runInThisContext` is untyped; the signature is fixed by the wrapper compiled here.
+    return runInThisContext(
+      `(function (exports, require, module, __filename, __dirname) {${javaScript}\n})`,
+      { filename },
+    ) as ModuleWrapper;
+  } catch (error) {
+    throw new SchematicsException(
+      `Emitter ${filename} failed to compile: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /** Tree paths are virtual and '/'-rooted on every platform, so `posix` walks them. */

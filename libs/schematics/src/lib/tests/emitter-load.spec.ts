@@ -81,6 +81,24 @@ export default defineEmitter({
     );
   });
 
+  it.each([
+    ['tools/data.json', './data.json', '{ "name": '],
+    ['tools/helper.js', './helper.js', 'export const name = 1;'],
+  ])('names %s when it cannot be evaluated', (path, specifier, content) => {
+    tree.create(src(path), content);
+    tree.create(
+      src('tools/broken-emitter.ts'),
+      `import data from '${specifier}';
+
+export default { name: data.name, emit() {} };
+`,
+    );
+
+    expect(() =>
+      resolveEmitter('./tools/broken-emitter.ts', tree, PATHS),
+    ).toThrow(`${src(path)} failed to compile`);
+  });
+
   it('loads an emitter that imports a JSON file', () => {
     tree.create(src('tools/data.json'), '{ "name": "from-json" }');
     tree.create(
