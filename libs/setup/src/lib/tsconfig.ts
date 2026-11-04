@@ -56,9 +56,11 @@ export function treePath(
 ): string | null {
   const prefix = rootPrefix(workspaceRoot);
 
-  return fileName.startsWith(`${prefix}/`)
-    ? fileName.slice(prefix.length)
-    : null;
+  return fileName === prefix
+    ? '/'
+    : fileName.startsWith(`${prefix}/`)
+      ? fileName.slice(prefix.length)
+      : null;
 }
 
 /**

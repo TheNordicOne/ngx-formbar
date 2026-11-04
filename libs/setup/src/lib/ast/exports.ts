@@ -8,11 +8,14 @@ import {
   isExportDeclaration,
   isFunctionDeclaration,
   isIdentifier,
+  isImportDeclaration,
   isNamedExports,
+  isNamedImports,
   isStringLiteral,
   isVariableStatement,
   ModifierFlags,
   NamedExportBindings,
+  SourceFile,
   Statement,
 } from 'typescript';
 import { posix } from 'node:path';
@@ -44,18 +47,24 @@ export function exportsIdentifier(
   );
 }
 
+/** Where a name of a module comes from, under the name it has there. */
+export interface ExportOrigin {
+  filePath: string;
+  className: string;
+}
+
 /**
- * The file that declares what `identifier` of a module stands for, following
- * re-exports. `resolve` finds the file of a module specifier.
+ * The declaration that `identifier` of a module stands for, following re-exports
+ * and their renames. `resolve` finds the file of a module specifier.
  */
-export function fileDeclaring(
+export function declarationOf(
   tree: Tree,
   identifier: string,
   resolve: (specifier: string, fromFile: string) => string | undefined,
   specifier: string,
   fromFile: string,
   visited = new Set<string>(),
-): string | undefined {
+): ExportOrigin | undefined {
   const filePath = resolve(specifier, fromFile);
   const sourceFile =
     filePath && !visited.has(filePath)
@@ -68,32 +77,75 @@ export function fileDeclaring(
 
   visited.add(filePath);
 
-  const declaredHere = sourceFile.statements.some(
-    (statement) =>
-      !hasModuleSpecifier(statement) && statementExports(statement, identifier),
-  );
+  const follow = (name: string, next: string) =>
+    declarationOf(tree, name, resolve, next, filePath, visited);
+  const exportDeclarations = sourceFile.statements
+    .filter(isExportDeclaration)
+    .filter(({ isTypeOnly }) => !isTypeOnly);
+  const localName = exportDeclarations
+    .filter(({ moduleSpecifier }) => !moduleSpecifier)
+    .flatMap((declaration) => namesBehind(declaration, identifier))
+    .at(0);
+  const imported = localName && importOf(sourceFile, localName);
+
+  if (imported) {
+    return follow(imported.name, imported.specifier);
+  }
+
+  const declaredHere =
+    !!localName ||
+    sourceFile.statements.some(
+      (statement) =>
+        !isExportDeclaration(statement) &&
+        declaredNames(statement).includes(identifier),
+    );
 
   return declaredHere
-    ? filePath
-    : sourceFile.statements
-        .filter(isExportDeclaration)
-        .filter(
-          ({ exportClause }) =>
-            !exportClause || exportClauseHas(exportClause, identifier),
-        )
-        .flatMap(({ moduleSpecifier, isTypeOnly }) =>
-          moduleSpecifier && isStringLiteral(moduleSpecifier) && !isTypeOnly
-            ? [moduleSpecifier.text]
-            : [],
-        )
-        .map((next) =>
-          fileDeclaring(tree, identifier, resolve, next, filePath, visited),
-        )
+    ? { filePath, className: localName ?? identifier }
+    : exportDeclarations
+        .flatMap((declaration) => {
+          const { moduleSpecifier } = declaration;
+
+          return moduleSpecifier && isStringLiteral(moduleSpecifier)
+            ? namesBehind(declaration, identifier).map((name) =>
+                follow(name, moduleSpecifier.text),
+              )
+            : [];
+        })
         .find(Boolean);
 }
 
-function hasModuleSpecifier(statement: Statement) {
-  return isExportDeclaration(statement) && !!statement.moduleSpecifier;
+/** What an export calls `identifier` on its other side. A namespace is no such name. */
+function namesBehind({ exportClause }: ExportDeclaration, identifier: string) {
+  return !exportClause
+    ? [identifier]
+    : isNamedExports(exportClause)
+      ? exportClause.elements
+          .filter(
+            ({ name, isTypeOnly }) => !isTypeOnly && name.text === identifier,
+          )
+          .map(({ name, propertyName }) => (propertyName ?? name).text)
+      : [];
+}
+
+function importOf({ statements }: SourceFile, localName: string) {
+  return statements
+    .filter(isImportDeclaration)
+    .flatMap(({ importClause, moduleSpecifier }) => {
+      const bindings = importClause?.namedBindings;
+
+      return bindings &&
+        isNamedImports(bindings) &&
+        isStringLiteral(moduleSpecifier)
+        ? bindings.elements
+            .filter(({ name }) => name.text === localName)
+            .map(({ name, propertyName }) => ({
+              name: (propertyName ?? name).text,
+              specifier: moduleSpecifier.text,
+            }))
+        : [];
+    })
+    .at(0);
 }
 
 function isStarExport(statement: Statement): statement is ExportDeclaration {
@@ -140,7 +192,9 @@ function statementExports(statement: Statement, identifier: string) {
 
 function exportClauseHas(clause: NamedExportBindings, identifier: string) {
   return isNamedExports(clause)
-    ? clause.elements.some(({ name }) => name.text === identifier)
+    ? clause.elements.some(
+        ({ name, isTypeOnly }) => !isTypeOnly && name.text === identifier,
+      )
     : clause.name.text === identifier;
 }
 

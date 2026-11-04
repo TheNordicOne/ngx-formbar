@@ -22,7 +22,6 @@ import {
   isPropertyAssignment,
   isStringLiteral,
   isStringLiteralLike,
-  isVariableDeclaration,
   isVariableStatement,
   Node,
   ObjectLiteralExpression,
@@ -34,7 +33,11 @@ import {
 } from 'typescript';
 import { Change } from '@schematics/angular/utility/change';
 import { NGX_FW_COMPONENT_REGISTRATIONS } from '../constants';
-import { findProvidersProperty, unwrapToObjectLiteral } from '../ast';
+import {
+  findProvidersProperty,
+  nameOfProperty,
+  unwrapToObjectLiteral,
+} from '../ast';
 import {
   createTreeCompilerHost,
   pathUnderRoot,
@@ -42,7 +45,7 @@ import {
   treePath,
 } from '../tsconfig';
 import { findWorkspaceRoot } from '../workspace-root';
-import { fileDeclaring } from './exports';
+import { declarationOf } from './exports';
 import { appendToLiteral } from './insert';
 
 const registrationHelpers = ['staticComponent', 'loadComponent'];
@@ -58,44 +61,21 @@ export interface RegisteredComponentQuery {
 export function findComponentRegistrationsNode(
   sourceFile: SourceFile,
 ): Node | null {
-  let result: Node | null = null;
-
-  function visit(node: Node) {
-    if (result) {
-      return;
-    }
-
-    result =
-      findMapNodeInTokenRegistration(node) ?? findMapNodeInProvideFormbar(node);
-    if (result) {
-      return;
-    }
-
-    node.forEachChild(visit);
+  function visit(node: Node): Node | undefined {
+    return findMapNodeInTokenRegistration(node) ?? node.forEachChild(visit);
   }
 
-  sourceFile.forEachChild(visit);
-  return result;
+  return sourceFile.forEachChild(visit) ?? null;
 }
 
 export function findMapArrayLiteral(
   mapExpression: Node,
 ): ArrayLiteralExpression | null {
-  if (!isNewExpression(mapExpression)) {
-    return null;
-  }
+  const firstArg = isNewExpression(mapExpression)
+    ? mapExpression.arguments?.at(0)
+    : undefined;
 
-  if (!mapExpression.arguments || mapExpression.arguments.length === 0) {
-    return null;
-  }
-
-  const firstArg = mapExpression.arguments[0];
-
-  if (firstArg.kind !== SyntaxKind.ArrayLiteralExpression) {
-    return null;
-  }
-
-  return firstArg as ArrayLiteralExpression;
+  return firstArg && isArrayLiteralExpression(firstArg) ? firstArg : null;
 }
 
 export function updateMapEntries(
@@ -117,27 +97,16 @@ export function updateMapEntries(
 export function findComponentRegistrationsObject(
   sourceFile: SourceFile,
 ): ObjectLiteralExpression | null {
-  let result: ObjectLiteralExpression | null = null;
-
-  function visit(node: Node) {
-    if (result) {
-      return;
-    }
-
-    result =
+  function visit(node: Node): ObjectLiteralExpression | undefined {
+    return (
       findStandaloneComponentRegistrations(node) ??
       findFormbarConfigComponentRegistrations(node) ??
-      findProvideFormbarComponentRegistrations(node);
-
-    if (result) {
-      return;
-    }
-
-    node.forEachChild(visit);
+      findProvideFormbarComponentRegistrations(node) ??
+      node.forEachChild(visit)
+    );
   }
 
-  sourceFile.forEachChild(visit);
-  return result;
+  return sourceFile.forEachChild(visit) ?? null;
 }
 
 export function addComponentRegistration(
@@ -157,139 +126,52 @@ export function addComponentRegistration(
 }
 
 export function registrationNodeHasKey(node: Node, key: string): boolean {
-  if (isNewExpression(node)) {
-    const arr = findMapArrayLiteral(node);
-    if (!arr) {
-      return false;
-    }
-    return arrayLiteralHasKey(arr, key);
-  }
+  const entries = findMapArrayLiteral(node);
 
-  if (isObjectLiteralExpression(node)) {
-    return objectLiteralHasKey(node, key);
-  }
-
-  return false;
+  return !!entries && arrayLiteralHasKey(entries, key);
 }
 
 export function registrationNodeUsesComponent(
   node: Node,
   component: RegisteredComponentQuery,
 ): boolean {
-  if (isNewExpression(node)) {
-    const arr = findMapArrayLiteral(node);
-    if (!arr) {
-      return false;
-    }
-    return arrayLiteralUsesComponent(arr, component);
-  }
+  const entries = findMapArrayLiteral(node);
 
-  if (isObjectLiteralExpression(node)) {
-    return objectLiteralUsesComponent(node, component);
-  }
-
-  return false;
-}
-
-function registrationsObjectHasKey(obj: ObjectLiteralExpression, key: string) {
-  for (const p of obj.properties) {
-    if (!isPropertyAssignment(p)) {
-      continue;
-    }
-    const n = p.name;
-    const matchesKey =
-      (isIdentifier(n) && n.text === key) ||
-      (isStringLiteral(n) && n.text === key);
-
-    if (matchesKey) {
-      return true;
-    }
-  }
-
-  return false;
+  return !!entries && arrayLiteralUsesComponent(entries, component);
 }
 
 export function componentRegistrationsObjectHasKey(
-  node: Node | null,
+  node: ObjectLiteralExpression,
   key: string,
 ): boolean {
-  if (!node) {
-    return false;
-  }
-
-  if (!isObjectLiteralExpression(node)) {
-    return false;
-  }
-
-  return registrationsObjectHasKey(node, key);
+  return node.properties.some((property) => isPropertyWithName(property, key));
 }
 
 export function componentRegistrationsObjectUsesComponent(
-  node: Node | null,
+  node: ObjectLiteralExpression,
   component: RegisteredComponentQuery,
 ): boolean {
-  if (!node) {
-    return false;
-  }
-
-  if (!isObjectLiteralExpression(node)) {
-    return false;
-  }
-
-  return objectLiteralUsesComponent(node, component);
+  return node.properties.some(
+    (property) =>
+      isPropertyAssignment(property) &&
+      registers(property.initializer, component),
+  );
 }
 
 function findMapNodeInTokenRegistration(node: Node) {
-  if (!isMapConstructorExpression(node)) {
-    return null;
-  }
+  const property = node.parent;
+  const owner = isPropertyWithName(property, 'useValue')
+    ? property.parent
+    : undefined;
 
-  const parent = node.parent;
-  if (!isUseValuePropertyAssignment(parent)) {
-    return null;
-  }
-
-  const grandParent = parent.parent;
-  if (!isObjectLiteralExpression(grandParent)) {
-    return null;
-  }
-
-  const hasComponentRegistrationsToken = grandParent.properties.some((prop) =>
-    isProvidePropertyWithToken(prop, NGX_FW_COMPONENT_REGISTRATIONS),
-  );
-
-  return hasComponentRegistrationsToken ? node : null;
-}
-
-function findMapNodeInProvideFormbar(node: Node) {
-  if (!isProvideFormbarCall(node)) {
-    return null;
-  }
-
-  const callExpr = node as CallExpression;
-
-  if (callExpr.arguments.length === 0) {
-    return null;
-  }
-
-  const arg = callExpr.arguments[0];
-  if (!isObjectLiteralExpression(arg)) {
-    return null;
-  }
-
-  const componentRegProp = arg.properties.find((prop) =>
-    isPropertyWithName(prop, 'componentRegistrations'),
-  );
-
-  if (
-    !componentRegProp ||
-    !isPropertyAssignment(componentRegProp) ||
-    !isObjectLiteralExpression(componentRegProp.initializer)
-  ) {
-    return null;
-  }
-
-  return componentRegProp.initializer;
+  return isMapConstructorExpression(node) &&
+    owner &&
+    isObjectLiteralExpression(owner) &&
+    owner.properties.some((prop) =>
+      isProvidePropertyWithToken(prop, NGX_FW_COMPONENT_REGISTRATIONS),
+    )
+    ? node
+    : null;
 }
 
 function isMapConstructorExpression(node: Node) {
@@ -300,40 +182,17 @@ function isMapConstructorExpression(node: Node) {
   );
 }
 
-function isUseValuePropertyAssignment(node: Node | undefined) {
-  return (
-    !!node &&
-    isPropertyAssignment(node) &&
-    isIdentifier(node.name) &&
-    node.name.text === 'useValue'
-  );
-}
-
 function isProvidePropertyWithToken(prop: Node, tokenName: string) {
   return (
+    isPropertyWithName(prop, 'provide') &&
     isPropertyAssignment(prop) &&
-    isIdentifier(prop.name) &&
-    prop.name.text === 'provide' &&
     isIdentifier(prop.initializer) &&
     prop.initializer.text === tokenName
   );
 }
 
-function isProvideFormbarCall(node: Node) {
-  return (
-    isCallExpression(node) &&
-    isPropertyAccessExpression(node.expression) &&
-    isIdentifier(node.expression.name) &&
-    node.expression.name.text === 'provideFormbar'
-  );
-}
-
 function isPropertyWithName(prop: Node, name: string) {
-  return (
-    isPropertyAssignment(prop) &&
-    isIdentifier(prop.name) &&
-    prop.name.text === name
-  );
+  return isPropertyAssignment(prop) && nameOfProperty(prop.name) === name;
 }
 
 function createLazyImportExpression(
@@ -394,16 +253,18 @@ function registers(value: Node, component: RegisteredComponentQuery) {
   const target = registrationTarget(value);
   const registered =
     target && isIdentifier(target) ? importedClass(target) : lazyClass(target);
+  const declared =
+    registered &&
+    declarationOfClass(value.getSourceFile(), registered, component);
 
   return (
-    registered?.className === component.className &&
-    declaringFile(value.getSourceFile(), registered, component) ===
-      component.filePath
+    declared?.className === component.className &&
+    declared.filePath === component.filePath
   );
 }
 
 /** Without a `specifier`, the class is declared in the registrations file. */
-function declaringFile(
+function declarationOfClass(
   { fileName }: SourceFile,
   { className, specifier }: RegisteredClass,
   { tree, tsConfigPath }: RegisteredComponentQuery,
@@ -423,8 +284,8 @@ function declaringFile(
   };
 
   return specifier === undefined
-    ? fileName
-    : fileDeclaring(tree, className, resolve, specifier, fileName);
+    ? { filePath: fileName, className }
+    : declarationOf(tree, className, resolve, specifier, fileName);
 }
 
 function registrationTarget(value: Node) {
@@ -483,7 +344,9 @@ function lazyClass(target: Node | undefined) {
 function thenPickedClass(body: Node) {
   const then = isCallExpression(body) ? body : undefined;
   const load =
-    then && isPropertyAccessExpression(then.expression)
+    then &&
+    isPropertyAccessExpression(then.expression) &&
+    then.expression.name.text === 'then'
       ? then.expression.expression
       : undefined;
   const specifier = dynamicImportSpecifier(load);
@@ -529,7 +392,11 @@ function awaitedClass(body: Node) {
 
 function dynamicImportSpecifier(load: Node | undefined) {
   const specifier =
-    load && isCallExpression(load) ? load.arguments.at(0) : undefined;
+    load &&
+    isCallExpression(load) &&
+    load.expression.kind === SyntaxKind.ImportKeyword
+      ? load.arguments.at(0)
+      : undefined;
 
   return specifier && isStringLiteralLike(specifier)
     ? specifier.text
@@ -537,64 +404,39 @@ function dynamicImportSpecifier(load: Node | undefined) {
 }
 
 function findStandaloneComponentRegistrations(node: Node) {
-  if (!isVariableStatement(node)) {
-    return null;
-  }
+  const declaration = isVariableStatement(node)
+    ? node.declarationList.declarations.find(
+        ({ name, initializer }) =>
+          isIdentifier(name) &&
+          ['componentRegistrations', 'componentsRegistrations'].includes(
+            name.text,
+          ) &&
+          !!initializer &&
+          isObjectLiteralExpression(initializer),
+      )
+    : undefined;
 
-  for (const declaration of node.declarationList.declarations) {
-    if (
-      !isVariableDeclaration(declaration) ||
-      !isIdentifier(declaration.name) ||
-      !declaration.initializer ||
-      !isObjectLiteralExpression(declaration.initializer)
-    ) {
-      continue;
-    }
-
-    if (
-      declaration.name.text === 'componentRegistrations' ||
-      declaration.name.text === 'componentsRegistrations'
-    ) {
-      return declaration.initializer;
-    }
-  }
-
-  return null;
+  return declaration?.initializer &&
+    isObjectLiteralExpression(declaration.initializer)
+    ? declaration.initializer
+    : null;
 }
 
 function findFormbarConfigComponentRegistrations(node: Node) {
-  if (
-    !isVariableStatement(node) ||
-    node.declarationList.declarations.length === 0
-  ) {
-    return null;
-  }
+  const initializer = isVariableStatement(node)
+    ? node.declarationList.declarations.find(
+        ({ name }) => isIdentifier(name) && name.text === 'formbarConfig',
+      )?.initializer
+    : undefined;
+  const configArg =
+    initializer &&
+    isCallExpression(initializer) &&
+    isIdentifier(initializer.expression) &&
+    initializer.expression.text === 'defineFormbarConfig'
+      ? initializer.arguments.at(0)
+      : undefined;
 
-  const declaration = node.declarationList.declarations[0];
-  if (
-    !isVariableDeclaration(declaration) ||
-    !isIdentifier(declaration.name) ||
-    declaration.name.text !== 'formbarConfig' ||
-    !declaration.initializer
-  ) {
-    return null;
-  }
-
-  if (!isCallExpression(declaration.initializer)) {
-    return null;
-  }
-
-  const callExpr = declaration.initializer;
-  if (
-    !isIdentifier(callExpr.expression) ||
-    callExpr.expression.text !== 'defineFormbarConfig' ||
-    callExpr.arguments.length === 0
-  ) {
-    return null;
-  }
-
-  const configArg = callExpr.arguments[0];
-  return getComponentRegistrationExpression(configArg);
+  return configArg ? getComponentRegistrationExpression(configArg) : null;
 }
 
 function findProvideFormbarComponentRegistrations(node: Node) {
@@ -628,39 +470,27 @@ function providersOf({ initializer }: VariableDeclaration) {
 }
 
 function getComponentRegistrationExpression(configArg: Expression) {
-  if (!isObjectLiteralExpression(configArg)) {
-    return null;
-  }
+  const property = isObjectLiteralExpression(configArg)
+    ? configArg.properties.find((prop) =>
+        isPropertyWithName(prop, 'componentRegistrations'),
+      )
+    : undefined;
 
-  const componentRegProp = configArg.properties.find(
-    (prop) =>
-      isPropertyAssignment(prop) &&
-      isIdentifier(prop.name) &&
-      prop.name.text === 'componentRegistrations',
-  );
-
-  if (
-    !componentRegProp ||
-    !isPropertyAssignment(componentRegProp) ||
-    !isObjectLiteralExpression(componentRegProp.initializer)
-  ) {
-    return null;
-  }
-
-  return componentRegProp.initializer;
+  return property &&
+    isPropertyAssignment(property) &&
+    isObjectLiteralExpression(property.initializer)
+    ? property.initializer
+    : null;
 }
 
 function arrayLiteralHasKey(arr: ArrayLiteralExpression, key: string) {
-  for (const el of arr.elements) {
-    if (!isArrayLiteralExpression(el) || el.elements.length !== 2) {
-      continue;
-    }
-    const [k] = el.elements;
-    if (isStringLiteral(k) && k.text === key) {
-      return true;
-    }
-  }
-  return false;
+  return arr.elements.some(
+    (el) =>
+      isArrayLiteralExpression(el) &&
+      el.elements.length === 2 &&
+      isStringLiteral(el.elements[0]) &&
+      el.elements[0].text === key,
+  );
 }
 
 function arrayLiteralUsesComponent(
@@ -672,30 +502,5 @@ function arrayLiteralUsesComponent(
       isArrayLiteralExpression(el) &&
       el.elements.length === 2 &&
       registers(el.elements[1], component),
-  );
-}
-
-function objectLiteralHasKey(obj: ObjectLiteralExpression, key: string) {
-  for (const p of obj.properties) {
-    if (!isPropertyAssignment(p)) {
-      continue;
-    }
-    const n = p.name;
-    if (isIdentifier(n) && n.text === key) {
-      return true;
-    }
-    if (isStringLiteral(n) && n.text === key) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function objectLiteralUsesComponent(
-  obj: ObjectLiteralExpression,
-  component: RegisteredComponentQuery,
-) {
-  return obj.properties.some(
-    (p) => isPropertyAssignment(p) && registers(p.initializer, component),
   );
 }

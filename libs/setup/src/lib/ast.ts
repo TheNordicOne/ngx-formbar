@@ -96,7 +96,9 @@ export function unwrapToObjectLiteral(
   }
 }
 
-function nameOfProperty(propertyName: PropertyName | undefined) {
+export function nameOfProperty(
+  propertyName: PropertyName | undefined,
+): string | null {
   // Computed names don't count for this check.
   return propertyName &&
     (isIdentifier(propertyName) ||
