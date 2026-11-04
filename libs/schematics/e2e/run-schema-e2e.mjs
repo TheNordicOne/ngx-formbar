@@ -519,15 +519,15 @@ function readLoggedCoreRoot(output) {
 }
 
 /**
- * The schematic's CompilerHost reads the Tree first and falls back to disk, and
- * `getCurrentDirectory()` is '/', so a Tree path and a real path travel the
- * same fallback. Anchoring the logged value against the app is the only way to
+ * The schematic's CompilerHost reads the Tree first and falls back to disk, so
+ * the file it read tells nothing. Anchoring the logged value against the app is
+ * the only way to
  * tell the consumer's own install from something else the machine happens to
  * have at that path.
  */
 function checkCoreRoot(coreRoot, appDir) {
   const expected = join(appDir, 'node_modules', CORE_PACKAGE_NAME) + sep;
-  const resolved = existsSync(coreRoot) ? coreRoot : join(appDir, coreRoot);
+  const resolved = join(coreRoot);
 
   console.log(`  core root: ${coreRoot} -> ${resolved}`);
 
@@ -1729,6 +1729,50 @@ function runAngular20Flow(appParent, tarballs, cliVersion) {
  * npm installs the packages of a workspace member at the monorepo root, above
  * `angular.json` and so above the Tree the schematics run on.
  */
+function addControlWithContractAboveRoot(monorepo, appDir) {
+  const tsConfig = join(appDir, 'tsconfig.json');
+  const componentDir = join(appDir, 'src/app/knob');
+
+  writeFileSync(
+    join(monorepo, 'tsconfig.base.json'),
+    JSON.stringify({
+      compilerOptions: { paths: { '@shared/*': ['./shared/*'] } },
+    }),
+  );
+  writeFileSync(
+    tsConfig,
+    readFileSync(tsConfig, 'utf8').replace(
+      '"compileOnSave"',
+      '"extends": "../../tsconfig.base.json",\n  "compileOnSave"',
+    ),
+  );
+  mkdirSync(join(monorepo, 'shared'));
+  writeFileSync(
+    join(monorepo, 'shared/knob.ts'),
+    `import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+export interface Knob extends NgxFbControl {
+  type: 'knob';
+}
+
+export type KnobContract = ReactiveFormbarControl<Knob>;
+`,
+  );
+  mkdirSync(componentDir);
+  writeFileSync(
+    join(componentDir, 'knob.component.ts'),
+    `import { Component, input } from '@angular/core';
+import type { KnobContract } from '@shared/knob';
+
+@Component({ selector: 'app-knob', template: '' })
+export class KnobComponent implements KnobContract {
+  readonly name = input.required<string>();
+}
+`,
+  );
+}
+
 function runNpmWorkspaceFlow(appParent, tarballs) {
   const monorepo = join(appParent, 'monorepo');
   const appsDir = join(monorepo, 'apps');
@@ -1767,16 +1811,23 @@ function runNpmWorkspaceFlow(appParent, tarballs) {
     'slider',
     '--skip-registration',
   ]);
+  addControlWithContractAboveRoot(monorepo, appDir);
   generate(appDir, 'web', 'register');
   generate(appDir, 'web', 'schema');
   run('npx', ['ng', 'build'], appDir);
 
+  const registrations = readFileSync(
+    join(appDir, 'src/app/registrations/component-registrations.ts'),
+    'utf8',
+  );
+
   check(
-    readFileSync(
-      join(appDir, 'src/app/registrations/component-registrations.ts'),
-      'utf8',
-    ).includes("'slider'"),
+    registrations.includes("'slider'"),
     'register finds a control when the packages are installed above angular.json',
+  );
+  check(
+    registrations.includes("'knob'"),
+    'register follows a tsconfig extending one above angular.json to a contract there',
   );
 
   return appDir;

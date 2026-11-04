@@ -860,8 +860,10 @@ export type AppContent = TextControl;
     await runner.runSchematic('schema', { project: 'test-app' }, tree);
 
     // Which copy answered is otherwise invisible, and it decides every kind.
-    expect(messages).toContain(
-      'Resolved @ngx-formbar/core at "/node_modules/@ngx-formbar/core/"',
+    expect(messages).toContainEqual(
+      expect.stringMatching(
+        /^Resolved @ngx-formbar\/core at ".*\/node_modules\/@ngx-formbar\/core\/"$/,
+      ),
     );
   });
 

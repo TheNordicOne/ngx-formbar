@@ -68,5 +68,6 @@ export {
 export {
   createTreeCompilerHost,
   findTsConfigPath,
+  pathUnderRoot,
   readCompilerOptions,
 } from './lib/tsconfig';

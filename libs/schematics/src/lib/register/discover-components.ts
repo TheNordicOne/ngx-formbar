@@ -85,14 +85,14 @@ function toComponentInfo(
     return [];
   }
 
-  const { program, checker } = createTreeProgram(
+  const { checker, sourceFileAt } = createTreeProgram(
     tree,
     tsConfigPath,
     candidates,
   );
 
   return candidates.flatMap((filePath) => {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = sourceFileAt(filePath);
 
     return sourceFile
       ? analyzeSourceFile(sourceFile, filePath, checker, context)

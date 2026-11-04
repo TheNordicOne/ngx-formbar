@@ -51,7 +51,7 @@ export type AppContent = TextControl | NoteBlock;
 
     const names = type.types.map((member) => checker.typeToString(member));
     expect(names).toEqual(['TextControl', 'NoteBlock']);
-    expect(coreRoot).toBe('/node_modules/@ngx-formbar/core/');
+    expect(coreRoot.endsWith('/node_modules/@ngx-formbar/core/')).toBe(true);
   });
 
   it('resolves a reference written with a leading "./"', () => {

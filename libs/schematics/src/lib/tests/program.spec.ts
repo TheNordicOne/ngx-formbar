@@ -85,6 +85,56 @@ describe('createTreeProgram', () => {
 
     expect(loadedFiles()).toContain(join(monorepo, 'vendor/mapped.d.ts'));
   });
+
+  it('follows a tsconfig extending one above the workspace root', () => {
+    writeOnDisk('vendor/mapped.d.ts', 'export type Mapped = string;\n');
+    writeOnDisk(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: { paths: { mapped: ['./vendor/mapped.d.ts'] } },
+      }),
+    );
+    tree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({ extends: '../../tsconfig.base.json' }),
+    );
+    tree.create(file, "export { Mapped } from 'mapped';\n");
+
+    expect(loadedFiles()).toContain(join(monorepo, 'vendor/mapped.d.ts'));
+  });
+
+  it('follows a relative import leaving the workspace root', () => {
+    writeOnDisk('shared/types.ts', 'export type Shared = string;\n');
+    tree.create(
+      file,
+      "export { Shared } from '../../../../../../shared/types';\n",
+    );
+
+    expect(loadedFiles()).toContain(join(monorepo, 'shared/types.ts'));
+  });
+
+  it('prefers the Tree over the disk inside the workspace root', () => {
+    tree.create(file, "export { Fresh } from './fresh';\n");
+    tree.create(
+      '/projects/test-app/src/app/fresh.ts',
+      'export type Fresh = 1;\n',
+    );
+    writeOnDisk(
+      'apps/web/projects/test-app/src/app/fresh.ts',
+      'export type Stale = 1;\n',
+    );
+
+    const { sourceFileAt } = createTreeProgram(
+      tree,
+      '/tsconfig.json',
+      [file],
+      join(monorepo, 'apps/web'),
+    );
+
+    expect(sourceFileAt('/projects/test-app/src/app/fresh.ts')?.text).toContain(
+      'Fresh',
+    );
+  });
 });
 
 describe('readCompilerOptions', () => {

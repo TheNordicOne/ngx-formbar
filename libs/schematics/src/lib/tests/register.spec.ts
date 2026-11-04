@@ -1072,9 +1072,13 @@ ${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' 
 
         const tree = await runSchematic();
         const file = src(registrationsPath);
-        const { program } = createTreeProgram(tree, '/tsconfig.json', [file]);
+        const { program, sourceFileAt } = createTreeProgram(
+          tree,
+          '/tsconfig.json',
+          [file],
+        );
         const missingMembers = program
-          .getSemanticDiagnostics(program.getSourceFile(file))
+          .getSemanticDiagnostics(sourceFileAt(file))
           .filter(({ code }) => code === PROPERTY_DOES_NOT_EXIST)
           .map(({ messageText }) => messageText);
 
@@ -2423,8 +2427,12 @@ export class Slider implements ReactiveFormbarControl<SliderConfig> {
 
         const tree = await runSchematic();
         const file = src(registrationsPath);
-        const { program } = createTreeProgram(tree, '/tsconfig.json', [file]);
-        const sourceFile = program.getSourceFile(file);
+        const { program, sourceFileAt } = createTreeProgram(
+          tree,
+          '/tsconfig.json',
+          [file],
+        );
+        const sourceFile = sourceFileAt(file);
         const problems = [
           ...program.getSyntacticDiagnostics(sourceFile),
           ...program.getSemanticDiagnostics(sourceFile),
