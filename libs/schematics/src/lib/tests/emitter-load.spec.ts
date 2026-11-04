@@ -81,6 +81,37 @@ export default defineEmitter({
     );
   });
 
+  it('loads an emitter that imports a JSON file', () => {
+    tree.create(src('tools/data.json'), '{ "name": "from-json" }');
+    tree.create(
+      src('tools/json-emitter.ts'),
+      `import data from './data.json';
+
+export default { name: data.name, emit() {} };
+`,
+    );
+
+    expect(resolveEmitter('./tools/json-emitter.ts', tree, PATHS).name).toBe(
+      'from-json',
+    );
+  });
+
+  it('gives an emitter its directory on disk as __dirname', () => {
+    const workspaceRoot = tempWorkspaceRoot();
+
+    tree.create(
+      src('tools/dir-emitter.ts'),
+      'export default { name: __dirname, emit() {} };\n',
+    );
+
+    expect(
+      resolveEmitter('./tools/dir-emitter.ts', tree, {
+        ...PATHS,
+        workspaceRoot,
+      }).name,
+    ).toBe(join(workspaceRoot, PATHS.projectRoot, 'tools'));
+  });
+
   it('loads an emitter that imports a sibling file', () => {
     createSplitEmitter(tree);
 
