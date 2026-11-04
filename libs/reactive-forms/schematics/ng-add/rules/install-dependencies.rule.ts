@@ -1,3 +1,4 @@
+import { isJsonObject } from '@angular-devkit/core';
 import {
   chain,
   noop,
@@ -7,7 +8,6 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import { addDependency, DependencyType } from '@schematics/angular/utility';
-import { getDependency } from '@schematics/angular/utility/dependency';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -15,6 +15,12 @@ import {
   SCHEMATICS_PACKAGE_NAME,
 } from '../../shared/constants';
 import { RuleContext } from '../schema';
+
+const dependencySections = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+];
 
 interface OwnManifest {
   version?: string;
@@ -43,7 +49,7 @@ function installPackage(
   range: () => string,
 ) {
   return (tree: Tree, context: SchematicContext) => {
-    if (getDependency(tree, packageName)) {
+    if (isDeclared(tree, packageName)) {
       return noop();
     }
 
@@ -51,6 +57,20 @@ function installPackage(
 
     return addDependency(packageName, range(), { type });
   };
+}
+
+/** Not `getDependency`, as `@schematics/angular` only has it from 20.2. */
+function isDeclared(tree: Tree, packageName: string) {
+  const manifest = tree.readJson('/package.json');
+
+  return (
+    isJsonObject(manifest) &&
+    dependencySections.some((section) => {
+      const dependencies = manifest[section];
+
+      return isJsonObject(dependencies) && packageName in dependencies;
+    })
+  );
 }
 
 /** The release writes the range of the matching core into the peer dependencies. */

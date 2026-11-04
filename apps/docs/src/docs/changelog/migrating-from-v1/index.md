@@ -13,7 +13,7 @@ Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is sp
 
 ## Prerequisites
 
-- Angular 20.0.0 or higher
+- Angular 20.0.0 up to (but not including) Angular 22
 
 ## Step 1: Install the new packages
 

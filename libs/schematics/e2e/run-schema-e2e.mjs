@@ -7,8 +7,8 @@
  * read differently from plain concatenation, and in every layout the root
  * providers can have. A second one starts from `ng new --no-standalone`. A
  * third one goes through `ng add`, scaffolds into the seeded union, re-runs
- * `ng add`, runs `schema` and builds. A fourth one does this on Angular 20 with
- * an older TypeScript. The rows of "Where Components Go" and a run without a
+ * `ng add`, runs `schema` and builds. Two more do this on Angular 20.0 and 20.3
+ * with TypeScript 5.8. The rows of "Where Components Go" and a run without a
  * schematics configuration file go through the CLI too. Every
  * other test in these libraries runs inside this workspace against a virtual
  * Tree, which is the shape of test that passes while the shipped artifact is
@@ -1688,12 +1688,14 @@ function runRootProjectPathFlow(appDir, project) {
 }
 
 /**
- * `@schematics/angular` 20.3 bundles a TypeScript whose syntax kinds differ from
- * the 5.8 Angular 20.3 still allows, so passing it nodes parsed by the app's
- * TypeScript crashes or misreads them.
+ * Angular 20.0 is the oldest supported version, so anything imported from
+ * `@schematics/angular` has to exist there. `@schematics/angular` 20.3 bundles a
+ * TypeScript whose syntax kinds differ from the 5.8 Angular 20.3 still allows,
+ * so passing it nodes parsed by the app's TypeScript crashes or misreads them.
  */
-function runOlderTypeScriptFlow(appParent, tarballs) {
-  const appDir = createApp('older-typescript', appParent, [], '20.3');
+function runAngular20Flow(appParent, tarballs, cliVersion) {
+  const project = `angular-${cliVersion.replace('.', '-')}`;
+  const appDir = createApp(project, appParent, [], cliVersion);
 
   run(
     'npm',
@@ -1715,9 +1717,9 @@ function runOlderTypeScriptFlow(appParent, tarballs) {
     appDir,
   );
 
-  ngAdd(appDir, 'older-typescript');
-  generate(appDir, 'older-typescript', 'control', ['--key', 'slider']);
-  generate(appDir, 'older-typescript', 'schema');
+  ngAdd(appDir, project);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  generate(appDir, project, 'schema');
   run('npx', ['ng', 'build'], appDir);
 
   return appDir;
@@ -1851,7 +1853,8 @@ function main() {
     }
   }
 
-  runOlderTypeScriptFlow(appParent, tarballs);
+  runAngular20Flow(appParent, tarballs, '20.0');
+  runAngular20Flow(appParent, tarballs, '20.3');
 
   createApp('consumer', appParent);
   run('npm', ['install', tarballs.get(CORE_PACKAGE_NAME)], appDir);

@@ -2051,6 +2051,22 @@ export class OneControl implements ReactiveFormbarControl<OneConfig> {
       ).toBe(true);
     });
 
+    it('inserts at the right positions in a file with a BOM', async () => {
+      const result = await runConfig(
+        `\uFEFF${configFile(
+          coreImport('{ ComponentRegistrationConfig }'),
+          '  a: A,',
+        )}`,
+      );
+
+      expect(result).toContain(
+        coreImport('{ ComponentRegistrationConfig, loadComponent }'),
+      );
+      expect(result).toContain(`  a: A,
+  "one": loadComponent(() => import("../one/one-control").then(m => m.OneControl)),
+};`);
+    });
+
     it('adds loadComponent to the value import next to a type-only import', async () => {
       const value = '{ NGX_FW_COMPONENT_REGISTRATIONS }';
       const typeOnly = coreImport('type { ComponentRegistrationConfig }');
