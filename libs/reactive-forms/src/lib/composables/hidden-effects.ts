@@ -11,7 +11,8 @@ import { AbstractControl } from '@angular/forms';
 /**
  * Drives the mount lifecycle from the resolved component and the hidden
  * state. On initial setup, mounts the component into the host once the
- * parent container is available and the directive is not hidden. Calls
+ * parent container is available, unless the directive is hidden and handles
+ * visibility itself. Calls
  * `onHidden` or `onVisible` on every subsequent change to `isHidden` so each
  * directive applies its own form-attachment policy. The composable owns the
  * orchestration; the per-directive logic (`setControl`/`removeControl`,
@@ -20,6 +21,9 @@ import { AbstractControl } from '@angular/forms';
  * @param options.component Signal of the resolved component class to mount,
  *   or `null` while no component has been resolved yet.
  * @param options.isHidden Signal of the directive's hidden state.
+ * @param options.handleVisibility Signal of whether the library handles
+ *   visibility. When it does not, a hidden component still mounts, so it can
+ *   decide what to render.
  * @param options.parentControl Getter for the enclosing container (a
  *   `FormGroup`, or a `FormArray` for array rows). The initial mount is
  *   deferred until this returns a non-null control.
@@ -31,6 +35,7 @@ import { AbstractControl } from '@angular/forms';
 export function hiddenEffects(options: {
   component: Signal<Type<unknown> | null>;
   isHidden: Signal<boolean>;
+  handleVisibility: Signal<boolean>;
   parentControl: () => AbstractControl | null;
   host: ComponentHost;
   onHidden: () => void;
@@ -45,7 +50,7 @@ export function hiddenEffects(options: {
       return;
     }
 
-    if (untracked(() => options.isHidden())) {
+    if (untracked(() => options.isHidden() && options.handleVisibility())) {
       return;
     }
 
