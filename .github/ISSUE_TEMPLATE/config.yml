@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question
+    url: https://github.com/TheNordicOne/ngx-formbar/discussions/categories/q-a
+    about: Ask how to use ngx-formbar.
+  - name: Documentation
+    url: https://docs.ngx-formbar.net
+    about: Guides, examples and API reference.
+  - name: Known issues
+    url: https://docs.ngx-formbar.net/about/known-issues/
+    about: Check whether the problem is already known.
+  - name: Migrating from v1
+    url: https://next.docs.ngx-formbar.net/changelog/migrating-from-v1
+    about: Upgrade steps for v2.

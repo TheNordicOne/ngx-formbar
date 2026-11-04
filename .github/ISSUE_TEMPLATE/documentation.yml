@@ -1,0 +1,28 @@
+name: Documentation improvement
+description: Report a problem with the documentation
+labels: [documentation]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page URL
+      placeholder: https://docs.ngx-formbar.net/about/known-issues/
+    validations:
+      required: true
+  - type: dropdown
+    id: problem-type
+    attributes:
+      label: Problem
+      options:
+        - Wrong
+        - Missing
+        - Unclear
+        - Outdated
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What should change?
+    validations:
+      required: true

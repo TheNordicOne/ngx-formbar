@@ -1,0 +1,77 @@
+name: Schematics bug
+description: Something is wrong with ng add or a generator
+labels: [bug]
+assignees: [TheNordicOne]
+body:
+  - type: markdown
+    attributes:
+      value: v2 prereleases and v1 are both accepted. v1 only receives critical fixes.
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: The full command, including all options.
+      placeholder: ng generate @ngx-formbar/schematics:control name
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ngx-formbar version
+      placeholder: 2.0.0-next.5
+    validations:
+      required: true
+  - type: input
+    id: angular-version
+    attributes:
+      label: Angular version
+      placeholder: 21.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: workspace
+    attributes:
+      label: Workspace
+      options:
+        - Angular CLI
+        - Nx
+    validations:
+      required: true
+  - type: dropdown
+    id: package-manager
+    attributes:
+      label: Package manager
+      options:
+        - npm
+        - pnpm
+        - yarn
+        - bun
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Terminal output
+      render: shell
+  - type: textarea
+    id: schematics-config
+    attributes:
+      label: schematicsConfig
+      description: The relevant part of `angular.json`, if you use it.
+      render: json
+  - type: input
+    id: repository
+    attributes:
+      label: Reproduction repository

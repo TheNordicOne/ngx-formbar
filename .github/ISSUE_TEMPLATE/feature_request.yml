@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest a new capability
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: ngx-formbar ships no UI components and does not support custom configuration shapes. Requests for either are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration example
+      description: How the feature would look in a form configuration, if it affects one.
+      render: typescript
+  - type: dropdown
+    id: json
+    attributes:
+      label: Does it work in a plain JSON configuration?
+      options:
+        - 'Yes'
+        - 'No'
+        - Not applicable
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Is it a breaking change?
+      options:
+        - 'No'
+        - 'Yes'
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or alternatives

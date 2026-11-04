@@ -1,0 +1,98 @@
+name: Bug report
+description: Something is wrong with a form at runtime
+labels: [bug]
+assignees: [TheNordicOne]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        v2 prereleases and v1 are both accepted. v1 only receives critical fixes.
+        For `ng add` or generator problems, use the schematics bug form.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@ngx-formbar/reactive-forms'
+        - '@ngx-formbar/core'
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ngx-formbar version
+      placeholder: 2.0.0-next.5
+    validations:
+      required: true
+  - type: input
+    id: angular-version
+    attributes:
+      label: Angular version
+      placeholder: 21.1.0
+    validations:
+      required: true
+  - type: input
+    id: last-working-version
+    attributes:
+      label: Last working version
+      description: Only for regressions.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include any error message.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Form configuration
+      description: The smallest configuration that shows the problem.
+      render: typescript
+    validations:
+      required: true
+  - type: dropdown
+    id: config-source
+    attributes:
+      label: Configuration source
+      options:
+        - JSON
+        - TypeScript object
+    validations:
+      required: true
+  - type: dropdown
+    id: expressions
+    attributes:
+      label: Expressions involved
+      options:
+        - None
+        - String expressions
+        - Function expressions
+        - Both
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Render the form
+        2. Type "hide" into the first control
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Reproduction repository
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Only if the problem is browser-specific.
