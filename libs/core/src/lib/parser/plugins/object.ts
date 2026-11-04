@@ -14,8 +14,6 @@ const OCURLY_CODE = 123; // {
 const CCURLY_CODE = 125; // }
 
 export const objectPlugin: Plugin = {
-  name: 'object',
-
   init(jsep) {
     jsep.hooks.add('gobble-token', function gobbleObjectExpression(env) {
       if (this.code() !== OCURLY_CODE) {

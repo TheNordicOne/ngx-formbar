@@ -399,6 +399,8 @@ describe('parse', () => {
       ['[', 'Expected ] at character 1'],
       ['[a', 'Expected ] at character 2'],
       ['[a b]', 'Expected comma at character 3'],
+      ['[@]', 'Expected comma at character 1'],
+      ['a(@)', 'Expected comma at character 2'],
       ['[a, b c]', 'Expected comma at character 6'],
     ])('rejects %j with %j', (source, message) => {
       expect(errorOf(source)).toHaveProperty('message', message);
@@ -565,6 +567,25 @@ describe('parse', () => {
       });
     });
 
+    it.each([
+      [
+        'a => b ** c',
+        [a],
+        { type: 'BinaryExpression', operator: '**', left: b, right: c },
+      ],
+      [
+        'a => b + c',
+        [a],
+        { type: 'BinaryExpression', operator: '+', left: b, right: c },
+      ],
+    ])('keeps the operator in the body of %s', (source, params, body) => {
+      expect(parse(source).body).toEqual({
+        type: 'ArrowFunctionExpression',
+        params,
+        body,
+      });
+    });
+
     it('reads an arrow inside an arrow', () => {
       expect(parse('() => () => a').body).toEqual({
         type: 'ArrowFunctionExpression',
@@ -621,6 +642,7 @@ describe('parse', () => {
       ['``', [quasi('', '', true)], []],
       ['`a`', [quasi('a', 'a', true)], []],
       ['`$a`', [quasi('$a', '$a', true)], []],
+      ['`a{b}`', [quasi('a{b}', 'a{b}', true)], []],
       ['`\\${a}`', [quasi('\\${a}', '${a}', true)], []],
       [
         '`\\n\\r\\t\\b\\f\\v\\q`',
@@ -690,6 +712,14 @@ describe('parse', () => {
     it('stops the flags at the first other character', () => {
       expect(parse('/a/g.b').body).toEqual(
         member({ type: 'Literal', value: /a/g, raw: '/a/g' }, b),
+      );
+    });
+
+    it('reads a slash after an object as a division', () => {
+      const object = { type: 'ObjectExpression', properties: [] };
+
+      expect(parse('{} / b / c').body).toEqual(
+        bin(bin(object, '/', b), '/', c),
       );
     });
 

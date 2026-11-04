@@ -8,7 +8,6 @@
  */
 
 import type { Plugin } from '../plugins';
-import type { ParserStatic } from '../core';
 import type {
   BinaryExpression,
   ConditionalExpression,
@@ -16,17 +15,11 @@ import type {
   LogicalExpression,
 } from '../ast';
 
-function getOpPrecedence(jsep: ParserStatic, node: Expression) {
-  const operator = (node as { operator?: string }).operator;
-  if (operator === undefined) {
-    return undefined;
-  }
-  return jsep.binary_ops[operator];
+function isArrow(node: Expression) {
+  return (node as { operator?: string }).operator === '=>';
 }
 
 export const ternaryPlugin: Plugin = {
-  name: 'ternary',
-
   init(jsep) {
     jsep.hooks.add('after-expression', function gobbleTernary(env) {
       if (!env.node || this.code() !== jsep.QUMARK_CODE) {
@@ -62,15 +55,12 @@ export const ternaryPlugin: Plugin = {
         alternate: alternate as Expression,
       };
 
-      // Re-parent when the test is a low-precedence binary the ternary
-      // should bind tighter than (mirrors upstream jsep).
-      const testPrecedence = getOpPrecedence(jsep, test);
-      if (testPrecedence !== undefined && testPrecedence <= 0.9) {
+      // `=>` is still a binary operator here and binds looser than the ternary,
+      // so the ternary belongs in the innermost arrow body.
+      if (isArrow(test)) {
         let walk = test as BinaryExpression | LogicalExpression;
-        let rightPrecedence = getOpPrecedence(jsep, walk.right);
-        while (rightPrecedence !== undefined && rightPrecedence <= 0.9) {
+        while (isArrow(walk.right)) {
           walk = walk.right as BinaryExpression | LogicalExpression;
-          rightPrecedence = getOpPrecedence(jsep, walk.right);
         }
         conditional = { ...conditional, test: walk.right };
         walk.right = conditional;

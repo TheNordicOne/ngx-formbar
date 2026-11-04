@@ -16,8 +16,6 @@ const BTICK_CODE = 96; // `
 const CCURLY_CODE = 125; // }
 
 export const templatePlugin: Plugin = {
-  name: 'template',
-
   init(jsep) {
     jsep.hooks.add('gobble-token', function gobbleTemplateLiteral(env) {
       if (this.code() !== BTICK_CODE) {

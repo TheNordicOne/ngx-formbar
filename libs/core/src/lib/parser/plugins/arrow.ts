@@ -30,8 +30,6 @@ interface SequenceLike {
 }
 
 export const arrowPlugin: Plugin = {
-  name: 'arrow',
-
   init(jsep) {
     // Right-associative low-precedence so `=>` binds last.
     jsep.addRightAssociativeOp('=>', 0.1);
@@ -89,13 +87,7 @@ export const arrowPlugin: Plugin = {
       for (const key of Object.keys(node)) {
         const value = (node as unknown as Record<string, unknown>)[key];
         if (value && typeof value === 'object') {
-          if (Array.isArray(value)) {
-            for (const item of value) {
-              updateBinariesToArrows(item as Expression);
-            }
-          } else {
-            updateBinariesToArrows(value as Expression);
-          }
+          updateBinariesToArrows(value as Expression);
         }
       }
 

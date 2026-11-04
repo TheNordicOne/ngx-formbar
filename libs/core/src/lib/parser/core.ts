@@ -259,7 +259,7 @@ export class Parser {
       const curBiop = biop;
 
       const comparePrev = (prev: BinopInfo): boolean =>
-        biopInfo.right_a && prev.right_a ? prec > prev.prec : prec <= prev.prec;
+        biopInfo.right_a && prev.right_a ? prec < prev.prec : prec <= prev.prec;
 
       while (
         stack.length > 2 &&
@@ -443,7 +443,7 @@ export class Parser {
           callee: node,
           ...(optional ? { optional: true } : {}),
         };
-      } else if (ch === Parser.PERIOD_CODE || optional) {
+      } else {
         if (optional) {
           this.index--;
         }
@@ -568,22 +568,14 @@ export class Parser {
   }
 
   gobbleIdentifier(): Identifier {
-    let ch = this.code();
     const start = this.index;
 
-    if (Parser.isIdentifierStart(ch)) {
-      this.index++;
-    } else {
+    if (!Parser.isIdentifierStart(this.code())) {
       this.throwError('Unexpected ' + this.char());
     }
 
-    while (this.index < this.expr.length) {
-      ch = this.code();
-      if (Parser.isIdentifierPart(ch)) {
-        this.index++;
-      } else {
-        break;
-      }
+    while (Parser.isIdentifierPart(this.code())) {
+      this.index++;
     }
     return {
       type: 'Identifier',
@@ -621,13 +613,9 @@ export class Parser {
           termination === Parser.CPAREN_CODE
         ) {
           this.throwError('Unexpected token ,');
-        } else if (
-          separatorCount !== args.length &&
-          termination === Parser.CBRACK_CODE
-        ) {
-          for (let arg = args.length; arg < separatorCount; arg++) {
-            args.push(null);
-          }
+        }
+        for (let arg = args.length; arg < separatorCount; arg++) {
+          args.push(null);
         }
       } else if (args.length !== separatorCount) {
         this.throwError('Expected comma');

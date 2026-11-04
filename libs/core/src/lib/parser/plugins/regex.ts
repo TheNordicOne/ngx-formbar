@@ -15,8 +15,6 @@ const FSLASH_CODE = 47; // '/'
 const BSLASH_CODE = 92; // '\\'
 
 export const regexPlugin: Plugin = {
-  name: 'regex',
-
   init(jsep) {
     jsep.hooks.add('gobble-token', function gobbleRegexLiteral(env) {
       if (this.code() !== FSLASH_CODE) {

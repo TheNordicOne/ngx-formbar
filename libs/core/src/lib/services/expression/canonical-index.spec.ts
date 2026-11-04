@@ -19,6 +19,7 @@ describe('isCanonicalIndex', () => {
     null,
     true,
     {},
+    [1],
   ])('rejects %j', (value) => {
     expect(isCanonicalIndex(value)).toBe(false);
   });

@@ -250,11 +250,6 @@ export class ExpressionService {
         : undefined;
     }
 
-    if (typeof objectValue === 'function') {
-      throw new Error(
-        `Cannot access properties on a function value: .${String(propertyValue)}`,
-      );
-    }
     if (typeof objectValue === 'number' || typeof objectValue === 'boolean') {
       throw new Error(
         `Cannot access properties on a ${typeof objectValue} value: ${String(objectValue)}.${String(propertyValue)}`,
