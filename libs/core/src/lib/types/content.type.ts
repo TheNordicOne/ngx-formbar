@@ -131,6 +131,18 @@ export interface NgxFbBlock extends NgxFbBaseContent {
   [key: string]: unknown;
 }
 
+/**
+ * Marks a component contract. A component implementing a type that includes it
+ * is a form component to the `register` schematic, and `T` is its config.
+ *
+ * @template T The config of the component
+ */
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-object-type -- Only the `register` schematic reads it, from the types. */
+export interface FormbarContract<
+  T extends NgxFbBaseContent = NgxFbBaseContent,
+> {}
+/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-object-type */
+
 /** Any content that can appear in a form. */
 export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
 

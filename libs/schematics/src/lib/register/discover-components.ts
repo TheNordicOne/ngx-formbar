@@ -15,8 +15,10 @@ import {
   isClassDeclaration,
   isClassLike,
   isIdentifier,
+  isImportDeclaration,
   isInterfaceDeclaration,
   isIntersectionTypeNode,
+  isNamedImports,
   isTypeAliasDeclaration,
   isTypeReferenceNode,
   ModifierFlags,
@@ -37,12 +39,7 @@ import { FormbarComponentInfo } from './component-info.type';
 
 const defaultIncludes = ['**/*.ts'];
 const globCharacters = /[*?[]/;
-const contracts = [
-  'ReactiveFormbarControl',
-  'ReactiveFormbarGroup',
-  'ReactiveFormbarArray',
-  'FormbarBlock',
-];
+const CONTRACT = 'FormbarContract';
 const utilityTypes = ['Partial', 'Readonly', 'Pick', 'Omit'];
 
 export function discoverComponents(
@@ -435,8 +432,8 @@ function extractComponentInfo(
 }
 
 /**
- * A file naming a contract suggests the class was meant to implement it, unless
- * another class in the file accounts for the name.
+ * Importing a contract suggests the class was meant to implement it, unless
+ * another class in the file accounts for the import.
  */
 function warnAboutMentionedContract(
   classNode: ClassDeclaration,
@@ -446,9 +443,7 @@ function warnAboutMentionedContract(
   context: SchematicContext,
 ) {
   const sourceFile = classNode.getSourceFile();
-  const contract = contracts.find((name) =>
-    new RegExp(`\\b${name}\\b`).test(sourceFile.text),
-  );
+  const contract = importedContract(sourceFile, checker);
   const accountedFor = sourceFile.statements
     .filter(isClassDeclaration)
     .some(
@@ -461,6 +456,35 @@ function warnAboutMentionedContract(
       `${className} is not registered. Its file mentions ${contract}, but this schematic cannot read a contract from the class.`,
     );
   }
+}
+
+/** A class is left out, as importing a control does not mean implementing it. */
+function importedContract(sourceFile: SourceFile, checker: TypeChecker) {
+  return sourceFile.statements
+    .filter(isImportDeclaration)
+    .flatMap(({ importClause }) => {
+      const bindings = importClause?.namedBindings;
+
+      return bindings && isNamedImports(bindings) ? [...bindings.elements] : [];
+    })
+    .find(({ name }) => {
+      const symbol = originalSymbol(name, checker);
+
+      return (
+        isContract(symbol) ||
+        symbol?.declarations
+          ?.filter(isTypeDeclaration)
+          .some(
+            (declaration) =>
+              contractConfigs(declaration, new Map(), checker, new Set())
+                .length > 0,
+          )
+      );
+    })?.name.text;
+}
+
+function isTypeDeclaration(node: Node) {
+  return isInterfaceDeclaration(node) || isTypeAliasDeclaration(node);
 }
 
 function isAbstract(classNode: ClassDeclaration) {
@@ -497,7 +521,7 @@ function contractConfigs(
     const reference = withoutUtilityTypes(written, checker);
     const symbol = originalSymbol(reference.name, checker);
 
-    if (isContract(reference.name, symbol)) {
+    if (isContract(symbol)) {
       const config = reference.typeArguments?.at(0);
 
       return [config && resolveType(config, typeArguments, checker)];
@@ -506,8 +530,7 @@ function contractConfigs(
     const unseen = symbolsBehind(reference.name, symbol, checker).filter(
       (behind) => !seen.has(behind),
     );
-
-    unseen.forEach((behind) => seen.add(behind));
+    const seenBelow = new Set([...seen, ...unseen]);
 
     return unseen
       .flatMap((behind) => behind.declarations ?? [])
@@ -522,7 +545,7 @@ function contractConfigs(
             checker,
           ),
           checker,
-          seen,
+          seenBelow,
         ),
       );
   });
@@ -620,16 +643,8 @@ function symbolsBehind(
   );
 }
 
-/**
- * The imported name stands in when the package cannot be resolved, as then the
- * checker knows nothing about the symbol.
- */
-function isContract(name: Node, symbol: TsSymbol | undefined) {
-  const written = isIdentifier(name) ? name.text : undefined;
-
-  return [symbol?.name, written].some(
-    (candidate) => !!candidate && contracts.includes(candidate),
-  );
+function isContract(symbol: TsSymbol | undefined) {
+  return symbol?.name === CONTRACT;
 }
 
 /** What the type parameters of a declaration stand for at one reference to it. */

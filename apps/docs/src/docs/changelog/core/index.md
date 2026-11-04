@@ -18,6 +18,7 @@ The core package now focuses on content rendering, expression evaluation, and DI
 - `disabledHandling?: StateHandling` option on component registrations (default `'auto'`).
 - String helper utility `toSafeString`.
 - Form array config type `NgxFbArray<T>`, now part of the `NgxFbItem` union.
+- `FormbarContract<T>` type marking a component contract for the `register` schematic.
 
 ### Changed
 

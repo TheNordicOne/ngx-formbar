@@ -17,6 +17,8 @@ import {
   provideToken,
   setupWorkspace,
   TestComponentDetails,
+  addCoreStub,
+  addReactiveFormsStub,
 } from './workspace-setup';
 import {
   app,
@@ -65,6 +67,8 @@ describe('register schematic', () => {
   beforeEach(async () => {
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     appTree = await setupWorkspace(runner);
+    addCoreStub(appTree);
+    addReactiveFormsStub(appTree);
   });
 
   it('rejects a registration type other than token and config', async () => {
@@ -812,6 +816,82 @@ export class Wrapped implements Required<ReactiveFormbarControl> {
         ]);
       });
 
+      it('registers a component of an own integration', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/own-slider.ts'),
+          `import { Component, input } from '@angular/core';
+import { FormbarContract, NgxFbControl } from '@ngx-formbar/core';
+
+type MyLibControl<T extends NgxFbControl = NgxFbControl> = {
+  readonly name: unknown;
+} & FormbarContract<T>;
+
+interface SliderConfig extends NgxFbControl { type: 'slider'; }
+
+${decorator}
+export class OwnSlider implements MyLibControl<SliderConfig> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).toContain('OwnSlider');
+        expect(registrations).toContain('"slider"');
+        expect(warnings).toEqual([]);
+      });
+
+      it('ignores a type named like a contract that is not one', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/lookalike.ts'),
+          `import { Component, input } from '@angular/core';
+
+interface ReactiveFormbarControl { readonly name: unknown; }
+
+${decorator}
+export class Lookalike implements ReactiveFormbarControl {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).not.toContain('Lookalike');
+        expect(warnings).toEqual([]);
+      });
+
+      it('stays silent for a component importing a control', async () => {
+        appTree.create(
+          app('x/slider-control.ts'),
+          `${header}
+
+interface SliderConfig { type: 'slider'; }
+
+${decorator}
+export class SliderControl implements ReactiveFormbarControl<SliderConfig> {
+  ${nameInput}
+}
+`,
+        );
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/slider-page.ts'),
+          `import { Component } from '@angular/core';
+import { SliderControl } from './slider-control';
+
+@Component({ selector: 'app-page', imports: [SliderControl], template: '' })
+export class SliderPage {}
+`,
+        );
+
+        expect(registrations).toContain('SliderControl');
+        expect(registrations).not.toContain('SliderPage');
+        expect(warnings).toEqual([]);
+      });
+
       it('stays silent for a component next to a class implementing the contract', async () => {
         const warnings = warned();
 
@@ -1514,28 +1594,6 @@ export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarCo
     });
 
     describe('with the package installed', () => {
-      beforeEach(() => {
-        appTree.create(
-          '/node_modules/@ngx-formbar/reactive-forms/index.d.ts',
-          'export type ReactiveFormbarControl<T = unknown> = { readonly name: T };\n',
-        );
-        appTree.create(
-          '/node_modules/@ngx-formbar/reactive-forms/package.json',
-          JSON.stringify({
-            name: '@ngx-formbar/reactive-forms',
-            types: 'index.d.ts',
-          }),
-        );
-        appTree.create(
-          '/node_modules/@ngx-formbar/core/index.d.ts',
-          'export interface NgxFbControl { type: string; label?: string; }\n',
-        );
-        appTree.create(
-          '/node_modules/@ngx-formbar/core/package.json',
-          JSON.stringify({ name: '@ngx-formbar/core', types: 'index.d.ts' }),
-        );
-      });
-
       it('reads an intersection with a type of the package', async () => {
         appTree.create(
           componentFile,

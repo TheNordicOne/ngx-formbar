@@ -1,5 +1,6 @@
 import {
   ExtendedBlockInputs,
+  FormbarContract,
   HideStrategy,
   NgxFbArray,
   NgxFbBlock,
@@ -54,7 +55,7 @@ export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> =
       readonly labelText?: SignalInput<string | undefined>;
       readonly dynamicLabel?: SignalInput<string | null | undefined>;
       readonly controlInstance?: SignalInput<FormControl>;
-    };
+    } & FormbarContract<T>;
 
 /**
  * Implement this on components registered as form groups.
@@ -85,7 +86,7 @@ export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> =
       readonly titleText?: SignalInput<string | undefined>;
       readonly dynamicTitle?: SignalInput<string | null | undefined>;
       readonly groupInstance?: SignalInput<FormGroup>;
-    };
+    } & FormbarContract<T>;
 
 /**
  * Implement this on components registered as form arrays.
@@ -110,7 +111,7 @@ export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> =
       readonly labelText?: SignalInput<string | undefined>;
       readonly dynamicLabel?: SignalInput<string | null | undefined>;
       readonly arrayInstance?: SignalInput<FormArray>;
-    };
+    } & FormbarContract<T>;
 
 /**
  * Implement this on components registered as blocks (non-control elements like
@@ -136,4 +137,4 @@ export type FormbarBlock<T extends NgxFbBlock = NgxFbBlock> = ToSignalInputs<
 > & {
   readonly isHidden?: SignalInput<boolean>;
   readonly testId?: SignalInput<string>;
-};
+} & FormbarContract<T>;

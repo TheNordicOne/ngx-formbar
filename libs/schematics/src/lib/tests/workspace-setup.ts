@@ -66,8 +66,33 @@ export interface NgxFbControl extends NgxFbAbstractControl { label?: string; def
 export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { controls: Record<string, T>; }
 export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { rowControl: T & { hideStrategy?: 'keep' }; }
 export interface NgxFbBlock extends NgxFbBaseContent { isControl: false; [key: string]: unknown; }
+export interface FormbarContract<T extends NgxFbBaseContent = NgxFbBaseContent> {}
+export declare const NGX_FW_COMPONENT_REGISTRATIONS: unknown;
+export declare function staticComponent(component: unknown, options?: unknown): unknown;
+export declare function loadComponent(load: unknown, options?: unknown): unknown;
 export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
 export interface NgxFbForm<C extends NgxFbBaseContent = NgxFbItem> { content: Record<string, C>; }
+`,
+  );
+}
+
+export function addReactiveFormsStub(tree: UnitTestTree): void {
+  tree.create(
+    '/node_modules/@ngx-formbar/reactive-forms/package.json',
+    JSON.stringify({
+      name: '@ngx-formbar/reactive-forms',
+      types: './index.d.ts',
+    }),
+  );
+  tree.create(
+    '/node_modules/@ngx-formbar/reactive-forms/index.d.ts',
+    `import { FormbarContract, NgxFbArray, NgxFbBlock, NgxFbControl, NgxFbFormGroup } from '@ngx-formbar/core';
+interface ReactiveFormbarAbstractControl { readonly name: unknown; }
+export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type FormbarBlock<T extends NgxFbBlock = NgxFbBlock> = { readonly testId?: unknown } & FormbarContract<T>;
+export declare class NgxFbFormComponent {}
 `,
   );
 }

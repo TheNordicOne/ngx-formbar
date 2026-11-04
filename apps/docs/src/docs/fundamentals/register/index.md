@@ -2,7 +2,7 @@ While the Generator Schematics, by default, already register every new component
 
 ## What Does It Do
 
-This schematic registers every component that implements one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`, also through a base class or a type of your own.
+This schematic registers every component that implements one of `ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray` or `FormbarBlock`, also through a base class or a type of your own. For your own integration, see [Component Contract](/core/guide#component-contract).
 
 Any other component is left alone, such as a page that hosts `<ngxfb-form>`. It does **not** discover validators. Those must always be registered manually.
 
@@ -10,7 +10,7 @@ It looks through the source root of the project and skips any other project insi
 
 It skips abstract classes. It also skips a class that is not a named export, such as `export default class`, with a warning naming the class, as a registration imports it by name.
 
-A component it cannot read a contract from is skipped too. If its file mentions one of the contracts and no class in that file implements one, a warning names the class.
+A component it cannot read a contract from is skipped too. If its file imports a contract and no class in that file implements one, a warning names the class.
 
 Each component is registered under the `type` of its config, as a form refers to it. A config without one `type` value gets its key from the class name, and a warning names the class and the key:
 

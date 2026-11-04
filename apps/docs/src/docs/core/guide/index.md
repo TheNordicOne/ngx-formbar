@@ -328,6 +328,32 @@ Core does not own the form-model side. Your integration is responsible for:
 
 `@ngx-formbar/reactive-forms` handles these via a thin layer of effects (`disabledEffect`, `setComputedValueEffect`, `hiddenEffects`) wrapped around the core composables, plus its own `withControlState`/`withFormParent` helpers. The pattern is reusable as a template.
 
+### Component Contract
+
+Define the type your components implement, and include `FormbarContract` with their config:
+
+```typescript
+export type MyControlContract<T extends NgxFbControl = NgxFbControl> = {
+  readonly name: SignalInput<string>;
+  readonly isHidden?: SignalInput<boolean>;
+  readonly isDisabled?: SignalInput<boolean>;
+  readonly testId?: SignalInput<string>;
+} & FormbarContract<T>;
+```
+
+`FormbarContract` adds nothing to the component. It is how the [`register` schematic](/fundamentals/register) recognizes form components, and it registers each one under the `type` of its config:
+
+```typescript
+interface SliderConfig extends NgxFbControl {
+  type: 'slider';
+}
+
+@Component({ selector: 'app-slider', template: '' })
+export class SliderComponent implements MyControlContract<SliderConfig> {
+  readonly name = input.required<string>();
+}
+```
+
 ### Minimal Integration Sketch
 
 A directive that uses the configuration to resolve hidden/disabled state, mounts the registered component, and lets your form-state source handle everything else:
