@@ -60,13 +60,13 @@ A root NgModule has to be a named class declared in the project, and its metadat
 
 With source root `src`, `ng add` uses the first row that matches:
 
-| What exists                                                                   | `ng add` uses                                                                          |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `schematicsConfig` in `angular.json`, pointing at a file that exists          | That file                                                                              |
-| `src/app/formbar-schematic.config.json`                                       | That file                                                                              |
-| `formbar-schematic.config.json` at the workspace root, with the same settings | That file                                                                              |
-| `formbar-schematic.config.json` at the workspace root, with other settings    | A new `src/app/formbar-schematic.config.json`, and a warning lists what stops applying |
-| None of these                                                                 | A new `src/app/formbar-schematic.config.json`                                          |
+| What exists                                                                   | `ng add` uses                                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `schematicsConfig` in `angular.json`, pointing at a file that exists          | That file                                                                |
+| `src/app/formbar-schematic.config.json`                                       | That file                                                                |
+| `formbar-schematic.config.json` at the workspace root, with the same settings | That file                                                                |
+| `formbar-schematic.config.json` at the workspace root, with other settings    | A new `src/app/formbar-schematic.config.json`, holding only what differs |
+| None of these                                                                 | A new `src/app/formbar-schematic.config.json`                            |
 
 The same settings means the same registration style, registrations file and view provider helper as this run. A kept file is not changed, and a warning names each of those settings it does not have.
 
@@ -74,12 +74,12 @@ The same settings means the same registration style, registrations file and view
 
 To name the location yourself:
 
-| You pass                                 | `ng add` uses                                                                                                                                          |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--schematics-config-path=forms`         | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it                                                         |
-| `--schematic-config-file-name=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                                                                               |
-| `--schematics-config-path=app`           | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning                                                            |
-| `--schematics-config-path=/`             | `formbar-schematic.config.json` at the workspace root. With other settings already there, a new `src/app/formbar-schematic.config.json` and a warning. |
+| You pass                                 | `ng add` uses                                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--schematics-config-path=forms`         | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it                                                                     |
+| `--schematic-config-file-name=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                                                                                           |
+| `--schematics-config-path=app`           | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning                                                                        |
+| `--schematics-config-path=/`             | `formbar-schematic.config.json` at the workspace root. With other settings already there, a new `src/app/formbar-schematic.config.json` holding only what differs. |
 
 ## Options
 

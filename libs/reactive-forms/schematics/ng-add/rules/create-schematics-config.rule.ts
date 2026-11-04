@@ -12,10 +12,9 @@ import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 import { generatorDefaults } from '../helper';
 import {
   ignoredSettings,
-  ownSchematicsConfigFile,
   schematicsConfigFile,
   seededUnionType,
-  settingsStoppingToApply,
+  settingsOverShared,
   SHARED_CONFIG_FILE,
 } from '../schematics-config-file';
 import { posix } from 'node:path';
@@ -45,19 +44,12 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       },
     };
 
-    if (
-      configFile === ownSchematicsConfigFile(ruleContext) &&
-      !tree.exists(configFile) &&
-      tree.exists(SHARED_CONFIG_FILE)
-    ) {
-      const stopping = settingsStoppingToApply(
-        tree,
-        SHARED_CONFIG_FILE,
-        schematicConfig,
-      );
+    const overShared =
+      configFile !== SHARED_CONFIG_FILE && tree.exists(SHARED_CONFIG_FILE);
 
-      context.logger.warn(
-        `${configFile} now applies to this project instead of ${SHARED_CONFIG_FILE}.${stopping.length > 0 ? ` These settings of ${SHARED_CONFIG_FILE} stop applying: ${stopping.join(', ')}.` : ''}`,
+    if (overShared && !tree.exists(configFile)) {
+      context.logger.info(
+        `${configFile} goes over ${SHARED_CONFIG_FILE} and holds what differs from it.`,
       );
     }
 
@@ -65,7 +57,13 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       apply(url('./ng-add/files/schematics-config'), [
         applyTemplates({
           schematicConfigFileName: posix.basename(configFile, '.json'),
-          schematicConfig: JSON.stringify(schematicConfig, null, 2),
+          schematicConfig: JSON.stringify(
+            overShared
+              ? settingsOverShared(tree, ruleContext, schematicConfig)
+              : schematicConfig,
+            null,
+            2,
+          ),
         }),
         move(posix.dirname(configFile)),
         skipExistingFiles(tree, context, 'schematics configuration file'),

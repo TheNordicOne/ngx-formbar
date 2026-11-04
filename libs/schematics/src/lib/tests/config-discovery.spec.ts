@@ -5,8 +5,11 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
 import {
+  addCoreStub,
+  addReactiveFormsStub,
   addRootProject,
   COLLECTION_PATH,
+  provideToken,
   setupWorkspace,
 } from './workspace-setup';
 import { app, appRoot, exists, read, src, writeJson } from './helper';
@@ -14,6 +17,19 @@ import { app, appRoot, exists, read, src, writeJson } from './helper';
 const widgetConfig: NgxFormbarAutomationConfig = {
   control: { componentSuffix: 'Widget' },
 };
+
+function controlComponent(className: string, type: string) {
+  return `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface Config { type: '${type}'; }
+
+@Component({ selector: 'app-${type}', template: '' })
+export class ${className} implements ReactiveFormbarControl<Config> {
+  readonly name = input.required<string>();
+}
+`;
+}
 
 describe('schematics configuration file lookup', () => {
   let runner: SchematicTestRunner;
@@ -48,20 +64,101 @@ describe('schematics configuration file lookup', () => {
     expect(usedConfig(await scaffoldSlider())).toBe(true);
   });
 
-  it("replaces the workspace root config with the project's own, without merging", async () => {
-    writeJson(tree, '/formbar-schematic.config.json', {
-      control: { componentSuffix: 'Ignored', interfaceSuffix: 'Ignored' },
+  describe('with a file over the workspace root config', () => {
+    const shared = '/formbar-schematic.config.json';
+    const interfaceOfSlider = (result: UnitTestTree, suffix: string) =>
+      read(result, app(`slider/slider-${suffix}.ts`));
+
+    it('merges per key inside a section', async () => {
+      writeJson(tree, shared, {
+        control: { componentSuffix: 'Ignored', interfaceSuffix: 'Inherited' },
+      });
+      writeJson(tree, app('formbar-schematic.config.json'), widgetConfig);
+
+      const result = await scaffoldSlider();
+
+      expect(usedConfig(result)).toBe(true);
+      expect(interfaceOfSlider(result, 'widget')).toContain('Inherited');
     });
-    writeJson(tree, app('formbar-schematic.config.json'), widgetConfig);
 
-    const result = await scaffoldSlider();
+    it('inherits a setting the file does not state', async () => {
+      writeJson(tree, shared, widgetConfig);
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        registrationType: 'config',
+      });
 
-    expect(usedConfig(result)).toBe(true);
-    expect(
-      result.files
-        .filter((file) => file.startsWith(app('slider/')))
-        .some((file) => read(result, file).includes('Ignored')),
-    ).toBe(false);
+      expect(usedConfig(await scaffoldSlider())).toBe(true);
+    });
+
+    it('removes an inherited setting with null', async () => {
+      writeJson(tree, shared, widgetConfig);
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        control: { componentSuffix: null },
+      });
+
+      expect(usedConfig(await scaffoldSlider())).toBe(false);
+    });
+
+    it('replaces an inherited array', async () => {
+      tree.create(app('one/one.ts'), controlComponent('OneControl', 'one'));
+      tree.create(app('two/two.ts'), controlComponent('TwoControl', 'two'));
+      addCoreStub(tree);
+      addReactiveFormsStub(tree);
+      writeJson(tree, shared, { discovery: { include: ['app/one/**'] } });
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        discovery: { include: ['app/two/**'] },
+      });
+      provideToken(
+        tree,
+        'app.config.ts',
+        'app/registrations/component-registrations.ts',
+      );
+
+      const result = await runner.runSchematic(
+        'register',
+        { project: 'test-app' },
+        tree,
+      );
+      const registrations = read(
+        result,
+        src('app/registrations/component-registrations.ts'),
+      );
+
+      expect(registrations).toContain('TwoControl');
+      expect(registrations).not.toContain('OneControl');
+    });
+
+    it('inherits with an explicit --schematicsConfig too', async () => {
+      writeJson(tree, shared, widgetConfig);
+      writeJson(tree, src('config/custom.json'), {
+        registrationType: 'config',
+      });
+
+      const result = await runner.runSchematic(
+        'control',
+        {
+          key: 'slider',
+          project: 'test-app',
+          schematicsConfig: 'config/custom.json',
+        },
+        tree,
+      );
+
+      expect(usedConfig(result)).toBe(true);
+    });
+
+    it('logs both files', async () => {
+      const messages: string[] = [];
+      runner.logger.subscribe(({ message }) => messages.push(message));
+      writeJson(tree, shared, widgetConfig);
+      writeJson(tree, app('formbar-schematic.config.json'), {});
+
+      await scaffoldSlider();
+
+      expect(messages).toContain(
+        `Using schematics configuration file ${app('formbar-schematic.config.json')} over ${shared}`,
+      );
+    });
   });
 
   it('prefers an explicit --schematicsConfig over both locations', async () => {

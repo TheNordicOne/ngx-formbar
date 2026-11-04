@@ -1,4 +1,3 @@
-import { isJsonObject, JsonValue } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import {
   DEFAULT_REGISTRATION_TYPE,
@@ -6,7 +5,10 @@ import {
   DEFAULT_SCHEMATICS_CONFIG_PATH,
   isWithin,
   joinToSourceRoot,
+  NgxFormbarAutomationConfig,
+  readSchematicsConfig,
   resolveWithinWorkspace,
+  SHARED_SCHEMATICS_CONFIG,
   sourceRootValue,
 } from '@ngx-formbar/setup';
 import { posix } from 'node:path';
@@ -22,7 +24,7 @@ import {
   DEFAULT_CONTENT_TYPE_PATH,
 } from '../shared/constants';
 
-export const SHARED_CONFIG_FILE = `/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
+export const SHARED_CONFIG_FILE = SHARED_SCHEMATICS_CONFIG;
 
 /** What a setting means when neither this run nor the file states it. */
 const UNSTATED: Required<GeneratorDefaults> = {
@@ -30,6 +32,8 @@ const UNSTATED: Required<GeneratorDefaults> = {
   controlRegistrationsPath: DEFAULT_REGISTRATIONS_FILE,
   viewProviderHelperPath: 'none',
 };
+/** How a file overrides the shared file with what this run leaves unstated. */
+const REMOVED_OR_STATED = { ...UNSTATED, viewProviderHelperPath: null };
 const SETTINGS: (keyof GeneratorDefaults)[] = [
   'registrationType',
   'controlRegistrationsPath',
@@ -68,9 +72,8 @@ export function linkedSchematicsConfigFile(
 
 /**
  * The file holding the settings of this run. A link stays unless the run names
- * another location. The lookup prefers a project's own
- * file and does not merge it with the shared one, so that is where settings go
- * that differ from the shared file.
+ * another location. A project's own file goes over the shared one, so that is
+ * where settings go that differ from the shared file.
  */
 export function schematicsConfigFile(
   tree: Tree,
@@ -111,14 +114,12 @@ export function keptConfigUnion(
   union: string,
 ): 'unset' | 'this' | 'other' {
   const file = schematicsConfigFile(tree, ruleContext);
-  const kept = tree.exists(file)
-    ? tree.readJson(file)
-    : { schema: { type: union } };
-  const schema = isJsonObject(kept) ? kept.schema : null;
-  const type = schema && isJsonObject(schema) ? schema.type : null;
+  const type = readSchematicsConfig(tree, file)?.schema?.type;
 
-  return typeof type !== 'string'
-    ? 'unset'
+  return !type
+    ? tree.exists(file)
+      ? 'unset'
+      : 'this'
     : resolveWithinWorkspace(type.split('#')[0], ruleContext.sourceRoot) ===
         union
       ? 'this'
@@ -131,55 +132,61 @@ export function ignoredSettings(
   file: string,
   ruleContext: RuleContext,
 ): string[] {
-  const kept = tree.exists(file) ? tree.readJson(file) : null;
-
-  if (!isJsonObject(kept)) {
-    return [];
-  }
-
   const defaults = generatorDefaults(ruleContext);
-  const stated = (setting: keyof GeneratorDefaults) =>
-    defaults[setting] ?? UNSTATED[setting];
+
+  return tree.exists(file)
+    ? differingSettings(readSchematicsConfig(tree, file), ruleContext).map(
+        (setting) => `${setting}: ${defaults[setting] ?? UNSTATED[setting]}`,
+      )
+    : [];
+}
+
+/** What a new file over the shared one has to state. */
+export function settingsOverShared(
+  tree: Tree,
+  ruleContext: RuleContext,
+  { schema }: NgxFormbarAutomationConfig,
+): object {
+  const shared = readSchematicsConfig(tree, SHARED_CONFIG_FILE);
+  const defaults = generatorDefaults(ruleContext);
+
+  return {
+    ...Object.fromEntries(
+      differingSettings(shared, ruleContext).map((setting) => [
+        setting,
+        defaults[setting] ?? REMOVED_OR_STATED[setting],
+      ]),
+    ),
+    ...(shared?.schema?.type ? {} : { schema }),
+  };
+}
+
+function differingSettings(
+  kept: NgxFormbarAutomationConfig | null,
+  ruleContext: RuleContext,
+) {
+  const defaults = generatorDefaults(ruleContext);
 
   return SETTINGS.filter(
     (setting) =>
       !isSameSetting(
         setting,
-        kept[setting] ?? UNSTATED[setting],
-        stated(setting),
+        kept?.[setting] ?? UNSTATED[setting],
+        defaults[setting] ?? UNSTATED[setting],
         ruleContext.sourceRoot,
       ),
-  ).map((setting) => `${setting}: ${stated(setting)}`);
-}
-
-/** The top-level settings of `shared` that `own` does not repeat. */
-export function settingsStoppingToApply(
-  tree: Tree,
-  shared: string,
-  own: object,
-): string[] {
-  const kept = tree.readJson(shared);
-  const ownEntries = new Map(Object.entries(own));
-
-  return isJsonObject(kept)
-    ? Object.keys(kept).filter(
-        (setting) =>
-          JSON.stringify(kept[setting]) !==
-          JSON.stringify(ownEntries.get(setting)),
-      )
-    : [];
+  );
 }
 
 function isSameSetting(
   setting: keyof GeneratorDefaults,
-  kept: JsonValue,
+  kept: string,
   stated: string,
   sourceRoot: string,
 ) {
   return (
     kept === stated ||
     (setting !== 'registrationType' &&
-      typeof kept === 'string' &&
       stated !== UNSTATED.viewProviderHelperPath &&
       isSamePath(setting, kept, stated, sourceRoot))
   );

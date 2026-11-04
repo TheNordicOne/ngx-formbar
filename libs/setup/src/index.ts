@@ -38,9 +38,11 @@ export {
 export {
   findSchematicsConfig,
   loadAutomationConfig,
+  readSchematicsConfig,
   registrationsMissingMessage,
   registrationsNotFoundMessage,
   resolveRegistrationsPath,
+  SHARED_SCHEMATICS_CONFIG,
 } from './lib/file';
 export {
   getAngularComponentNaming,

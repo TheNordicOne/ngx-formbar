@@ -3892,7 +3892,7 @@ describe('ng-add schematic', () => {
         );
       });
 
-      it('writes the settings to the own file of the project', async () => {
+      it('writes only what differs to the own file of the project', async () => {
         const kept = read(appTree, sharedFile);
         const { tree, warnings } = await warningsOfRun(
           {
@@ -3902,54 +3902,57 @@ describe('ng-add schematic', () => {
           },
           'other',
         );
-        const ownConfig = tree.readJson(otherOwnFile);
 
         expect(read(tree, sharedFile)).toBe(kept);
-        expect(ownConfig).toHaveProperty('registrationType', 'config');
-        expect(ownConfig).toHaveProperty('viewProviderHelperPath', 'app/h2');
-        expect(ownConfig).toHaveProperty(
-          'schema.type',
-          'app/types/content.type.ts#AppContent',
-        );
-        expect(warnings).toEqual([
-          `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: viewProviderHelperPath.`,
-        ]);
+        expect(tree.readJson(otherOwnFile)).toEqual({
+          registrationType: 'config',
+          viewProviderHelperPath: 'app/h2',
+        });
+        expect(warnings).toEqual([]);
       });
 
-      it('names every setting that stops applying', async () => {
+      it('states a setting back to its default when the shared file differs', async () => {
         appTree.overwrite(
           sharedFile,
           JSON.stringify({
+            registrationType: 'config',
             viewProviderHelperPath: 'app/shared/helper',
-            control: { interfaceSuffix: 'Type' },
-            discovery: { include: ['**/forms/**'] },
           }),
         );
 
-        const { warnings } = await warningsOfRun(
-          { schematicsConfigPath: '/', registrationStyle: 'config' },
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', useHelper: false },
           'other',
         );
 
-        expect(warnings).toEqual([
-          `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: control, discovery.`,
-        ]);
+        expect(tree.readJson(otherOwnFile)).toEqual({
+          registrationType: 'token',
+          viewProviderHelperPath: null,
+          schema: {
+            type: 'app/types/content.type.ts#AppContent',
+            emitters: [
+              { use: 'json-schema-2020-12', output: 'form.schema.json' },
+            ],
+          },
+        });
       });
 
-      it('does not list what the own file repeats', async () => {
+      it('does not ignore a setting the kept own file inherits', async () => {
         appTree.overwrite(
           sharedFile,
-          JSON.stringify({ viewProviderHelperPath: 'app/shared/helper' }),
+          JSON.stringify({
+            registrationType: 'config',
+            schema: { type: 'app/types/content.type.ts#AppContent' },
+          }),
         );
+        appTree.create(otherOwnFile, JSON.stringify({ control: {} }));
 
         const { warnings } = await warningsOfRun(
-          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          { registrationStyle: 'config', useHelper: false },
           'other',
         );
 
-        expect(warnings).toEqual([
-          `${otherOwnFile} now applies to this project instead of ${sharedFile}.`,
-        ]);
+        expect(warnings).toEqual([]);
       });
 
       it.each<[string, Record<string, string>]>([
@@ -4058,7 +4061,7 @@ describe('ng-add schematic', () => {
           expect(warnings).toEqual([]);
         });
 
-        it('writes the own file and warns when the settings differ', async () => {
+        it('writes the own file when the settings differ', async () => {
           appTree.overwrite(
             sharedFile,
             JSON.stringify({
@@ -4076,9 +4079,8 @@ describe('ng-add schematic', () => {
             'registrationType',
             'config',
           );
-          expect(warnings).toEqual([
-            `${otherOwnFile} now applies to this project instead of ${sharedFile}. These settings of ${sharedFile} stop applying: control.`,
-          ]);
+          expect(tree.readJson(otherOwnFile)).not.toHaveProperty('control');
+          expect(warnings).toEqual([]);
         });
 
         it('stays with the own file on a further run', async () => {
@@ -4105,9 +4107,7 @@ describe('ng-add schematic', () => {
           expect(
             tree.exists(`${otherDirectory}/formbar-schematic.config.json`),
           ).toBe(true);
-          expect(warnings).toEqual([
-            `${otherOwnFile} now applies to this project instead of ${sharedFile}.`,
-          ]);
+          expect(warnings).toEqual([]);
         });
 
         it('does not count the default file name as a location', async () => {
