@@ -13,7 +13,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 - `interfaceFileSuffix` option to control the interface file's name segment.
 - `schema` generator: emits documents such as JSON Schema from the content union. See [Schema Generation](/fundamentals/schema).
-- `--registrationType` and `--controlRegistrationsPath` options on the scaffold generators.
+- `--registration-type` and `--control-registrations-path` options on the scaffold generators.
 
 ### Changed
 
@@ -32,14 +32,14 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Fixed
 
-- `register` honors `--controlRegistrationsPath`, `--controlRegistrations` and `--registrationType`.
+- `register` honors `--control-registrations-path`, `--control-registrations` and `--registration-type`.
 - A scaffold warns when the registrations file is missing or holds no registrations.
 - Paths above the workspace root give a clear error.
 
 ### Removed
 
-- `--hostDirectiveHelperPath` CLI option from the `control`, `group`, and `block` generators.
-- `--viewProviderHelperPath` from the `block` generator.
+- `--host-directive-helper-path` CLI option from the `control`, `group`, and `block` generators.
+- `--view-provider-helper-path` from the `block` generator.
 - Generated components no longer reference `hostDirectives` or `inject(NgxfbControlDirective)`.
 
 ### Migration
@@ -50,4 +50,4 @@ Install as a dev dependency to replace the generators previously in `@ngx-formba
 npm install -D @ngx-formbar/schematics
 ```
 
-Replace `@ngx-formbar/core:control` with `@ngx-formbar/schematics:control`, and the same for the other generators. Drop the `--hostDirectiveHelperPath` flag, and `--viewProviderHelperPath` from `block`. Convert v1-generated components with [Migrating from v1](/changelog/migrating-from-v1).
+Replace `@ngx-formbar/core:control` with `@ngx-formbar/schematics:control`, and the same for the other generators. Drop the `--host-directive-helper-path` flag, and `--view-provider-helper-path` from `block`. Convert v1-generated components with [Migrating from v1](/changelog/migrating-from-v1).

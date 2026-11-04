@@ -40,13 +40,13 @@ The generator reads your project's TypeScript configuration, so path aliases in 
 
 ### Options
 
-| Option             | Type   | Required | Default                             | Description                                                                                                                      |
-| ------------------ | ------ | -------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| --project          | string | No       | [Default Project](#default-project) | Angular project to run the emitters for.                                                                                         |
-| --schematicsConfig | string | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).     |
-| --type             | string | No       | -                                   | The content union as file and export, like `app/types/content.type.ts#AppContent`. Overrides `schema.type`. See [Paths](#paths). |
-| --emitter          | array  | No       | -                                   | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                 |
-| --output           | string | No       | -                                   | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.            |
+| Option              | Type   | Required | Default                             | Description                                                                                                                      |
+| ------------------- | ------ | -------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| --project           | string | No       | [Default Project](#default-project) | Angular project to run the emitters for.                                                                                         |
+| --schematics-config | string | No       | -                                   | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).     |
+| --type              | string | No       | -                                   | The content union as file and export, like `app/types/content.type.ts#AppContent`. Overrides `schema.type`. See [Paths](#paths). |
+| --emitter           | array  | No       | -                                   | Run only the configured emitter entries whose `use` matches one of these values. Repeat to select more than one.                 |
+| --output            | string | No       | -                                   | Overrides the `output` of one emitter entry (see [Paths](#paths)). With several entries, select one with `--emitter`.            |
 
 ## Default Project
 
@@ -56,7 +56,7 @@ The generator reads your project's TypeScript configuration, so path aliases in 
 
 {% include "../../shared/paths.md" %}
 
-A local `use` path must start with `./`, `../` or `/`. Anything else is read as a built-in name or a package name. With source root `src`, `./tools/my-emitter.ts` is `src/tools/my-emitter.ts`.
+A local `use` path must start with `./`, `../` or `/`. Anything else is read as a built-in name or a package name. With source root `src`, `./tools/my-emitter.ts` is `src/tools/my-emitter.ts` and `/tools/my-emitter.ts` is `tools/my-emitter.ts`.
 
 ## Finding the Schematics Configuration
 
@@ -110,9 +110,9 @@ Skip this section if the built-in JSON Schema output is all you need. It describ
 
 An emitter is the module's default export: an object with a string `name` and an `emit(model, ctx)` method. Any object of that shape loads. `defineEmitter` returns the object unchanged and types `model` and `ctx`.
 
-Save the emitter in your project. This one writes a Markdown reference of every node and its properties:
+Save the emitter outside `src`, so `ng build` does not compile it as app code. This one writes a Markdown reference of every node and its properties:
 
-```typescript name="src/tools/content-overview-emitter.ts"
+```typescript name="tools/content-overview-emitter.ts"
 import { defineEmitter } from '@ngx-formbar/schematics';
 
 export default defineEmitter({
@@ -141,7 +141,7 @@ Register it in the configuration by path:
 {
   "schema": {
     "type": "app/types/content.type.ts#AppContent",
-    "emitters": [{ "use": "./tools/content-overview-emitter.ts", "output": "content-overview.md" }]
+    "emitters": [{ "use": "/tools/content-overview-emitter.ts", "output": "content-overview.md" }]
   }
 }
 ```

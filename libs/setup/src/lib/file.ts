@@ -67,7 +67,7 @@ export function findSchematicsConfig(
 
 /**
  * Reads `formbar-schematic.config.json` and logs which file that was. An
- * explicit `--schematicsConfig` follows `resolveFromSourceRoot` and must exist.
+ * explicit `--schematics-config` follows `resolveFromSourceRoot` and must exist.
  * Without one, see `findSchematicsConfig`.
  */
 export function loadAutomationConfig(

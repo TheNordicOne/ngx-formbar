@@ -61,7 +61,7 @@ ng generate @ngx-formbar/schematics:schema
 
 `register` now takes each key from the `type` of the component's config. It only searches the source root, and an `--include` outside it fails. `register` only finds components implementing a contract, so run it after [Step 6](#step-6-refactor-consumer-components-to-the-interface-contract).
 
-The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at. The `block` generator no longer takes `--viewProviderHelperPath`.
+The `--host-directive-helper-path` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at. The `block` generator no longer takes `--view-provider-helper-path`.
 
 `--path` inside the project is relative to the workspace root, as in Angular's generators. In a project rooted at the workspace root (the default `ng new` layout), `--path app/forms` now writes to `app/forms`, where v1 wrote to `src/app/forms`. A path outside the project goes under the source root, a leading `/` means the workspace root, and a path inside another project fails.
 
@@ -71,7 +71,7 @@ Generated file and class names now follow Angular's `@schematics/angular:compone
 
 ### Generator settings written by v1's `ng add`
 
-The generators read their `angular.json` defaults from keys such as `@ngx-formbar/schematics:control`. With `--useSchematicConfig=false`, v1's `ng add` wrote them under `@ngx-formbar/core:control`, `@ngx-formbar/core:group` and `@ngx-formbar/core:block`, and the `2.0.0-next.x` prereleases did the same. Rename these keys in the project's `schematics` section and remove `hostDirectiveHelperPath`. Under the `block` key, delete `viewProviderHelperPath` too:
+The generators read their `angular.json` defaults from keys such as `@ngx-formbar/schematics:control`. With `--use-schematic-config=false`, v1's `ng add` wrote them under `@ngx-formbar/core:control`, `@ngx-formbar/core:group` and `@ngx-formbar/core:block`, and the `2.0.0-next.x` prereleases did the same. Rename these keys in the project's `schematics` section and remove `hostDirectiveHelperPath`. Under the `block` key, delete `viewProviderHelperPath` too:
 
 **Before:**
 
@@ -98,7 +98,7 @@ The generators read their `angular.json` defaults from keys such as `@ngx-formba
 }
 ```
 
-`controlRegistrationsPath` names the registrations file. With a custom `--registrationsPath`, v1's `ng add` set it to the registrations directory in the schematics configuration file, and the `2.0.0-next.x` prereleases did the same. Append the file name:
+`controlRegistrationsPath` names the registrations file. With a custom `--registrations-path`, v1's `ng add` set it to the registrations directory in the schematics configuration file, and the `2.0.0-next.x` prereleases did the same. Append the file name:
 
 **Before:**
 
