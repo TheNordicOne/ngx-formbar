@@ -17,11 +17,27 @@ function isStaticallyRead({ node }) {
   return name?.type === 'Identifier' && STATICALLY_READ.includes(name.name);
 }
 
+function isEmptyArrayInComputed(path) {
+  return (
+    path.node.type === 'ArrayExpression' &&
+    path.node.elements.length === 0 &&
+    path.findParent(
+      ({ node }) =>
+        node.type === 'CallExpression' && node.callee.name === 'computed',
+    ) !== null
+  );
+}
+
 export const strykerPlugins = [
   declareValuePlugin(PluginKind.Ignore, 'signal-options', {
-    shouldIgnore: (path) =>
-      isStaticallyRead(path)
-        ? 'Angular reads the options of this call at compile time.'
-        : undefined,
+    shouldIgnore: (path) => {
+      if (isStaticallyRead(path)) {
+        return 'Angular reads the options of this call at compile time.';
+      }
+
+      return isEmptyArrayInComputed(path)
+        ? 'Filling it widens the type a template reads, which fails the build.'
+        : undefined;
+    },
   }),
 ];
