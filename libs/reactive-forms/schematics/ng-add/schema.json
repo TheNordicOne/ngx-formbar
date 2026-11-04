@@ -79,6 +79,10 @@
       "description": "Whether to install @ngx-formbar/schematics (generators for control, group, block, array, register, schema)",
       "default": true,
       "x-prompt": "Would you like to install @ngx-formbar/schematics for component generators (control, group, block, array, register, schema)?"
+    },
+    "updateOtherProjects": {
+      "type": "boolean",
+      "description": "When this run creates the schematics configuration file at the workspace root, whether to write what other projects use now into their files. Without it, you are asked in a terminal, and nothing changes elsewhere."
     }
   }
 }

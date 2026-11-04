@@ -22,6 +22,7 @@ export interface Schema {
   schematicConfigFileName?: string;
 
   installSchematics?: boolean;
+  updateOtherProjects?: boolean;
 }
 
 export interface RuleContext

@@ -3894,7 +3894,11 @@ describe('ng-add schematic', () => {
         appTree = await runAdd({});
 
         const { tree } = await warningsOfRun(
-          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            updateOtherProjects: true,
+          },
           'other',
         );
 
@@ -3904,11 +3908,42 @@ describe('ng-add schematic', () => {
         );
       });
 
+      it('leaves another project alone and warns without a terminal', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+        expect(warnings).toEqual([
+          `/formbar-schematic.config.json changes other projects. To keep what they use now, write this into their files:\n  ${ownFile}: "registrationType": "token"`,
+        ]);
+      });
+
+      it('leaves another project alone when told to', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            updateOtherProjects: false,
+          },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+      });
+
       it('removes a helper the new file would add to another project', async () => {
         appTree = await runAdd({ useHelper: false });
 
         const { tree } = await warningsOfRun(
-          { schematicsConfigPath: '/' },
+          { schematicsConfigPath: '/', updateOtherProjects: true },
           'other',
         );
 

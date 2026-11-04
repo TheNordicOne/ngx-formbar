@@ -72,7 +72,7 @@ The same settings means the same registration style, registrations file and view
 
 `ng add` creates the content union file only for a new schematics configuration file or a kept one that points at it. A kept file without `schema.type` gets a warning naming the setting.
 
-When `ng add` creates the file at the workspace root, the file of every other project gets the settings that would otherwise change, so those projects keep working as before.
+When `ng add` creates the file at the workspace root and that would change another project, it asks whether to write what that project uses now into its file. `--update-other-projects` answers yes and `--update-other-projects=false` answers no. Without a terminal it changes nothing and logs a warning with what to write.
 
 To name the location yourself:
 
@@ -102,6 +102,7 @@ To name the location yourself:
 | --schematics-config-path     | string              | No       | `app`                               | Folder for the schematics configuration file. See [Paths](#paths).                                                                                                                                                                  |
 | --schematic-config-file-name | string              | No       | `formbar-schematic.config.json`     | Name of the schematics configuration file.                                                                                                                                                                                          |
 | --install-schematics         | boolean             | No       | `true`                              | Whether to install `@ngx-formbar/schematics` as a dev dependency for the control, group, block, array, register, and schema generators.                                                                                             |
+| --update-other-projects      | boolean             | No       | -                                   | Answers whether to write what other projects use now into their files when `ng add` creates the file at the workspace root. See [Which Schematics Configuration File](#which-schematics-configuration-file).                        |
 
 ## Default Project
 
