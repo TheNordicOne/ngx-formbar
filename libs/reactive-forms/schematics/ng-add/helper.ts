@@ -11,7 +11,6 @@ import {
   SourceFile,
 } from 'typescript';
 import { Change } from '@schematics/angular/utility/change';
-import { isImported } from '@schematics/angular/utility/ast-utils';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { isJsonObject, JsonObject, strings } from '@angular-devkit/core';
 import { posix } from 'node:path';
@@ -21,6 +20,7 @@ import {
   DEFAULT_REGISTRATIONS_PATH,
   exportsIdentifier,
   insertNamedImport,
+  isNamedImported,
   isCallee,
   joinToSourceRoot,
   NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS,
@@ -330,7 +330,7 @@ function importChanges(
     const symbols = imports
       .filter((requested) => requested.from === from)
       .map(({ symbol }) => symbol)
-      .filter((symbol) => !isImported(sourceFile, symbol, from));
+      .filter((symbol) => !isNamedImported(sourceFile, symbol, from));
 
     return symbols.length > 0
       ? [insertNamedImport(sourceFile, filePath, symbols.join(', '), from)]

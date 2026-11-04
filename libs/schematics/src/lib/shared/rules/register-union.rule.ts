@@ -1,7 +1,10 @@
 import { noop, Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { addUnionMember, loadSourceFile } from '@ngx-formbar/setup';
+import {
+  addUnionMember,
+  insertNamedImport,
+  loadSourceFile,
+} from '@ngx-formbar/setup';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
 import { parseTypeReference, resolveTypeFile } from '../type-reference';
 import { ScaffoldContext, ScaffoldType } from '../schema';
@@ -52,7 +55,7 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
     const recorder = tree.beginUpdate(unionPath);
 
     applyToUpdateRecorder(recorder, [
-      insertImport(
+      insertNamedImport(
         sourceFile,
         unionPath,
         ruleContext.interfaceName,

@@ -5,8 +5,10 @@ import {
   ImportClause,
   ImportDeclaration,
   isArrayLiteralExpression,
+  isExpressionStatement,
   isImportDeclaration,
   isNamedImports,
+  isStringLiteral,
   isStringLiteralLike,
   Node,
   NodeArray,
@@ -19,7 +21,6 @@ import {
   InsertChange,
   NoopChange,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 
 /** How a file breaks lines and indents, for what gets inserted into it. */
 export interface TextLayout {
@@ -34,9 +35,25 @@ export function textLayout(text: string): TextLayout {
   };
 }
 
+/** Whether a symbol can be used as a value under its bare name. */
+export function isNamedImported(
+  sourceFile: SourceFile,
+  symbol: string,
+  packageName: string,
+): boolean {
+  return importsFrom(sourceFile, packageName)
+    .flatMap(valueSpecifiers)
+    .some(
+      (specifier) => !specifier.isTypeOnly && specifier.name.text === symbol,
+    );
+}
+
 /**
- * Imports a symbol for use as a value under its bare name. `insertImport` alone
- * takes a namespace import as providing it and adds it to an `import type`.
+ * Imports a symbol for use as a value under its bare name.
+ *
+ * Does not use `ast-utils` of `@schematics/angular`: it tests nodes with the
+ * TypeScript bundled there, whose syntax kinds can differ from the TypeScript of
+ * the app that parsed them.
  */
 export function insertNamedImport(
   sourceFile: SourceFile,
@@ -44,30 +61,35 @@ export function insertNamedImport(
   symbol: string,
   packageName: string,
 ): Change {
-  const declarations = sourceFile.statements
+  const declarations = importsFrom(sourceFile, packageName);
+  const lastSpecifier = declarations.flatMap(valueSpecifiers).at(-1);
+  const first = sourceFile.statements.at(0);
+  const anchor =
+    declarations.at(-1) ??
+    sourceFile.statements.filter(isImportDeclaration).at(-1) ??
+    (first && isExpressionStatement(first) && isStringLiteral(first.expression)
+      ? first
+      : undefined);
+  const { newLine } = textLayout(sourceFile.text);
+  const statement = `import { ${symbol} } from '${packageName}';`;
+
+  return isNamedImported(sourceFile, symbol, packageName)
+    ? new NoopChange()
+    : lastSpecifier
+      ? new InsertChange(filePath, lastSpecifier.getEnd(), `, ${symbol}`)
+      : anchor
+        ? new InsertChange(filePath, anchor.getEnd(), `${newLine}${statement}`)
+        : new InsertChange(filePath, 0, `${statement}${newLine}`);
+}
+
+function importsFrom({ statements }: SourceFile, packageName: string) {
+  return statements
     .filter(isImportDeclaration)
     .filter(
       ({ moduleSpecifier }) =>
         isStringLiteralLike(moduleSpecifier) &&
         moduleSpecifier.text === packageName,
     );
-  const specifiers = declarations.flatMap(valueSpecifiers);
-  const lastDeclaration = declarations.at(-1);
-  const lastSpecifier = specifiers.at(-1);
-
-  return specifiers.some(
-    ({ isTypeOnly, name }) => !isTypeOnly && name.text === symbol,
-  )
-    ? new NoopChange()
-    : lastSpecifier
-      ? new InsertChange(filePath, lastSpecifier.getEnd(), `, ${symbol}`)
-      : lastDeclaration
-        ? new InsertChange(
-            filePath,
-            lastDeclaration.getEnd(),
-            `${textLayout(sourceFile.text).newLine}import { ${symbol} } from '${packageName}';`,
-          )
-        : insertImport(sourceFile, filePath, symbol, packageName);
 }
 
 function valueSpecifiers({ importClause }: ImportDeclaration) {
@@ -131,12 +153,14 @@ export function appendToLiteral(
     .map((printed) => `${newLine}${memberIndent}${printed}`)
     .join(',');
   const trailingComma = existing.hasTrailingComma ? ',' : '';
+  const closingOnOwnLine =
+    inner.includes('\n') && !text.slice(lastLineFeed, closing).trim();
 
   return [
     ...(last && !existing.hasTrailingComma
       ? [new InsertChange(filePath, last.getEnd(), ',')]
       : []),
-    inner.includes('\n')
+    closingOnOwnLine
       ? new InsertChange(filePath, closingLineBreak, `${lines}${trailingComma}`)
       : new InsertChange(filePath, closing, `${lines}${newLine}${indent}`),
   ];

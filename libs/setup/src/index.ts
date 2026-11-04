@@ -8,6 +8,7 @@ export { exportsIdentifier } from './lib/ast/exports';
 export {
   appendToLiteral,
   insertNamedImport,
+  isNamedImported,
   textLayout,
 } from './lib/ast/insert';
 export type { TextLayout } from './lib/ast/insert';

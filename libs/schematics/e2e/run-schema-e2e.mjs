@@ -7,8 +7,9 @@
  * read differently from plain concatenation, and in every layout the root
  * providers can have. A second one starts from `ng new --no-standalone`. A
  * third one goes through `ng add`, scaffolds into the seeded union, re-runs
- * `ng add`, runs `schema` and builds. The rows of "Where Components Go" and a
- * run without a schematics configuration file go through the CLI too. Every
+ * `ng add`, runs `schema` and builds. A fourth one does this on Angular 20 with
+ * an older TypeScript. The rows of "Where Components Go" and a run without a
+ * schematics configuration file go through the CLI too. Every
  * other test in these libraries runs inside this workspace against a virtual
  * Tree, which is the shape of test that passes while the shipped artifact is
  * broken.
@@ -708,14 +709,14 @@ function checkPackedFiles(files) {
   );
 }
 
-function createApp(name, appParent, newOptions = []) {
+function createApp(name, appParent, newOptions = [], cliVersion = '21') {
   const appDir = join(appParent, name);
 
   run(
     'npx',
     [
       '--yes',
-      '@angular/cli@21',
+      `@angular/cli@${cliVersion}`,
       'new',
       name,
       '--skip-git',
@@ -1686,6 +1687,42 @@ function runRootProjectPathFlow(appDir, project) {
   ]);
 }
 
+/**
+ * `@schematics/angular` 20.3 bundles a TypeScript whose syntax kinds differ from
+ * the 5.8 Angular 20.3 still allows, so passing it nodes parsed by the app's
+ * TypeScript crashes or misreads them.
+ */
+function runOlderTypeScriptFlow(appParent, tarballs) {
+  const appDir = createApp('older-typescript', appParent, [], '20.3');
+
+  run(
+    'npm',
+    ['install', '--save-dev', '--save-exact', 'typescript@5.8.3'],
+    appDir,
+  );
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, 'older-typescript');
+  generate(appDir, 'older-typescript', 'control', ['--key', 'slider']);
+  generate(appDir, 'older-typescript', 'schema');
+  run('npx', ['ng', 'build'], appDir);
+
+  return appDir;
+}
+
 function runNgAddFlow(appParent, tarballs) {
   const appDir = createApp('formbar', appParent);
 
@@ -1813,6 +1850,8 @@ function main() {
       schematicsFiles = files;
     }
   }
+
+  runOlderTypeScriptFlow(appParent, tarballs);
 
   createApp('consumer', appParent);
   run('npm', ['install', tarballs.get(CORE_PACKAGE_NAME)], appDir);
