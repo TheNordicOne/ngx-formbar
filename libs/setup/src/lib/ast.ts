@@ -1,22 +1,21 @@
 import {
-  AsExpression,
   CallExpression,
   Expression,
   isArrowFunction,
+  isAsExpression,
+  isCallExpression,
   isIdentifier,
+  isNonNullExpression,
   isNumericLiteral,
   isObjectLiteralExpression,
   isParenthesizedExpression,
+  isSatisfiesExpression,
   isStringLiteral,
   isVariableStatement,
-  NonNullExpression,
   ObjectLiteralElementLike,
   ObjectLiteralExpression,
-  ParenthesizedExpression,
   PropertyName,
-  SatisfiesExpression,
   SourceFile,
-  SyntaxKind,
   VariableDeclaration,
 } from 'typescript';
 
@@ -52,48 +51,29 @@ export function findVariableWithObjectLiteral(
 export function unwrapToObjectLiteral(
   expr: Expression,
 ): ObjectLiteralExpression | null {
-  let current: Expression | undefined = expr;
+  return isObjectLiteralExpression(expr)
+    ? expr
+    : isParenthesizedExpression(expr) ||
+        isAsExpression(expr) ||
+        isSatisfiesExpression(expr) ||
+        isNonNullExpression(expr)
+      ? unwrapToObjectLiteral(expr.expression)
+      : isCallExpression(expr)
+        ? objectOfImmediateCall(expr)
+        : null;
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  while (true) {
-    if (isObjectLiteralExpression(current)) {
-      return current;
-    }
+function objectOfImmediateCall({ expression: callee }: CallExpression) {
+  const body =
+    isParenthesizedExpression(callee) && isArrowFunction(callee.expression)
+      ? callee.expression.body
+      : undefined;
 
-    switch (current.kind) {
-      case SyntaxKind.ParenthesizedExpression:
-        current = (current as ParenthesizedExpression).expression;
-        continue;
-      case SyntaxKind.AsExpression:
-        current = (current as AsExpression).expression;
-        continue;
-      case SyntaxKind.SatisfiesExpression:
-        current = (current as SatisfiesExpression).expression;
-        continue;
-      case SyntaxKind.NonNullExpression:
-        current = (current as NonNullExpression).expression;
-        continue;
-      case SyntaxKind.CallExpression: {
-        const call = current as CallExpression;
-        const callee = call.expression;
-        if (
-          isParenthesizedExpression(callee) &&
-          isArrowFunction(callee.expression)
-        ) {
-          const body = callee.expression.body;
-          if (
-            isParenthesizedExpression(body) &&
-            isObjectLiteralExpression(body.expression)
-          ) {
-            return body.expression;
-          }
-        }
-        return null;
-      }
-      default:
-        return null;
-    }
-  }
+  return body &&
+    isParenthesizedExpression(body) &&
+    isObjectLiteralExpression(body.expression)
+    ? body.expression
+    : null;
 }
 
 export function nameOfProperty(

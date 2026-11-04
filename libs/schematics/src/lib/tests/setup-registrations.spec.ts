@@ -247,6 +247,7 @@ describe('finding the registered component', () => {
     [imported, 'Comp'],
     [`import { Comp as Renamed } from './comp';`, 'Renamed'],
     [`import { Other, Comp } from './comp';`, 'Comp'],
+    [`import './side';\n${imported}`, 'Comp'],
     [imported, 'staticComponent(Comp)'],
     ['', `loadComponent(() => import('./comp').then((m) => m.Comp))`],
     ['', `loadComponent(() => import('./comp').then(({ Comp }) => Comp))`],
@@ -284,6 +285,7 @@ describe('finding the registered component', () => {
     ['', `loadComponent(() => import('./comp').then(({ Comp }) => Other))`],
     ['', `loadComponent(() => import('./comp').then(([Comp]) => Comp))`],
     ['', `loadComponent(() => import('./comp').then((Comp) => Comp))`],
+    ['', `loadComponent(() => import('./comp').then(() => Comp))`],
     ['', `loadComponent(() => import('./comp').then(cb))`],
     ['', `loadComponent(() => import('./comp').then())`],
     ['', `loadComponent(() => load('./comp').then((m) => m.Comp))`],
@@ -330,6 +332,7 @@ describe('finding the registered component', () => {
 
   it.each([
     ['class', 'export class Comp {}'],
+    ['class after another statement', 'const other = 1;\nexport class Comp {}'],
     ['const', 'export const Comp = 1;'],
     ['function', 'export function Comp() {}'],
     ['enum', 'export enum Comp {}'],
@@ -362,6 +365,14 @@ describe('finding the registered component', () => {
     ['a chain', `export * from './middle';`],
     ['a second star', `export * from './none';\nexport * from './comp';`],
     [
+      'a star next to a local export',
+      `class Other {}\nexport { Other };\nexport * from './comp';`,
+    ],
+    [
+      'an import among others',
+      `import './side';\nimport D from './d';\nimport * as n from './n';\nimport { Other } from './other';\nimport { Comp } from './comp';\nexport { Comp };`,
+    ],
+    [
       'a skipped name',
       `export { Other } from './none';\nexport * from './comp';`,
     ],
@@ -388,6 +399,8 @@ describe('finding the registered component', () => {
     ['an inline type', `export { type Comp } from './comp';`],
     ['a namespace export', `export * as Comp from './comp';`],
     ['a cycle', `export * from './loop';`],
+    ['a namespace import', `import * as Comp from './comp';\nexport { Comp };`],
+    ['a default import', `import Comp from './comp';\nexport { Comp };`],
     ['a missing file', `export * from './none';`],
     ['a package', `export * from 'pkg';`],
   ])('does not follow %s', (_, barrel) => {
@@ -438,5 +451,23 @@ describe('finding the registered component', () => {
         '/src/comp.ts': `export class Comp {}\nexport class Other {}`,
       }),
     ).toBe(false);
+  });
+
+  it('finds the component among the properties of an object', () => {
+    const registrations = findComponentRegistrationsObject(
+      parse(
+        `${imported}\nconst componentRegistrations = { a: Other, b: Comp };`,
+      ),
+    );
+
+    expect(
+      registrations &&
+        componentRegistrationsObjectUsesComponent(registrations, {
+          tree: treeOf({ '/src/comp.ts': DECLARATION }),
+          tsConfigPath: '/tsconfig.json',
+          className: 'Comp',
+          filePath: '/src/comp.ts',
+        }),
+    ).toBe(true);
   });
 });

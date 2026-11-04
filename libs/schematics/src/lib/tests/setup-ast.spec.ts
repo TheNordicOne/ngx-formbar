@@ -185,6 +185,7 @@ describe('exportsIdentifier', () => {
     'export enum X {}',
     'export const Y = 1, X = 2;',
     'class X {}\nexport { X };',
+    'class A {}\nclass X {}\nexport { A, X };',
     'class Y {}\nexport { Y as X };',
     `export { X } from 'pkg';`,
     `export * as X from 'pkg';`,
@@ -206,6 +207,7 @@ describe('exportsIdentifier', () => {
     `export * as Y from 'pkg';`,
     `export * from 'pkg';`,
     `export * from './none';`,
+    `export * from 'b';`,
     `export type * from './b';`,
   ])('is false for %s', (text) => {
     expect(inFile(text, { '/b.ts': 'export class X {}' })).toBe(false);
@@ -296,6 +298,10 @@ describe('imports', () => {
       `import { A } from 'a';\nimport { B, X } from 'pkg';\nimport { C } from 'c';`,
     ],
     [`import 'pkg';`, `import 'pkg';\nimport { X } from 'pkg';`],
+    [
+      `import 'pkg';\nimport D from 'pkg';\nimport * as n from 'pkg';`,
+      `import 'pkg';\nimport D from 'pkg';\nimport * as n from 'pkg';\nimport { X } from 'pkg';`,
+    ],
     [`import D from 'pkg';`, `import D from 'pkg';\nimport { X } from 'pkg';`],
   ])('adds to %j', (text, expected) => {
     expect(applied(text)).toBe(expected);
@@ -366,9 +372,35 @@ describe('appendToLiteral', () => {
     [`const a = [\n  1, 2 ];`, `const a = [\n  1, 2, \n  ["k"]\n];`],
     [`const a = [1,\n2 ];`, `const a = [1,\n2, \n["k"]\n];`],
     [`const a = {};`, `const a = {\n  ["k"]\n};`],
+    [
+      `// one\r\nconst a = [\n  1,\n];`,
+      `// one\r\nconst a = [\n  1,\n  ["k"],\n];`,
+    ],
+    [
+      `function f() {\n  g();\n}\nconst a = [\n      // none\n];`,
+      `function f() {\n  g();\n}\nconst a = [\n      // none\n      ["k"]\n];`,
+    ],
+    [`run();\nconst a = [1];`, `run();\nconst a = [1,\n  ["k"]\n];`],
     [`const a = {\n  b: 1,\n};`, `const a = {\n  b: 1,\n  ["k"],\n};`],
   ])('appends to %j', (text, expected) => {
     expect(applied(text, arrayMember)).toBe(expected);
+  });
+
+  it('separates several members', () => {
+    const sourceFile = parse(`const a = [\n  1,\n];`);
+    const tree = treeOf({ '/f.ts': sourceFile.text });
+    const recorder = tree.beginUpdate('/f.ts');
+
+    applyToUpdateRecorder(
+      recorder,
+      appendToLiteral(sourceFile, '/f.ts', firstLiteral(sourceFile), [
+        factory.createNumericLiteral(2),
+        factory.createNumericLiteral(3),
+      ]),
+    );
+    tree.commitUpdate(recorder);
+
+    expect(tree.readText('/f.ts')).toBe(`const a = [\n  1,\n  2,\n  3,\n];`);
   });
 
   it('indents the lines of a printed member by the indent unit of the file', () => {
@@ -490,6 +522,15 @@ describe('findTsConfigPath', () => {
     expect(findTsConfigPath(tree, project(configured))).toBe(expected);
   });
 
+  it('reads a build target without options as no configured path', () => {
+    expect(
+      findTsConfigPath(treeOf({ '/p/tsconfig.json': '{}' }), {
+        root: 'p',
+        targets: new Map([['build', {}]]),
+      } as unknown as ProjectDefinition),
+    ).toBe('p/tsconfig.json');
+  });
+
   it('reads no build target as no configured path', () => {
     expect(
       findTsConfigPath(treeOf({ '/p/tsconfig.json': '{}' }), {
@@ -526,6 +567,15 @@ describe('readCompilerOptions', () => {
       target: ScriptTarget.ES2020,
       skipLibCheck: true,
     });
+  });
+
+  it('follows extends without the extension', () => {
+    const tree = treeOf({
+      '/base.json': '{ "compilerOptions": { "strict": false } }',
+      '/tsconfig.json': '{ "extends": "./base" }',
+    });
+
+    expect(readCompilerOptions(tree, '/tsconfig.json').strict).toBe(false);
   });
 
   it('roots what the file resolves at the workspace root', () => {
@@ -717,6 +767,14 @@ describe('readSchematicsConfig', () => {
     expect(readSchematicsConfig(new EmptyTree(), null)).toBeNull();
   });
 
+  it('reads a file with a BOM', () => {
+    expect(
+      readSchematicsConfig(treeOf({ [OWN]: '\uFEFF{"a":1}' }), OWN),
+    ).toEqual({
+      a: 1,
+    });
+  });
+
   it('logs which files it read', () => {
     const messages: string[] = [];
     const logger = new logging.Logger('test');
@@ -750,6 +808,7 @@ describe('resolveWithinWorkspace', () => {
     ['.//a.ts', 'src', '/src/a.ts'],
     ['/a.ts', 'src', '/a.ts'],
     ['src/a.ts', 'src', '/src/a.ts'],
+    ['././src/a.ts', 'src', '/src/a.ts'],
     ['x/./a.ts', 'src', '/src/x/a.ts'],
     ['../../a.ts', 'src', null],
   ])('resolves %s in %s', (path, sourceRoot, expected) => {

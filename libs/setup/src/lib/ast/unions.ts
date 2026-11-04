@@ -43,7 +43,7 @@ export function addUnionMember(
   const content = sourceFile.getFullText();
   const existing = alias.type.getText(sourceFile);
   const replacement =
-    existing.trim() === 'never' ? member : `${existing}\n  | ${member}`;
+    existing === 'never' ? member : `${existing}\n  | ${member}`;
   const start = alias.type.getStart(sourceFile);
   const end = alias.type.getEnd();
 
@@ -60,5 +60,5 @@ export function addUnionMember(
 function readMembers(alias: TypeAliasDeclaration, sourceFile: SourceFile) {
   const types = isUnionTypeNode(alias.type) ? alias.type.types : [alias.type];
 
-  return types.map((type) => type.getText(sourceFile).trim());
+  return types.map((type) => type.getText(sourceFile));
 }

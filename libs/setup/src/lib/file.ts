@@ -155,18 +155,8 @@ function resolveExplicitConfig(
 }
 
 function readFile<T>(tree: Tree, path?: string | null) {
-  if (!path) {
-    return null;
-  }
-  if (!tree.exists(path)) {
-    return null;
-  }
-  const buf = tree.read(path);
-  if (!buf) {
-    throw new SchematicsException(`Could not read ${path}`);
-  }
-
-  const text = buf.toString('utf-8');
-
-  return JSON.parse(text) as T;
+  // `readText` drops a BOM, which `JSON.parse` does not take.
+  return path && tree.exists(path)
+    ? (JSON.parse(tree.readText(path)) as T)
+    : null;
 }
