@@ -453,7 +453,7 @@ Loose equality coercion is no longer applied. `==` behaves identically to `===` 
 | `"" == 0`                                     | `true`  | `false` |
 | `null == undefined`                           | `true`  | `false` |
 
-If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `String(age) == "18"`).
+If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `age.toString() == "18"`).
 
 ### Array mutators throw
 
