@@ -3878,6 +3878,59 @@ describe('ng-add schematic', () => {
       ]);
     });
 
+    describe('when this run creates the shared file', () => {
+      const ownFile = schematicsConfigPath;
+
+      beforeEach(async () => {
+        appTree = await runner.runExternalSchematic(
+          '@schematics/angular',
+          'application',
+          { name: 'other', standalone: true },
+          appTree,
+        );
+      });
+
+      it('states a default the new file would change in another project', async () => {
+        appTree = await runAdd({});
+
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+
+        expect(tree.readJson(ownFile)).toHaveProperty(
+          'registrationType',
+          'token',
+        );
+      });
+
+      it('removes a helper the new file would add to another project', async () => {
+        appTree = await runAdd({ useHelper: false });
+
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(tree.readJson(ownFile)).toHaveProperty(
+          'viewProviderHelperPath',
+          null,
+        );
+      });
+
+      it('changes nothing when the new file agrees', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+      });
+    });
+
     describe('in the shared file at the workspace root', () => {
       const sharedFile = '/formbar-schematic.config.json';
       const otherOwnFile =
@@ -3934,6 +3987,21 @@ describe('ng-add schematic', () => {
               { use: 'json-schema-2020-12', output: 'form.schema.json' },
             ],
           },
+        });
+      });
+
+      it('inherits the emitters of the shared file', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({
+            schema: { emitters: [{ use: 'json-schema-draft-07' }] },
+          }),
+        );
+
+        const { tree } = await warningsOfRun({}, 'other');
+
+        expect(tree.readJson(otherOwnFile)).toHaveProperty('schema', {
+          type: 'app/types/content.type.ts#AppContent',
         });
       });
 
@@ -4300,12 +4368,24 @@ describe('ng-add schematic', () => {
       return warnings;
     }
 
-    it('warns naming the workspace root config that overrides the settings', async () => {
-      appTree.create('/formbar-schematic.config.json', '{}');
+    it('warns about the settings a config file wins with', async () => {
+      appTree.create(
+        '/formbar-schematic.config.json',
+        JSON.stringify({ registrationType: 'config' }),
+      );
 
       expect(await warningsOfRun({ useSchematicConfig: false })).toContain(
-        '/formbar-schematic.config.json overrides the settings written to angular.json, as the generators prefer a schematics configuration file.',
+        'The schematics configuration of this project sets registrationType, which win over the settings written to angular.json.',
       );
+    });
+
+    it('does not warn about a config file without those settings', async () => {
+      appTree.create(
+        '/formbar-schematic.config.json',
+        JSON.stringify({ control: { componentSuffix: 'X' } }),
+      );
+
+      expect(await warningsOfRun({ useSchematicConfig: false })).toEqual([]);
     });
 
     it('does not warn without a config file', async () => {

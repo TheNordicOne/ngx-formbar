@@ -32,6 +32,7 @@ import {
 import { createTokenRegistrationFiles } from './rules/create-token-registration-files.rule';
 import { createConfigRegistrationFiles } from './rules/create-config-registration-files.rule';
 import { createSchematicsConfig } from './rules/create-schematics-config.rule';
+import { keepOtherProjects } from './rules/keep-other-projects.rule';
 import { linkSchematicsConfig } from './rules/link-schematics-config.rule';
 import { createFormbarRegistrationsConfig } from './rules/create-formbar-registration-config.rule';
 import { createContentTypeFile } from './rules/create-content-type-file.rule';
@@ -146,6 +147,7 @@ export function ngAdd(options: Schema): Rule {
       createFormbarRegistrationsConfig(ruleContext),
       createHelperFiles(ruleContext),
       createContentTypeFile(ruleContext),
+      keepOtherProjects(ruleContext),
       createSchematicsConfig(ruleContext),
       linkSchematicsConfig(ruleContext),
       updateSchematicsConfig(ruleContext),

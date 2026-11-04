@@ -50,12 +50,11 @@ export function requestedSchematicsConfigFile({
   );
 }
 
+export const OWN_SCHEMATICS_CONFIG = `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`;
+
 /** Where the lookup looks first in a project. */
 export function ownSchematicsConfigFile({ sourceRoot }: RuleContext): string {
-  return joinToSourceRoot(
-    `${DEFAULT_SCHEMATICS_CONFIG_PATH}/${DEFAULT_SCHEMATIC_CONFIG_FILE_NAME}`,
-    sourceRoot,
-  );
+  return joinToSourceRoot(OWN_SCHEMATICS_CONFIG, sourceRoot);
 }
 
 /** Where `schematicsConfig` in angular.json points, if that file exists. */
@@ -157,8 +156,23 @@ export function settingsOverShared(
         defaults[setting] ?? REMOVED_OR_STATED[setting],
       ]),
     ),
-    ...(shared?.schema?.type ? {} : { schema }),
+    ...(shared?.schema?.type
+      ? {}
+      : { schema: shared?.schema?.emitters ? { type: schema?.type } : schema }),
   };
+}
+
+/** What a file does not state and a new shared file would set for it. */
+export function settingsLostToNewShared(
+  tree: Tree,
+  file: string,
+  stated: GeneratorDefaults,
+): [string, string | null][] {
+  const kept = readSchematicsConfig(tree, file);
+
+  return SETTINGS.filter(
+    (setting) => kept?.[setting] === undefined && stated[setting] !== undefined,
+  ).map((setting) => [setting, REMOVED_OR_STATED[setting]]);
 }
 
 function differingSettings(

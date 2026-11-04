@@ -22,7 +22,7 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 - Config interfaces are generated with a `Config` suffix.
 - `--path` inside the project is relative to the workspace root, as in Angular's generators.
 - A `--path` inside another project fails.
-- The schematics configuration file is looked up in fixed places, with the workspace root as the default for every project. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
+- The schematics configuration file is looked up in fixed places, and a project's own file goes on top of the one at the workspace root. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
 - Each schematic logs which schematics configuration file it used.
 - A leading `/` in a path means the workspace root, in every schematic.
 - Generated registrations use `loadComponent()`.

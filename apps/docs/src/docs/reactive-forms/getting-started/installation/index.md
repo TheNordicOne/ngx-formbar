@@ -34,7 +34,7 @@ By default, this does the following.
 > With `--registration-style=config --provide-inline --split-registrations=false`, registrations go in the root providers only for `bootstrapApplication(App, appConfig)`. With any other bootstrap call they go in `--registrations-path`, where the generators can add to them.
 
 > **Note**
-> A schematics configuration file wins over the `angular.json` settings written with `--use-schematic-config=false`. `ng add` logs a warning naming the file when there is one.
+> A schematics configuration file wins over the `angular.json` settings written with `--use-schematic-config=false`. `ng add` logs a warning naming each setting a file wins with.
 
 > **Note**
 > To rename the helper file or its export later, see [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
@@ -71,6 +71,8 @@ With source root `src`, `ng add` uses the first row that matches:
 The same settings means the same registration style, registrations file and view provider helper as this run. A kept file is not changed, and a warning names each of those settings it does not have.
 
 `ng add` creates the content union file only for a new schematics configuration file or a kept one that points at it. A kept file without `schema.type` gets a warning naming the setting.
+
+When `ng add` creates the file at the workspace root, the file of every other project gets the settings that would otherwise change, so those projects keep working as before.
 
 To name the location yourself:
 

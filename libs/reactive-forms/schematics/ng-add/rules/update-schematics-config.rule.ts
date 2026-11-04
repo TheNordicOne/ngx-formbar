@@ -1,9 +1,15 @@
 import { Rule } from '@angular-devkit/schematics';
-import { findSchematicsConfig } from '@ngx-formbar/setup';
+import { findSchematicsConfig, readSchematicsConfig } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
 import { generatorDefaults, updateSchematicConfigs } from '../helper';
 import { SCAFFOLD_GENERATORS } from '../../shared/constants';
+
+const OVERRIDING_SETTINGS = [
+  'registrationType',
+  'controlRegistrationsPath',
+  'viewProviderHelperPath',
+] as const;
 
 const NG_ADD_SETTINGS = [
   'registrationType',
@@ -27,10 +33,14 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
     context.logger.info('Updating schematics configuration');
 
     const overridingConfig = findSchematicsConfig(tree, sourceRoot);
+    const config = readSchematicsConfig(tree, overridingConfig);
+    const overridden = OVERRIDING_SETTINGS.filter(
+      (setting) => config?.[setting] !== undefined,
+    );
 
-    if (overridingConfig) {
+    if (overridden.length > 0) {
       context.logger.warn(
-        `${overridingConfig} overrides the settings written to angular.json, as the generators prefer a schematics configuration file.`,
+        `The schematics configuration of this project sets ${overridden.join(', ')}, which win over the settings written to angular.json.`,
       );
     }
 
