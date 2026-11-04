@@ -812,6 +812,30 @@ export class Wrapped implements Required<ReactiveFormbarControl> {
         ]);
       });
 
+      it('stays silent for a component next to a class implementing the contract', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${header}
+
+interface WrappedConfig { type: 'wrapped'; }
+
+${decorator}
+export class WrappedControl implements ReactiveFormbarControl<WrappedConfig> {
+  ${nameInput}
+}
+
+${decorator}
+export class WrappedHelp {}
+`,
+        );
+
+        expect(registrations).toContain('WrappedControl');
+        expect(registrations).not.toContain('WrappedHelp');
+        expect(warnings).toEqual([]);
+      });
+
       it.each<[string, string, string]>([
         ['an abstract class', 'export abstract class Wrapped', header],
         ['a class that is not exported', 'class Wrapped', header],
@@ -1967,6 +1991,21 @@ export class RangeComponent extends MiddleControl {}
           staticImport,
         ],
         ['loadComponent', `loadComponent(${lazyImport})`, ''],
+        [
+          'a destructured import',
+          "loadComponent(() => import('../one/one-control').then(({ OneControl }) => OneControl))",
+          '',
+        ],
+        [
+          'a destructured and renamed import',
+          "loadComponent(() => import('../one/one-control').then(({ OneControl: Renamed }) => Renamed))",
+          '',
+        ],
+        [
+          'an awaited import',
+          "loadComponent(async () => (await import('../one/one-control')).OneControl)",
+          '',
+        ],
         [
           'loadComponent with options',
           `loadComponent(${lazyImport}, ${options})`,

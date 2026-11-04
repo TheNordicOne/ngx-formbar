@@ -1,6 +1,7 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import {
   ArrayLiteralExpression,
+  ArrowFunction,
   CallExpression,
   createPrinter,
   EmitHint,
@@ -10,12 +11,15 @@ import {
   ImportClause,
   isArrowFunction,
   isArrayLiteralExpression,
+  isAwaitExpression,
   isCallExpression,
   isIdentifier,
   isImportDeclaration,
   isNamedImports,
   isNewExpression,
+  isObjectBindingPattern,
   isObjectLiteralExpression,
+  isParenthesizedExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
   isStringLiteral,
@@ -494,27 +498,60 @@ function namedImportsOf(importClause: ImportClause | undefined) {
 }
 
 function lazyClass(target: Node | undefined) {
-  const then =
-    target && isArrowFunction(target) && isCallExpression(target.body)
-      ? target.body
-      : undefined;
-  const callback = then?.arguments.at(0);
-  const picked =
-    callback && isArrowFunction(callback) ? callback.body : undefined;
-  const specifier = then && dynamicImportSpecifier(then);
+  const body = target && isArrowFunction(target) ? target.body : undefined;
 
-  return specifier &&
-    picked &&
-    isPropertyAccessExpression(picked) &&
-    isIdentifier(picked.name)
-    ? { className: picked.name.text, specifier }
+  return body ? (thenPickedClass(body) ?? awaitedClass(body)) : null;
+}
+
+/** `import('x').then((m) => m.X)` and `import('x').then(({ X }) => X)` */
+function thenPickedClass(body: Node) {
+  const then = isCallExpression(body) ? body : undefined;
+  const load =
+    then && isPropertyAccessExpression(then.expression)
+      ? then.expression.expression
+      : undefined;
+  const specifier = dynamicImportSpecifier(load);
+  const callback = then?.arguments.at(0);
+  const className =
+    callback && isArrowFunction(callback) ? pickedName(callback) : undefined;
+
+  return specifier && className ? { className, specifier } : null;
+}
+
+function pickedName({ parameters, body }: ArrowFunction) {
+  const pattern = parameters.at(0)?.name;
+  const element =
+    pattern && isObjectBindingPattern(pattern) && isIdentifier(body)
+      ? pattern.elements.find(
+          ({ name }) => isIdentifier(name) && name.text === body.text,
+        )
+      : undefined;
+  const exported = element?.propertyName ?? element?.name;
+
+  return isPropertyAccessExpression(body)
+    ? body.name.text
+    : exported && isIdentifier(exported)
+      ? exported.text
+      : undefined;
+}
+
+/** `(await import('x')).X` */
+function awaitedClass(body: Node) {
+  const access = isPropertyAccessExpression(body) ? body : undefined;
+  const awaited =
+    access && isParenthesizedExpression(access.expression)
+      ? access.expression.expression
+      : undefined;
+  const load =
+    awaited && isAwaitExpression(awaited) ? awaited.expression : undefined;
+  const specifier = dynamicImportSpecifier(load);
+
+  return access && specifier
+    ? { className: access.name.text, specifier }
     : null;
 }
 
-function dynamicImportSpecifier({ expression }: CallExpression) {
-  const load = isPropertyAccessExpression(expression)
-    ? expression.expression
-    : undefined;
+function dynamicImportSpecifier(load: Node | undefined) {
   const specifier =
     load && isCallExpression(load) ? load.arguments.at(0) : undefined;
 

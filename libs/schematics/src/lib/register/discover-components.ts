@@ -399,7 +399,13 @@ function extractComponentInfo(
   const namedExport = isNamedExport(classNode, className, checker);
 
   if (configs.length === 0) {
-    warnAboutMentionedContract(classNode, className, namedExport, context);
+    warnAboutMentionedContract(
+      classNode,
+      className,
+      namedExport,
+      checker,
+      context,
+    );
 
     return undefined;
   }
@@ -428,19 +434,29 @@ function extractComponentInfo(
   };
 }
 
-/** A file naming a contract suggests the class was meant to implement it. */
+/**
+ * A file naming a contract suggests the class was meant to implement it, unless
+ * another class in the file accounts for the name.
+ */
 function warnAboutMentionedContract(
   classNode: ClassDeclaration,
   className: string,
   namedExport: boolean,
+  checker: TypeChecker,
   context: SchematicContext,
 ) {
-  const text = classNode.getSourceFile().text;
+  const sourceFile = classNode.getSourceFile();
   const contract = contracts.find((name) =>
-    new RegExp(`\\b${name}\\b`).test(text),
+    new RegExp(`\\b${name}\\b`).test(sourceFile.text),
   );
+  const accountedFor = sourceFile.statements
+    .filter(isClassDeclaration)
+    .some(
+      (sibling) =>
+        contractConfigs(sibling, new Map(), checker, new Set()).length > 0,
+    );
 
-  if (namedExport && contract) {
+  if (namedExport && contract && !accountedFor) {
     context.logger.warn(
       `${className} is not registered. Its file mentions ${contract}, but this schematic cannot read a contract from the class.`,
     );
