@@ -28,11 +28,24 @@ function isEmptyArrayInComputed(path) {
   );
 }
 
+function isInjectionTokenDescription({ node, parent }) {
+  return (
+    node.type === 'StringLiteral' &&
+    parent.type === 'NewExpression' &&
+    parent.callee.name === 'InjectionToken' &&
+    parent.arguments[0] === node
+  );
+}
+
 export const strykerPlugins = [
   declareValuePlugin(PluginKind.Ignore, 'signal-options', {
     shouldIgnore: (path) => {
       if (isStaticallyRead(path)) {
         return 'Angular reads the options of this call at compile time.';
+      }
+
+      if (isInjectionTokenDescription(path)) {
+        return 'Only shows up in Angular error messages.';
       }
 
       return isEmptyArrayInComputed(path)
