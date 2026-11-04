@@ -158,6 +158,15 @@ export function createTreeCompilerHost(
   };
 }
 
+/** `getDir` throws below a file, which is what a Yarn archive is to the Tree. */
+function treeDir(tree: Tree, directoryName: string, workspaceRoot: string) {
+  const path = treePath(directoryName, workspaceRoot);
+
+  return path === null || `${path}/`.includes('.zip/')
+    ? null
+    : tree.getDir(path);
+}
+
 /** A Tree directory "exists" once it has any child file or subdirectory;
  * `getDir` never throws for unknown paths, it just comes back empty. */
 function treeDirectoryExists(
@@ -165,8 +174,7 @@ function treeDirectoryExists(
   directoryName: string,
   workspaceRoot: string,
 ) {
-  const path = treePath(directoryName, workspaceRoot);
-  const dir = path === null ? null : tree.getDir(path);
+  const dir = treeDir(tree, directoryName, workspaceRoot);
 
   return (
     !!dir?.subfiles.length ||
@@ -180,8 +188,7 @@ function treeDirectories(
   directoryName: string,
   workspaceRoot: string,
 ) {
-  const path = treePath(directoryName, workspaceRoot);
-  const inTree = path === null ? [] : tree.getDir(path).subdirs;
+  const inTree = treeDir(tree, directoryName, workspaceRoot)?.subdirs ?? [];
   const diskDirs = sys.directoryExists(directoryName)
     ? sys.getDirectories(directoryName)
     : [];

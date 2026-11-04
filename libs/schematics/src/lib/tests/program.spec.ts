@@ -113,6 +113,24 @@ describe('createTreeProgram', () => {
     expect(loadedFiles()).toContain(join(monorepo, 'shared/types.ts'));
   });
 
+  it('reads a package inside an archive under the workspace root', () => {
+    const inArchive = 'apps/web/.yarn/cache/pkg.zip/index.d.ts';
+
+    writeOnDisk(inArchive, "export * from 'beside-the-archive';\n");
+    tree.create('/.yarn/cache/pkg.zip', 'archive');
+    tree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({
+        compilerOptions: {
+          paths: { zipped: ['./.yarn/cache/pkg.zip/index.d.ts'] },
+        },
+      }),
+    );
+    tree.create(file, "export { Zipped } from 'zipped';\n");
+
+    expect(loadedFiles()).toContain(join(monorepo, inArchive));
+  });
+
   it('prefers the Tree over the disk inside the workspace root', () => {
     tree.create(file, "export { Fresh } from './fresh';\n");
     tree.create(

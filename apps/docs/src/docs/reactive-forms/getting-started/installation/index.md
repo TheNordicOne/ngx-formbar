@@ -39,6 +39,9 @@ By default, this does the following.
 > **Note**
 > To rename the helper file or its export later, see [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
 
+> **Note**
+> Yarn Plug'n'Play in strict mode does not provide peer dependencies a project leaves out. Add `@angular-devkit/core`, `@angular-devkit/schematics` and `@schematics/angular` as dev dependencies before running `ng add`.
+
 ## Root Providers
 
 `ng add` follows the bootstrap call in the project's main file, also into files that file imports, and edits:

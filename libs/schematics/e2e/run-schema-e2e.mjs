@@ -8,8 +8,9 @@
  * providers can have. A second one starts from `ng new --no-standalone`. A
  * third one goes through `ng add`, scaffolds into the seeded union, re-runs
  * `ng add`, runs `schema` and builds. Two more do this on Angular 20.0 and 20.3
- * with TypeScript 5.8, and one is a member of an npm workspace. The rows of "Where Components Go" and a run without a
- * schematics configuration file go through the CLI too. Every
+ * with TypeScript 5.8, one is a member of an npm workspace and one installs with
+ * Yarn Plug'n'Play in strict mode. The rows of "Where Components Go" and a run
+ * without a schematics configuration file go through the CLI too. Every
  * other test in these libraries runs inside this workspace against a virtual
  * Tree, which is the shape of test that passes while the shipped artifact is
  * broken.
@@ -1773,6 +1774,88 @@ export class KnobComponent implements KnobContract {
   );
 }
 
+/**
+ * Packages live in archives inside the workspace root, read through the file
+ * system Yarn patches, and strict mode leaves a missing peer unresolved.
+ */
+function runYarnPnpFlow(appParent, tarballs) {
+  const appDir = createApp('pnp', appParent);
+  const yarn = (...args) =>
+    run('corepack', ['yarn', ...args], appDir, {
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
+    });
+  const manifestPath = join(appDir, 'package.json');
+  const fileRange = (name) => `file:${tarballs.get(name)}`;
+
+  rmSync(join(appDir, 'node_modules'), { recursive: true, force: true });
+  rmSync(join(appDir, 'package-lock.json'), { force: true });
+  writeFileSync(
+    manifestPath,
+    JSON.stringify({
+      ...readJson(manifestPath),
+      packageManager: 'yarn@4.18.1',
+      resolutions: Object.fromEntries(
+        [...tarballs.keys()].map((name) => [name, fileRange(name)]),
+      ),
+    }),
+  );
+  writeFileSync(
+    join(appDir, '.yarnrc.yml'),
+    'nodeLinker: pnp\npnpMode: strict\nenableGlobalCache: false\n',
+  );
+  writeFileSync(join(appDir, 'yarn.lock'), '');
+
+  yarn(
+    'add',
+    `${CORE_PACKAGE_NAME}@${fileRange(CORE_PACKAGE_NAME)}`,
+    `${REACTIVE_FORMS_PACKAGE_NAME}@${fileRange(REACTIVE_FORMS_PACKAGE_NAME)}`,
+  );
+  yarn(
+    'add',
+    '--dev',
+    `${SCHEMATICS_PACKAGE_NAME}@${fileRange(SCHEMATICS_PACKAGE_NAME)}`,
+    '@angular-devkit/core@21',
+    '@angular-devkit/schematics@21',
+    '@schematics/angular@21',
+  );
+
+  const generateInPnp = (schematic, ...args) =>
+    yarn(
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:${schematic}`,
+      '--project',
+      'pnp',
+      ...args,
+    );
+
+  yarn(
+    'ng',
+    'add',
+    REACTIVE_FORMS_PACKAGE_NAME,
+    '--project',
+    'pnp',
+    '--defaults',
+    '--skip-confirmation',
+  );
+  generateInPnp('control', '--key', 'slider', '--skip-registration');
+  generateInPnp('register');
+  generateInPnp('schema');
+  yarn('ng', 'build');
+
+  check(
+    readFileSync(
+      join(appDir, 'src/app/registrations/component-registrations.ts'),
+      'utf8',
+    ).includes("'slider'"),
+    'register finds a control under Yarn PnP',
+  );
+  check(
+    existsSync(join(appDir, 'src/form.schema.json')),
+    'schema emits under Yarn PnP',
+  );
+}
+
 function runNpmWorkspaceFlow(appParent, tarballs) {
   const monorepo = join(appParent, 'monorepo');
   const appsDir = join(monorepo, 'apps');
@@ -1962,6 +2045,7 @@ function main() {
   }
 
   runNpmWorkspaceFlow(appParent, tarballs);
+  runYarnPnpFlow(appParent, tarballs);
   runAngular20Flow(appParent, tarballs, '20.0');
   runAngular20Flow(appParent, tarballs, '20.3');
 
