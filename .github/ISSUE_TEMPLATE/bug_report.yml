@@ -72,7 +72,7 @@ body:
     attributes:
       label: Expressions involved
       options:
-        - None
+        - No expressions
         - String expressions
         - Function expressions
         - Both
