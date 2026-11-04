@@ -32,6 +32,9 @@ import type { Frame } from './frame';
 import { isAllowedMethod, readMethod } from './safe-methods';
 import { isObjectLike } from './value-guards';
 
+// A link of an optional chain found nothing, so the rest of the chain is skipped.
+const SHORT_CIRCUIT = Symbol('short-circuit');
+
 /**
  * Parses and evaluates a constrained pure-expression DSL against a form
  * context object. The grammar is an allow-list subset of JS expressions
@@ -116,7 +119,11 @@ export class ExpressionService {
       case 'Identifier':
         return this.evaluateIdentifier(node, frames);
       case 'Literal':
-        return node.value;
+        // A literal is a new object per evaluation, and a sticky or global
+        // pattern keeps its position between uses.
+        return node.value instanceof RegExp
+          ? new RegExp(node.value)
+          : node.value;
       case 'ArrayExpression':
         return this.evaluateArrayExpression(node, frames);
       case 'UnaryExpression':
@@ -126,7 +133,7 @@ export class ExpressionService {
       case 'LogicalExpression':
         return this.evaluateLogicalExpression(node, frames);
       case 'MemberExpression':
-        return this.evaluateMemberExpression(node, frames);
+        return this.endChain(this.evaluateMemberExpression(node, frames));
       case 'ConditionalExpression':
         return this.evaluateConditionalExpression(node, frames);
       case 'ObjectExpression':
@@ -134,7 +141,7 @@ export class ExpressionService {
       case 'TemplateLiteral':
         return this.evaluateTemplateLiteral(node, frames);
       case 'CallExpression':
-        return this.evaluateCallExpression(node, frames);
+        return this.endChain(this.evaluateCallExpression(node, frames));
       case 'ArrowFunctionExpression':
         return this.evaluateArrowFunctionExpression(node, frames);
       default:
@@ -142,6 +149,24 @@ export class ExpressionService {
           `Unsupported node type: ${(node as { type: string }).type}`,
         );
     }
+  }
+
+  private evaluateChainLink(
+    node: Expression,
+    frames: readonly Frame[],
+  ): unknown {
+    switch (node.type) {
+      case 'MemberExpression':
+        return this.evaluateMemberExpression(node, frames);
+      case 'CallExpression':
+        return this.evaluateCallExpression(node, frames);
+      default:
+        return this.evaluateAstNode(node, frames);
+    }
+  }
+
+  private endChain(value: unknown) {
+    return value === SHORT_CIRCUIT ? undefined : value;
   }
 
   private evaluateBinaryExpression(
@@ -190,11 +215,15 @@ export class ExpressionService {
       );
     }
 
-    const objectValue = this.evaluateAstNode(node.object, frames);
+    const objectValue = this.evaluateChainLink(node.object, frames);
+
+    if (objectValue === SHORT_CIRCUIT) {
+      return SHORT_CIRCUIT;
+    }
 
     if (objectValue === null || objectValue === undefined) {
       if (node.optional) {
-        return undefined;
+        return SHORT_CIRCUIT;
       }
       const readingFrom =
         node.object.type === 'Identifier' ? ` from ${node.object.name}` : '';
@@ -434,11 +463,15 @@ export class ExpressionService {
     }
 
     const memberExpr = node.callee;
-    const object = this.evaluateAstNode(memberExpr.object, frames);
+    const object = this.evaluateChainLink(memberExpr.object, frames);
+
+    if (object === SHORT_CIRCUIT) {
+      return SHORT_CIRCUIT;
+    }
 
     if (object === null || object === undefined) {
-      if (node.optional ?? memberExpr.optional) {
-        return undefined;
+      if (memberExpr.optional) {
+        return SHORT_CIRCUIT;
       }
       throw new Error('Cannot call methods on null or undefined');
     }
@@ -513,7 +546,7 @@ export class ExpressionService {
       // own property rather than triggering the Object.prototype setter
       // (which would silently lose the binding).
       const paramFrame = Object.create(null) as Frame;
-      for (let i = 0; i < node.params.length && i < args.length; i++) {
+      for (let i = 0; i < node.params.length; i++) {
         paramFrame[node.params[i].name] = args[i];
       }
       return this.evaluateAstNode(body, [...frames, paramFrame]);

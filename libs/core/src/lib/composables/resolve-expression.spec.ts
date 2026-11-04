@@ -182,3 +182,15 @@ describe('resolveExpression', () => {
     });
   });
 });
+
+describe('resolveExpression without an expression', () => {
+  it('gives nothing for an empty string', () => {
+    const result = resolveExpression<string>(
+      signal(''),
+      signal<FormContext>({}),
+      TestBed.inject(ExpressionService),
+    );
+
+    expect(result()).toBeUndefined();
+  });
+});

@@ -1,6 +1,4 @@
 import {
-  ComponentRef,
-  DestroyRef,
   inject,
   Injector,
   Provider,
@@ -40,12 +38,6 @@ export function withComponentHost(
   options: ComponentHostOptions,
 ): ComponentHost {
   const viewContainerRef = inject(ViewContainerRef);
-  const destroyRef = inject(DestroyRef);
-  let componentRef: ComponentRef<unknown> | undefined;
-
-  destroyRef.onDestroy(() => {
-    componentRef?.destroy();
-  });
 
   const childInjector = options.additionalProviders
     ? Injector.create({
@@ -61,14 +53,13 @@ export function withComponentHost(
         options.signalMap,
         options.controlConfig,
       );
-      componentRef = viewContainerRef.createComponent(component, {
+      viewContainerRef.createComponent(component, {
         bindings: [...bindings],
         injector: childInjector,
       });
     },
     clear() {
       viewContainerRef.clear();
-      componentRef = undefined;
     },
   };
 }

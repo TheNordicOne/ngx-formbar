@@ -53,7 +53,16 @@ export const objectPlugin: Plugin = {
             value: key as Expression,
             shorthand: true,
           });
+        } else if (key.type === 'SpreadElement') {
+          properties.push(key);
         } else if (this.code() === jsep.COLON_CODE) {
+          if (
+            key.type !== jsep.IDENTIFIER &&
+            key.type !== jsep.LITERAL &&
+            !(key.type === jsep.ARRAY_EXP && key.elements.length === 1)
+          ) {
+            this.throwError('Expected a property name');
+          }
           this.index++;
           const value = this.gobbleExpression();
           if (!value || value.type === 'SpreadElement') {
@@ -72,12 +81,13 @@ export const objectPlugin: Plugin = {
           });
           this.gobbleSpaces();
         } else {
-          // Anything the spread plugin produced (SpreadElement).
-          properties.push(key as unknown as SpreadElement);
+          this.throwError('Expected : after a property name');
         }
 
         if (this.code() === jsep.COMMA_CODE) {
           this.index++;
+        } else if (this.code() !== CCURLY_CODE) {
+          break;
         }
       }
       this.throwError('missing }');

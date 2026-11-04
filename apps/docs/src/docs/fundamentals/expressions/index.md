@@ -18,7 +18,7 @@ The parser produces only the following AST node types:
 - `UnaryExpression` (`-`, `+`, `!`, `~`, `typeof`, `void`)
 - `BinaryExpression`
 - `LogicalExpression` (`&&`, `||`, `??`)
-- `MemberExpression` (static `a.b` and computed `a[b]`, both with optional chaining `?.`)
+- `MemberExpression` (static `a.b` and computed `a[b]`, both with optional chaining `?.`, which skips the rest of the chain, as in JavaScript)
 - `ConditionalExpression` (ternary)
 - `ObjectExpression` (with optional spread)
 - `TemplateLiteral` with `${expr}` placeholders (one expression per placeholder)

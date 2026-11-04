@@ -34,9 +34,9 @@ export const ternaryPlugin: Plugin = {
       }
       this.index++;
       const nodeType = (env.node as { type: string }).type;
-      if (nodeType === 'SequenceExpression' || nodeType === 'SpreadElement') {
+      if (nodeType === 'SequenceExpression') {
         this.throwError(
-          'Ternary test must be a single expression, not a sequence or spread',
+          'Ternary test must be a single expression, not a sequence',
         );
       }
       const test = env.node as Expression;

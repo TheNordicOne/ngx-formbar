@@ -19,7 +19,7 @@ export const NGX_FW_CONFIG_RESOLVED =
     providedIn: 'root',
     factory: () => {
       const base = inject(NGX_FW_DEFAULT_CONFIG);
-      const extras = inject(NGX_FW_CONFIG, { optional: true }) ?? [];
+      const extras = inject(NGX_FW_CONFIG);
       return mergeDeep(base, ...extras);
     },
   });
