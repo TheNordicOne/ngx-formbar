@@ -13,6 +13,7 @@ describe('toSafeString', () => {
     [true, 'true'],
     [false, 'false'],
     [1, '1'],
+    [NaN, 'NaN'],
     [BigInt(2), '2'],
     [Symbol('s'), 'Symbol(s)'],
     [named, named.toString()],

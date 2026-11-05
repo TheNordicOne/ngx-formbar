@@ -24,6 +24,10 @@ export const NGX_FW_CONFIG_RESOLVED =
     },
   });
 
+function isMergeable(value: unknown) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function mergeDeep<T>(base: T, ...partials: readonly Partial<T>[]): T {
   const out = { ...base };
   for (const p of partials) {
@@ -31,15 +35,7 @@ function mergeDeep<T>(base: T, ...partials: readonly Partial<T>[]): T {
       const src = (p as unknown as Record<keyof T, unknown>)[k];
       const dst = (out as unknown as Record<keyof T, unknown>)[k];
 
-      const bothObjects =
-        typeof dst === 'object' &&
-        dst !== null &&
-        typeof src === 'object' &&
-        src !== null &&
-        !Array.isArray(dst) &&
-        !Array.isArray(src);
-
-      if (bothObjects) {
+      if (isMergeable(dst) && isMergeable(src)) {
         (out as unknown as Record<keyof T, unknown>)[k] = mergeDeep(
           dst as unknown as T,
           src as Partial<T>,

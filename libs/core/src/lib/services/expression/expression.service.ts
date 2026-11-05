@@ -81,10 +81,8 @@ export class ExpressionService {
     const ast = parse(expressionString);
     if (this.astCache.size >= ExpressionService.AST_CACHE_LIMIT) {
       // Evict least recently used (head of insertion order).
-      const oldestKey = this.astCache.keys().next().value;
-      if (oldestKey !== undefined) {
-        this.astCache.delete(oldestKey);
-      }
+      const [oldestKey] = this.astCache.keys();
+      this.astCache.delete(oldestKey);
     }
     this.astCache.set(expressionString, ast);
     return ast;
