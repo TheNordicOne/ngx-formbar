@@ -1,6 +1,7 @@
 # ngx-formbar
 
-![NPM Downloads](https://img.shields.io/npm/dw/@ngx-formbar/core?label=Downloads)
+![NPM Downloads: Core](https://img.shields.io/npm/dw/@ngx-formbar/core?label=Downloads:%20Core)
+![NPM Downloads: Reactive Forms](https://img.shields.io/npm/dw/@ngx-formbar/reactive-forms?label=Downloads:%20Reactive%20Forms)
 
 A framework for generating forms from a declarative configuration.
 
