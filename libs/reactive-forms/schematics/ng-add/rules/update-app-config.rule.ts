@@ -2,11 +2,7 @@ import { RuleContext } from '../schema';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
 import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
-import {
-  appendToLiteral,
-  findProvidersProperty,
-  loadSourceFile,
-} from '@ngx-formbar/setup';
+import { appendToLiteral, findProvidersProperty } from '@ngx-formbar/setup';
 
 import {
   createSourceFile,
@@ -23,23 +19,17 @@ export function updateAppConfig(ruleContext: RuleContext): Rule {
 
     context.logger.info(`Updating ${appConfigPath}`);
 
-    const original = loadSourceFile(tree, appConfigPath);
-    if (!original) {
-      throw new SchematicsException(
-        `Missing file or unreadable: ${appConfigPath}`,
+    const parse = () =>
+      createSourceFile(
+        appConfigPath,
+        tree.readText(appConfigPath),
+        ScriptTarget.Latest,
+        true,
       );
-    }
 
-    addMissingProviders(tree, original, rootConfig);
+    addMissingProviders(tree, parse(), rootConfig);
 
-    const content = tree.readText(appConfigPath);
-    const sourceFile = createSourceFile(
-      appConfigPath,
-      content,
-      ScriptTarget.Latest,
-      true,
-    );
-
+    const sourceFile = parse();
     const owner = findProvidersOwner(sourceFile, rootConfig);
     const providers = owner && findProvidersProperty(owner);
     const providersInit =

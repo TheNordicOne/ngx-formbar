@@ -13,7 +13,6 @@ import {
 } from '@ngx-formbar/setup';
 import {
   CallExpression,
-  canHaveDecorators,
   ClassDeclaration,
   Expression,
   getDecorators,
@@ -75,10 +74,7 @@ function bootstrapApplicationCall(sourceFile: SourceFile) {
 
 function moduleMetadata(sourceFile: SourceFile, className: string) {
   const declaration = findClass(sourceFile, className);
-  const decorators =
-    declaration && canHaveDecorators(declaration)
-      ? (getDecorators(declaration) ?? [])
-      : [];
+  const decorators = (declaration && getDecorators(declaration)) ?? [];
 
   return (
     decorators

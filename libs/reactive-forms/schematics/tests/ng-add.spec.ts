@@ -13,6 +13,7 @@ import {
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { PassThrough } from 'node:stream';
 import { join } from 'path';
 import { lastValueFrom } from 'rxjs';
 import {
@@ -3972,6 +3973,112 @@ describe('ng-add schematic', () => {
         ])('does not ask with %s', async (flags) => {
           appTree = await runAdd({});
           process.argv = [...argv, ...flags.split(' ')];
+
+          const { warnings } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(warnings).toHaveLength(1);
+        });
+
+        /** A terminal that takes this answer, and what was written to it. */
+        function answering(answer: string) {
+          const input = Object.assign(new PassThrough(), { isTTY: true });
+          const output = Object.assign(new PassThrough(), { isTTY: true });
+          let written = '';
+
+          output.on('data', (chunk: Buffer) => {
+            written += chunk.toString();
+          });
+          vi.spyOn(process, 'stdin', 'get').mockReturnValue(
+            input as unknown as typeof process.stdin,
+          );
+          vi.spyOn(process, 'stdout', 'get').mockReturnValue(
+            output as unknown as typeof process.stdout,
+          );
+          input.write(`${answer}\n`);
+
+          return () => written;
+        }
+
+        async function answered(answer: string, flags: string[] = []) {
+          appTree = await runAdd({});
+          process.argv = [...argv, ...flags];
+
+          const prompted = answering(answer);
+          const { tree } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          vi.restoreAllMocks();
+
+          return { prompted: prompted(), file: tree.readJson(ownFile) };
+        }
+
+        it.each(['y', 'yes', ' Y ', 'YES'])(
+          'updates the other project on %j',
+          async (answer) => {
+            const { file } = await answered(answer);
+
+            expect(file).toHaveProperty('registrationType', 'token');
+          },
+        );
+
+        it.each(['n', '', 'ye', 'xy', 'yesx', 'yy'])(
+          'leaves the other project alone on %j',
+          async (answer) => {
+            const { file } = await answered(answer);
+
+            expect(file).not.toHaveProperty('registrationType');
+          },
+        );
+
+        it('asks about what would change', async () => {
+          const { prompted } = await answered('n');
+
+          expect(prompted).toContain(
+            `/formbar-schematic.config.json would change other projects. Write what they use now into their files?\n  ${ownFile}: "registrationType": "token"\n(y/N) `,
+          );
+        });
+
+        it.each([
+          '--interactive',
+          '--interactive=true',
+          '--interactive true',
+          '--no-defaults',
+          '--defaults=false',
+          '--defaults false',
+          '--interactive-other',
+        ])('asks with %s', async (flags) => {
+          const { file } = await answered('y', flags.split(' '));
+
+          expect(file).toHaveProperty('registrationType', 'token');
+        });
+
+        it.each<[string, () => void]>([
+          [
+            'output',
+            () => {
+              process.stdout.isTTY = false;
+            },
+          ],
+          [
+            'input',
+            () => {
+              process.stdin.isTTY = false;
+            },
+          ],
+          [
+            'a terminal in CI',
+            () => {
+              vi.stubEnv('CI', 'true');
+            },
+          ],
+        ])('does not ask without %s', async (_, leaveTerminal) => {
+          appTree = await runAdd({});
+          leaveTerminal();
 
           const { warnings } = await warningsOfRun(
             { schematicsConfigPath: '/', registrationStyle: 'config' },
