@@ -8,12 +8,7 @@
  */
 
 import type { Plugin } from '../plugins';
-import type {
-  Expression,
-  ObjectExpression,
-  Property,
-  SpreadElement,
-} from '../ast';
+import type { Expression, Property, SpreadElement } from '../ast';
 
 const OCURLY_CODE = 123; // {
 const CCURLY_CODE = 125; // }
@@ -36,7 +31,7 @@ export const objectPlugin: Plugin = {
           env.node = this.gobbleTokenProperty({
             type: 'ObjectExpression',
             properties,
-          } as ObjectExpression);
+          });
           return;
         }
 

@@ -1,6 +1,6 @@
 ## Compatibility
 
-This package is compatible with Angular 20.0.0 up to (but not including) Angular 22.
+This package is compatible with Angular 20.0.0 up to (but not including) Angular 23.
 
 ## Primary Installation via ng-add
 

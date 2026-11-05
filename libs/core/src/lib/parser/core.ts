@@ -325,7 +325,7 @@ export class Parser {
     const hooked = this.searchHook('gobble-token');
     if (hooked) {
       const after = this.runHook('after-token', hooked);
-      return (after ?? hooked) as Expression | false;
+      return (after ?? hooked);
     }
 
     const ch = this.code();
@@ -366,7 +366,7 @@ export class Parser {
             prefix: true,
           };
           const after = this.runHook('after-token', unary);
-          return (after ?? unary) as Expression;
+          return (after ?? unary);
         }
         toCheck = toCheck.substring(0, --tcLen);
       }
@@ -398,7 +398,7 @@ export class Parser {
 
     if (!node) {
       const after = this.runHook('after-token', false);
-      return (after ?? false) as Expression | false;
+      return (after ?? false);
     }
 
     // Skip property access on SequenceExpression — the arrow plugin will
@@ -408,7 +408,7 @@ export class Parser {
       node = this.gobbleTokenProperty(asExpression(node));
     }
     const after = this.runHook('after-token', node);
-    return (after ?? node) as Expression;
+    return (after ?? node);
   }
 
   gobbleTokenProperty(node: Expression): Expression {
@@ -692,11 +692,7 @@ export class Parser {
     this.index++;
     return {
       type: 'ArrayExpression',
-      elements: this.gobbleArguments(Parser.CBRACK_CODE) as (
-        | Expression
-        | SpreadElement
-        | null
-      )[],
+      elements: this.gobbleArguments(Parser.CBRACK_CODE),
     };
   }
 
@@ -704,7 +700,7 @@ export class Parser {
 
   static register(...plugins: Plugin[]): void {
     for (const plugin of plugins) {
-      plugin.init(Parser as unknown as ParserStatic);
+      plugin.init(Parser);
     }
   }
 

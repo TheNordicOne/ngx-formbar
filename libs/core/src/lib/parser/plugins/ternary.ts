@@ -73,7 +73,7 @@ export const ternaryPlugin: Plugin = {
           rightPrecedence = getOpPrecedence(jsep, walk.right);
         }
         conditional = { ...conditional, test: walk.right };
-        walk.right = conditional as unknown as Expression;
+        walk.right = conditional;
         env.node = test;
         return;
       }

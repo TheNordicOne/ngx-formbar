@@ -22,13 +22,14 @@ let nextFormId = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StoryFormHostComponent {
+  private readonly formBuilder = inject(FormBuilder);
+
   static lastInstance: StoryFormHostComponent | null = null;
 
   // Unique per instance so the submit button's `form` attribute binds to this
   // host's form, not another story rendered on the same autodocs page.
   readonly formId = `ngxfb-story-form-${String(nextFormId++)}`;
 
-  private readonly formBuilder = inject(FormBuilder);
   private readonly formRef = viewChild.required(NgxFbFormComponent);
 
   readonly formConfig = input.required<NgxFbForm>();

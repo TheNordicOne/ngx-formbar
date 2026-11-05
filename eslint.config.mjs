@@ -102,6 +102,8 @@ export default defineConfig(
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@angular-eslint/use-injectable-provided-in': 'off',
+      // @Service() only exists from Angular 22; the libs still support Angular 20.
+      '@angular-eslint/prefer-service-decorator': 'off',
     },
   },
   {

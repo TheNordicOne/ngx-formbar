@@ -44,8 +44,6 @@ import { withAsyncValidators, withValidators } from '../composables/validators';
 export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy, NgxFwParentContext
 {
-  private readonly parent = withFormParent();
-
   private readonly parentContext = inject<NgxFwParentContext | null>(
     NGX_FW_PARENT_CONTEXT,
     {
@@ -53,6 +51,7 @@ export class NgxFbGroupDirective<T extends NgxFbBaseContent = NgxFbItem>
       skipSelf: true,
     },
   );
+  private readonly parent = withFormParent();
 
   readonly config = input.required<FormConfigEntry<NgxFbFormGroup<T>>>({
     alias: 'ngxfbGroup',

@@ -39,7 +39,7 @@ describe('readCompilerOptions', () => {
 
     const options = readCompilerOptions(tree, TS_CONFIG_PATH);
 
-    expect(options.baseUrl).toBe('/projects/test-app');
+    expect(options).toMatchObject({ baseUrl: '/projects/test-app' });
     expect(options.typeRoots).toEqual(['/node_modules/@types']);
   });
 
@@ -47,6 +47,6 @@ describe('readCompilerOptions', () => {
     const options = readCompilerOptions(tree, 'projects/test-app/absent.json');
 
     expect(options.strict).toBe(true);
-    expect(options.baseUrl).toBeUndefined();
+    expect(options).not.toHaveProperty('baseUrl');
   });
 });

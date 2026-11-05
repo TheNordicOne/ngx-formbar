@@ -59,3 +59,6 @@ storybook-static
 # act (local GitHub Actions runner)
 .secrets
 /.verdaccio/htpasswd
+
+.nx/self-healing
+.nx/migrate-runs

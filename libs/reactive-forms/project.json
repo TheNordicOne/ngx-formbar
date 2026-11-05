@@ -4,11 +4,16 @@
   "sourceRoot": "libs/reactive-forms/src",
   "prefix": "ngxfb",
   "projectType": "library",
-  "tags": ["reactive-forms"],
+  "tags": [
+    "reactive-forms"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}"
+      ],
+      "defaultConfiguration": "production",
       "options": {
         "project": "libs/reactive-forms/ng-package.json",
         "tsConfig": "libs/reactive-forms/tsconfig.lib.json"
@@ -18,23 +23,32 @@
           "tsConfig": "libs/reactive-forms/tsconfig.lib.prod.json"
         },
         "development": {}
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "build-schematics": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@nx/esbuild:esbuild",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}/schematics"],
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}/schematics"
+      ],
       "options": {
         "outputPath": "dist/libs/reactive-forms/schematics",
         "main": "libs/reactive-forms/schematics/ng-add/index.ts",
         "tsConfig": "libs/reactive-forms/tsconfig.schematics.json",
         "platform": "node",
-        "format": ["cjs"],
+        "format": [
+          "cjs"
+        ],
         "bundle": true,
         "declaration": false,
         "generatePackageJson": false,
-        "external": ["@angular-devkit/*", "@schematics/*", "typescript"],
+        "external": [
+          "@angular-devkit/*",
+          "@schematics/*",
+          "typescript"
+        ],
         "assets": [
           {
             "input": "libs/reactive-forms/schematics",
@@ -55,7 +69,9 @@
       }
     },
     "clean-schematics": {
-      "dependsOn": ["build-schematics"],
+      "dependsOn": [
+        "build-schematics"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "rm -f dist/{projectRoot}/schematics/package.json"
@@ -73,14 +89,28 @@
       }
     },
     "test-schematics": {
-      "dependsOn": ["build-schematics"],
-      "executor": "@nx/vite:test",
+      "dependsOn": [
+        "build-schematics"
+      ],
+      "executor": "nx:run-commands",
       "options": {
-        "config": "libs/reactive-forms/vitest.config.schematics.mts"
+        "command": "vitest run --config libs/reactive-forms/vitest.config.schematics.mts"
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": [
+            "eslint"
+          ]
+        }
+      ]
     }
   }
 }

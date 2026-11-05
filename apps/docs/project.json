@@ -14,6 +14,7 @@
     "build": {
       "executor": "@ng-doc/builder:application",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/docs",
         "browser": "apps/docs/src/main.ts",
@@ -75,12 +76,12 @@
           "extractLicenses": false,
           "sourceMap": true
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "serve": {
       "continuous": true,
       "executor": "@ng-doc/builder:dev-server",
+      "defaultConfiguration": "development",
       "configurations": {
         "production": {
           "buildTarget": "@ngx-formbar/docs:build:production"
@@ -88,11 +89,20 @@
         "development": {
           "buildTarget": "@ngx-formbar/docs:build:development"
         }
-      },
-      "defaultConfiguration": "development"
+      }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ],
       "dependsOn": ["build"]
     },
     "serve-static": {
@@ -103,7 +113,11 @@
         "port": 4200,
         "staticFilePath": "dist/apps/docs/browser",
         "spa": true
-      }
+      },
+      "readyWhen": {
+        "signal": true
+      },
+      "dependsOn": ["build"]
     }
   }
 }

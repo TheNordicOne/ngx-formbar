@@ -11,7 +11,6 @@ import {
 import { NG_DOC_ROUTING, provideNgDocContext } from '@ng-doc/generated';
 import {
   provideHttpClient,
-  withFetch,
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import {
@@ -27,7 +26,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
-    provideHttpClient(withInterceptorsFromDi()),
     provideRouter(
       NG_DOC_ROUTING,
       withInMemoryScrolling({
@@ -35,7 +33,7 @@ export const appConfig: ApplicationConfig = {
         anchorScrolling: 'enabled',
       }),
     ),
-    provideHttpClient(withInterceptorsFromDi(), withFetch()),
+    provideHttpClient(withInterceptorsFromDi()),
     provideNgDocContext(),
     provideNgDocApp(),
     provideSearchEngine(NgDocDefaultSearchEngine),

@@ -13,5 +13,13 @@
     "src/**/*.test.ts",
     "**/*.stories.ts",
     "**/*.stories.js"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

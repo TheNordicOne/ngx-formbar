@@ -32,7 +32,6 @@ import { FormService } from '../services/form.service';
   selector: '[ngxfbControl]',
 })
 export class NgxFbControlDirective implements OnDestroy {
-  private readonly parent = withFormParent();
   private readonly formService = inject(FormService);
   private readonly formLifecycleState = inject(FORM_LIFECYCLE_STATE);
   private readonly rowIdentity = inject(ROW_IDENTITY);
@@ -41,6 +40,7 @@ export class NgxFbControlDirective implements OnDestroy {
     NGX_FW_PARENT_CONTEXT,
     { optional: true },
   );
+  private readonly parent = withFormParent();
 
   readonly config = input.required<FormConfigEntry<NgxFbControl>>({
     alias: 'ngxfbControl',

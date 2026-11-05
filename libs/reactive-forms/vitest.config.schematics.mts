@@ -1,10 +1,11 @@
 import { defineConfig } from 'vitest/config';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  resolve: {
+    tsconfigPaths: true,
+  },
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/reactive-forms-schematics',
-  plugins: [nxViteTsPaths()],
   test: {
     name: '@ngx-formbar/reactive-forms-schematics',
     watch: false,

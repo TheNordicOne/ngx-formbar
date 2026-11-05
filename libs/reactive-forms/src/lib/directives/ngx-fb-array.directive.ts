@@ -51,7 +51,6 @@ import { withParentOwnedControl } from '../composables/parent-owned-control';
 export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
   implements OnDestroy, NgxFwParentContext
 {
-  private readonly parent = withFormParent();
   private readonly rowFactory = inject(RowFactoryService);
 
   private readonly parentContext = inject<NgxFwParentContext | null>(
@@ -61,6 +60,7 @@ export class NgxFbArrayDirective<T extends NgxFbBaseContent = NgxFbItem>
       skipSelf: true,
     },
   );
+  private readonly parent = withFormParent();
 
   readonly config = input.required<FormConfigEntry<NgxFbArray<T>>>({
     alias: 'ngxfbArray',

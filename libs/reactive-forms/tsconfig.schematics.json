@@ -9,7 +9,8 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"]
+    "types": ["node"],
+    "ignoreDeprecations": "6.0"
   },
   "include": ["schematics/**/*.ts"],
   "exclude": ["schematics/**/*.spec.ts"]

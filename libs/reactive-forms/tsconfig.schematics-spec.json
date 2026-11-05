@@ -8,11 +8,9 @@
       "vite/client",
       "node",
       "vitest"
-    ]
+    ],
+    "ignoreDeprecations": "6.0"
   },
-  "include": [
-    "vitest.config.schematics.mts",
-    "schematics/**/*.ts"
-  ],
+  "include": ["vitest.config.schematics.mts", "schematics/**/*.ts"],
   "exclude": []
 }
