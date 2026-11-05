@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ErrorHandler,
   inject,
   input,
   signal,
@@ -13,7 +14,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { NgxFbForm, staticComponent } from '@ngx-formbar/core';
+import { loadComponent, NgxFbForm, staticComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '../../config/provide-formbar';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
@@ -107,6 +108,7 @@ async function render(
           group: staticComponent(GroupComponent),
           array: staticComponent(ArrayComponent),
           rows: staticComponent(RowsComponent),
+          pending: loadComponent(() => new Promise<never>(() => undefined)),
           'manual-text': staticComponent(TextComponent, manual),
           'manual-group': staticComponent(GroupComponent, manual),
           'manual-array': staticComponent(ArrayComponent, manual),
@@ -448,5 +450,20 @@ describe('NgxFbFormComponent', () => {
     );
 
     expect(fixture.componentInstance.form.get('field')).not.toBe(existing);
+  });
+
+  it('renders nothing for a block still loading', async () => {
+    const handleError = vi.fn();
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: ErrorHandler, useValue: { handleError } }],
+    });
+
+    const fixture = await render({
+      note: { type: 'pending', isControl: false },
+    });
+
+    expect(handleError).not.toHaveBeenCalled();
+    expect((fixture.nativeElement as HTMLElement).textContent.trim()).toBe('');
   });
 });
