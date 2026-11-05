@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Determine publishing mode
         id: mode
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
         run: |
           EVENT="${{ github.event_name }}"
 
@@ -50,7 +52,6 @@ jobs:
             echo "should-run=true" >> "$GITHUB_OUTPUT"
           elif [ "$EVENT" = "pull_request" ]; then
             MERGED="${{ github.event.pull_request.merged }}"
-            TITLE="${{ github.event.pull_request.title }}"
             if [ "$MERGED" = "true" ] && [[ "$TITLE" == "chore: version packages"* ]]; then
               echo "mode=release" >> "$GITHUB_OUTPUT"
               echo "should-run=true" >> "$GITHUB_OUTPUT"

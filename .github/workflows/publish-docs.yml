@@ -75,7 +75,6 @@ jobs:
           echo "password ${{ steps.ftp.outputs.password }}" >> ~/.netrc
           chmod 600 ~/.netrc
 
-          lftp -c "set ssl:verify-certificate no; \
-                  open ${{ secrets.DOCS_FTP_SERVER }}; \
+          lftp -c "open ${{ secrets.DOCS_FTP_SERVER }}; \
                   lcd ./dist/apps/docs/browser/; \
                   mirror --reverse --delete --verbose . /"
