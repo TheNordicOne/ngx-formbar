@@ -62,6 +62,78 @@ describe('resolveEmitter', () => {
     return root;
   }
 
+  it('loads an emitter from an absolute path in the tree', () => {
+    tree.create(
+      src('tools/absolute.ts'),
+      `export default { name: 'absolute', emit() {} };\n`,
+    );
+
+    expect(resolveEmitter(src('tools/absolute.ts'), tree, PATHS).name).toBe(
+      'absolute',
+    );
+  });
+
+  it.each([
+    ['tools/plain.js', './plain', 'exports.label = "found";'],
+    ['tools/lib/index.ts', './lib', 'export const label = "found";'],
+    ['tools/lib/index.js', './lib', 'exports.label = "found";'],
+  ])('finds %s behind the import %s', (path, specifier, content) => {
+    tree.create(src(path), content);
+    tree.create(
+      src('tools/importing.ts'),
+      `import { label } from '${specifier}';
+
+export default { name: label, emit() {} };
+`,
+    );
+
+    expect(resolveEmitter('./tools/importing.ts', tree, PATHS).name).toBe(
+      'found',
+    );
+  });
+
+  it('names an import it cannot find', () => {
+    tree.create(
+      src('tools/importing.ts'),
+      `import { label } from './absent';
+
+export default { name: label, emit() {} };
+`,
+    );
+
+    expect(() => resolveEmitter('./tools/importing.ts', tree, PATHS)).toThrow(
+      `Emitter ${src('tools/importing.ts')} imports "./absent", which was not found in the workspace.`,
+    );
+  });
+
+  it.each([
+    ['a string', 'module.exports = "text";'],
+    ['null', 'module.exports = null;'],
+    ['a null default', 'exports.default = null;'],
+    ['a numeric name', 'module.exports = { name: 1, emit() {} };'],
+  ])('rejects %s as an emitter', (_, content) => {
+    tree.create(src('tools/not-emitter.js'), content);
+
+    expect(() => resolveEmitter('./tools/not-emitter.js', tree, PATHS)).toThrow(
+      `"${src('tools/not-emitter.js')}" does not export an emitter`,
+    );
+  });
+
+  it.each([
+    ['__esModule', 'formbar.__esModule', 'true'],
+    ['a symbol', 'formbar[Symbol.iterator]', 'undefined'],
+  ])('answers a probe for %s on the package', (_, probe, answer) => {
+    tree.create(
+      src('tools/probing.js'),
+      `const formbar = require('@ngx-formbar/schematics');
+
+module.exports = { name: String(${probe}), emit() {} };
+`,
+    );
+
+    expect(resolveEmitter('./tools/probing.js', tree, PATHS).name).toBe(answer);
+  });
+
   it('loads a TypeScript emitter from a project-relative path', () => {
     tree.create(
       src('tools/yaml-emitter.ts'),

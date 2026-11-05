@@ -36,7 +36,7 @@ export interface ScaffoldContext extends Schema {
 }
 
 export interface RegisterComponentContext {
-  controlRegistrationsPath?: string | null;
+  controlRegistrationsPath: string;
   key: string;
   componentFilePath: string;
   componentClassName: string;

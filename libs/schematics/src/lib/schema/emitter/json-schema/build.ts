@@ -7,18 +7,22 @@ export interface Dialect {
   defsKeyword: '$defs' | 'definitions';
   /** Draft 2020-12 types tuple positions with `prefixItems`, draft-07 with an `items` array. */
   positionalKeyword: 'prefixItems' | 'items';
+  /** Types the items past those positions. */
+  furtherKeyword: 'items' | 'additionalItems';
 }
 
 export const DRAFT_2020_12: Dialect = {
   id: 'https://json-schema.org/draft/2020-12/schema',
   defsKeyword: '$defs',
   positionalKeyword: 'prefixItems',
+  furtherKeyword: 'items',
 };
 
 export const DRAFT_07: Dialect = {
   id: 'http://json-schema.org/draft-07/schema#',
   defsKeyword: 'definitions',
   positionalKeyword: 'items',
+  furtherKeyword: 'additionalItems',
 };
 
 export interface JsonSchemaOptions {
@@ -115,7 +119,12 @@ function buildNode(node: FormNode, ctx: BuildContext) {
   const childSchema =
     node.children &&
     withConstraints(
-      { $ref: refPath(defNameOf(childRefName(node), ctx), ctx.dialect) },
+      {
+        $ref: refPath(
+          defNameOf(childRefName(node.name, node.children), ctx),
+          ctx.dialect,
+        ),
+      },
       node.children.constraints,
       ctx,
     );
@@ -193,7 +202,7 @@ function collectUnions(model: FormModel, rootName: string) {
 
   for (const node of Object.values(model.nodes)) {
     if (node.children) {
-      unions[childRefName(node)] = node.children;
+      unions[childRefName(node.name, node.children)] = node.children;
     }
   }
 
@@ -222,8 +231,8 @@ function defNameOf(name: string, ctx: BuildContext) {
   return defName;
 }
 
-function childRefName(node: FormNode) {
-  return node.children?.name ?? `${node.name}Children`;
+function childRefName(nodeName: string, children: TypeRef) {
+  return children.name ?? `${nodeName}Children`;
 }
 
 /**
@@ -308,7 +317,8 @@ function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
       return buildObject(type, ctx);
     case 'function':
     case 'never':
-      // `toJsonTypes` drops these, so only a hand-built model reaches this arm.
+      // `buildProperty` projects every type first, so these never arrive. The
+      // arm only keeps the switch exhaustive for `TypeNode`.
       return false;
     case 'unknown':
     case 'any':
@@ -317,8 +327,7 @@ function buildType(type: TypeNode, ctx: BuildContext): JsonSchema {
 }
 
 /**
- * Items past the positions go under `items` in 2020-12 and `additionalItems` in
- * draft-07. Both drafts reject an empty positional list, so a tuple with no
+ * Both drafts reject an empty positional list, so a tuple with no
  * positions types every item through `items` alone.
  */
 function buildTuple(
@@ -333,9 +342,12 @@ function buildTuple(
     return { type: 'array', items: further, ...length };
   }
 
-  return ctx.dialect.positionalKeyword === 'prefixItems'
-    ? { type: 'array', prefixItems: positions, items: further, ...length }
-    : { type: 'array', items: positions, additionalItems: further, ...length };
+  return {
+    type: 'array',
+    [ctx.dialect.positionalKeyword]: positions,
+    [ctx.dialect.furtherKeyword]: further,
+    ...length,
+  };
 }
 
 /**

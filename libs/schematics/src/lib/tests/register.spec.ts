@@ -782,6 +782,140 @@ export class OtherPage implements OnInit {
       expect(registrations).not.toContain('OtherPage');
     });
 
+    describe('with classes that are no components', () => {
+      const contract = 'implements ReactiveFormbarControl<{ type: "x" }>';
+      const header = `import { Component, Directive, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+`;
+      const nameInput = 'readonly name = input.required<string>();';
+      const hostPage = `@Component({ selector: 'app-host', template: '' })
+export class HostPage {}`;
+
+      it.each([
+        ['a directive', '@Directive()'],
+        ['an undecorated class', ''],
+        ['a decorator without a call', '@Component'],
+      ])('skips %s', async (_, decorator) => {
+        const registrations = await registeredAfterCreating(
+          app('x/not-a-component.ts'),
+          `${header}
+${decorator}
+export class NotAComponent ${contract} { ${nameInput} }
+
+${hostPage}
+`,
+        );
+
+        expect(registrations).not.toContain('NotAComponent');
+      });
+
+      it('skips a default export without a name', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/unnamed.ts'),
+          `${header}
+@Component({ selector: 'app-x', template: '' })
+export default class ${contract} { ${nameInput} }
+
+${hostPage}
+`,
+        );
+
+        expect(registrations).not.toContain('x/unnamed');
+      });
+
+      it('skips a file that is no source file', async () => {
+        appTree.create(app('notes.md'), 'Uses @Component a lot.');
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+        await expect(
+          runSchematic({ include: ['**/*'] }),
+        ).resolves.toBeDefined();
+      });
+    });
+
+    it.each([
+      ['a side effect', "import './styles';"],
+      ['a namespace', "import * as all from './all';"],
+      ['a default', "import all from './all';"],
+    ])('copes with importing %s', async (_, importLine) => {
+      const registrations = await registeredAfterCreating(
+        app('x/page.ts'),
+        `import { Component } from '@angular/core';
+${importLine}
+
+@Component({ selector: 'app-page', template: '' })
+export class Page {}
+`,
+      );
+
+      expect(registrations).not.toContain('Page');
+    });
+
+    it('skips a utility type around something else than a contract', async () => {
+      const registrations = await registeredAfterCreating(
+        app('x/partial-page.ts'),
+        `import { Component } from '@angular/core';
+
+@Component({ selector: 'app-x', template: '' })
+export class PartialPage implements Partial<{ a: string }> {}
+`,
+      );
+
+      expect(registrations).not.toContain('PartialPage');
+    });
+
+    describe('a contract without a stated config', () => {
+      const header = `import { Component, input } from '@angular/core';
+import { FormbarContract } from '@ngx-formbar/core';
+`;
+      const decorator = "@Component({ selector: 'app-x', template: '' })";
+      const nameInput = 'readonly name = input.required<string>();';
+
+      it('takes the key from a class name starting with Component', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/picker.ts'),
+          `${header}
+${decorator}
+export class ComponentPicker implements FormbarContract { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('"component-picker"');
+      });
+
+      it('follows a generic base without an argument', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/open.ts'),
+          `${header}
+abstract class Open<T> implements FormbarContract<T> {}
+
+${decorator}
+export class OpenComponent extends Open { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('"open"');
+      });
+    });
+
+    it('reads the contract of an intersection with a literal', async () => {
+      const registrations = await registeredAfterCreating(
+        app('x/mixed.ts'),
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+type Mixed = ReactiveFormbarControl<{ type: 'mixed' }> & { extra?: string };
+
+@Component({ selector: 'app-x', template: '' })
+export class MixedInput implements Mixed {
+  readonly name = input.required<string>();
+}
+`,
+      );
+
+      expect(registrations).toContain('"mixed"');
+    });
+
     describe('a component whose file mentions a contract', () => {
       const header = `import { Component, input } from '@angular/core';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';`;
@@ -816,6 +950,27 @@ export class Wrapped implements Required<ReactiveFormbarControl> {
         expect(registrations).not.toContain('Wrapped');
         expect(warnings).toEqual([
           'Wrapped is not registered. Its file mentions ReactiveFormbarControl, but this schematic cannot read a contract from the class.',
+        ]);
+      });
+
+      it('still warns with a contract alias next to the class', async () => {
+        const warnings = warned();
+
+        await registeredAfterCreating(
+          app('x/aliased.ts'),
+          `${header}
+
+type Local = ReactiveFormbarControl;
+
+${decorator}
+export class Aliased implements Required<Local> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(warnings).toEqual([
+          'Aliased is not registered. Its file mentions ReactiveFormbarControl, but this schematic cannot read a contract from the class.',
         ]);
       });
 

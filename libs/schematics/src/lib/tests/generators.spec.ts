@@ -1603,6 +1603,201 @@ describe('scaffold warnings', () => {
     );
   });
 
+  it('stays silent when everything is found', async () => {
+    await scaffold('control', { registrationType: 'config' });
+
+    expect(warnings).toEqual([]);
+  });
+
+  it('warns once when no registrations can be found', async () => {
+    const bare = await setupWorkspace(runner);
+    bare.delete(app('app.config.ts'));
+
+    const tree = await runner.runSchematic(
+      'control',
+      { project: 'test-app', key: 'test' },
+      bare,
+    );
+
+    expect(warnings).toEqual([
+      'No configuration files provided or found! Registration will be skipped!',
+    ]);
+    expect(exists(tree, app('test/test-control.ts'))).toBe(true);
+  });
+
+  it('names the missing registrations in a register run', async () => {
+    const bare = await setupWorkspace(runner);
+    bare.delete(app('app.config.ts'));
+
+    await runner.runSchematic('register', { project: 'test-app' }, bare);
+
+    expect(warnings).toEqual([
+      'No file for registrations could be found. Skipping registration.',
+    ]);
+  });
+
+  it('warns about a key the config registrations already hold', async () => {
+    appTree = await scaffold('control', { registrationType: 'config' });
+    const before = read(appTree, app('app.config.ts'));
+
+    const tree = await scaffold('control', {
+      name: 'other',
+      registrationType: 'config',
+    });
+
+    expect(warnings).toEqual(['A key with the name "test" is already used']);
+    expect(read(tree, app('app.config.ts'))).toBe(before);
+  });
+
+  it('warns about a token map it cannot add to', async () => {
+    const registrations = [
+      `import { NGX_FW_COMPONENT_REGISTRATIONS } from '@ngx-formbar/core';`,
+      'export const provider = {',
+      '  provide: NGX_FW_COMPONENT_REGISTRATIONS,',
+      '  useValue: new Map(entries),',
+      '};',
+    ].join('\n');
+    appTree.create(app('map-of-entries.ts'), registrations);
+
+    const tree = await scaffold('control', {
+      registrationType: 'token',
+      controlRegistrationsPath: 'app/map-of-entries.ts',
+    });
+
+    expect(warnings).toEqual([
+      `Registration file ${app('map-of-entries.ts')} holds no component registrations. Skipping registration.`,
+    ]);
+    expect(read(tree, app('map-of-entries.ts'))).toBe(registrations);
+  });
+
+  it.each<'token' | 'config'>(['token', 'config'])(
+    'keeps ".ts" inside a folder name in a %s registration',
+    async (registrationType) => {
+      const registrationsFile = 'app/registrations.ts';
+      provideToken(appTree, appConfigPathRaw, registrationsFile);
+      provideMapInlineNoSplit(appTree, appConfigPathRaw);
+
+      const tree = await scaffold('control', {
+        registrationType,
+        path: 'app/lib.ts.d',
+        controlRegistrationsPath:
+          registrationType === 'token'
+            ? registrationsFile
+            : `app/${appConfigPathRaw}`,
+      });
+      const registrations = read(
+        tree,
+        registrationType === 'token'
+          ? src(registrationsFile)
+          : app(appConfigPathRaw),
+      );
+
+      expect(registrations).toContain('import("./lib.ts.d/test/test-control")');
+    },
+  );
+
+  describe('naming', () => {
+    it.each([
+      ['leading dots', '..model', 'test-control-config.model.ts'],
+      ['a dot inside', 'a.b', 'test-control-config.a.b.ts'],
+    ])('reads an interface file suffix with %s', async (_, suffix, file) => {
+      const tree = await scaffold('control', { interfaceFileSuffix: suffix });
+
+      expect(exists(tree, app(`test/${file}`))).toBe(true);
+    });
+  });
+
+  describe('spelling of a helper path', () => {
+    const helperImport = '../shared/helper/view-provider';
+
+    it.each([
+      ['backslashes', 'app\\\\shared\\\\helper\\\\view-provider.ts'],
+      ['repeated slashes', 'app//shared//helper//view-provider.ts'],
+      [
+        'repeated slashes in a path from the workspace root',
+        'projects//test-app//src//app//shared//helper//view-provider.ts',
+      ],
+      [
+        'spaces before the "#"',
+        'app/shared/helper/view-provider.ts #viewProviders',
+      ],
+    ])('accepts %s', async (_, viewProviderHelperPath) => {
+      addHelperFile(
+        appTree,
+        'app/shared/helper/view-provider.ts',
+        'viewProviders',
+      );
+
+      const tree = await scaffold('control', {
+        registrationType: 'config',
+        viewProviderHelperPath,
+      });
+
+      expect(warnings).toEqual([]);
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, app('test/test-control.ts'))),
+          helperImport,
+          'viewProviders',
+        ),
+      ).toBe(true);
+    });
+
+    it('takes a trailing slash as the folder', async () => {
+      addHelperFile(
+        appTree,
+        'app/shared/helper/view-provider.ts',
+        'viewProviders',
+      );
+
+      const tree = await scaffold('control', {
+        registrationType: 'config',
+        viewProviderHelperPath: 'app/shared/helper/',
+      });
+
+      expect(warnings).toEqual([]);
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, app('test/test-control.ts'))),
+          helperImport,
+          'viewProviders',
+        ),
+      ).toBe(true);
+    });
+
+    it('takes a folder whose name holds ".ts" as a folder', async () => {
+      addHelperFile(appTree, 'app/lib.tsx/view-provider.ts', 'viewProviders');
+
+      const tree = await scaffold('control', {
+        viewProviderHelperPath: 'app/lib.tsx',
+      });
+
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, app('test/test-control.ts'))),
+          '../lib.tsx/view-provider',
+          'viewProviders',
+        ),
+      ).toBe(true);
+    });
+
+    it('removes only the extension from a helper file name', async () => {
+      addHelperFile(appTree, 'app/helper.ts.v2.ts', 'viewProviders');
+
+      const tree = await scaffold('control', {
+        viewProviderHelperPath: 'app/helper.ts.v2.ts',
+      });
+
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, app('test/test-control.ts'))),
+          '../helper.ts.v2',
+          'viewProviders',
+        ),
+      ).toBe(true);
+    });
+  });
+
   it('does not warn about a helper when no helper path is configured', async () => {
     await scaffold('control');
 

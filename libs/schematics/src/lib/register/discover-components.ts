@@ -35,19 +35,17 @@ import {
 import { normalize, strings } from '@angular-devkit/core';
 import { isWithin, resolveRequiredPath } from '@ngx-formbar/setup';
 import { createTreeProgram } from '../schema/program';
-import { FormbarComponentInfo } from './component-info.type';
+import { isUtilityType } from '../schema/utility-types';
 
-const defaultIncludes = ['**/*.ts'];
 const globCharacters = /[*?[]/;
 const CONTRACT = 'FormbarContract';
-const utilityTypes = ['Partial', 'Readonly', 'Pick', 'Omit'];
 
 export function discoverComponents(
   tree: Tree,
   registerContext: RegisterContext,
   context: SchematicContext,
 ): RegisterContext {
-  const { exclude = [], include = [...defaultIncludes] } = registerContext;
+  const { exclude = [], include = [] } = registerContext;
 
   const files = findPotentialControlComponents(
     tree,
@@ -123,12 +121,8 @@ export function findPotentialControlComponents(
     otherProjectDirectories,
   }: Pick<RegisterContext, 'sourceRoot' | 'otherProjectDirectories'>,
   include: readonly string[],
-  exclude: readonly string[] = [],
+  exclude: readonly string[],
 ): string[] {
-  if (include.length === 0) {
-    return [];
-  }
-
   const includeRegs = compileGlobs(include, 'include', sourceRoot);
   const excludeRegs = compileGlobs(exclude, 'exclude', sourceRoot);
 
@@ -235,10 +229,6 @@ function someRegMatch(regs: readonly RegExp[], input: string) {
  *   - anchored with ^...$ for full-path match
  */
 function globToRegExp(glob: string) {
-  if (!glob) {
-    return undefined;
-  }
-
   let rx = '^';
   let i = 0;
 
@@ -246,13 +236,12 @@ function globToRegExp(glob: string) {
     const ch = glob[i];
 
     // Handle '**' specially (before '*').
-    if (ch === '*' && i + 1 < glob.length && glob[i + 1] === '*') {
-      const startsSegment = i === 0 || glob[i - 1] === '/';
+    if (ch === '*' && glob[i + 1] === '*') {
+      const startsSegment = glob[i - 1] === '/';
 
-      while (i + 1 < glob.length && glob[i] === '*' && glob[i + 1] === '*') {
+      while (glob[i] === '*') {
         i += 1;
       }
-      i += 1;
 
       if (startsSegment && glob[i] === '/') {
         rx += '(?:.*/)?';
@@ -289,7 +278,8 @@ function globToRegExp(glob: string) {
           break;
         }
 
-        rx += cls;
+        // A range or a negated class could otherwise match the separator.
+        rx += `(?!/)${cls}`;
         i = end + 1;
         break;
       }
@@ -330,40 +320,16 @@ function analyzeSourceFile(
   checker: TypeChecker,
   context: SchematicContext,
 ) {
-  const components: FormbarComponentInfo[] = [];
-
-  for (const stmt of sourceFile.statements) {
-    if (!isClassDeclaration(stmt)) {
-      continue;
-    }
-
-    const decorators = getDecorators(stmt);
-    if (!decorators || decorators.length === 0) {
-      continue;
-    }
-
-    const componentDecorator = decorators.find((decorator: Decorator) => {
-      const decoratorName = getDecoratorName(decorator);
-      return decoratorName === 'Component';
-    });
-
-    if (!componentDecorator || !stmt.name) {
-      continue;
-    }
-
-    const componentInfo = extractComponentInfo(
-      stmt,
-      filePath,
-      checker,
-      context,
+  return sourceFile.statements
+    .filter(isClassDeclaration)
+    .filter((stmt) =>
+      getDecorators(stmt)?.some(
+        (decorator) => getDecoratorName(decorator) === 'Component',
+      ),
+    )
+    .flatMap(
+      (stmt) => extractComponentInfo(stmt, filePath, checker, context) ?? [],
     );
-
-    if (componentInfo) {
-      components.push(componentInfo);
-    }
-  }
-
-  return components;
 }
 
 /** Get a decorator's identifier name (e.g., 'Component') */
@@ -609,10 +575,6 @@ function withoutUtilityTypes(
         checker,
       )
     : reference;
-}
-
-function isUtilityType(symbol: TsSymbol | undefined) {
-  return !!symbol && utilityTypes.includes(symbol.name);
 }
 
 function originalSymbol(name: Node, checker: TypeChecker) {

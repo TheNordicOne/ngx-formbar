@@ -351,7 +351,7 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
 
   const fileName = (
     inputPathParts.fileName || defaultPathParts.fileName
-  ).replace('.ts', '');
+  ).replace(EXT_REGEX, '');
 
   const identifier = inputParts.exportName || defaultParts.exportName;
 
@@ -364,16 +364,14 @@ function extractFromPath(inputSpec: string, defaultSpec: string) {
 }
 
 function splitPath(pathPart: string) {
-  const trimmedPath = pathPart.trim();
-  if (!trimmedPath) {
-    return { directory: '', fileName: '' };
-  }
-
-  const normalizedPath = trimmedPath.replace(/\\/g, '/').replace(/\/+/g, '/');
+  const normalizedPath = pathPart
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/');
   const pathSegments = normalizedPath.split('/');
   const lastSegment = pathSegments[pathSegments.length - 1];
 
   return EXT_REGEX.test(lastSegment)
     ? { directory: posix.dirname(normalizedPath), fileName: lastSegment }
-    : { directory: normalizedPath.replace(/(?<=.)\/$/, ''), fileName: '' };
+    : { directory: normalizedPath, fileName: '' };
 }

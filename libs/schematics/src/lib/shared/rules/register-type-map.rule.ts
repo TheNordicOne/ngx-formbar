@@ -30,10 +30,6 @@ export function registerTypeConfig(
       alreadyRegisteredLevel,
     } = ruleContext;
 
-    if (!controlRegistrationsPath) {
-      return tree;
-    }
-
     const registrationsSourceFile = loadSourceFile(
       tree,
       controlRegistrationsPath,

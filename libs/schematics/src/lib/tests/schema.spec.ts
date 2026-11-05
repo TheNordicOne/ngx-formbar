@@ -1,3 +1,4 @@
+import { lastValueFrom } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,6 +16,7 @@ import {
 import { SchematicsException } from '@angular-devkit/schematics';
 import { app, appRoot, read, src, writeJson } from './helper';
 import { DRAFT_07, DRAFT_2020_12 } from '../schema/emitter/json-schema/build';
+import { schema } from '../schema';
 
 interface EmittedSchemaDocument {
   $schema: string;
@@ -70,6 +72,46 @@ export type AppContent = TextControl;
     await expect(
       runner.runSchematic('schema', { project: 'test-app' }, tree),
     ).rejects.toThrow(/No content type configured/);
+  });
+
+  it('fails on a config without a schema section when no type is passed', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {});
+
+    await expect(
+      runner.runSchematic('schema', { project: 'test-app' }, tree),
+    ).rejects.toThrow(/No content type configured/);
+  });
+
+  it.each([
+    ['no config file', false],
+    ['a config without a schema section', true],
+  ])('writes nothing with --type and %s', async (_, hasConfig) => {
+    if (hasConfig) {
+      writeJson(tree, app('formbar-schematic.config.json'), {});
+    }
+
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    await runner.runSchematic(
+      'schema',
+      { project: 'test-app', type: 'app/types/content.type.ts#AppContent' },
+      tree,
+    );
+
+    expect(messages).toContain(
+      'No emitters configured in "schema.emitters". Nothing was written.',
+    );
+  });
+
+  it('treats an --emitter the option schema never defaulted as no filter', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: { type: 'app/types/content.type.ts#AppContent' },
+    });
+
+    await expect(
+      lastValueFrom(runner.callRule(schema({ project: 'test-app' }), tree)),
+    ).resolves.toBeDefined();
   });
 
   it('fails with a helpful message when the content union is empty', async () => {
@@ -549,6 +591,9 @@ export default defineEmitter({
         },
       });
 
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+
       const result = await runner.runSchematic(
         'schema',
         { project: 'test-app' },
@@ -557,6 +602,9 @@ export default defineEmitter({
 
       expect(result.exists(src('de.json'))).toBe(true);
       expect(result.exists(src('en.json'))).toBe(true);
+      expect(messages).toContain(
+        'Emitted with "by-language" to "(emitter default)"',
+      );
     });
 
     it('fails on the same explicit output of a custom emitter', async () => {
@@ -1236,6 +1284,7 @@ export interface CallbackControl extends NgxFbControl {
   type: 'callback';
   onPick: (value: string) => void;
   onHover?: (value: string) => void;
+  caption: string;
 }
 export type AppContent = CallbackControl;
 `,
@@ -1259,6 +1308,9 @@ export type AppContent = CallbackControl;
     // The config can simply omit it, so it must not warn.
     expect(
       messages.some((message) => message.includes('CallbackControl.onHover')),
+    ).toBe(false);
+    expect(
+      messages.some((message) => message.includes('CallbackControl.caption')),
     ).toBe(false);
   });
 

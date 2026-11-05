@@ -97,4 +97,39 @@ export type AppContent = TextControl | NoteBlock;
       ),
     ).toThrow(/Missing/);
   });
+
+  it('names a file TypeScript cannot read', () => {
+    tree.create(app('types/content.txt'), 'not code');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/content.txt#AppContent' }),
+      ),
+    ).toThrow('Could not parse /projects/test-app/src/app/types/content.txt');
+  });
+
+  it('names a file that is not a module', () => {
+    tree.create(app('types/script.ts'), 'const a = 1;\n');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/script.ts#AppContent' }),
+      ),
+    ).toThrow('/projects/test-app/src/app/types/script.ts exports nothing.');
+  });
+
+  it('names a core the program never reaches', () => {
+    tree.create(app('types/plain.ts'), 'export type AppContent = string;\n');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/plain.ts#AppContent' }),
+      ),
+    ).toThrow(
+      'Could not resolve @ngx-formbar/core from the project. Is it installed?',
+    );
+  });
 });

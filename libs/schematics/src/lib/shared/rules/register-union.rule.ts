@@ -34,17 +34,9 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
 
     const { unionPath, exportName } = parsed;
     const added = addMember(tree, unionPath, exportName, ruleContext, context);
-
-    if (!added) {
-      return tree;
-    }
-
-    const sourceFile = loadSourceFile(tree, unionPath);
+    const sourceFile = added && loadSourceFile(tree, unionPath);
 
     if (!sourceFile) {
-      context.logger.warn(
-        `${unionPath} could not be re-read after the union update. Skipping import registration.`,
-      );
       return tree;
     }
 

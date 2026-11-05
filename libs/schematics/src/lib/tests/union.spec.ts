@@ -86,6 +86,18 @@ describe('scaffolding updates the content union', () => {
     );
   });
 
+  it('adds a scaffolded array with the union as its type argument', async () => {
+    const result = await runner.runSchematic(
+      'array',
+      { key: 'rows', project: 'test-app' },
+      tree,
+    );
+
+    expect(read(result, app('types/content.type.ts'))).toContain(
+      'export type AppContent = RowsArrayConfig<AppContent>;',
+    );
+  });
+
   it('appends to a union that already has members', async () => {
     const withSlider = await runner.runSchematic(
       'control',
@@ -143,6 +155,8 @@ describe('scaffolding updates the content union', () => {
 
   it('does nothing when no schema type is configured', async () => {
     writeJson(tree, app('formbar-schematic.config.json'), {});
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
 
     const result = await runner.runSchematic(
       'control',
@@ -153,6 +167,7 @@ describe('scaffolding updates the content union', () => {
     expect(read(result, app('types/content.type.ts'))).toBe(
       'export type AppContent = never;\n',
     );
+    expect(messages.filter((m) => m.includes('union'))).toEqual([]);
   });
 
   it('adds a member whose name already appears as an unrelated import', async () => {
@@ -308,5 +323,8 @@ describe('degrades gracefully when the union cannot be updated', () => {
     expect(
       messages.some((m) => m.includes('no type alias named "AppContent"')),
     ).toBe(true);
+    expect(read(result, app('types/content.type.ts'))).toBe(
+      'export type SomethingElse = never;\n',
+    );
   });
 });

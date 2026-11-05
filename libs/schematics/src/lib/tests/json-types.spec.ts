@@ -88,6 +88,15 @@ describe('toJsonTypes', () => {
     expect(toJsonTypes({ k: 'function' })).toBeNull();
   });
 
+  it('returns null when no arm of a union survives', () => {
+    expect(
+      toJsonTypes({
+        k: 'union',
+        members: [{ k: 'function' }, { k: 'never' }],
+      }),
+    ).toBeNull();
+  });
+
   it('returns null when a required property has no JSON representation', () => {
     expect(
       toJsonTypes({

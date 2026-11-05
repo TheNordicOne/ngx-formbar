@@ -26,21 +26,24 @@ export function registerComponents(
     return tree;
   }
 
-  return registerComponentsByComponentInfo(registerContext);
+  return registerComponentsByComponentInfo(
+    registerContext,
+    controlRegistrations,
+  );
 }
 
 function registerComponentsByComponentInfo(
   registerContext: RegisterContext,
+  controlRegistrationsPath: string,
 ): Rule {
-  const { components, registrationType, controlRegistrations, tsConfigPath } =
-    registerContext;
+  const { components, registrationType, tsConfigPath } = registerContext;
 
   const registrations: Rule[] = components.map((component) => {
     const { key, componentFilePath, componentClassName, addedWarning } =
       component;
 
     const registerComponentContext: RegisterComponentContext = {
-      controlRegistrationsPath: controlRegistrations,
+      controlRegistrationsPath,
       key,
       componentFilePath,
       componentClassName,

@@ -32,12 +32,19 @@ export interface RowArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbA
 export type AppContent = TextControl | NoteBlock | GroupControl<AppContent> | RowArray<AppContent>;
 `;
 
-async function modelFor(source: string): Promise<FormModel> {
+async function modelFor(
+  source: string,
+  files: Record<string, string> = {},
+): Promise<FormModel> {
   const tree: UnitTestTree = await setupWorkspace(
     new SchematicTestRunner('schematics', COLLECTION_PATH),
   );
   addCoreStub(tree);
   tree.create(app('types/content.type.ts'), source);
+
+  for (const [name, content] of Object.entries(files)) {
+    tree.create(app(`types/${name}`), content);
+  }
 
   const { type, checker, coreRoot } = resolveContentType(tree, {
     typeReference: 'app/types/content.type.ts#AppContent',
@@ -731,6 +738,327 @@ export type AppContent = (TextControl & { required: true }) | NoteBlock | RowArr
 export interface TextControl extends NgxFbControl { type: 'text'; }
 export interface Extra { extra?: string; }
 export type AppContent = TextControl & Extra;
+`,
+      ),
+    ).rejects.toThrow('does not extend a @ngx-formbar/core base type.');
+  });
+
+  describe('the kind of a member', () => {
+    it('follows a base declared in the same file', async () => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface Labelled extends NgxFbControl { caption?: string; }
+export interface TextControl extends Labelled { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+
+    it('looks past a base that reaches no core type', async () => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface Marker { tag?: string; }
+export interface TextControl extends Marker, NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+
+    it('follows a base written through a type alias', async () => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export type Base = NgxFbControl;
+export interface TextControl extends Base { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+
+    it('rejects a member whose only base is no interface', async () => {
+      await expect(
+        modelFor(
+          `export class Plain { tag?: string; }
+export interface Rogue extends Plain { type: 'rogue'; }
+export type AppContent = Rogue;
+import '@ngx-formbar/core';
+`,
+        ),
+      ).rejects.toThrow('Rogue does not extend a @ngx-formbar/core base type.');
+    });
+  });
+
+  describe('a base behind another type', () => {
+    it.each([
+      ['Omit', "Omit<NgxFbControl, 'label'>", ''],
+      ['Pick', "Pick<NgxFbControl, 'type'>", ''],
+      ['Partial', 'Partial<NgxFbControl>', ''],
+      ['Readonly', 'Readonly<NgxFbControl>', ''],
+      ['nested utility types', "Readonly<Omit<NgxFbControl, 'label'>>", ''],
+      [
+        'an alias of a utility type',
+        'Base',
+        "type Base = Omit<NgxFbControl, 'label'>;",
+      ],
+      [
+        'an alias of an intersection',
+        'Base',
+        'type Base = NgxFbControl & { extra?: string };',
+      ],
+    ])('finds the kind through %s', async (_, base, declarations) => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+${declarations}
+export interface TextControl extends ${base} { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+
+    it('still rejects a utility type around something else', async () => {
+      await expect(
+        modelFor(
+          `import '@ngx-formbar/core';
+interface Other { a: string; }
+export interface Rogue extends Omit<Other, 'a'> { type: 'rogue'; }
+export type AppContent = Rogue;
+`,
+        ),
+      ).rejects.toThrow('Rogue does not extend a @ngx-formbar/core base type.');
+    });
+
+    it('reads every declaration of a merged interface', async () => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl { type: 'text'; }
+export interface TextControl extends NgxFbControl { hint?: string; }
+export type AppContent = TextControl;
+`,
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+  });
+
+  describe('node names', () => {
+    const declaring = (extra = '') =>
+      `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: '${extra}text'; }
+`;
+
+    it('numbers unrelated interfaces that print alike', async () => {
+      const model = await modelFor(
+        `import { TextControl } from './a';
+import { TextControl as B } from './b';
+import { TextControl as C } from './c';
+export type AppContent = TextControl | B | C;
+`,
+        {
+          'a.ts': declaring('a-'),
+          'b.ts': declaring('b-'),
+          'c.ts': declaring('c-'),
+        },
+      );
+
+      expect(model.root.members).toEqual([
+        'TextControl',
+        'TextControl2',
+        'TextControl3',
+      ]);
+      expect(model.nodes['TextControl3'].typeLiteral).toEqual(['c-text']);
+    });
+
+    it('names a node only a group reaches like every other node', async () => {
+      const model = await modelFor(
+        `import { NgxFbBaseContent, NgxFbControl, NgxFbFormGroup, NgxFbItem } from '@ngx-formbar/core';
+export interface Tagged<T> extends NgxFbControl { type: 'tagged'; tag?: T; }
+export interface GroupControl<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbFormGroup<T> { type: 'group'; peer?: Tagged<string>; }
+export interface OtherControl extends NgxFbControl { type: 'other'; }
+export type AppContent = OtherControl | GroupControl<Tagged<string>>;
+`,
+      );
+
+      expect(Object.keys(model.nodes).sort()).toEqual([
+        'GroupControl',
+        'OtherControl',
+        'Tagged',
+      ]);
+      expect(
+        model.nodes['GroupControl'].properties.find(
+          (property) => property.name === 'peer',
+        )?.type,
+      ).toEqual({ k: 'union', members: [{ k: 'ref', node: 'Tagged' }] });
+    });
+
+    it('names the union alias, and nothing for a union written inline', async () => {
+      const model = await modelFor(
+        `import { NgxFbBaseContent, NgxFbBlock, NgxFbControl, NgxFbFormGroup, NgxFbItem } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export interface NoteBlock extends NgxFbBlock { type: 'note'; }
+export interface GroupControl<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbFormGroup<T> { type: 'group'; }
+export type AppContent = TextControl | GroupControl<TextControl | NoteBlock>;
+`,
+      );
+
+      expect(model.root.name).toBe('AppContent');
+      expect(model.nodes['GroupControl'].children?.name).toBeNull();
+    });
+  });
+
+  it('keeps the rows of an array on the row type, even one with an index signature', async () => {
+    const model = await modelFor(
+      `import { NgxFbArray, NgxFbBaseContent, NgxFbBlock, NgxFbItem } from '@ngx-formbar/core';
+export interface NoteBlock extends NgxFbBlock { type: 'note'; }
+export interface RowArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbArray<T> { type: 'array'; }
+export interface OtherBlock extends NgxFbBlock { type: 'other'; }
+export type AppContent = OtherBlock | RowArray<NoteBlock>;
+`,
+    );
+
+    expect(model.nodes['RowArray'].children?.members).toEqual(['NoteBlock']);
+  });
+
+  describe('the type literals of a member', () => {
+    const literalsOf = async (type: string) => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface PickControl extends NgxFbControl { type: ${type}; }
+export type AppContent = PickControl;
+`,
+      );
+
+      return model.nodes['PickControl'].typeLiteral;
+    };
+
+    it('lists every literal of a union', async () => {
+      expect(await literalsOf(`'a' | 'b'`)).toEqual(['a', 'b']);
+    });
+
+    it.each([
+      ['a branded string arm', `'a' | (string & {})`],
+      ['a template literal arm', `'a' | \`x-\${string}\``],
+    ])('pins nothing next to %s', async (_, type) => {
+      expect(await literalsOf(type)).toBeNull();
+    });
+  });
+
+  describe('the type of a property', () => {
+    const typeOf = async (type: string, declarations = '') => {
+      const model = await modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+${declarations}
+export interface WideControl extends NgxFbControl { type: 'wide'; value: ${type}; }
+export type AppContent = WideControl;
+`,
+      );
+
+      return model.nodes['WideControl'].properties.find(
+        (property) => property.name === 'value',
+      )?.type;
+    };
+
+    it.each([
+      ['null', { k: 'null' }],
+      ['unknown', { k: 'unknown' }],
+      ['any', { k: 'any' }],
+      ['string[]', { k: 'array', items: { k: 'string' } }],
+    ])('maps %s', async (type, node) => {
+      expect(await typeOf(type)).toEqual(node);
+    });
+
+    it('keeps a lone boolean literal next to another arm', async () => {
+      expect(await typeOf('true | string')).toEqual({
+        k: 'union',
+        members: [{ k: 'string' }, { k: 'literal', value: true }],
+      });
+    });
+
+    it('folds both boolean literals back into a boolean', async () => {
+      expect(await typeOf('boolean | string')).toEqual({
+        k: 'union',
+        members: [{ k: 'string' }, { k: 'boolean' }],
+      });
+    });
+
+    it('states only the fixed positions of a tuple without a rest', async () => {
+      expect(await typeOf('[string, number]')).toEqual({
+        k: 'tuple',
+        elements: [{ k: 'string' }, { k: 'number' }],
+        minItems: 2,
+      });
+    });
+
+    it('keeps a single rest type of a tuple as it is', async () => {
+      expect(await typeOf('[string, ...number[]]')).toEqual({
+        k: 'tuple',
+        elements: [{ k: 'string' }],
+        minItems: 1,
+        rest: { k: 'number' },
+      });
+    });
+
+    it('unites what follows a rest in the middle of a tuple', async () => {
+      expect(await typeOf('[...string[], number]')).toEqual({
+        k: 'tuple',
+        elements: [],
+        minItems: 1,
+        rest: { k: 'union', members: [{ k: 'string' }, { k: 'number' }] },
+      });
+    });
+
+    it('treats an intersection of empty interfaces like {}', async () => {
+      const declarations = `export interface A {}
+export interface B {}`;
+
+      expect(await typeOf('A & B', declarations)).toEqual(await typeOf('{}'));
+    });
+
+    it('gives a constructor no JSON form', async () => {
+      expect(await typeOf('new () => object')).toEqual({ k: 'function' });
+    });
+
+    it('expands an object behind an index signature', async () => {
+      expect(await typeOf('{ [key: string]: { a: string } }')).toEqual({
+        k: 'object',
+        properties: [],
+        index: {
+          k: 'object',
+          properties: [{ name: 'a', optional: false, type: { k: 'string' } }],
+        },
+      });
+    });
+
+    it('closes a cycle through an index signature', async () => {
+      const declarations =
+        'export interface Tree { [key: string]: Tree | string; }';
+
+      expect(await typeOf('Tree', declarations)).toEqual({
+        k: 'object',
+        name: 'Tree',
+        properties: [],
+        index: {
+          k: 'union',
+          members: [{ k: 'string' }, { k: 'cycle', name: 'Tree' }],
+        },
+      });
+    });
+  });
+
+  it('rejects a union member with a declared arm of two merged declarations', async () => {
+    await expect(
+      modelFor(
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export class Merged { a?: string; }
+export interface Merged { b?: string; }
+export type AppContent = TextControl & Merged;
 `,
       ),
     ).rejects.toThrow('does not extend a @ngx-formbar/core base type.');
