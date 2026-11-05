@@ -42,6 +42,8 @@ describe('discovery globs', () => {
       ['x/y.ts'],
     ],
     ['a range stays in its segment', 'x[.-0]y.ts', ['x.y.ts'], ['x/y.ts']],
+    ['a ] before a class is a character', 'x][ab].ts', ['x]a.ts'], ['xa.ts']],
+    ['\\ is a separator', 'app\\a.ts', ['app/a.ts'], ['app/b.ts']],
     ['an open [ is a character', 'app/[a.ts', ['app/[a.ts'], ['app/a.ts']],
     ['[ with a separator is a character', '[a/b].ts', ['[a/b].ts'], ['a.ts']],
     ['. is a character', 'app/a.ts', ['app/a.ts'], ['app/axts']],

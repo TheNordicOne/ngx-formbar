@@ -283,7 +283,6 @@ function globToRegExp(glob: string) {
         i = end + 1;
         break;
       }
-      case '\\':
       case '.':
       case '+':
       case '^':

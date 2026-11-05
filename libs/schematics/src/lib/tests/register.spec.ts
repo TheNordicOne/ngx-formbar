@@ -809,6 +809,23 @@ ${hostPage}
         expect(registrations).not.toContain('NotAComponent');
       });
 
+      it('registers a component with a further decorator', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/both.ts'),
+          `${header}
+function Tracked(): ClassDecorator {
+  return () => undefined;
+}
+
+@Component({ selector: 'app-x', template: '' })
+@Tracked()
+export class BothDecorated ${contract} { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('BothDecorated');
+      });
+
       it('skips a default export without a name', async () => {
         const registrations = await registeredAfterCreating(
           app('x/unnamed.ts'),
