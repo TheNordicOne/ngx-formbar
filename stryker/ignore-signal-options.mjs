@@ -37,6 +37,15 @@ function isInjectionTokenDescription({ node, parent }) {
   );
 }
 
+function isInjectionTokenRootScope({ node, parent, parentPath }) {
+  return (
+    node.type === 'StringLiteral' &&
+    parent.type === 'ObjectProperty' &&
+    parent.key.name === 'providedIn' &&
+    parentPath?.parentPath?.parent?.type === 'NewExpression'
+  );
+}
+
 export const strykerPlugins = [
   declareValuePlugin(PluginKind.Ignore, 'signal-options', {
     shouldIgnore: (path) => {
@@ -46,6 +55,10 @@ export const strykerPlugins = [
 
       if (isInjectionTokenDescription(path)) {
         return 'Only shows up in Angular error messages.';
+      }
+
+      if (isInjectionTokenRootScope(path)) {
+        return 'A token without a scope defaults to root.';
       }
 
       return isEmptyArrayInComputed(path)

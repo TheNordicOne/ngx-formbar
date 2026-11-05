@@ -17,7 +17,9 @@ export interface RowIdentity {
   stablePath(root: AbstractControl | null, path: string): string;
 }
 
-export const ROW_IDENTITY = new InjectionToken<RowIdentity>('ngxfb-row-identity');
+export const ROW_IDENTITY = new InjectionToken<RowIdentity>(
+  'ngxfb-row-identity',
+);
 
 export function rowIdentityFactory(): RowIdentity {
   const ids = new WeakMap<AbstractControl, string>();
@@ -36,18 +38,14 @@ export function rowIdentityFactory(): RowIdentity {
 
   return {
     stablePath(root: AbstractControl | null, path: string): string {
-      if (!root) {
-        return path;
-      }
       const segments = path.split('.');
       const out: string[] = [];
       let current: AbstractControl | null = root;
 
       for (const segment of segments) {
         if (current instanceof FormArray) {
-          const index = Number(segment);
-          const rows: AbstractControl[] = current.controls;
-          const row = index >= 0 && index < rows.length ? rows[index] : null;
+          const rows: (AbstractControl | undefined)[] = current.controls;
+          const row = rows[Number(segment)] ?? null;
           out.push(row ? idFor(row) : segment);
           current = row;
           continue;

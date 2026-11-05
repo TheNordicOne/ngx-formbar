@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   AsyncValidatorFn,
+  FormArray,
   FormControl,
   FormGroup,
   ValidatorFn,
@@ -23,6 +24,24 @@ function createFactory(): RowFactoryService {
 }
 
 describe('RowFactoryService', () => {
+  it('builds a nested array with its update strategy', () => {
+    const row = createFactory().build({
+      type: 'group',
+      title: 'Row',
+      controls: {
+        list: {
+          type: 'array',
+          label: 'List',
+          updateOn: 'blur',
+          rowControl: { type: 'text', label: 'Tag' },
+        },
+      },
+    } as unknown as NgxFbItem);
+
+    expect((row as FormGroup).get('list')).toBeInstanceOf(FormArray);
+    expect((row as FormGroup).get('list')?.updateOn).toBe('blur');
+  });
+
   it('builds a FormControl for a plain control row', () => {
     const row = createFactory().build({ type: 'text', label: 'Tag' });
     expect(row).toBeInstanceOf(FormControl);

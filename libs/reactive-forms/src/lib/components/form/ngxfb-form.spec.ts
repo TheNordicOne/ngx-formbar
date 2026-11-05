@@ -17,6 +17,7 @@ import { NgxFbForm, staticComponent } from '@ngx-formbar/core';
 import { provideFormbar } from '../../config/provide-formbar';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
+import { NgxFbFormArrayOutlet } from '../form-array-outlet/ngxfb-form-array-outlet.component';
 import { NgxFbFormComponent } from './ngxfb-form.component';
 
 @Component({
@@ -60,6 +61,23 @@ class ArrayComponent {
 }
 
 @Component({
+  selector: 'ngxfb-test-rows',
+  imports: [ReactiveFormsModule, NgxFbFormArrayOutlet],
+  // eslint-disable-next-line @angular-eslint/component-max-inline-declarations
+  template: `<div [formArrayName]="name()">
+    @for (row of context.rows(); track row) {
+      <ngxfb-form-array-outlet [index]="$index" />
+    }
+  </div>`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  viewProviders: controlContainerViewProviders,
+})
+class RowsComponent {
+  readonly context = inject(NGXFB_ARRAY_CONTROL);
+  readonly name = input.required<string>();
+}
+
+@Component({
   selector: 'ngxfb-test-host',
   imports: [ReactiveFormsModule, NgxFbFormComponent],
   template: `<form [formGroup]="form">
@@ -88,6 +106,7 @@ async function render(
           text: staticComponent(TextComponent),
           group: staticComponent(GroupComponent),
           array: staticComponent(ArrayComponent),
+          rows: staticComponent(RowsComponent),
           'manual-text': staticComponent(TextComponent, manual),
           'manual-group': staticComponent(GroupComponent, manual),
           'manual-array': staticComponent(ArrayComponent, manual),
@@ -269,6 +288,81 @@ describe('NgxFbFormComponent', () => {
       expect(emitted).toEqual([]);
     });
 
+    it('does not emit when it enables a control', async () => {
+      const fixture = await render({
+        field: { type: 'text', label: 'Field', disabled: 'flag === true' },
+        flag: { type: 'text', label: 'Flag' },
+      });
+      const { form } = fixture.componentInstance;
+      const field = form.get('field') as FormControl;
+
+      form.get('flag')?.setValue(true);
+      await fixture.whenStable();
+
+      const emitted: unknown[] = [];
+      field.valueChanges.subscribe((value) => emitted.push(value));
+
+      form.get('flag')?.setValue(false);
+      await fixture.whenStable();
+
+      expect(field.enabled).toBe(true);
+      expect(emitted).toEqual([]);
+    });
+
+    it('does not reattach a control that stayed in the form', async () => {
+      const fixture = await render({
+        field: {
+          type: 'text',
+          label: 'Field',
+          hidden: 'flag === true',
+          hideStrategy: 'keep',
+        },
+        flag: { type: 'text', label: 'Flag' },
+      });
+      const { form } = fixture.componentInstance;
+      const setControl = vi.spyOn(form, 'setControl');
+
+      form.get('flag')?.setValue(true);
+      await fixture.whenStable();
+      form.get('flag')?.setValue(false);
+      await fixture.whenStable();
+
+      expect(setControl).not.toHaveBeenCalled();
+    });
+
+    it('removes a hidden control once', async () => {
+      const fixture = await render({
+        field: { type: 'text', label: 'Field', hidden: 'flag === true' },
+        flag: { type: 'text', label: 'Flag' },
+      });
+      const { form } = fixture.componentInstance;
+      const removeControl = vi.spyOn(form, 'removeControl');
+
+      form.get('flag')?.setValue(true);
+      await fixture.whenStable();
+      fixture.destroy();
+
+      expect(
+        removeControl.mock.calls.filter(([name]) => name === 'field'),
+      ).toHaveLength(1);
+    });
+
+    it('does not reset a kept array when a move stays in place', async () => {
+      const fixture = await render({ list });
+      const { context } = fixture.debugElement.query(
+        By.directive(ArrayComponent),
+      ).componentInstance as ArrayComponent;
+      const array = fixture.componentInstance.form.get('list') as FormArray;
+      context.add();
+      context.add();
+      const emitted: unknown[] = [];
+      array.valueChanges.subscribe((value) => emitted.push(value));
+
+      context.move(1, 1);
+
+      expect(emitted).toEqual([]);
+    });
+
     it('does not emit when a reset strategy clears a hidden control', async () => {
       const fixture = await render({
         field: {
@@ -292,6 +386,55 @@ describe('NgxFbFormComponent', () => {
       expect(field.value).toBeNull();
       expect(emitted).toEqual([]);
     });
+  });
+
+  it.each([
+    ['control', { type: 'nope', label: 'Nope' }],
+    ['group', { type: 'nope', title: 'Nope', controls: {} }],
+    ['array', { type: 'nope', label: 'Nope', rowControl: { type: 'text' } }],
+    ['block', { type: 'nope', isControl: false }],
+  ])('renders nothing for a %s of an unknown type', async (_, item) => {
+    const fixture = await render({ item });
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.mounted'),
+    ).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.title'),
+    ).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.label'),
+    ).toBeNull();
+  });
+
+  it('passes the value strategy of an array on to its rows', async () => {
+    const fixture = await render({
+      flag: { type: 'text', label: 'Flag' },
+      list: {
+        type: 'rows',
+        label: 'Rows',
+        valueStrategy: 'reset',
+        rowControl: {
+          type: 'text',
+          label: 'Row',
+          hidden: 'flag === true',
+          hideStrategy: 'keep',
+        },
+      },
+    });
+    const { context } = fixture.debugElement.query(By.directive(RowsComponent))
+      .componentInstance as RowsComponent;
+    const { form } = fixture.componentInstance;
+    const array = form.get('list') as FormArray;
+
+    context.add();
+    await fixture.whenStable();
+    array.setValue(['typed']);
+
+    form.get('flag')?.setValue(true);
+    await fixture.whenStable();
+
+    expect(array.value).toEqual([null]);
   });
 
   it('replaces a control the form already holds', async () => {

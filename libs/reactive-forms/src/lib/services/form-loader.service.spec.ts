@@ -143,6 +143,16 @@ describe('FormLoaderService', () => {
     expect(root.controls.group.value).toBe(1);
   });
 
+  it('leaves a group alone whose config is a control', () => {
+    const root = new FormGroup({
+      field: new FormGroup({ kept: new FormControl('kept') }),
+    });
+
+    service.load(root, config, {});
+
+    expect(root.controls.field.value).toEqual({ kept: 'kept' });
+  });
+
   it('leaves an array alone whose config is a group', () => {
     const root = new FormGroup({
       group: new FormArray([new FormControl('kept')]),

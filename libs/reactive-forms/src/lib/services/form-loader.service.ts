@@ -40,15 +40,15 @@ export class FormLoaderService {
   ): void {
     const values = isRecord(data) ? data : {};
     for (const [name, node] of Object.entries(configRecord)) {
-      const control = group.get(name);
-      if (!control) {
-        continue;
-      }
-      this.sizeNode(node, control, values[name]);
+      this.sizeNode(node, group.get(name), values[name]);
     }
   }
 
-  private sizeNode(node: NgxFbItem, control: AbstractControl, value: unknown) {
+  private sizeNode(
+    node: NgxFbItem,
+    control: AbstractControl | null,
+    value: unknown,
+  ) {
     if (isFormbarArray(node) && control instanceof FormArray) {
       this.sizeArray(node, control, value);
       return;
