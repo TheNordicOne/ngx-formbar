@@ -22,7 +22,7 @@ The core package now focuses on content rendering, expression evaluation, and DI
 
 ### Changed
 
-- Peer dependencies limited to `@angular/core` (`>=20.0.0 <22.0.0`) and `rxjs` (`>=7.0.0`). `@angular/forms` and `@angular/cdk` no longer required.
+- Peer dependencies limited to `@angular/core` (`>=20.0.0 <23.0.0`) and `rxjs` (`>=7.0.0`). `@angular/forms` and `@angular/cdk` no longer required.
 - Composable functions and low-level services are now part of the public API.
 - Component registrations use `ComponentRegistrationEntry` instead of bare `Type<unknown>`. Each entry is static (`{ component: Type<unknown> }`) or lazy (`{ loadComponent: LoadComponentFn }`), with optional `ComponentRegistrationOptions`. Use `staticComponent()` or `loadComponent()`. See [Register](/fundamentals/register).
 - Registration option `visibilityHandling` renamed to `hiddenHandling` (`StateHandling = 'auto' | 'manual'`, default `'auto'`).

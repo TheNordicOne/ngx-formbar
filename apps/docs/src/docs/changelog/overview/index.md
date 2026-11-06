@@ -4,7 +4,7 @@ Version 2 splits the monolithic `@ngx-formbar/core` package into four focused pa
 
 | Package                       | Breaking Changes | Highlights                                                                                                                                                                                                                                                                                                                                                           |
 | ----------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@ngx-formbar/core`           | Yes              | Peers are now `@angular/core` (`>=20.0.0 <22.0.0`) and `rxjs` (`>=7.0.0`); `@angular/forms` and `@angular/cdk` dropped. Registrations use `ComponentRegistrationEntry` via `staticComponent()` / `loadComponent()`, with `hiddenHandling` and `disabledHandling`. Directives, form component, validators, and provider setup moved to `@ngx-formbar/reactive-forms`. |
+| `@ngx-formbar/core`           | Yes              | Peers are now `@angular/core` (`>=20.0.0 <23.0.0`) and `rxjs` (`>=7.0.0`); `@angular/forms` and `@angular/cdk` dropped. Registrations use `ComponentRegistrationEntry` via `staticComponent()` / `loadComponent()`, with `hiddenHandling` and `disabledHandling`. Directives, form component, validators, and provider setup moved to `@ngx-formbar/reactive-forms`. |
 | `@ngx-formbar/reactive-forms` | Yes              | New interface-based component contract: implement `ReactiveFormbarControl<T>`, `ReactiveFormbarGroup<T>`, or `FormbarBlock<T>` with `input()` signals. Groups render children with `<ngxfb-control-outlet />`. New: form arrays backed by a native `FormArray`.                                                                                                      |
 | `@ngx-formbar/schematics`     | -                | New package. The `control`, `group`, `block` and `array` generators scaffold interface-based components, `register` registers existing ones, and a `schema` generator derives documents from the content union through pluggable emitters.                                                                                                                           |
 | `@ngx-formbar/setup`          | -                | New internal utility package providing AST manipulation and file helpers for schematics.                                                                                                                                                                                                                                                                             |
@@ -13,7 +13,7 @@ Version 2 splits the monolithic `@ngx-formbar/core` package into four focused pa
 
 **`@ngx-formbar/core`:**
 
-- Minimum Angular version bumped from 19 to 20 (`@angular/core >=20.0.0 <22.0.0`).
+- Minimum Angular version bumped from 19 to 20 (`@angular/core >=20.0.0 <23.0.0`).
 - `@angular/forms` and `@angular/cdk` are no longer peer dependencies.
 - Component registrations require the new `ComponentRegistrationEntry` shape instead of bare `Type<unknown>`.
 - Registration option `visibilityHandling` renamed to `hiddenHandling`.
