@@ -196,7 +196,9 @@ export const InsertAtPosition: Story = {
 
     await userEvent.type(afterInsert[1], 'b');
     await expect(
-      (await canvas.findAllByRole('textbox')).map((i) => (i as HTMLInputElement).value),
+      (await canvas.findAllByRole('textbox')).map(
+        (i) => (i as HTMLInputElement).value,
+      ),
     ).toEqual(['a', 'b', 'c']);
   },
 };
@@ -258,7 +260,7 @@ export const MoveReorders: Story = {
 // ---------------------------------------------------------------------------
 
 export const ArrayHiddenKeep: Story = {
-  name: 'Array Hidden — Keep',
+  name: 'Array Hidden: Keep',
   parameters: {
     docs: {
       description: {
@@ -299,11 +301,11 @@ export const ArrayHiddenKeep: Story = {
     ).not.toBeInTheDocument();
     await expect(getFormValue()['tags']).toEqual(['kept']);
 
-    // Re-show — the row reappears with its value
+    // Re-show: the row reappears with its value
     await userEvent.clear(toggle);
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toHaveValue(
-      'kept',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toHaveValue('kept');
   },
 };
 
@@ -312,7 +314,7 @@ export const ArrayHiddenKeep: Story = {
 // ---------------------------------------------------------------------------
 
 export const ArrayHiddenRemove: Story = {
-  name: 'Array Hidden — Remove',
+  name: 'Array Hidden: Remove',
   parameters: {
     docs: {
       description: {
@@ -351,9 +353,11 @@ export const ArrayHiddenRemove: Story = {
     // The whole array key is removed from the model while hidden
     await expect(getFormValue()['tags']).toBeUndefined();
 
-    // Re-show — the array re-attaches and its rows render again
+    // Re-show: the array re-attaches and its rows render again
     await userEvent.clear(toggle);
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toBeInTheDocument();
     await expect(getFormValue()['tags']).toBeDefined();
   },
 };
@@ -363,7 +367,7 @@ export const ArrayHiddenRemove: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowTopHiddenKeep: Story = {
-  name: 'Row Top Hidden — Keep',
+  name: 'Row Top Hidden: Keep',
   parameters: {
     docs: {
       description: {
@@ -413,7 +417,7 @@ export const RowTopHiddenKeep: Story = {
     ).not.toBeInTheDocument();
     await expect(getFormValue()['tags']).toEqual(['a', 'b']);
 
-    // Re-show — rows return with their values in order
+    // Re-show: rows return with their values in order
     await userEvent.clear(toggle);
     const shown = await canvas.findAllByRole('textbox', { name: 'Tag' });
     await expect(shown.map((i) => (i as HTMLInputElement).value)).toEqual([
@@ -428,7 +432,7 @@ export const RowTopHiddenKeep: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildLastSurvivesRemoval: Story = {
-  name: 'Row Child Last — Survives Removal',
+  name: 'Row Child Last: Survives Removal',
   parameters: {
     docs: {
       description: {
@@ -486,10 +490,10 @@ export const RowChildLastSurvivesRemoval: Story = {
       canvas.queryByRole('textbox', { name: 'Name' }),
     ).not.toBeInTheDocument();
 
-    // Remove row 0 while hidden — the surviving row shifts from index 1 to 0
+    // Remove row 0 while hidden: the surviving row shifts from index 1 to 0
     await userEvent.click(await canvas.findByTestId('contacts-0-remove'));
 
-    // Re-show — the surviving row must still show 'second', not 'first'
+    // Re-show: the surviving row must still show 'second', not 'first'
     await userEvent.clear(toggle);
     const shown = await canvas.findAllByRole('textbox', { name: 'Name' });
     await expect(shown).toHaveLength(1);
@@ -502,7 +506,7 @@ export const RowChildLastSurvivesRemoval: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildLastFollowsReorder: Story = {
-  name: 'Row Child Last — Follows Reorder',
+  name: 'Row Child Last: Follows Reorder',
   parameters: {
     docs: {
       description: {
@@ -561,7 +565,7 @@ export const RowChildLastFollowsReorder: Story = {
     // Reorder while hidden: move row 0 down so the rows swap positions.
     await userEvent.click(await canvas.findByTestId('contacts-0-move-down'));
 
-    // Re-show — values followed their rows, so the order is now swapped.
+    // Re-show: values followed their rows, so the order is now swapped.
     // Index-keyed caching would instead leave 'first' at index 0.
     await userEvent.clear(toggle);
     const shown = await canvas.findAllByRole('textbox', { name: 'Name' });
@@ -576,7 +580,7 @@ export const RowChildLastFollowsReorder: Story = {
 // ---------------------------------------------------------------------------
 
 export const ArrayDisabledCascades: Story = {
-  name: 'Array Disabled — Cascades',
+  name: 'Array Disabled: Cascades',
   parameters: {
     docs: {
       description: {
@@ -602,7 +606,9 @@ export const ArrayDisabledCascades: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByTestId('tags-add'));
-    await expect(await canvas.findByRole('textbox', { name: 'Tag' })).toBeEnabled();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Tag' }),
+    ).toBeEnabled();
 
     const toggle = await canvas.findByRole('textbox', {
       name: 'Type "off" to disable',
@@ -725,7 +731,7 @@ export const RowChildValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const LoadShrinks: Story = {
-  name: 'Load — Shrinks',
+  name: 'Load: Shrinks',
   parameters: {
     docs: {
       description: {
@@ -750,9 +756,9 @@ export const LoadShrinks: Story = {
     await userEvent.click(add);
     await userEvent.click(add);
     await userEvent.click(add);
-    await expect(await canvas.findAllByRole('textbox', { name: 'Tag' })).toHaveLength(
-      3,
-    );
+    await expect(
+      await canvas.findAllByRole('textbox', { name: 'Tag' }),
+    ).toHaveLength(3);
 
     // Load fewer rows than present
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
@@ -768,7 +774,7 @@ export const LoadShrinks: Story = {
 // ---------------------------------------------------------------------------
 
 export const LoadAbsentKeyEmpties: Story = {
-  name: 'Load — Absent Key Empties Array',
+  name: 'Load: Absent Key Empties Array',
   parameters: {
     docs: {
       description: {
@@ -805,9 +811,9 @@ export const LoadAbsentKeyEmpties: Story = {
       canvas.queryByRole('textbox', { name: 'Tag' }),
     ).not.toBeInTheDocument();
     await expect(getFormValue()['tags']).toEqual([]);
-    await expect(await canvas.findByRole('textbox', { name: 'Title' })).toHaveValue(
-      'loaded',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Title' }),
+    ).toHaveValue('loaded');
   },
 };
 
@@ -816,7 +822,7 @@ export const LoadAbsentKeyEmpties: Story = {
 // ---------------------------------------------------------------------------
 
 export const LoadNestedArray: Story = {
-  name: 'Load — Nested Array',
+  name: 'Load: Nested Array',
   parameters: {
     docs: {
       description: {
@@ -851,9 +857,9 @@ export const LoadNestedArray: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Ada',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Name' }),
+    ).toHaveValue('Ada');
     const nicknames = await canvas.findAllByRole('textbox', {
       name: 'Nickname',
     });
@@ -868,7 +874,7 @@ export const LoadNestedArray: Story = {
 // ---------------------------------------------------------------------------
 
 export const LoadPartialRow: Story = {
-  name: 'Load — Partial Row Data',
+  name: 'Load: Partial Row Data',
   parameters: {
     docs: {
       description: {
@@ -897,12 +903,12 @@ export const LoadPartialRow: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Patch' }));
 
-    await expect(await canvas.findByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Ada',
-    );
-    await expect(await canvas.findByRole('textbox', { name: 'Email' })).toHaveValue(
-      'none',
-    );
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Name' }),
+    ).toHaveValue('Ada');
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Email' }),
+    ).toHaveValue('none');
   },
 };
 
@@ -911,7 +917,7 @@ export const LoadPartialRow: Story = {
 // ---------------------------------------------------------------------------
 
 export const ResetKeepsRowCount: Story = {
-  name: 'Reset — Keeps Count, Blanks Values',
+  name: 'Reset: Keeps Count, Blanks Values',
   parameters: {
     docs: {
       description: {
@@ -995,7 +1001,7 @@ export const ArrayDynamicLabel: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowUpdateOnBlur: Story = {
-  name: 'Row Update Strategy — Blur',
+  name: 'Row Update Strategy: Blur',
   parameters: {
     docs: {
       description: {
@@ -1020,7 +1026,7 @@ export const RowUpdateOnBlur: Story = {
 
     await userEvent.type(input, 'typed');
     // Keystrokes land in the input, but updateOn 'blur' withholds them from the
-    // model until the field is blurred — so the input shows the text while the
+    // model until the field is blurred, so the input shows the text while the
     // form value does not yet carry it.
     await expect(input).toHaveValue('typed');
     await expect(getFormValue()['tags']).not.toEqual(['typed']);
@@ -1031,11 +1037,11 @@ export const RowUpdateOnBlur: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Readonly — static on a row child
+// Readonly: static on a row child
 // ---------------------------------------------------------------------------
 
 export const RowChildReadonlyStatic: Story = {
-  name: 'Row Child Readonly — Static',
+  name: 'Row Child Readonly: Static',
   parameters: {
     docs: {
       description: {
@@ -1073,11 +1079,11 @@ export const RowChildReadonlyStatic: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Readonly — conditional on a row child
+// Readonly: conditional on a row child
 // ---------------------------------------------------------------------------
 
 export const RowChildReadonlyConditional: Story = {
-  name: 'Row Child Readonly — Conditional',
+  name: 'Row Child Readonly: Conditional',
   parameters: {
     docs: {
       description: {
@@ -1131,11 +1137,11 @@ export const RowChildReadonlyConditional: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Readonly — array cascades to rows
+// Readonly: array cascades to rows
 // ---------------------------------------------------------------------------
 
 export const ArrayReadonlyCascadesToRows: Story = {
-  name: 'Array Readonly — Cascades',
+  name: 'Array Readonly: Cascades',
   parameters: {
     docs: {
       description: {
@@ -1163,11 +1169,11 @@ export const ArrayReadonlyCascadesToRows: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Readonly — row child overrides array readonly
+// Readonly: row child overrides array readonly
 // ---------------------------------------------------------------------------
 
 export const RowChildReadonlyOverridesArray: Story = {
-  name: 'Row Child Readonly — Overrides Array',
+  name: 'Row Child Readonly: Overrides Array',
   parameters: {
     docs: {
       description: {
@@ -1206,11 +1212,11 @@ export const RowChildReadonlyOverridesArray: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Readonly — initial state from default value
+// Readonly: initial state from default value
 // ---------------------------------------------------------------------------
 
 export const RowChildReadonlyInitialState: Story = {
-  name: 'Row Child Readonly — Initial State',
+  name: 'Row Child Readonly: Initial State',
   parameters: {
     docs: {
       description: {
@@ -1249,7 +1255,9 @@ export const RowChildReadonlyInitialState: Story = {
       await canvas.findByRole('textbox', { name: 'Name' }),
     ).toHaveAttribute('readonly');
 
-    await userEvent.clear(await canvas.findByRole('textbox', { name: 'Lock toggle' }));
+    await userEvent.clear(
+      await canvas.findByRole('textbox', { name: 'Lock toggle' }),
+    );
     await expect(
       await canvas.findByRole('textbox', { name: 'Name' }),
     ).not.toHaveAttribute('readonly');
@@ -1257,11 +1265,11 @@ export const RowChildReadonlyInitialState: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Disabled — function-based on a row child
+// Disabled: function-based on a row child
 // ---------------------------------------------------------------------------
 
 export const RowChildDisabledFunction: Story = {
-  name: 'Row Child Disabled — Function',
+  name: 'Row Child Disabled: Function',
   parameters: {
     docs: {
       description: {
@@ -1316,11 +1324,11 @@ export const RowChildDisabledFunction: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Disabled — row child overrides array disabled
+// Disabled: row child overrides array disabled
 // ---------------------------------------------------------------------------
 
 export const RowChildDisabledOverridesArrayDisabled: Story = {
-  name: 'Row Child Disabled — Overrides Array',
+  name: 'Row Child Disabled: Overrides Array',
   parameters: {
     docs: {
       description: {
@@ -1359,11 +1367,11 @@ export const RowChildDisabledOverridesArrayDisabled: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Disabled — initial state from default value
+// Disabled: initial state from default value
 // ---------------------------------------------------------------------------
 
 export const RowChildInitialDisabledState: Story = {
-  name: 'Row Child Disabled — Initial State',
+  name: 'Row Child Disabled: Initial State',
   parameters: {
     docs: {
       description: {
@@ -1544,7 +1552,7 @@ export const RowChildAsyncValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const ArrayLevelValidator: Story = {
-  name: 'Array Level Validator — Min Rows',
+  name: 'Array Level Validator: Min Rows',
   parameters: {
     docs: {
       description: {
@@ -1567,7 +1575,7 @@ export const ArrayLevelValidator: Story = {
   play: async ({ canvas, userEvent }) => {
     const add = await canvas.findByTestId('tags-add');
 
-    // One row — below the minimum of two. Typing marks the array dirty so the
+    // One row: below the minimum of two. Typing marks the array dirty so the
     // array-level error renders.
     await userEvent.click(add);
     await userEvent.type(
@@ -1597,7 +1605,7 @@ export const ArrayLevelValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildValueStrategyReset: Story = {
-  name: 'Row Child Value Strategy — Reset',
+  name: 'Row Child Value Strategy: Reset',
   parameters: {
     docs: {
       description: {
@@ -1658,7 +1666,7 @@ export const RowChildValueStrategyReset: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildValueStrategyDefault: Story = {
-  name: 'Row Child Value Strategy — Default',
+  name: 'Row Child Value Strategy: Default',
   parameters: {
     docs: {
       description: {
@@ -1707,7 +1715,9 @@ export const RowChildValueStrategyDefault: Story = {
     await expect(
       canvas.queryByRole('textbox', { name: 'Name' }),
     ).not.toBeInTheDocument();
-    await expect(getFormValue()['contacts']).toEqual([{ name: 'default-name' }]);
+    await expect(getFormValue()['contacts']).toEqual([
+      { name: 'default-name' },
+    ]);
 
     await userEvent.clear(toggle);
     await expect(
@@ -1721,7 +1731,7 @@ export const RowChildValueStrategyDefault: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowInheritsHideStrategyFromArray: Story = {
-  name: 'Row Inherits Hide Strategy — Keep',
+  name: 'Row Inherits Hide Strategy: Keep',
   parameters: {
     docs: {
       description: {
@@ -1779,7 +1789,7 @@ export const RowInheritsHideStrategyFromArray: Story = {
 // ---------------------------------------------------------------------------
 
 export const ArrayValueStrategyDoesNotTouchRows: Story = {
-  name: 'Array Value Strategy — No Row Cascade',
+  name: 'Array Value Strategy: No Row Cascade',
   parameters: {
     docs: {
       description: {
@@ -1839,7 +1849,7 @@ export const ArrayValueStrategyDoesNotTouchRows: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowInheritsUpdateOnFromArray: Story = {
-  name: 'Row Inherits Update On — Blur',
+  name: 'Row Inherits Update On: Blur',
   parameters: {
     docs: {
       description: {
@@ -1877,7 +1887,7 @@ export const RowInheritsUpdateOnFromArray: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildUpdateOnSubmit: Story = {
-  name: 'Row Child Update On — Submit',
+  name: 'Row Child Update On: Submit',
   parameters: {
     docs: {
       description: {
@@ -1903,7 +1913,9 @@ export const RowChildUpdateOnSubmit: Story = {
     await userEvent.tab();
     await expect(getFormValue()['tags']).not.toEqual(['submit-text']);
 
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
     await expect(getFormValue()['tags']).toEqual(['submit-text']);
   },
 };
@@ -2040,8 +2052,12 @@ export const ArrayRowTestIdComposition: Story = {
 
     // Scalar row: input and row operation buttons
     await expect(await canvas.findByTestId('tags-0-input')).toBeInTheDocument();
-    await expect(await canvas.findByTestId('tags-0-remove')).toBeInTheDocument();
-    await expect(await canvas.findByTestId('tags-0-insert')).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('tags-0-remove'),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('tags-0-insert'),
+    ).toBeInTheDocument();
     await expect(
       await canvas.findByTestId('tags-0-move-up'),
     ).toBeInTheDocument();
@@ -2062,12 +2078,12 @@ export const ArrayRowTestIdComposition: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildHideStrategyRemoveInGroupRow: Story = {
-  name: 'Row Child Hide Strategy — Remove (group row)',
+  name: 'Row Child Hide Strategy: Remove (group row)',
   parameters: {
     docs: {
       description: {
         story:
-          "A child inside a group row with hideStrategy remove drops its own key from each row object when hidden (siblings and rows remain), and re-attaches the key with its cached value on show.",
+          'A child inside a group row with hideStrategy remove drops its own key from each row object when hidden (siblings and rows remain), and re-attaches the key with its cached value on show.',
       },
     },
   },
@@ -2127,7 +2143,7 @@ export const RowChildHideStrategyRemoveInGroupRow: Story = {
       { name: 'Alan' },
     ]);
 
-    // Re-show — the key returns with its cached value in each row.
+    // Re-show: the key returns with its cached value in each row.
     await userEvent.clear(toggle);
     const shownNotes = await canvas.findAllByRole('textbox', { name: 'Note' });
     await expect(shownNotes).toHaveLength(2);
@@ -2145,7 +2161,7 @@ export const RowChildHideStrategyRemoveInGroupRow: Story = {
 // ---------------------------------------------------------------------------
 
 export const ScalarRowTopReadonlyStatic: Story = {
-  name: 'Scalar Row Top Readonly — Static',
+  name: 'Scalar Row Top Readonly: Static',
   parameters: {
     docs: {
       description: {
@@ -2187,7 +2203,7 @@ export const ScalarRowTopReadonlyStatic: Story = {
 // ---------------------------------------------------------------------------
 
 export const ScalarRowTopReadonlyConditional: Story = {
-  name: 'Scalar Row Top Readonly — Conditional',
+  name: 'Scalar Row Top Readonly: Conditional',
   parameters: {
     docs: {
       description: {
@@ -2240,7 +2256,7 @@ export const ScalarRowTopReadonlyConditional: Story = {
 // ---------------------------------------------------------------------------
 
 export const ScalarRowTopDisabledFunction: Story = {
-  name: 'Scalar Row Top Disabled — Function',
+  name: 'Scalar Row Top Disabled: Function',
   parameters: {
     docs: {
       description: {
@@ -2347,7 +2363,7 @@ export const ScalarRowTopComputedValue: Story = {
 // ---------------------------------------------------------------------------
 
 export const ScalarRowTopValueStrategyReset: Story = {
-  name: 'Scalar Row Top Value Strategy — Reset',
+  name: 'Scalar Row Top Value Strategy: Reset',
   parameters: {
     docs: {
       description: {
@@ -2403,7 +2419,7 @@ export const ScalarRowTopValueStrategyReset: Story = {
 // ---------------------------------------------------------------------------
 
 export const ScalarRowTopValueStrategyDefault: Story = {
-  name: 'Scalar Row Top Value Strategy — Default',
+  name: 'Scalar Row Top Value Strategy: Default',
   parameters: {
     docs: {
       description: {
@@ -2522,7 +2538,7 @@ export const RowChildAsyncValidatorInGroup: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildUpdateOnSubmitInGroup: Story = {
-  name: 'Row Child Update On — Submit (group row)',
+  name: 'Row Child Update On: Submit (group row)',
   parameters: {
     docs: {
       description: {
@@ -2553,7 +2569,9 @@ export const RowChildUpdateOnSubmitInGroup: Story = {
     await userEvent.tab();
     await expect(getFormValue()['contacts']).not.toEqual([{ name: 'Ada' }]);
 
-    await userEvent.click(await canvas.findByRole('button', { name: 'Submit' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Submit' }),
+    );
     await expect(getFormValue()['contacts']).toEqual([{ name: 'Ada' }]);
   },
 };
@@ -2596,7 +2614,9 @@ export const RowChildDynamicLabelInGroup: Story = {
     await userEvent.click(await canvas.findByTestId('contacts-add'));
     await expect(await canvas.findByText('email address')).toBeInTheDocument();
 
-    const fieldType = await canvas.findByRole('textbox', { name: 'Field Type' });
+    const fieldType = await canvas.findByRole('textbox', {
+      name: 'Field Type',
+    });
     await userEvent.clear(fieldType);
     await userEvent.type(fieldType, 'phone');
     await expect(await canvas.findByText('phone address')).toBeInTheDocument();
@@ -2608,7 +2628,7 @@ export const RowChildDynamicLabelInGroup: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopHiddenKeep: Story = {
-  name: 'Row Group Top Hidden — Keep',
+  name: 'Row Group Top Hidden: Keep',
   parameters: {
     docs: {
       description: {
@@ -2672,10 +2692,9 @@ export const RowGroupTopHiddenKeep: Story = {
       '',
       '',
     ]);
-    await expect(shownEmails.map((i) => (i as HTMLInputElement).value)).toEqual([
-      '',
-      '',
-    ]);
+    await expect(shownEmails.map((i) => (i as HTMLInputElement).value)).toEqual(
+      ['', ''],
+    );
   },
 };
 
@@ -2684,7 +2703,7 @@ export const RowGroupTopHiddenKeep: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopDisabled: Story = {
-  name: 'Row Group Top Disabled — Cascades',
+  name: 'Row Group Top Disabled: Cascades',
   parameters: {
     docs: {
       description: {
@@ -2749,7 +2768,7 @@ export const RowGroupTopDisabled: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopReadonly: Story = {
-  name: 'Row Group Top Readonly — Cascades',
+  name: 'Row Group Top Readonly: Cascades',
   parameters: {
     docs: {
       description: {
@@ -2814,7 +2833,7 @@ export const RowGroupTopReadonly: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopValueStrategyReset: Story = {
-  name: 'Row Group Top Value Strategy — Reset',
+  name: 'Row Group Top Value Strategy: Reset',
   parameters: {
     docs: {
       description: {
@@ -2880,7 +2899,7 @@ export const RowGroupTopValueStrategyReset: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopValueStrategyDefault: Story = {
-  name: 'Row Group Top Value Strategy — Default',
+  name: 'Row Group Top Value Strategy: Default',
   parameters: {
     docs: {
       description: {
@@ -2952,7 +2971,7 @@ export const RowGroupTopValueStrategyDefault: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopValueStrategyLast: Story = {
-  name: 'Row Group Top Value Strategy — Last',
+  name: 'Row Group Top Value Strategy: Last',
   parameters: {
     docs: {
       description: {
@@ -3068,7 +3087,7 @@ export const RowGroupTopGroupValidator: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowGroupTopUpdateOnBlurInheritance: Story = {
-  name: 'Row Group Top Inherits Update On — Blur',
+  name: 'Row Group Top Inherits Update On: Blur',
   parameters: {
     docs: {
       description: {
@@ -3149,12 +3168,12 @@ export const RowGroupTopTestId: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowInheritsGlobalUpdateOn: Story = {
-  name: 'Row Inherits Global Update On — Blur',
+  name: 'Row Inherits Global Update On: Blur',
   parameters: {
     docs: {
       description: {
         story:
-          'With a global updateOn blur and no override on the array or its row, a row control commits to the model only on blur — the same default a non-array control receives.',
+          'With a global updateOn blur and no override on the array or its row, a row control commits to the model only on blur: the same default a non-array control receives.',
       },
     },
   },
@@ -3192,7 +3211,7 @@ export const RowInheritsGlobalUpdateOn: Story = {
 // ---------------------------------------------------------------------------
 
 export const RowChildNonNullableReset: Story = {
-  name: 'Row Child Non-Nullable — Reset',
+  name: 'Row Child Non-Nullable: Reset',
   parameters: {
     docs: {
       description: {

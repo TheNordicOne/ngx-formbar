@@ -4,7 +4,7 @@ This package is compatible with Angular 20.0.0 up to (but not including) Angular
 
 ## Primary Installation via ng-add
 
-This command installs ngx-formbar.
+This command installs _ngx-formbar_.
 
 ```shell
 ng add @ngx-formbar/reactive-forms
@@ -12,9 +12,9 @@ ng add @ngx-formbar/reactive-forms
 
 By default, this does the following.
 
-- Install `@ngx-formbar/reactive-forms` as a dependency (`@ngx-formbar/core` is included as a peer dependency)
-- Install `@ngx-formbar/schematics` as a dev dependency (for the control, group, block, and schema generators)
-- Create a registration configuration file
+- Install `@ngx-formbar/reactive-forms` and `@ngx-formbar/core` as dependencies, in matching versions
+- Install `@ngx-formbar/schematics` as a dev dependency (for the control, group, block, array, register, and schema generators)
+- Create a provider configuration file
 - Setup token-based registration including
   - barrel export
   - component registration
@@ -24,35 +24,96 @@ By default, this does the following.
   - barrel export
   - control container view provider
 - Create a schematics configuration file
-- Create a content union file (`content.type.ts` with an `AppContent` type)
-- Provide ngx-formbar in your `app.config.ts`
-- Install dependencies
+- Create a content union file (`content.type.ts` with an `AppContent` type) that the schematics configuration file points at
+- Provide _ngx-formbar_ in your application's [root providers](#root-providers)
 
 > **Note**
-> The schematics configuration file will only contain values, that differ from the default.
+> `ng add` never overwrites a file that already exists. Running it again keeps your registrations, helper files, schematics configuration file and content union as they are. See [Which Schematics Configuration File](#which-schematics-configuration-file).
 
 > **Note**
-> When setting the `helperPath` option, only set it to a folder path. If you want to adjust how the files or exports are named later, update the configuration afterward. See Notes for Path Options in the [Generators page](/fundamentals/generators) to learn how this works.
+> With `--registration-style=config --provide-inline --split-registrations=false`, registrations go in the root providers only for `bootstrapApplication(App, appConfig)`. With any other bootstrap call they go in `--registrations-path`, where the generators can add to them.
+
+> **Note**
+> A schematics configuration file wins over the `angular.json` settings written with `--use-schematic-config=false`. `ng add` logs a warning naming each setting a file wins with.
+
+> **Note**
+> To rename the helper file or its export later, see [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
+
+> **Note**
+> Yarn Plug'n'Play in strict mode does not provide peer dependencies a project leaves out. Add `@angular-devkit/core`, `@angular-devkit/schematics` and `@schematics/angular` as dev dependencies before running `ng add`.
+
+## Root Providers
+
+`ng add` follows the bootstrap call in the project's main file, also into files that file imports, and edits:
+
+| The bootstrap call                                  | `ng add` edits                                                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `bootstrapApplication(App, appConfig)`              | The `appConfig` variable, also through a barrel or a path alias                                                |
+| `bootstrapApplication(App, { providers: [] })`      | The object                                                                                                     |
+| `bootstrapApplication(App)`                         | The call, which gets a config object                                                                           |
+| `bootstrapApplication(App, makeConfig())`           | The call, as `bootstrapApplication(App, mergeApplicationConfig(makeConfig(), { providers: [...] }))`           |
+| `bootstrapApplication(App, { ...base })`            | The call, wrapped the same way                                                                                 |
+| `bootstrapApplication(App, configFromOtherProject)` | The call, wrapped the same way, so that no other project imports from this one                                 |
+| `platformBrowser().bootstrapModule(AppModule)`      | The `providers` of `AppModule`, also through a barrel or a path alias                                          |
+| None                                                | `app/app.config.ts` in the source root, with a warning naming it. If that file is missing too, `ng add` fails. |
+
+A root NgModule has to be a named class declared in the project, and its metadata has to be an object in the decorator, with no spread or with a `providers` array after it. Otherwise `ng add` fails naming the file.
+
+## Which Schematics Configuration File
+
+With source root `src`, `ng add` uses the first row that matches:
+
+| What exists                                                                   | `ng add` uses                                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `schematicsConfig` in `angular.json`, pointing at a file that exists          | That file                                                                |
+| `src/app/formbar-schematic.config.json`                                       | That file                                                                |
+| `formbar-schematic.config.json` at the workspace root, with the same settings | That file                                                                |
+| `formbar-schematic.config.json` at the workspace root, with other settings    | A new `src/app/formbar-schematic.config.json`, holding only what differs |
+| None of these                                                                 | A new `src/app/formbar-schematic.config.json`                            |
+
+The same settings means the same registration style, registrations file and view provider helper as this run. A kept file is not changed, and a warning names each of those settings it does not have.
+
+`ng add` creates the content union file only for a new schematics configuration file or a kept one that points at it. A kept file without `schema.type` gets a warning naming the setting.
+
+When `ng add` creates the file at the workspace root and that would change another project, it asks whether to write what that project uses now into its file. `--update-other-projects` answers yes and `--update-other-projects=false` answers no. Without a terminal it changes nothing and logs a warning with what to write.
+
+To name the location yourself:
+
+| You pass                                 | `ng add` uses                                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--schematics-config-path=forms`         | `src/forms/formbar-schematic.config.json`, and sets `schematicsConfig` in `angular.json` to it                                                                     |
+| `--schematic-config-file-name=mine.json` | `src/app/mine.json`, and sets `schematicsConfig` in `angular.json` to it                                                                                           |
+| `--schematics-config-path=app`           | `src/app/formbar-schematic.config.json`, and removes any `schematicsConfig`, with a warning                                                                        |
+| `--schematics-config-path=/`             | `formbar-schematic.config.json` at the workspace root. With other settings already there, a new `src/app/formbar-schematic.config.json` holding only what differs. |
 
 ## Options
 
-| Option                    | Type                | Required | Default                         | Description                                                                                                                                                                                                              |
-| ------------------------- | ------------------- | -------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --project                 | string              | No       | workspace default project       | Angular project to add ngx-formbar to.                                                                                                                                                                                   |
-| --registrationStyle       | `token` \| `config` | No       | `token`                         | The registration style to be used.                                                                                                                                                                                       |
-| --provideInline           | boolean             | No       | `false`                         | Put the provider configuration object of `provideFormbar` inline, instead of putting it in a separate file.                                                                                                              |
-| --providerConfigPath      | string              | No       | `app`                           | Where the provider configuration file should be placed, relative to the project root.                                                                                                                                    |
-| --providerConfigFileName  | string              | No       | `formbar.config.ts`             | Name of the provider configuration file.                                                                                                                                                                                 |
-| --includeSyncValidators   | boolean             | No       | `true`                          | Whether to include the setup for validators.                                                                                                                                                                             |
-| --includeAsyncValidators  | boolean             | No       | `true`                          | Whether to include the setup for async validators.                                                                                                                                                                       |
-| --useHelper               | boolean             | No       | `true`                          | Include helper files for the view provider used by control and group components.                                                                                                                                         |
-| --helperPath              | string              | No       | `app/shared/helper`             | Where helper files should be placed, relative to the project root.                                                                                                                                                       |
-| --splitRegistrations      | boolean             | No       | `true`                          | Whether to split the registrations into a separate file. If false, registrations will happen directly in the `formbar.config.ts` or `app.config.ts`, depending on the registration style and the `provideInline` option. |
-| --registrationsPath       | string              | No       | `app/registrations`             | Where registration files should be placed, relative to the project root.                                                                                                                                                 |
-| --useSchematicConfig      | boolean             | No       | `true`                          | Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in `angular.json`.                                                                   |
-| --schematicsConfigPath    | string              | No       | `app`                           | Where the schematics config should be placed, relative to the project root.                                                                                                                                              |
-| --schematicConfigFileName | string              | No       | `formbar-schematic.config.json` | Name of the schematic config file.                                                                                                                                                                                       |
-| --installSchematics       | boolean             | No       | `true`                          | Whether to install `@ngx-formbar/schematics` as a dev dependency for the control, group, block, and schema generators.                                                                                                   |
+| Option                       | Type                | Required | Default                             | Description                                                                                                                                                                                                                         |
+| ---------------------------- | ------------------- | -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --project                    | string              | No       | [Default Project](#default-project) | Angular project to add _ngx-formbar_ to.                                                                                                                                                                                            |
+| --registration-style         | `token` \| `config` | No       | `token`                             | The registration style to be used.                                                                                                                                                                                                  |
+| --provide-inline             | boolean             | No       | `false`                             | Configure `provideFormbar` in the root providers, without a provider configuration file.                                                                                                                                            |
+| --provider-config-path       | string              | No       | `app`                               | Folder for the provider configuration file. See [Paths](#paths).                                                                                                                                                                    |
+| --provider-config-file-name  | string              | No       | `formbar.config.ts`                 | Name of the provider configuration file.                                                                                                                                                                                            |
+| --include-sync-validators    | boolean             | No       | `true`                              | Whether to include the setup for validators.                                                                                                                                                                                        |
+| --include-async-validators   | boolean             | No       | `true`                              | Whether to include the setup for async validators.                                                                                                                                                                                  |
+| --use-helper                 | boolean             | No       | `true`                              | Include helper files for the view provider used by control, group and array components.                                                                                                                                             |
+| --helper-path                | string              | No       | `app/shared/helper`                 | Folder for the helper files. See [Paths](#paths).                                                                                                                                                                                   |
+| --split-registrations        | boolean             | No       | `true`                              | Put the registrations in their own files in `--registrations-path`. If `false`, token style puts them in the root providers, and config style in the provider configuration file, or in the root providers with `--provide-inline`. |
+| --registrations-path         | string              | No       | `app/registrations`                 | Folder for the registration files. See [Paths](#paths).                                                                                                                                                                             |
+| --use-schematic-config       | boolean             | No       | `true`                              | Create a schematics configuration file. If `false`, registration and helper settings go in `angular.json`, no content union is created, and you set up the [`schema` generator](/fundamentals/schema) by hand.                      |
+| --schematics-config-path     | string              | No       | `app`                               | Folder for the schematics configuration file. See [Paths](#paths).                                                                                                                                                                  |
+| --schematic-config-file-name | string              | No       | `formbar-schematic.config.json`     | Name of the schematics configuration file.                                                                                                                                                                                          |
+| --install-schematics         | boolean             | No       | `true`                              | Whether to install `@ngx-formbar/schematics` as a dev dependency for the control, group, block, array, register, and schema generators.                                                                                             |
+| --update-other-projects      | boolean             | No       | -                                   | Answers whether to write what other projects use now into their files when `ng add` creates the file at the workspace root. See [Which Schematics Configuration File](#which-schematics-configuration-file).                        |
+
+## Default Project
+
+{% include "../../../shared/default-project.md" %}
+
+## Paths
+
+{% include "../../../shared/paths.md" %}
 
 ## Manual Installation
 

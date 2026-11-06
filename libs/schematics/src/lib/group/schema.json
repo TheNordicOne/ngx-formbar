@@ -15,7 +15,7 @@
     "path": {
       "type": "string",
       "format": "path",
-      "description": "The path to create the component.",
+      "description": "The directory to create the component in.",
       "visible": false,
       "$default": {
         "$source": "workingDirectory"
@@ -46,17 +46,23 @@
       "type": "boolean",
       "description": "Skip automatic registration"
     },
+    "registrationType": {
+      "type": "string",
+      "enum": ["token", "config"],
+      "description": "How components are registered"
+    },
+    "controlRegistrationsPath": {
+      "type": "string",
+      "description": "The component registrations file"
+    },
     "viewProviderHelperPath": {
       "type": "string",
-      "description": "Path to the viewProvider helper"
+      "description": "The view provider helper"
     },
     "schematicsConfig": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic"
+      "description": "The schematics configuration file to use"
     }
   },
-  "required": [
-    "key"
-  ]
+  "required": ["key"]
 }
-

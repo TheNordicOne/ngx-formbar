@@ -1,8 +1,13 @@
-import { beforeEach, describe, expect } from 'vitest';
-import { SchematicTestRunner, UnitTestTree } from '@angular-devkit/schematics/testing';
+import { beforeEach, describe, expect, vi } from 'vitest';
+import {
+  SchematicTestRunner,
+  UnitTestTree,
+} from '@angular-devkit/schematics/testing';
 
 import {
   addComponentFiles,
+  addProject,
+  addRootProject,
   COLLECTION_PATH,
   createControlComponent,
   createUnrelatedComponent,
@@ -11,7 +16,9 @@ import {
   provideMap,
   provideToken,
   setupWorkspace,
-  TestComponentDetails
+  TestComponentDetails,
+  addCoreStub,
+  addReactiveFormsStub,
 } from './workspace-setup';
 import {
   app,
@@ -21,18 +28,23 @@ import {
   hasDynamicImportOf,
   read,
   src,
-  writeJson
-} from './helper';
-import { DiscoverOptions } from '../register/schema';
-import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { SourceFile } from 'typescript';
-import {
+  writeJson,
   componentRegistrationsMapProviderHasIdentifier,
   directComponentRegistrationsHasIdentifier,
   parseTS,
   hasNamedImport,
-  NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
+} from './helper';
+import { DiscoverOptions } from '../register/schema';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createTreeProgram } from '../schema/program';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import { SourceFile } from 'typescript';
+import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
+
+const PROPERTY_DOES_NOT_EXIST = 2339;
+const CANNOT_FIND_MODULE = 2307;
 
 describe('register schematic', () => {
   let appTree: UnitTestTree;
@@ -58,6 +70,35 @@ describe('register schematic', () => {
   beforeEach(async () => {
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     appTree = await setupWorkspace(runner);
+    addCoreStub(appTree);
+    addReactiveFormsStub(appTree);
+  });
+
+  it('rejects a registration type other than token and config', async () => {
+    await expect(
+      runner.runSchematic(
+        'register',
+        { ...baseOptions, registrationType: 'tokens' },
+        appTree,
+      ),
+    ).rejects.toThrow(/registrationType/);
+  });
+
+  it('treats a --controlRegistrations above the workspace root as a missing file', async () => {
+    const warnings: string[] = [];
+    runner.logger.subscribe((entry) => {
+      if (entry.level === 'warn') {
+        warnings.push(entry.message);
+      }
+    });
+
+    await runSchematic({
+      controlRegistrations: '../../../../registrations.ts',
+    });
+
+    expect(warnings).toContain(
+      'Registration file ../../../../registrations.ts could not be found. Skipping registration.',
+    );
   });
 
   it('finds and registers components anywhere, with and without helper', async () => {
@@ -453,7 +494,7 @@ describe('register schematic', () => {
     expect(existingRegistrationsCount).toBe(1);
   });
 
-  it('uses schematics config file when passed as parameter', async () => {
+  it('uses schematics configuration file when passed as parameter', async () => {
     const files: TestComponentDetails[] = [
       {
         path: app('components/form/controls/inline.component.ts'),
@@ -533,7 +574,7 @@ describe('register schematic', () => {
     );
   });
 
-  it('finds schematics config file if no parameter was passed', async () => {
+  it('finds schematics configuration file if no parameter was passed', async () => {
     const files: TestComponentDetails[] = [
       {
         path: app('components/form/controls/inline.component.ts'),
@@ -599,6 +640,2200 @@ describe('register schematic', () => {
       src(registrationsPath),
       directComponentRegistrationsHasIdentifier,
     );
+  });
+
+  it.each(['controlRegistrations', 'controlRegistrationsPath'])(
+    'honors the %s option when no config file is present',
+    async (option) => {
+      const files: TestComponentDetails[] = [
+        {
+          path: app('components/form/controls/inline.component.ts'),
+          content: createControlComponent(
+            'inline',
+            inlineProviders,
+            'InlineComponent',
+          ),
+          className: 'InlineComponent',
+          key: 'inline',
+        },
+      ];
+      const customRegistrations = 'app/forms/component-registrations.ts';
+
+      addComponentFiles(appTree, files);
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        customRegistrations,
+        formbarConfigPath,
+      );
+
+      const tree = await runSchematic({
+        registrationType: 'config',
+        [option]: customRegistrations,
+      });
+
+      assertRegisteredComponents(
+        tree,
+        files,
+        src(customRegistrations),
+        directComponentRegistrationsHasIdentifier,
+      );
+    },
+  );
+
+  it.each([
+    'projects/test-app/src/app/forms/component-registrations.ts',
+    '/projects/test-app/src/app/forms/component-registrations.ts',
+  ])(
+    'registers into a controlRegistrations path of %s as given',
+    async (controlRegistrations) => {
+      const files: TestComponentDetails[] = [
+        {
+          path: app('components/form/controls/inline.component.ts'),
+          content: createControlComponent(
+            'inline',
+            inlineProviders,
+            'InlineComponent',
+          ),
+          className: 'InlineComponent',
+          key: 'inline',
+        },
+      ];
+      const customRegistrations = 'app/forms/component-registrations.ts';
+
+      addComponentFiles(appTree, files);
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        customRegistrations,
+        formbarConfigPath,
+      );
+
+      const tree = await runSchematic({
+        registrationType: 'config',
+        controlRegistrations,
+      });
+
+      assertRegisteredComponents(
+        tree,
+        files,
+        src(customRegistrations),
+        directComponentRegistrationsHasIdentifier,
+      );
+    },
+  );
+
+  describe('what counts as a control', () => {
+    async function registeredAfterCreating(path: string, content: string) {
+      appTree.create(path, content);
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      return read(await runSchematic(), src(registrationsPath));
+    }
+
+    it('skips a page hosting the form', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/checkout-page.ts'),
+        `import { Component } from '@angular/core';
+import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
+
+@Component({
+  selector: 'app-checkout-page',
+  imports: [NgxFbFormComponent],
+  template: '<ngxfb-form />',
+})
+export class CheckoutPage {}
+`,
+      );
+
+      expect(registrations).not.toContain('CheckoutPage');
+    });
+
+    it('skips a page that only imports a type', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/summary-page.ts'),
+        `import { Component } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-summary-page', template: '' })
+export class SummaryPage {
+  readonly form: NgxFbForm = { content: {} };
+}
+`,
+      );
+
+      expect(registrations).not.toContain('SummaryPage');
+    });
+
+    it('skips a component implementing something else', async () => {
+      const registrations = await registeredAfterCreating(
+        app('checkout/other-page.ts'),
+        `import { Component, OnInit } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-other-page', template: '' })
+export class OtherPage implements OnInit {
+  readonly form?: NgxFbForm;
+  ngOnInit() {}
+}
+`,
+      );
+
+      expect(registrations).not.toContain('OtherPage');
+    });
+
+    describe('with classes that are no components', () => {
+      const contract = 'implements ReactiveFormbarControl<{ type: "x" }>';
+      const header = `import { Component, Directive, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+`;
+      const nameInput = 'readonly name = input.required<string>();';
+      const hostPage = `@Component({ selector: 'app-host', template: '' })
+export class HostPage {}`;
+
+      it.each([
+        ['a directive', '@Directive()'],
+        ['an undecorated class', ''],
+        ['a decorator without a call', '@Component'],
+      ])('skips %s', async (_, decorator) => {
+        const registrations = await registeredAfterCreating(
+          app('x/not-a-component.ts'),
+          `${header}
+${decorator}
+export class NotAComponent ${contract} { ${nameInput} }
+
+${hostPage}
+`,
+        );
+
+        expect(registrations).not.toContain('NotAComponent');
+      });
+
+      it('registers a component with a further decorator', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/both.ts'),
+          `${header}
+function Tracked(): ClassDecorator {
+  return () => undefined;
+}
+
+@Component({ selector: 'app-x', template: '' })
+@Tracked()
+export class BothDecorated ${contract} { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('BothDecorated');
+      });
+
+      it('skips a default export without a name', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/unnamed.ts'),
+          `${header}
+@Component({ selector: 'app-x', template: '' })
+export default class ${contract} { ${nameInput} }
+
+${hostPage}
+`,
+        );
+
+        expect(registrations).not.toContain('x/unnamed');
+      });
+
+      it('skips a file that is no source file', async () => {
+        appTree.create(app('notes.md'), 'Uses @Component a lot.');
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+        await expect(
+          runSchematic({ include: ['**/*'] }),
+        ).resolves.toBeDefined();
+      });
+    });
+
+    it.each([
+      ['a side effect', "import './styles';"],
+      ['a namespace', "import * as all from './all';"],
+      ['a default', "import all from './all';"],
+    ])('copes with importing %s', async (_, importLine) => {
+      const registrations = await registeredAfterCreating(
+        app('x/page.ts'),
+        `import { Component } from '@angular/core';
+${importLine}
+
+@Component({ selector: 'app-page', template: '' })
+export class Page {}
+`,
+      );
+
+      expect(registrations).not.toContain('Page');
+    });
+
+    it('skips a utility type around something else than a contract', async () => {
+      const registrations = await registeredAfterCreating(
+        app('x/partial-page.ts'),
+        `import { Component } from '@angular/core';
+
+@Component({ selector: 'app-x', template: '' })
+export class PartialPage implements Partial<{ a: string }> {}
+`,
+      );
+
+      expect(registrations).not.toContain('PartialPage');
+    });
+
+    describe('a contract without a stated config', () => {
+      const header = `import { Component, input } from '@angular/core';
+import { FormbarContract } from '@ngx-formbar/core';
+`;
+      const decorator = "@Component({ selector: 'app-x', template: '' })";
+      const nameInput = 'readonly name = input.required<string>();';
+
+      it('takes the key from a class name starting with Component', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/picker.ts'),
+          `${header}
+${decorator}
+export class ComponentPicker implements FormbarContract { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('"component-picker"');
+      });
+
+      it('follows a generic base without an argument', async () => {
+        const registrations = await registeredAfterCreating(
+          app('x/open.ts'),
+          `${header}
+abstract class Open<T> implements FormbarContract<T> {}
+
+${decorator}
+export class OpenComponent extends Open { ${nameInput} }
+`,
+        );
+
+        expect(registrations).toContain('"open"');
+      });
+    });
+
+    it('reads the contract of an intersection with a literal', async () => {
+      const registrations = await registeredAfterCreating(
+        app('x/mixed.ts'),
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+type Mixed = ReactiveFormbarControl<{ type: 'mixed' }> & { extra?: string };
+
+@Component({ selector: 'app-x', template: '' })
+export class MixedInput implements Mixed {
+  readonly name = input.required<string>();
+}
+`,
+      );
+
+      expect(registrations).toContain('"mixed"');
+    });
+
+    describe('a component whose file mentions a contract', () => {
+      const header = `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';`;
+      const decorator = "@Component({ selector: 'app-x', template: '' })";
+      const nameInput = 'readonly name = input.required<string>();';
+
+      function warned() {
+        const warnings: string[] = [];
+        runner.logger.subscribe((entry) => {
+          if (entry.level === 'warn') {
+            warnings.push(entry.message);
+          }
+        });
+
+        return warnings;
+      }
+
+      it('warns with the class name when no contract can be read', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${header}
+
+${decorator}
+export class Wrapped implements Required<ReactiveFormbarControl> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).not.toContain('Wrapped');
+        expect(warnings).toEqual([
+          'Wrapped is not registered. Its file mentions ReactiveFormbarControl, but this schematic cannot read a contract from the class.',
+        ]);
+      });
+
+      it('still warns with a contract alias next to the class', async () => {
+        const warnings = warned();
+
+        await registeredAfterCreating(
+          app('x/aliased.ts'),
+          `${header}
+
+type Local = ReactiveFormbarControl;
+
+${decorator}
+export class Aliased implements Required<Local> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(warnings).toEqual([
+          'Aliased is not registered. Its file mentions ReactiveFormbarControl, but this schematic cannot read a contract from the class.',
+        ]);
+      });
+
+      it('registers a component of an own integration', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/own-slider.ts'),
+          `import { Component, input } from '@angular/core';
+import { FormbarContract, NgxFbControl } from '@ngx-formbar/core';
+
+type MyLibControl<T extends NgxFbControl = NgxFbControl> = {
+  readonly name: unknown;
+} & FormbarContract<T>;
+
+interface SliderConfig extends NgxFbControl { type: 'slider'; }
+
+${decorator}
+export class OwnSlider implements MyLibControl<SliderConfig> {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).toContain('OwnSlider');
+        expect(registrations).toContain('"slider"');
+        expect(warnings).toEqual([]);
+      });
+
+      it('ignores a type named like a contract that is not one', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/lookalike.ts'),
+          `import { Component, input } from '@angular/core';
+
+interface ReactiveFormbarControl { readonly name: unknown; }
+
+${decorator}
+export class Lookalike implements ReactiveFormbarControl {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(registrations).not.toContain('Lookalike');
+        expect(warnings).toEqual([]);
+      });
+
+      it('stays silent for a component importing a control', async () => {
+        appTree.create(
+          app('x/slider-control.ts'),
+          `${header}
+
+interface SliderConfig { type: 'slider'; }
+
+${decorator}
+export class SliderControl implements ReactiveFormbarControl<SliderConfig> {
+  ${nameInput}
+}
+`,
+        );
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/slider-page.ts'),
+          `import { Component } from '@angular/core';
+import { SliderControl } from './slider-control';
+
+@Component({ selector: 'app-page', imports: [SliderControl], template: '' })
+export class SliderPage {}
+`,
+        );
+
+        expect(registrations).toContain('SliderControl');
+        expect(registrations).not.toContain('SliderPage');
+        expect(warnings).toEqual([]);
+      });
+
+      it('stays silent for a component next to a class implementing the contract', async () => {
+        const warnings = warned();
+
+        const registrations = await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${header}
+
+interface WrappedConfig { type: 'wrapped'; }
+
+${decorator}
+export class WrappedControl implements ReactiveFormbarControl<WrappedConfig> {
+  ${nameInput}
+}
+
+${decorator}
+export class WrappedHelp {}
+`,
+        );
+
+        expect(registrations).toContain('WrappedControl');
+        expect(registrations).not.toContain('WrappedHelp');
+        expect(warnings).toEqual([]);
+      });
+
+      it.each<[string, string, string]>([
+        ['an abstract class', 'export abstract class Wrapped', header],
+        ['a class that is not exported', 'class Wrapped', header],
+        [
+          'an ordinary component',
+          'export class Wrapped',
+          "import { Component, input } from '@angular/core';",
+        ],
+        [
+          'a component with a longer name containing a contract',
+          'export class Wrapped',
+          `import { Component, input } from '@angular/core';
+type MyReactiveFormbarControlOptions = object;`,
+        ],
+      ])('stays silent for %s', async (_, declaration, imports) => {
+        const warnings = warned();
+
+        await registeredAfterCreating(
+          app('x/wrapped.ts'),
+          `${imports}
+
+${decorator}
+${declaration} {
+  ${nameInput}
+}
+`,
+        );
+
+        expect(warnings).toEqual([]);
+      });
+    });
+
+    describe('what a registration cannot import', () => {
+      const nameInput = 'readonly name = input.required<string>();';
+      const header = `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface TagsConfig { type: 'tags'; }
+
+@Component({ selector: 'app-tags-input', template: '' })`;
+
+      function collectWarnings() {
+        const warnings: string[] = [];
+        runner.logger.subscribe((entry) => {
+          if (entry.level === 'warn') {
+            warnings.push(entry.message);
+          }
+        });
+
+        return warnings;
+      }
+
+      it('skips an abstract class silently', async () => {
+        const warnings = collectWarnings();
+
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+export abstract class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
+`,
+        );
+
+        expect(registrations).not.toContain('TagsInput');
+        expect(warnings).toEqual([]);
+      });
+
+      it('registers a class extending an abstract one, and not the abstract one', async () => {
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+export abstract class BaseInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
+
+@Component({ selector: 'app-tags', template: '' })
+export class TagsInput extends BaseInput {}
+`,
+        );
+
+        expect(registrations).toContain('TagsInput');
+        expect(registrations).not.toContain('BaseInput');
+      });
+
+      it.each<[string, string]>([
+        [
+          'a class without an export',
+          `class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }`,
+        ],
+        [
+          'a default export',
+          `export default class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }`,
+        ],
+        [
+          'an export under another name',
+          `class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }\nexport { TagsInput as Tags };`,
+        ],
+      ])('skips %s with a warning', async (_, declaration) => {
+        const warnings = collectWarnings();
+
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}\n${declaration}\n`,
+        );
+
+        expect(registrations).not.toContain('TagsInput');
+        expect(warnings).toEqual([
+          'TagsInput is not a named export, so it is not registered.',
+        ]);
+      });
+
+      it('registers a class exported after its declaration', async () => {
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `${header}
+class TagsInput implements ReactiveFormbarControl<TagsConfig> { ${nameInput} }
+export { TagsInput };
+`,
+        );
+
+        expect(registrations).toContain('TagsInput');
+      });
+
+      it('does not warn about a class without a contract', async () => {
+        const warnings = collectWarnings();
+
+        await registeredAfterCreating(
+          app('tags/tags-page.ts'),
+          `import { Component } from '@angular/core';
+
+@Component({ selector: 'app-tags-page', template: '' })
+export default class TagsPage {}
+`,
+        );
+
+        expect(warnings).toEqual([]);
+      });
+
+      it('leaves registrations that compile', async () => {
+        for (const [name, declaration] of Object.entries({
+          Abstract: 'export abstract class',
+          Hidden: 'class',
+          Default: 'export default class',
+          Named: 'export class',
+        })) {
+          appTree.create(
+            app(`tags/${name.toLowerCase()}.ts`),
+            `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+@Component({ selector: 'app-${name}', template: '' })
+${declaration} ${name}Input implements ReactiveFormbarControl<{ type: '${name}' }> { ${nameInput} }
+`,
+          );
+        }
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+        const tree = await runSchematic();
+        const file = src(registrationsPath);
+        const { program, sourceFileAt } = createTreeProgram(
+          tree,
+          '/tsconfig.json',
+          [file],
+        );
+        const missingMembers = program
+          .getSemanticDiagnostics(sourceFileAt(file))
+          .filter(({ code }) => code === PROPERTY_DOES_NOT_EXIST)
+          .map(({ messageText }) => messageText);
+
+        expect(missingMembers).toEqual([]);
+        expect(read(tree, file)).toContain('NamedInput');
+      });
+    });
+
+    it.each<[string, string, string]>([
+      ['ReactiveFormbarControl', 'NgxFbControl', 'name'],
+      ['ReactiveFormbarGroup', 'NgxFbFormGroup', 'name'],
+      ['ReactiveFormbarArray', 'NgxFbArray', 'name'],
+      ['FormbarBlock', 'NgxFbBlock', ''],
+    ])(
+      'finds %s imported through a local barrel',
+      async (contract, config, input) => {
+        appTree.create(
+          app('shared/index.ts'),
+          `export { ${contract} } from '@ngx-formbar/reactive-forms';\n`,
+        );
+
+        const registrations = await registeredAfterCreating(
+          app('tags/tags-input.ts'),
+          `import { Component, input } from '@angular/core';
+import { ${config} } from '@ngx-formbar/core';
+import { ${contract} } from '../shared';
+
+interface TagsConfig extends ${config} { type: 'tags'; }
+
+@Component({ selector: 'app-tags-input', template: '' })
+export class TagsInput implements ${contract}<TagsConfig> {
+  ${input && `readonly ${input} = input.required<string>();`}
+}
+`,
+        );
+
+        expect(registrations).toContain('TagsInput');
+      },
+    );
+  });
+
+  describe('the project it looks in', () => {
+    function controlAt(path: string, className: string) {
+      appTree.create(
+        path,
+        createControlComponent('x', inlineProviders, className),
+      );
+    }
+
+    async function registeredIn(file: string, options: DiscoverOptions = {}) {
+      appTree.create(file, 'export const componentRegistrations = {};\n');
+
+      return read(
+        await runSchematic({
+          registrationType: 'config',
+          controlRegistrations: `/${file}`,
+          ...options,
+        }),
+        `/${file}`,
+      );
+    }
+
+    it.each<[string, string]>([
+      ['a spec file', app('tags/tags-input.spec.ts')],
+      ['a nested node_modules folder', app('node_modules/tags/tags-input.ts')],
+    ])('skips %s', async (_, path) => {
+      appTree.create(
+        path,
+        createControlComponent('tags', inlineProviders, 'TagsInput'),
+      );
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      const tree = await runSchematic();
+
+      expect(read(tree, src(registrationsPath))).not.toContain('TagsInput');
+    });
+
+    it('skips the other projects of the workspace', async () => {
+      appTree = await runner.runExternalSchematic(
+        '@schematics/angular',
+        'application',
+        { name: 'other', standalone: true },
+        appTree,
+      );
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/other/src/app/foreign.ts', 'ForeignComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+
+    it('skips what lies outside the source root', async () => {
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/test-app/tools/tool.ts', 'ToolComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ToolComponent');
+    });
+
+    it('skips a project nested in the source root', async () => {
+      addProject(appTree, 'nested', 'projects/test-app/src/nested');
+      controlAt(app('mine.ts'), 'MineComponent');
+      controlAt('/projects/test-app/src/nested/foreign.ts', 'ForeignComponent');
+
+      const registrations = await registeredIn(src(registrationsPath).slice(1));
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+
+    it('skips other projects from a project at the workspace root', async () => {
+      addRootProject(appTree, 'root-app');
+      controlAt('/lib/mine.ts', 'MineComponent');
+      controlAt(app('foreign.ts'), 'ForeignComponent');
+
+      const registrations = await registeredIn('registrations.ts', {
+        project: 'root-app',
+      });
+
+      expect(registrations).toContain('MineComponent');
+      expect(registrations).not.toContain('ForeignComponent');
+    });
+  });
+
+  describe('the base of the discovery globs', () => {
+    const spellings = [
+      ['relative to the source root', 'app/widgets/**'],
+      ['with a leading ./', './app/widgets/**'],
+      ['from the workspace root', 'projects/test-app/src/app/widgets/**'],
+      ['with a leading /', '/projects/test-app/src/app/widgets/**'],
+    ];
+
+    beforeEach(() => {
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+      appTree.create(
+        app('widgets/in.ts'),
+        createControlComponent('in', inlineProviders, 'InComponent'),
+      );
+      appTree.create(
+        app('other/out.ts'),
+        createControlComponent('out', inlineProviders, 'OutComponent'),
+      );
+    });
+
+    async function registered(options: Partial<DiscoverOptions>) {
+      return read(
+        await runSchematic({ registrationType: 'config', ...options }),
+        src(registrationsPath),
+      );
+    }
+
+    it.each(spellings)('--include %s', async (_, glob) => {
+      const registrations = await registered({ include: [glob] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it.each(spellings)('--exclude %s', async (_, glob) => {
+      const registrations = await registered({ exclude: [glob] });
+
+      expect(registrations).not.toContain('InComponent');
+      expect(registrations).toContain('OutComponent');
+    });
+
+    it.each(spellings)('discovery.include %s', async (_, glob) => {
+      writeJson(appTree, src(schematicsConfigPath), {
+        discovery: { include: [glob] },
+      });
+
+      const registrations = await registered({});
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it.each([
+      ['--include', { include: ['**/*.ts'] }],
+      ['--exclude', { exclude: [] }],
+      ['no pattern', {}],
+    ])(
+      'finds a file directly in the source root with %s',
+      async (_, options) => {
+        appTree.create(
+          src('top.ts'),
+          createControlComponent('top', inlineProviders, 'TopComponent'),
+        );
+
+        expect(await registered(options)).toContain('TopComponent');
+      },
+    );
+
+    it.each([
+      'app/widgets',
+      'app/widgets/',
+      'projects/test-app/src/app/widgets',
+    ])('--include %s means everything in the folder', async (folder) => {
+      appTree.create(
+        app('widgets/nested/deep.ts'),
+        createControlComponent('deep', inlineProviders, 'DeepComponent'),
+      );
+
+      const registrations = await registered({ include: [folder] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).toContain('DeepComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it('--exclude with a folder skips everything in the folder', async () => {
+      const registrations = await registered({ exclude: ['app/widgets'] });
+
+      expect(registrations).not.toContain('InComponent');
+      expect(registrations).toContain('OutComponent');
+    });
+
+    it('--include with a file path still means that file', async () => {
+      const registrations = await registered({
+        include: ['app/widgets/in.ts'],
+      });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('OutComponent');
+    });
+
+    it('--include with a glob-free path does not reach a folder named alike', async () => {
+      appTree.create(
+        app('widgets-old/old.ts'),
+        createControlComponent('old', inlineProviders, 'OldComponent'),
+      );
+
+      const registrations = await registered({ include: ['app/widgets'] });
+
+      expect(registrations).not.toContain('OldComponent');
+    });
+
+    it('matches a folder directly in the source root with a leading **', async () => {
+      appTree.create(
+        src('controls/top.ts'),
+        createControlComponent('top', inlineProviders, 'TopComponent'),
+      );
+
+      const registrations = await registered({
+        include: ['**/controls/**'],
+      });
+
+      expect(registrations).toContain('TopComponent');
+    });
+
+    it.each([
+      ['with a leading /', '/tools/**'],
+      ['climbing out of the source root', '../tools/**'],
+    ])('fails on an include %s outside the source root', async (_, glob) => {
+      await expect(registered({ include: [glob] })).rejects.toThrow(
+        `"include" points outside the source root projects/test-app/src: ${glob}`,
+      );
+    });
+
+    it('fails on the same glob from discovery.include', async () => {
+      writeJson(appTree, src(schematicsConfigPath), {
+        discovery: { include: ['/tools/**'] },
+      });
+
+      await expect(registered({})).rejects.toThrow(
+        '"include" points outside the source root',
+      );
+    });
+
+    it('accepts an exclude outside the source root', async () => {
+      expect(await registered({ exclude: ['/tools/**'] })).toContain(
+        'InComponent',
+      );
+    });
+
+    it('only walks the source root, with a glob covering more', async () => {
+      appTree.create(
+        '/projects/test-app/tools/tool.ts',
+        createControlComponent('tool', inlineProviders, 'ToolComponent'),
+      );
+
+      const registrations = await registered({ include: ['/**/*.ts'] });
+
+      expect(registrations).toContain('InComponent');
+      expect(registrations).not.toContain('ToolComponent');
+    });
+
+    it('logs where it looked', async () => {
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+
+      await registered({ include: ['app/absent/**'] });
+
+      expect(messages).toContain(
+        '0 components discovered in /projects/test-app/src',
+      );
+    });
+
+    it('fails on a glob above the workspace root', async () => {
+      await expect(registered({ include: ['../../../../**'] })).rejects.toThrow(
+        '"include" points outside the workspace root',
+      );
+    });
+  });
+
+  describe('the registration key', () => {
+    const componentFile = app('widgets/range.ts');
+    const key = (name: string) =>
+      new RegExp(`["']?${name}["']?:\\s*loadComponent\\(`);
+
+    const nameInput = 'readonly name = input.required<string>();';
+    const inheritsOrDeclaresName = (heritage: string) =>
+      heritage.startsWith('extends') ? '' : nameInput;
+
+    function componentImplementing(contract: string, importLine = '') {
+      return `import { Component, input, OnInit } from '@angular/core';
+import { ${contract.split('<')[0]} } from '@ngx-formbar/reactive-forms';
+${importLine}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements OnInit, ${contract} {
+  ${nameInput}
+  ngOnInit() {
+    return undefined;
+  }
+}
+`;
+    }
+
+    async function registered() {
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+
+      const tree = await runSchematic({ registrationType: 'config' });
+
+      return read(tree, src(registrationsPath));
+    }
+
+    it.each([
+      ['control', 'SliderControl'],
+      ['group', 'SliderGroup'],
+      ['block', 'SliderBlock'],
+      ['array', 'SliderArray'],
+    ])(
+      'is the key a %s was scaffolded with',
+      async (schematic, componentClassName) => {
+        appTree = await runner.runSchematic(
+          schematic,
+          { ...baseOptions, key: 'slider', skipRegistration: true },
+          appTree,
+        );
+
+        const registrations = await registered();
+
+        expect(registrations).toContain(componentClassName);
+        expect(registrations).toMatch(key('slider'));
+        expect(registrations).not.toMatch(key('slider-[a-z]+'));
+      },
+    );
+
+    it('is the key of a control named differently', async () => {
+      appTree = await runner.runSchematic(
+        'control',
+        {
+          ...baseOptions,
+          key: 'slider',
+          name: 'fancy',
+          skipRegistration: true,
+        },
+        appTree,
+      );
+
+      const registrations = await registered();
+
+      expect(registrations).toContain('FancyControl');
+      expect(registrations).toMatch(key('slider'));
+    });
+
+    it('reads an interface in the component file', async () => {
+      appTree.create(
+        componentFile,
+        `${componentImplementing('ReactiveFormbarControl<RangeConfig>')}
+export interface RangeConfig { type: 'from-same-file'; }
+`,
+      );
+
+      expect(await registered()).toMatch(key('from-same-file'));
+    });
+
+    it.each<[string, string, Record<string, string>]>([
+      [
+        'an import under another name',
+        './range.type',
+        {
+          'range.type.ts': "export interface Config { type: 'followed'; }\n",
+        },
+      ],
+      [
+        'a barrel with export * and a cycle',
+        './types',
+        {
+          'types/index.ts':
+            "export * from './index';\nexport * from './one';\n",
+          'types/one.ts': "export { Config } from './two';\n",
+          'types/two.ts': "export interface Config { type: 'followed'; }\n",
+        },
+      ],
+    ])('follows %s', async (_, specifier, files) => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          `import { Config as RangeConfig } from '${specifier}';`,
+        ),
+      );
+
+      for (const [file, content] of Object.entries(files)) {
+        appTree.create(app(`widgets/${file}`), content);
+      }
+
+      expect(await registered()).toMatch(key('followed'));
+    });
+
+    it('reads `type` past another literal property', async () => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "interface RangeConfig { kind?: 'other'; type: 'after-kind'; }",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('after-kind'));
+    });
+
+    it('reads the config of the contract past another generic', async () => {
+      appTree.create(
+        componentFile,
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface Elsewhere<T> { value?: T; }
+interface OtherConfig { type: 'wrong'; }
+interface RangeConfig { type: 'right'; }
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements Elsewhere<OtherConfig>, ReactiveFormbarControl<RangeConfig> {
+  ${nameInput}
+  value?: OtherConfig;
+}
+`,
+      );
+
+      expect(await registered()).toMatch(key('right'));
+    });
+
+    it('reads a config behind a path alias', async () => {
+      writeJson(appTree, '/tsconfig.json', {
+        compilerOptions: { baseUrl: '.', paths: { '@forms/*': ['forms/*'] } },
+      });
+      appTree.create(
+        '/forms/range.config.ts',
+        "export interface RangeConfig { type: 'from-alias'; }\n",
+      );
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "import { RangeConfig } from '@forms/range.config';",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('from-alias'));
+    });
+
+    it.each<[string, string]>([
+      ['an object type', "type RangeConfig = { type: 'declared' };"],
+      [
+        'an intersection',
+        "interface Base { label: string; }\ntype RangeConfig = Base & { type: 'declared' };",
+      ],
+      [
+        'a utility type',
+        "interface Base { label: string; type: 'declared'; }\ntype RangeConfig = Omit<Base, 'label'>;",
+      ],
+    ])('reads a type alias of %s', async (_, line) => {
+      appTree.create(
+        componentFile,
+        componentImplementing('ReactiveFormbarControl<RangeConfig>', line),
+      );
+
+      expect(await registered()).toMatch(key('declared'));
+    });
+
+    it('reads a type inherited from another interface', async () => {
+      appTree.create(
+        componentFile,
+        componentImplementing(
+          'ReactiveFormbarControl<RangeConfig>',
+          "interface Base { type: 'inherited'; }\ninterface RangeConfig extends Base {}",
+        ),
+      );
+
+      expect(await registered()).toMatch(key('inherited'));
+    });
+
+    describe('with the package installed', () => {
+      it('reads an intersection with a type of the package', async () => {
+        appTree.create(
+          componentFile,
+          componentImplementing(
+            'ReactiveFormbarControl<RangeConfig>',
+            "import { NgxFbControl } from '@ngx-formbar/core';\ntype RangeConfig = NgxFbControl & { type: 'declared' };",
+          ),
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it.each<[string, string, string]>([
+        [
+          'a local alias',
+          'implements MyControl',
+          'type MyControl = formbar.ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a local interface',
+          'implements MyControl',
+          'interface MyControl extends formbar.ReactiveFormbarControl<RangeConfig> {}',
+        ],
+        [
+          'a base',
+          'extends BaseControl',
+          `export abstract class BaseControl implements formbar.ReactiveFormbarControl<RangeConfig> { ${nameInput} }`,
+        ],
+      ])(
+        'finds the contract of a namespace import through %s',
+        async (_, heritage, declaration) => {
+          appTree.create(
+            componentFile,
+            `import { Component, input } from '@angular/core';
+import * as formbar from '@ngx-formbar/reactive-forms';
+
+interface RangeConfig { type: 'declared'; }
+${declaration}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent ${heritage} { ${inheritsOrDeclaresName(heritage)} }
+`,
+          );
+
+          expect(await registered()).toMatch(key('declared'));
+        },
+      );
+
+      it.each<[string, string, string, Record<string, string>]>([
+        [
+          'an import under another name',
+          "import { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';",
+          'Control',
+          {},
+        ],
+        [
+          'a namespace import',
+          "import * as formbar from '@ngx-formbar/reactive-forms';",
+          'formbar.ReactiveFormbarControl',
+          {},
+        ],
+        [
+          'a barrel renaming it',
+          "import { Control } from '../shared';",
+          'Control',
+          {
+            'shared/index.ts':
+              "export { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';\n",
+          },
+        ],
+      ])('finds the contract through %s', async (_, line, used, files) => {
+        for (const [file, content] of Object.entries(files)) {
+          appTree.create(app(file), content);
+        }
+        appTree.create(
+          componentFile,
+          `import { Component, input } from '@angular/core';
+${line}
+
+interface RangeConfig { type: 'declared'; }
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent implements ${used}<RangeConfig> { ${nameInput} }
+`,
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+    });
+
+    describe('through what the class builds on', () => {
+      const contractImport =
+        "import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';";
+      const config = "interface RangeConfig { type: 'declared'; }";
+
+      function component(heritage: string, declarations = '') {
+        return `import { Component, Directive, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+${contractImport}
+${declarations}
+${config}
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent ${heritage} { ${inheritsOrDeclaresName(heritage)} }
+`;
+      }
+
+      const stating = (name: string, stated: string) => `@Directive()
+export abstract class ${name} implements ReactiveFormbarControl<${stated}> { ${nameInput} }`;
+
+      const stated = stating('StatedControl', 'RangeConfig');
+      const loose = stating('LooseControl', '{ type: string }');
+      const mixin = (body: string, heritage = '') =>
+        `type Constructor = abstract new (...args: any[]) => object;
+abstract class Plain {}
+function withMixin<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base ${heritage} { ${body} }
+  return Mixed;
+}`;
+      const contractMixin = mixin(
+        nameInput,
+        'implements ReactiveFormbarControl<RangeConfig>',
+      );
+
+      it.each<[string, string, string]>([
+        ['a base stating the config', 'extends StatedControl', stated],
+        [
+          'a two-level base stating the config',
+          'extends MiddleControl',
+          `${stated}
+@Directive()
+export abstract class MiddleControl extends StatedControl {}`,
+        ],
+        [
+          'a generic base over one stating the config',
+          'extends MiddleControl<string>',
+          `${stated}
+@Directive()
+export abstract class MiddleControl<V> extends StatedControl { value?: V; }`,
+        ],
+        ['a mixin call', 'extends withMixin(Plain)', contractMixin],
+        [
+          'a variable holding a mixin call',
+          'extends Mixin',
+          `${contractMixin}\nconst Mixin = withMixin(Plain);`,
+        ],
+        [
+          'a variable holding a class',
+          'extends Base',
+          `const Base = class implements ReactiveFormbarControl<RangeConfig> { ${nameInput} };`,
+        ],
+        [
+          'a utility type',
+          'implements Partial<ReactiveFormbarControl<RangeConfig>>',
+          '',
+        ],
+        [
+          'Pick around the contract',
+          "implements Pick<ReactiveFormbarControl<RangeConfig>, 'name'>",
+          '',
+        ],
+        [
+          'nested utility types',
+          'implements Readonly<Partial<ReactiveFormbarControl<RangeConfig>>>',
+          '',
+        ],
+        [
+          'a utility type in a local alias',
+          'implements MyControl',
+          "type MyControl = Omit<ReactiveFormbarControl<RangeConfig>, 'errors'>;",
+        ],
+        [
+          'a utility type in a local interface',
+          'implements MyControl',
+          "interface MyControl extends Omit<ReactiveFormbarControl<RangeConfig>, 'errors'> {}",
+        ],
+        [
+          'a utility type in a generic local alias',
+          'implements MyControl<RangeConfig>',
+          "type MyControl<C extends NgxFbControl> = Omit<ReactiveFormbarControl<C>, 'errors'>;",
+        ],
+        [
+          'a local interface',
+          'implements MyControl',
+          'interface MyControl extends ReactiveFormbarControl<RangeConfig> {}',
+        ],
+        [
+          'a local alias',
+          'implements MyControl',
+          'type MyControl = ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a generic local alias',
+          'implements MyControl<RangeConfig>',
+          'type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<C>;',
+        ],
+        [
+          'a local alias with a default config',
+          'implements MyControl',
+          'type MyControl<C extends NgxFbControl = RangeConfig> = ReactiveFormbarControl<C>;',
+        ],
+        [
+          'an intersection in a local alias',
+          'implements MyControl',
+          'type MyControl = { label?: string } & ReactiveFormbarControl<RangeConfig>;',
+        ],
+        [
+          'a base and its own contract',
+          'extends LooseControl implements ReactiveFormbarControl<RangeConfig>',
+          loose,
+        ],
+        [
+          'a base when its own contract has no literal',
+          'extends StatedControl implements ReactiveFormbarControl<{ type: string }>',
+          stated,
+        ],
+        [
+          'a base and another literal in its own contract',
+          'extends OtherControl implements ReactiveFormbarControl<RangeConfig>',
+          stating('OtherControl', "{ type: 'other' }"),
+        ],
+      ])('finds the contract through %s', async (_, heritage, declarations) => {
+        appTree.create(componentFile, component(heritage, declarations));
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it('finds the contract through a base in another file', async () => {
+        appTree.create(
+          app('widgets/base-control.ts'),
+          `${contractImport}
+import { Directive, input } from '@angular/core';
+
+${config}
+
+${stated}
+`,
+        );
+        appTree.create(
+          app('widgets/middle-control.ts'),
+          `import { Directive } from '@angular/core';
+import { StatedControl } from './base-control';
+
+@Directive()
+export abstract class MiddleControl extends StatedControl {}
+`,
+        );
+        appTree.create(
+          componentFile,
+          `import { Component } from '@angular/core';
+import { MiddleControl } from './middle-control';
+
+@Component({ selector: 'app-range', template: '' })
+export class RangeComponent extends MiddleControl {}
+`,
+        );
+
+        expect(await registered()).toMatch(key('declared'));
+      });
+
+      it.each<[string, string, string]>([
+        ['a base that fixes no type literal', 'extends LooseControl', loose],
+        [
+          'a type argument wrapped in the alias',
+          'implements MyControl<RangeConfig>',
+          'type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<Readonly<C>>;',
+        ],
+      ])(
+        'falls back to the class name with %s',
+        async (_, heritage, declarations) => {
+          appTree.create(componentFile, component(heritage, declarations));
+          const warnings: string[] = [];
+          runner.logger.subscribe((entry) => {
+            if (entry.level === 'warn') {
+              warnings.push(entry.message);
+            }
+          });
+
+          expect(await registered()).toMatch(key('range'));
+          expect(warnings).toContain(
+            'RangeComponent has no single string `type` in its config, so it is registered as "range".',
+          );
+        },
+      );
+
+      it.each<[string, string, string]>([
+        [
+          'a base without a contract',
+          'extends PlainBase',
+          '@Directive()\nexport abstract class PlainBase<T = RangeConfig> {}',
+        ],
+        [
+          'a mixin without a contract',
+          `extends withMixin(Plain)`,
+          mixin(nameInput),
+        ],
+        [
+          'a variable holding a class without a contract',
+          'extends Base',
+          `const Base = class { ${nameInput} };`,
+        ],
+        [
+          'an interface without a contract',
+          'implements Plain',
+          'interface Plain { readonly name: unknown; }',
+        ],
+        [
+          'an alias without a contract',
+          'implements Plain',
+          'type Plain = { readonly name: unknown };',
+        ],
+        [
+          'a contract only in a type argument',
+          'implements Holder<ReactiveFormbarControl<RangeConfig>>',
+          'interface Holder<T> { readonly name: unknown; held?: T; }',
+        ],
+        [
+          'Required around the contract',
+          'implements Required<ReactiveFormbarControl<RangeConfig>>',
+          '',
+        ],
+        [
+          'NonNullable around the contract',
+          'implements NonNullable<ReactiveFormbarControl<RangeConfig>>',
+          '',
+        ],
+        [
+          'interfaces extending each other',
+          'implements First',
+          'interface First extends Second {}\ninterface Second extends First {}',
+        ],
+      ])('skips a component with %s', async (_, heritage, declarations) => {
+        appTree.create(componentFile, component(heritage, declarations));
+
+        expect(await registered()).not.toContain('RangeComponent');
+      });
+    });
+
+    it.each<[string, string, string]>([
+      [
+        'an interface it cannot find',
+        'ReactiveFormbarControl<MissingConfig>',
+        "import { MissingConfig } from './missing';",
+      ],
+      [
+        'an interface without a type literal',
+        'ReactiveFormbarControl<LooseConfig>',
+        'interface LooseConfig { type: string; }',
+      ],
+      [
+        'a package interface',
+        'ReactiveFormbarControl<PackageConfig>',
+        "import { PackageConfig } from 'some-package';",
+      ],
+      [
+        'several possible types',
+        'ReactiveFormbarControl<LooseConfig>',
+        "interface LooseConfig { type: 'a' | 'b'; }",
+      ],
+      ['no config type', 'ReactiveFormbarControl', ''],
+    ])('falls back to the class name with %s', async (_, contract, line) => {
+      appTree.create(componentFile, componentImplementing(contract, line));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      expect(await registered()).toMatch(key('range'));
+      expect(warnings).toContain(
+        'RangeComponent has no single string `type` in its config, so it is registered as "range".',
+      );
+    });
+  });
+
+  describe('a registrations file written by hand', () => {
+    const coreImport = (clause: string) =>
+      `import ${clause} from '@ngx-formbar/core';`;
+    const tokenFile = (imports: string, entries: string) => `${imports}
+
+export const componentRegistrationsProvider = {
+  provide: NGX_FW_COMPONENT_REGISTRATIONS,
+  useValue: new Map([
+${entries}
+  ]),
+};
+`;
+    const configFile = (imports: string, entries: string) => `${imports}
+
+export const componentRegistrations: ComponentRegistrationConfig = {
+${entries}
+};
+`;
+
+    function createComponent() {
+      appTree.create(
+        app('one/one-control.ts'),
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface OneConfig { type: 'one'; }
+
+@Component({ selector: 'app-one', template: '' })
+export class OneControl implements ReactiveFormbarControl<OneConfig> {
+  readonly name = input.required<string>();
+}
+`,
+      );
+    }
+
+    async function runToken(content: string) {
+      createComponent();
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+      appTree.overwrite(src(registrationsPath), content);
+
+      return read(await runSchematic(), src(registrationsPath));
+    }
+
+    async function runConfig(content: string) {
+      createComponent();
+      provideMap(
+        appTree,
+        appConfigPathRaw,
+        registrationsPath,
+        formbarConfigPath,
+      );
+      appTree.overwrite(src(registrationsPath), content);
+
+      return read(
+        await runSchematic({ registrationType: 'config' }),
+        src(registrationsPath),
+      );
+    }
+
+    it('keeps comments and layout of a token file', async () => {
+      const entries = `    ['a', A], // trailing
+    // ['old', Old],`;
+
+      const result = await runToken(
+        tokenFile(coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS }'), entries),
+      );
+
+      expect(result).toBe(
+        tokenFile(
+          coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS, loadComponent }'),
+          `${entries}
+    ["one", loadComponent(() => import("../one/one-control").then(m => m.OneControl))],`,
+        ),
+      );
+    });
+
+    it('keeps comments and layout of a config file', async () => {
+      const entries = `  a: A, // legacy
+  // b: B,`;
+
+      const result = await runConfig(
+        configFile(coreImport('{ ComponentRegistrationConfig }'), entries),
+      );
+
+      expect(result).toBe(
+        configFile(
+          coreImport('{ ComponentRegistrationConfig, loadComponent }'),
+          `${entries}
+  "one": loadComponent(() => import("../one/one-control").then(m => m.OneControl)),`,
+        ),
+      );
+    });
+
+    it.each([
+      [
+        'a type-only import',
+        coreImport('type { ComponentRegistrationConfig }'),
+      ],
+      ['a namespace import', coreImport('* as core')],
+      ['a default import', coreImport('core')],
+    ])('imports loadComponent separately from %s', async (_, imports) => {
+      const result = await runConfig(configFile(imports, ''));
+
+      expect(result).toContain(
+        `${imports}\n${coreImport('{ loadComponent }')}`,
+      );
+    });
+
+    it('puts an entry after a block comment ending on the closing line', async () => {
+      const result = await runConfig(
+        configFile(
+          coreImport('{ ComponentRegistrationConfig }'),
+          `  /* a
+     b */`,
+        ).replace('b */\n};', 'b */ };'),
+      );
+
+      expect(result).toContain(
+        `b */ 
+  "one": loadComponent(() => import("../one/one-control").then(m => m.OneControl))
+};`,
+      );
+    });
+
+    it.each([
+      [
+        'after the last import',
+        "import { A } from './a';\n",
+        "import { A } from './a';\n",
+      ],
+      ['at the start of a file without imports', '', ''],
+    ])('adds the core import %s', async (_, imports, before) => {
+      const result = await runConfig(configFile(imports.trimEnd(), ''));
+
+      expect(
+        result.startsWith(`${before}${coreImport('{ loadComponent }')}\n`),
+      ).toBe(true);
+    });
+
+    it('inserts at the right positions in a file with a BOM', async () => {
+      const result = await runConfig(
+        `\uFEFF${configFile(
+          coreImport('{ ComponentRegistrationConfig }'),
+          '  a: A,',
+        )}`,
+      );
+
+      expect(result).toContain(
+        coreImport('{ ComponentRegistrationConfig, loadComponent }'),
+      );
+      expect(result).toContain(`  a: A,
+  "one": loadComponent(() => import("../one/one-control").then(m => m.OneControl)),
+};`);
+    });
+
+    it('adds loadComponent to the value import next to a type-only import', async () => {
+      const value = '{ NGX_FW_COMPONENT_REGISTRATIONS }';
+      const typeOnly = coreImport('type { ComponentRegistrationConfig }');
+
+      const result = await runToken(
+        tokenFile(`${coreImport(value)}\n${typeOnly}`, ''),
+      );
+
+      expect(result).toContain(
+        `${coreImport('{ NGX_FW_COMPONENT_REGISTRATIONS, loadComponent }')}\n${typeOnly}`,
+      );
+    });
+  });
+
+  describe('a component that is already registered', () => {
+    function logged(level: string) {
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === level) {
+          messages.push(entry.message);
+        }
+      });
+
+      return messages;
+    }
+
+    it.each<['token' | 'config', () => void]>([
+      [
+        'token',
+        () => {
+          provideToken(appTree, appConfigPathRaw, registrationsPath);
+        },
+      ],
+      [
+        'config',
+        () => {
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+          );
+        },
+      ],
+    ])(
+      'is logged at info level on a %s re-run',
+      async (registrationType, provide) => {
+        appTree.create(
+          app('one/one-control.ts'),
+          createControlComponent('one', inlineProviders, 'OneInput'),
+        );
+        provide();
+        appTree = await runSchematic({ registrationType });
+
+        const warnings = logged('warn');
+        const infos = logged('info');
+
+        await runSchematic({ registrationType });
+
+        const alreadyUsed =
+          'A component with the name "OneInput" is already used';
+
+        expect(warnings).not.toContain(alreadyUsed);
+        expect(infos).toContain(alreadyUsed);
+      },
+    );
+
+    describe('in a form written by hand', () => {
+      const componentPath = app('one/one-control.ts');
+      const lazyImport =
+        "() => import('../one/one-control').then((m) => m.OneControl)";
+      const staticImport = "import { OneControl } from '../one/one-control';";
+      const options = "{ hiddenHandling: 'manual' }";
+      const forms: [string, string, string][] = [
+        ['the class', 'OneControl', staticImport],
+        ['staticComponent', 'staticComponent(OneControl)', staticImport],
+        [
+          'staticComponent with options',
+          `staticComponent(OneControl, ${options})`,
+          staticImport,
+        ],
+        [
+          'a renamed import',
+          'staticComponent(Renamed)',
+          "import { OneControl as Renamed } from '../one/one-control';",
+        ],
+        ['a component entry', '{ component: OneControl }', staticImport],
+        [
+          'a component entry with options',
+          "{ component: OneControl, hiddenHandling: 'manual' }",
+          staticImport,
+        ],
+        ['loadComponent', `loadComponent(${lazyImport})`, ''],
+        [
+          'a destructured import',
+          "loadComponent(() => import('../one/one-control').then(({ OneControl }) => OneControl))",
+          '',
+        ],
+        [
+          'a destructured and renamed import',
+          "loadComponent(() => import('../one/one-control').then(({ OneControl: Renamed }) => Renamed))",
+          '',
+        ],
+        [
+          'an awaited import',
+          "loadComponent(async () => (await import('../one/one-control')).OneControl)",
+          '',
+        ],
+        [
+          'loadComponent with options',
+          `loadComponent(${lazyImport}, ${options})`,
+          '',
+        ],
+        ['a loadComponent entry', `{ loadComponent: ${lazyImport} }`, ''],
+        [
+          'a loadComponent entry with options',
+          `{ loadComponent: ${lazyImport}, hiddenHandling: 'manual' }`,
+          '',
+        ],
+      ];
+
+      function createComponent() {
+        appTree.create(
+          componentPath,
+          `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface OneConfig { type: 'one'; }
+
+@Component({ selector: 'app-one', template: '' })
+export class OneControl implements ReactiveFormbarControl<OneConfig> {
+  readonly name = input.required<string>();
+}
+`,
+        );
+      }
+
+      it.each(forms)(
+        'adds no second token entry for %s',
+        async (_, entry, imports) => {
+          createComponent();
+          provideToken(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            `['custom', ${entry}]`,
+            imports,
+          );
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic();
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it.each(forms)(
+        'adds no second config entry for %s',
+        async (_, entry, imports) => {
+          createComponent();
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+            `custom: ${entry}`,
+          );
+          appTree.overwrite(
+            src(registrationsPath),
+            `${imports}\n${read(appTree, src(registrationsPath))}`,
+          );
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic({ registrationType: 'config' });
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it('changes nothing on a clean re-run', async () => {
+        createComponent();
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['custom', staticComponent(OneControl)]",
+          staticImport,
+        );
+        appTree = await runSchematic();
+        const before = read(appTree, src(registrationsPath));
+        const warnings = logged('warn');
+
+        const tree = await runSchematic();
+
+        expect(read(tree, src(registrationsPath))).toBe(before);
+        expect(warnings).toEqual([]);
+      });
+    });
+
+    describe('a class name used in two folders', () => {
+      const sliderOne = app('one/slider.ts');
+      const sliderTwo = app('two/slider.ts');
+      const component = (type: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface SliderConfig { type: '${type}'; }
+
+@Component({ selector: 'app-slider', template: '' })
+export class Slider implements ReactiveFormbarControl<SliderConfig> {
+  readonly name = input.required<string>();
+}
+`;
+      const provideFor: Record<'token' | 'config', () => void> = {
+        token: () => {
+          provideToken(appTree, appConfigPathRaw, registrationsPath);
+        },
+        config: () => {
+          provideMap(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            formbarConfigPath,
+          );
+        },
+      };
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'registers each under its own key in %s registrations',
+        async (registrationType) => {
+          appTree.create(sliderOne, component('slider-one'));
+          appTree.create(sliderTwo, component('slider-two'));
+          provideFor[registrationType]();
+
+          const registrations = read(
+            await runSchematic({ registrationType }),
+            src(registrationsPath),
+          );
+
+          expect(registrations).toContain('slider-one');
+          expect(registrations).toContain('../one/slider');
+          expect(registrations).toContain('slider-two');
+          expect(registrations).toContain('../two/slider');
+        },
+      );
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'changes nothing on a %s re-run',
+        async (registrationType) => {
+          appTree.create(sliderOne, component('slider-one'));
+          appTree.create(sliderTwo, component('slider-two'));
+          provideFor[registrationType]();
+          appTree = await runSchematic({ registrationType });
+          const before = read(appTree, src(registrationsPath));
+          const warnings = logged('warn');
+
+          const tree = await runSchematic({ registrationType });
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+          expect(warnings).toEqual([]);
+        },
+      );
+
+      it('warns when both want the same key', async () => {
+        appTree.create(sliderOne, component('slider'));
+        appTree.create(sliderTwo, component('slider'));
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+        const warnings = logged('warn');
+
+        const registrations = read(
+          await runSchematic(),
+          src(registrationsPath),
+        );
+
+        expect(warnings).toEqual([
+          'A key with the name "slider" is already used',
+        ]);
+        expect(registrations).toContain('../one/slider');
+        expect(registrations).not.toContain('../two/slider');
+      });
+
+      it('compiles next to a hand-written static import of the other class', async () => {
+        appTree.create(sliderOne, component('slider-one'));
+        appTree.create(sliderTwo, component('slider-two'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['slider-one', staticComponent(Slider)]",
+          "import { staticComponent } from '@ngx-formbar/core';\nimport { Slider } from '../one/slider';",
+        );
+
+        const tree = await runSchematic();
+        const file = src(registrationsPath);
+        const { program, sourceFileAt } = createTreeProgram(
+          tree,
+          '/tsconfig.json',
+          [file],
+        );
+        const sourceFile = sourceFileAt(file);
+        const problems = [
+          ...program.getSyntacticDiagnostics(sourceFile),
+          ...program.getSemanticDiagnostics(sourceFile),
+        ]
+          .filter(({ code }) => code !== CANNOT_FIND_MODULE)
+          .map(({ messageText }) => messageText);
+
+        expect(read(tree, file)).toContain('../two/slider');
+        expect(problems).toEqual([]);
+      });
+
+      it.each<[string, string, string, () => void]>([
+        [
+          'a barrel',
+          'staticComponent(Slider)',
+          "import { Slider } from '../one';",
+          () => {
+            appTree.create(app('one/index.ts'), "export * from './slider';\n");
+          },
+        ],
+        [
+          'a barrel naming the class',
+          "loadComponent(() => import('../one').then((m) => m.Slider))",
+          '',
+          () => {
+            appTree.create(
+              app('one/index.ts'),
+              "export { Slider } from './slider';\n",
+            );
+          },
+        ],
+        [
+          'a tsconfig path',
+          "loadComponent(() => import('@app/one/slider').then((m) => m.Slider))",
+          '',
+          () => {
+            setTsconfigPaths({ '@app/*': ['./projects/test-app/src/app/*'] });
+          },
+        ],
+        [
+          'a static import through a tsconfig path',
+          'staticComponent(Slider)',
+          "import { Slider } from '@app/one/slider';",
+          () => {
+            setTsconfigPaths({ '@app/*': ['./projects/test-app/src/app/*'] });
+          },
+        ],
+      ])(
+        'recognizes the class imported through %s',
+        async (_, entry, imports, arrange) => {
+          appTree.create(sliderOne, component('slider'));
+          arrange();
+          provideToken(
+            appTree,
+            appConfigPathRaw,
+            registrationsPath,
+            `['custom', ${entry}]`,
+            imports,
+          );
+          const before = read(appTree, src(registrationsPath));
+
+          const tree = await runSchematic();
+
+          expect(read(tree, src(registrationsPath))).toBe(before);
+        },
+      );
+
+      it('registers the class when the entry points at another file of that name', async () => {
+        appTree.create(sliderOne, component('slider'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['custom', loadComponent(() => import('../gone/slider').then((m) => m.Slider))]",
+        );
+
+        const tree = await runSchematic();
+
+        expect(read(tree, src(registrationsPath))).toContain('../one/slider');
+      });
+
+      it('recognizes the class imported through a path in a tsconfig above the workspace root', async () => {
+        const monorepo = mkdtempSync(join(tmpdir(), 'ngx-formbar-monorepo-'));
+        const cwd = vi
+          .spyOn(process, 'cwd')
+          .mockReturnValue(join(monorepo, 'apps/web'));
+
+        writeFileSync(
+          join(monorepo, 'tsconfig.base.json'),
+          JSON.stringify({
+            compilerOptions: {
+              paths: { '@app/*': ['./apps/web/projects/test-app/src/app/*'] },
+            },
+          }),
+        );
+        appTree.overwrite(
+          '/tsconfig.json',
+          JSON.stringify({ extends: '../../tsconfig.base.json' }),
+        );
+        appTree.create(sliderOne, component('slider'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          `['custom', staticComponent(Slider)]`,
+          "import { Slider } from '@app/one/slider';",
+        );
+        const before = read(appTree, src(registrationsPath));
+
+        const tree = await runSchematic();
+
+        cwd.mockRestore();
+        rmSync(monorepo, { recursive: true, force: true });
+
+        expect(read(tree, src(registrationsPath))).toBe(before);
+      });
+
+      function setTsconfigPaths(paths: Record<string, string[]>) {
+        appTree.overwrite(
+          '/tsconfig.json',
+          JSON.stringify({ compilerOptions: { baseUrl: '.', paths } }),
+        );
+      }
+    });
+
+    describe('the warning about a key from the class name', () => {
+      const fallback = (className: string, key: string) =>
+        `${className} has no single string \`type\` in its config, so it is registered as "${key}".`;
+      const component = (className: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+@Component({ selector: 'app-rating', template: '' })
+export class ${className} implements ReactiveFormbarControl {
+  readonly name = input.required<string>();
+}
+`;
+
+      it.each<'token' | 'config'>(['token', 'config'])(
+        'appears when the %s entry is added',
+        async (registrationType) => {
+          appTree.create(app('rating.ts'), component('RatingControl'));
+          if (registrationType === 'token') {
+            provideToken(appTree, appConfigPathRaw, registrationsPath);
+          } else {
+            provideMap(
+              appTree,
+              appConfigPathRaw,
+              registrationsPath,
+              formbarConfigPath,
+            );
+          }
+          const warnings = logged('warn');
+
+          await runSchematic({ registrationType });
+
+          expect(warnings).toEqual([
+            fallback('RatingControl', 'rating-control'),
+          ]);
+        },
+      );
+
+      it('stays away on a re-run', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        provideToken(appTree, appConfigPathRaw, registrationsPath);
+        appTree = await runSchematic();
+        const warnings = logged('warn');
+
+        await runSchematic();
+
+        expect(warnings).toEqual([]);
+      });
+
+      it('stays away when the key is taken', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        provideToken(
+          appTree,
+          appConfigPathRaw,
+          registrationsPath,
+          "['rating-control', loadComponent(() => import('../other').then((m) => m.Other))]",
+        );
+        const warnings = logged('warn');
+
+        await runSchematic();
+
+        expect(warnings).toEqual([
+          'A key with the name "rating-control" is already used',
+        ]);
+      });
+
+      it('stays away when there is no registrations file', async () => {
+        appTree.create(app('rating.ts'), component('RatingControl'));
+        const warnings = logged('warn');
+
+        await runSchematic({ controlRegistrations: './absent.ts' });
+
+        expect(warnings).not.toContain(
+          fallback('RatingControl', 'rating-control'),
+        );
+      });
+    });
+
+    it('still warns when another component holds the key', async () => {
+      const component = (className: string) =>
+        `import { Component, input } from '@angular/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface SharedConfig { type: 'shared'; }
+
+@Component({ selector: 'app-x', template: '' })
+export class ${className} implements ReactiveFormbarControl<SharedConfig> {
+  readonly name = input.required<string>();
+}
+`;
+      appTree.create(app('one/one-control.ts'), component('OneControl'));
+      appTree.create(app('two/two-control.ts'), component('TwoControl'));
+      provideToken(appTree, appConfigPathRaw, registrationsPath);
+
+      const warnings = logged('warn');
+
+      await runSchematic();
+
+      expect(warnings).toEqual([
+        'A key with the name "shared" is already used',
+      ]);
+    });
   });
 
   it('honors the registrationType option when no config file is present', async () => {

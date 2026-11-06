@@ -16,7 +16,7 @@ function context(overrides: Partial<SchemaContext> = {}): SchemaContext {
   return {
     typeReference: 'app/types/content.type.ts#AppContent',
     entries: [],
-    projectRoot: 'projects/test-app/src',
+    sourceRoot: 'projects/test-app/src',
     workspaceRoot: '/',
     tsConfigPath: 'projects/test-app/tsconfig.app.json',
     ...overrides,
@@ -51,7 +51,7 @@ export type AppContent = TextControl | NoteBlock;
 
     const names = type.types.map((member) => checker.typeToString(member));
     expect(names).toEqual(['TextControl', 'NoteBlock']);
-    expect(coreRoot).toBe('/node_modules/@ngx-formbar/core/');
+    expect(coreRoot.endsWith('/node_modules/@ngx-formbar/core/')).toBe(true);
   });
 
   it('resolves a reference written with a leading "./"', () => {
@@ -96,5 +96,40 @@ export type AppContent = TextControl | NoteBlock;
         context({ typeReference: 'app/types/content.type.ts#Missing' }),
       ),
     ).toThrow(/Missing/);
+  });
+
+  it('names a file TypeScript cannot read', () => {
+    tree.create(app('types/content.txt'), 'not code');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/content.txt#AppContent' }),
+      ),
+    ).toThrow('Could not parse /projects/test-app/src/app/types/content.txt');
+  });
+
+  it('names a file that is not a module', () => {
+    tree.create(app('types/script.ts'), 'const a = 1;\n');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/script.ts#AppContent' }),
+      ),
+    ).toThrow('/projects/test-app/src/app/types/script.ts exports nothing.');
+  });
+
+  it('names a core the program never reaches', () => {
+    tree.create(app('types/plain.ts'), 'export type AppContent = string;\n');
+
+    expect(() =>
+      resolveContentType(
+        tree,
+        context({ typeReference: 'app/types/plain.ts#AppContent' }),
+      ),
+    ).toThrow(
+      'Could not resolve @ngx-formbar/core from the project. Is it installed?',
+    );
   });
 });

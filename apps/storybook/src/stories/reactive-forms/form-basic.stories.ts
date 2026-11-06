@@ -18,7 +18,7 @@ export const AllControls: Story = {
     docs: {
       description: {
         story:
-          'The most basic case — renders exactly one of every control type with no expressions, so every control is always visible.',
+          'The most basic case: renders exactly one of every control type with no expressions, so every control is always visible.',
       },
     },
   },

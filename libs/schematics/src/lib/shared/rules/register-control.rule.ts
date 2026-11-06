@@ -4,7 +4,7 @@ import { registerTypeToken } from './register-type-token.rule';
 import { registerTypeConfig } from './register-type-map.rule';
 
 export function registerControl(ruleContext: ScaffoldContext): Rule {
-  return (tree, context) => {
+  return (tree) => {
     const {
       skipRegistration,
       controlRegistrationsPath,
@@ -12,24 +12,20 @@ export function registerControl(ruleContext: ScaffoldContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
     } = ruleContext;
 
-    if (skipRegistration) {
-      return tree;
-    }
-
-    if (!controlRegistrationsPath) {
-      context.logger.warn(
-        'No file for registrations could be found. Skipping registration.',
-      );
+    if (skipRegistration || !controlRegistrationsPath) {
       return tree;
     }
 
     const registerComponentContext: RegisterComponentContext = {
       controlRegistrationsPath,
       key,
-      componentFilePath,
+      componentFilePath: `${componentFilePath}.ts`,
       componentClassName,
+      tsConfigPath,
+      alreadyRegisteredLevel: 'warn',
     };
 
     switch (registrationType) {

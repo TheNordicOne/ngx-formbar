@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import {
   NgxFbArray,
+  NgxFbBaseContent,
   NgxFbBlock,
   NgxFbControl,
   NgxFbFormGroup,
@@ -74,5 +75,15 @@ describe('isFormbarBlock', () => {
     expect(isFormbarBlock(control)).toBe(false);
     expect(isFormbarBlock(group)).toBe(false);
     expect(isFormbarBlock(array)).toBe(false);
+  });
+});
+
+describe('isFormbarBlock', () => {
+  it.each([
+    [{ isControl: false }, true],
+    [{ isControl: true }, false],
+    [{}, false],
+  ])('reads %j as %s', (item, result) => {
+    expect(isFormbarBlock(item as unknown as NgxFbBaseContent)).toBe(result);
   });
 });

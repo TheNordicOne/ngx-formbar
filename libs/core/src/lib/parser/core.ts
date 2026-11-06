@@ -75,12 +75,7 @@ export interface ParserStatic {
   max_unop_len: number;
   max_binop_len: number;
 
-  addUnaryOp(opName: string): ParserStatic;
-  addBinaryOp(
-    opName: string,
-    precedence: number,
-    isRightAssociative?: boolean,
-  ): ParserStatic;
+  addRightAssociativeOp(opName: string, precedence: number): void;
 
   isDecimalDigit(ch: number): boolean;
   isIdentifierStart(ch: number): boolean;
@@ -117,21 +112,15 @@ export class Parser {
     name: string,
     node: ParseResult | false | undefined,
   ): ParseResult | false | undefined {
-    if (Parser.hooks.has(name)) {
-      const env: HookEnv = { context: this, node };
-      Parser.hooks.run(name, env);
-      return env.node;
-    }
-    return node;
+    const env: HookEnv = { context: this, node };
+    Parser.hooks.run(name, env);
+    return env.node;
   }
 
   searchHook(name: string): ParseResult | false | undefined {
-    if (Parser.hooks.has(name)) {
-      const env: HookEnv = { context: this };
-      Parser.hooks.search(name, env);
-      return env.node;
-    }
-    return undefined;
+    const env: HookEnv = { context: this };
+    Parser.hooks.search(name, env);
+    return env.node;
   }
 
   gobbleSpaces(): void {
@@ -144,7 +133,6 @@ export class Parser {
     ) {
       ch = this.expr.charCodeAt(++this.index);
     }
-    this.runHook('gobble-spaces', undefined);
   }
 
   /**
@@ -153,7 +141,6 @@ export class Parser {
    * `(a, b)` and `a; b` cannot reach the evaluator.
    */
   parse(): Expression {
-    this.runHook('before-all', undefined);
     const nodes = this.gobbleExpressions();
 
     if (nodes.length === 0) {
@@ -163,11 +150,7 @@ export class Parser {
       this.throwError('Expression must contain exactly one expression');
     }
 
-    let node: ParseResult = nodes[0];
-    const hooked = this.runHook('after-all', node);
-    if (hooked) {
-      node = hooked;
-    }
+    const node = nodes[0];
     // SpreadElement and SequenceExpression are parser-internal transients
     // (see ParseResult). If one survives to the public surface, refuse.
     if (node.type === 'SpreadElement') {
@@ -230,10 +213,9 @@ export class Parser {
       if (
         Object.prototype.hasOwnProperty.call(Parser.binary_ops, toCheck) &&
         (!Parser.isIdentifierStart(this.code()) ||
-          (this.index + toCheck.length < this.expr.length &&
-            !Parser.isIdentifierPart(
-              this.expr.charCodeAt(this.index + toCheck.length),
-            )))
+          !Parser.isIdentifierPart(
+            this.expr.charCodeAt(this.index + toCheck.length),
+          ))
       ) {
         this.index += tcLen;
         return toCheck;
@@ -269,10 +251,6 @@ export class Parser {
 
     while ((biop = this.gobbleBinaryOp())) {
       const prec = Parser.binaryPrecedence(biop);
-      if (prec === 0) {
-        this.index -= biop.length;
-        break;
-      }
       biopInfo = {
         value: biop,
         prec,
@@ -281,9 +259,12 @@ export class Parser {
       const curBiop = biop;
 
       const comparePrev = (prev: BinopInfo): boolean =>
-        biopInfo.right_a && prev.right_a ? prec > prev.prec : prec <= prev.prec;
+        biopInfo.right_a && prev.right_a ? prec < prev.prec : prec <= prev.prec;
 
-      while (stack.length > 2 && comparePrev(stack[stack.length - 2] as BinopInfo)) {
+      while (
+        stack.length > 2 &&
+        comparePrev(stack[stack.length - 2] as BinopInfo)
+      ) {
         const right = stack.pop() as ParseResult;
         const op = (stack.pop() as BinopInfo).value;
         const left = stack.pop() as ParseResult;
@@ -291,9 +272,7 @@ export class Parser {
         // (the `=>` operand for `(a, b) => x`). The arrow plugin's
         // after-expression hook expands it; if we narrowed here we'd
         // reject before the hook runs. Survivors are rejected at parse().
-        stack.push(
-          makeBinaryNode(op, left as Expression, right as Expression),
-        );
+        stack.push(makeBinaryNode(op, left as Expression, right as Expression));
       }
 
       const node = this.gobbleToken();
@@ -324,8 +303,7 @@ export class Parser {
     this.gobbleSpaces();
     const hooked = this.searchHook('gobble-token');
     if (hooked) {
-      const after = this.runHook('after-token', hooked);
-      return (after ?? hooked);
+      return hooked;
     }
 
     const ch = this.code();
@@ -349,10 +327,9 @@ export class Parser {
         if (
           Object.prototype.hasOwnProperty.call(Parser.unary_ops, toCheck) &&
           (!Parser.isIdentifierStart(this.code()) ||
-            (this.index + toCheck.length < this.expr.length &&
-              !Parser.isIdentifierPart(
-                this.expr.charCodeAt(this.index + toCheck.length),
-              )))
+            !Parser.isIdentifierPart(
+              this.expr.charCodeAt(this.index + toCheck.length),
+            ))
         ) {
           this.index += tcLen;
           const argument = this.gobbleToken();
@@ -365,8 +342,7 @@ export class Parser {
             argument: asExpression(argument),
             prefix: true,
           };
-          const after = this.runHook('after-token', unary);
-          return (after ?? unary);
+          return unary;
         }
         toCheck = toCheck.substring(0, --tcLen);
       }
@@ -384,7 +360,7 @@ export class Parser {
             raw: ident.name,
           };
         } else {
-          // Refuse to promote `this` to a ThisExpression — this DSL does
+          // Refuse to promote `this` to a ThisExpression. This DSL does
           // not bind a receiver.
           if (ident.name === 'this') {
             this.throwError('The `this` keyword is not supported');
@@ -397,18 +373,24 @@ export class Parser {
     }
 
     if (!node) {
-      const after = this.runHook('after-token', false);
-      return (after ?? false);
+      return false;
     }
 
-    // Skip property access on SequenceExpression — the arrow plugin will
-    // expand `(a, b) => x` later; member/call on a sequence is rejected
-    // at the top level.
-    if (node.type !== 'SequenceExpression') {
-      node = this.gobbleTokenProperty(asExpression(node));
+    // The arrow plugin expands `(a, b) => x` later, so a sequence stays as it
+    // is, but nothing can read a property of it.
+    if (node.type === 'SequenceExpression') {
+      this.gobbleSpaces();
+      if (
+        [Parser.PERIOD_CODE, Parser.OBRACK_CODE, Parser.OPAREN_CODE].includes(
+          this.code(),
+        )
+      ) {
+        this.throwError('Comma sequences are not supported');
+      }
+      return node;
     }
-    const after = this.runHook('after-token', node);
-    return (after ?? node);
+    node = this.gobbleTokenProperty(asExpression(node));
+    return node;
   }
 
   gobbleTokenProperty(node: Expression): Expression {
@@ -461,7 +443,7 @@ export class Parser {
           callee: node,
           ...(optional ? { optional: true } : {}),
         };
-      } else if (ch === Parser.PERIOD_CODE || optional) {
+      } else {
         if (optional) {
           this.index--;
         }
@@ -515,7 +497,10 @@ export class Parser {
     const chCode = this.code();
     if (Parser.isIdentifierStart(chCode)) {
       this.throwError(
-        'Variable names cannot start with a number (' + number + this.char() + ')',
+        'Variable names cannot start with a number (' +
+          number +
+          this.char() +
+          ')',
       );
     } else if (
       chCode === Parser.PERIOD_CODE ||
@@ -583,22 +568,14 @@ export class Parser {
   }
 
   gobbleIdentifier(): Identifier {
-    let ch = this.code();
     const start = this.index;
 
-    if (Parser.isIdentifierStart(ch)) {
-      this.index++;
-    } else {
+    if (!Parser.isIdentifierStart(this.code())) {
       this.throwError('Unexpected ' + this.char());
     }
 
-    while (this.index < this.expr.length) {
-      ch = this.code();
-      if (Parser.isIdentifierPart(ch)) {
-        this.index++;
-      } else {
-        break;
-      }
+    while (Parser.isIdentifierPart(this.code())) {
+      this.index++;
     }
     return {
       type: 'Identifier',
@@ -623,7 +600,9 @@ export class Parser {
           separatorCount &&
           separatorCount >= args.length
         ) {
-          this.throwError('Unexpected token ' + String.fromCharCode(termination));
+          this.throwError(
+            'Unexpected token ' + String.fromCharCode(termination),
+          );
         }
         break;
       } else if (chI === Parser.COMMA_CODE) {
@@ -634,18 +613,11 @@ export class Parser {
           termination === Parser.CPAREN_CODE
         ) {
           this.throwError('Unexpected token ,');
-        } else if (
-          separatorCount !== args.length &&
-          termination === Parser.CBRACK_CODE
-        ) {
-          for (let arg = args.length; arg < separatorCount; arg++) {
-            args.push(null);
-          }
         }
-      } else if (
-        args.length !== separatorCount &&
-        separatorCount !== 0
-      ) {
+        for (let arg = args.length; arg < separatorCount; arg++) {
+          args.push(null);
+        }
+      } else if (args.length !== separatorCount) {
         this.throwError('Expected comma');
       } else {
         const node = this.gobbleExpression();
@@ -782,25 +754,10 @@ export class Parser {
   static max_unop_len = getMaxKeyLen(Parser.unary_ops);
   static max_binop_len = getMaxKeyLen(Parser.binary_ops);
 
-  static addUnaryOp(opName: string): typeof Parser {
-    Parser.max_unop_len = Math.max(opName.length, Parser.max_unop_len);
-    Parser.unary_ops[opName] = 1;
-    return Parser;
-  }
-
-  static addBinaryOp(
-    opName: string,
-    precedence: number,
-    isRightAssociative = false,
-  ): typeof Parser {
+  static addRightAssociativeOp(opName: string, precedence: number): void {
     Parser.max_binop_len = Math.max(opName.length, Parser.max_binop_len);
     Parser.binary_ops[opName] = precedence;
-    if (isRightAssociative) {
-      Parser.right_associative.add(opName);
-    } else {
-      Parser.right_associative.delete(opName);
-    }
-    return Parser;
+    Parser.right_associative.add(opName);
   }
 
   static isDecimalDigit(ch: number): boolean {
@@ -811,7 +768,7 @@ export class Parser {
     return (
       (ch >= 65 && ch <= 90) ||
       (ch >= 97 && ch <= 122) ||
-      (ch >= 128 && !Parser.binary_ops[String.fromCharCode(ch)]) ||
+      ch >= 128 ||
       Parser.additional_identifier_chars.has(String.fromCharCode(ch))
     );
   }

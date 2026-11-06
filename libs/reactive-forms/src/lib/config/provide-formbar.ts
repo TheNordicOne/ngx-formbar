@@ -212,15 +212,7 @@ function toValidatorMap<T extends RegistrationRecord, V>(
       continue;
     }
 
-    const spec = source[key];
-    const cached = memo.get(key);
-    if (cached) {
-      out.set(key, cached);
-      continue;
-    }
-    const resolved = toValidatorFn(spec, source, memo);
-    memo.set(key, resolved);
-    out.set(key, resolved);
+    out.set(key, toValidatorFn(source[key], source, memo));
   }
   return out;
 }

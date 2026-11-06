@@ -1,19 +1,39 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
+import { isJsonObject, JsonObject } from '@angular-devkit/core';
+import { Tree } from '@angular-devkit/schematics';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
+import {
+  getWorkspace,
+  updateWorkspace,
+} from '@schematics/angular/utility/workspace';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { PassThrough } from 'node:stream';
 import { join } from 'path';
+import { lastValueFrom } from 'rxjs';
+import {
+  CompilerHost,
+  createProgram,
+  createSourceFile,
+  flattenDiagnosticMessageText,
+  isImportDeclaration,
+  isNamedImports,
+  isStringLiteral,
+  ModuleKind,
+  ModuleResolutionKind,
+  ScriptTarget,
+  SourceFile,
+  transpileModule,
+} from 'typescript';
 import { Schema } from '../ng-add/schema';
 import {
-  BaseGenerateSchematicConfig,
-  NgxFormbarAutomationConfig,
-  parseTS,
-  hasNamedImport,
-  importForSymbolUsesCorrectRelativePath,
-} from '@ngx-formbar/setup';
-import {
   app,
+  appRoot,
   callObjectArgHasProp,
   countCall,
   countNamedImport,
@@ -23,6 +43,10 @@ import {
   providersArrayContainsProviderObject,
   read,
   src,
+  getDecoratorArrayProp,
+  parseTS,
+  hasNamedImport,
+  importForSymbolUsesCorrectRelativePath,
 } from '@ngx-formbar/schematics/testing';
 import { setupWorkspace } from './workspace-setup';
 import {
@@ -33,6 +57,10 @@ import {
 const COLLECTION_PATH = join(
   __dirname,
   '../../../../dist/libs/reactive-forms/schematics/collection.json',
+);
+const SCAFFOLD_COLLECTION_PATH = join(
+  __dirname,
+  '../../../../dist/libs/schematics/lib/collection.json',
 );
 
 describe('ng-add schematic', () => {
@@ -48,6 +76,15 @@ describe('ng-add schematic', () => {
   const schematicsConfigPath = app('formbar-schematic.config.json');
   const contentTypePath = app('types/content.type.ts');
 
+  const generators = [
+    'control',
+    'group',
+    'block',
+    'array',
+    'register',
+    'schema',
+  ];
+
   async function runAdd(options: Schema = {}) {
     return runner.runSchematic(
       'ng-add',
@@ -56,11 +93,277 @@ describe('ng-add schematic', () => {
     );
   }
 
+  async function generatorDefaults(tree: UnitTestTree, project = 'test-app') {
+    const workspace = await getWorkspace(tree);
+    const schematics =
+      workspace.projects.get(project)?.extensions.schematics ?? {};
+    const byName = isJsonObject(schematics) ? schematics : {};
+
+    return generators.map((generator) => {
+      const defaults = byName[`@ngx-formbar/schematics:${generator}`];
+
+      return defaults && isJsonObject(defaults) ? defaults : undefined;
+    });
+  }
+
+  function importedFrom(sourceFile: SourceFile, moduleName: string) {
+    return sourceFile.statements
+      .filter(isImportDeclaration)
+      .filter(
+        ({ moduleSpecifier }) =>
+          isStringLiteral(moduleSpecifier) &&
+          moduleSpecifier.text === moduleName,
+      )
+      .flatMap(({ importClause }) =>
+        importClause?.namedBindings &&
+        isNamedImports(importClause.namedBindings)
+          ? importClause.namedBindings.elements.map(({ name }) => name.text)
+          : [],
+      );
+  }
+
+  function syntaxErrors(code: string) {
+    return (
+      transpileModule(code, { reportDiagnostics: true }).diagnostics ?? []
+    ).map(({ messageText }) => messageText);
+  }
+
+  /**
+   * Type-checks every file of the tree. Packages stay out of reach, so only an
+   * import that a file of the project does not satisfy gets reported.
+   */
+  function brokenImports(tree: UnitTestTree) {
+    const missingExportCodes = [2305, 2459, 2614, 2724];
+    const host: CompilerHost = {
+      fileExists: (fileName) => tree.exists(fileName),
+      readFile: (fileName) =>
+        tree.exists(fileName) ? tree.readText(fileName) : undefined,
+      getSourceFile: (fileName, languageVersion) =>
+        tree.exists(fileName)
+          ? createSourceFile(fileName, tree.readText(fileName), languageVersion)
+          : undefined,
+      getDefaultLibFileName: () => 'lib.d.ts',
+      writeFile: () => undefined,
+      getCurrentDirectory: () => '/',
+      getCanonicalFileName: (fileName) => fileName,
+      useCaseSensitiveFileNames: () => true,
+      getNewLine: () => '\n',
+    };
+    const program = createProgram(
+      tree.files.filter((file) => file.endsWith('.ts')),
+      {
+        noLib: true,
+        noEmit: true,
+        experimentalDecorators: true,
+        target: ScriptTarget.ES2022,
+        module: ModuleKind.ESNext,
+        moduleResolution: ModuleResolutionKind.Bundler,
+      },
+      host,
+    );
+
+    return program
+      .getSemanticDiagnostics()
+      .filter(
+        ({ code, messageText }) =>
+          missingExportCodes.includes(code) ||
+          (code === 2307 &&
+            flattenDiagnosticMessageText(messageText, ' ').includes("'.")),
+      )
+      .map(
+        ({ file, messageText }) =>
+          `${file?.fileName ?? ''}: ${flattenDiagnosticMessageText(messageText, ' ')}`,
+      );
+  }
+
+  /** In the entry an earlier run left for the control generator. */
+  function seedForeignControlSetting() {
+    appTree.overwrite(
+      'angular.json',
+      read(appTree, 'angular.json').replace(
+        '"@ngx-formbar/schematics:control": {',
+        '"@ngx-formbar/schematics:control": { "interfaceSuffix": "Type",',
+      ),
+    );
+  }
+
+  async function scaffoldControl(tree: UnitTestTree) {
+    return new SchematicTestRunner(
+      'scaffold',
+      SCAFFOLD_COLLECTION_PATH,
+    ).runSchematic('control', { key: 'slider', project: 'test-app' }, tree);
+  }
+
   beforeEach(async () => {
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
 
     runner = new SchematicTestRunner('schematics', COLLECTION_PATH);
     appTree = await setupWorkspace(runner);
+  });
+
+  describe('installing the schematics package', () => {
+    const schematicsPackage = '@ngx-formbar/schematics';
+    const version = /"version": "(.+)"/.exec(
+      readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
+    )?.[1];
+
+    function seedEntry(section: string) {
+      appTree.overwrite(
+        '/package.json',
+        read(appTree, '/package.json').replace(
+          `"${section}": {`,
+          `"${section}": {\n    "${schematicsPackage}": "1.2.3",`,
+        ),
+      );
+    }
+
+    it('saves it as a dev dependency in the released version', async () => {
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(version).toBeTruthy();
+      expect(manifest).toHaveProperty(
+        ['devDependencies', schematicsPackage],
+        `^${version ?? ''}`,
+      );
+      expect(manifest).not.toHaveProperty(['dependencies', schematicsPackage]);
+    });
+
+    it.each([
+      ['dependencies', 'devDependencies'],
+      ['devDependencies', 'dependencies'],
+    ])('keeps an existing entry in %s', async (section, otherSection) => {
+      seedEntry(section);
+
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(manifest).toHaveProperty([section, schematicsPackage], '1.2.3');
+      expect(manifest).not.toHaveProperty([otherSection, schematicsPackage]);
+    });
+
+    it('leaves it out with installSchematics set to false', async () => {
+      const manifest = (await runAdd({ installSchematics: false })).readJson(
+        '/package.json',
+      );
+
+      expect(manifest).not.toHaveProperty(['dependencies', schematicsPackage]);
+      expect(manifest).not.toHaveProperty([
+        'devDependencies',
+        schematicsPackage,
+      ]);
+    });
+  });
+
+  describe('installing core', () => {
+    const corePackage = '@ngx-formbar/core';
+    const declaredRange = /"@ngx-formbar\/core": "(.+)"/.exec(
+      readFileSync(join(COLLECTION_PATH, '../../package.json'), 'utf8'),
+    )?.[1];
+    let packageDirectories: string[] = [];
+
+    /** The built schematic next to another manifest, as a published package reads its own. */
+    async function runAddWithManifest(manifest: string) {
+      const packageDirectory = mkdtempSync(
+        join(COLLECTION_PATH, '../../../manifest-'),
+      );
+
+      packageDirectories.push(packageDirectory);
+      execFileSync('cp', [
+        '-r',
+        join(COLLECTION_PATH, '..'),
+        join(packageDirectory, 'schematics'),
+      ]);
+
+      writeFileSync(join(packageDirectory, 'package.json'), manifest);
+
+      return new SchematicTestRunner(
+        'schematics',
+        join(packageDirectory, 'schematics/collection.json'),
+      ).runSchematic('ng-add', baseOptions, appTree);
+    }
+
+    afterEach(() => {
+      for (const directory of packageDirectories) {
+        rmSync(directory, { recursive: true });
+      }
+      packageDirectories = [];
+    });
+
+    it('saves it as a dependency in the declared peer range', async () => {
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(declaredRange).toBeTruthy();
+      expect(manifest).toHaveProperty(
+        ['dependencies', corePackage],
+        declaredRange,
+      );
+      expect(manifest).not.toHaveProperty(['devDependencies', corePackage]);
+    });
+
+    it('saves the range of a resolved manifest', async () => {
+      const tree = await runAddWithManifest(
+        JSON.stringify({
+          version: '2.0.0-next.5',
+          peerDependencies: { [corePackage]: '^2.0.0-next.5' },
+        }),
+      );
+      const manifest = tree.readJson('/package.json');
+
+      expect(manifest).toHaveProperty(
+        ['dependencies', corePackage],
+        '^2.0.0-next.5',
+      );
+      expect(manifest).toHaveProperty(
+        ['devDependencies', '@ngx-formbar/schematics'],
+        '^2.0.0-next.5',
+      );
+    });
+
+    it.each([
+      ['dependencies', 'devDependencies'],
+      ['devDependencies', 'dependencies'],
+    ])('keeps an existing entry in %s', async (section, otherSection) => {
+      appTree.overwrite(
+        '/package.json',
+        read(appTree, '/package.json').replace(
+          `"${section}": {`,
+          `"${section}": {\n    "${corePackage}": "1.2.3",`,
+        ),
+      );
+
+      const manifest = (await runAdd()).readJson('/package.json');
+
+      expect(manifest).toHaveProperty([section, corePackage], '1.2.3');
+      expect(manifest).not.toHaveProperty([otherSection, corePackage]);
+    });
+
+    it.each<[string, string]>([
+      ['no peer dependencies', JSON.stringify({ version: '2.0.0' })],
+      [
+        'no peer range for core',
+        JSON.stringify({ version: '2.0.0', peerDependencies: { rxjs: '^7' } }),
+      ],
+      [
+        'an empty peer range',
+        JSON.stringify({
+          version: '2.0.0',
+          peerDependencies: { [corePackage]: '' },
+        }),
+      ],
+    ])('fails naming core with %s', async (_, manifest) => {
+      await expect(runAddWithManifest(manifest)).rejects.toThrow(
+        `Could not read the version range of ${corePackage}`,
+      );
+    });
+
+    it('fails naming the schematics package without a version of its own', async () => {
+      await expect(
+        runAddWithManifest(
+          JSON.stringify({ peerDependencies: { [corePackage]: '^2.0.0' } }),
+        ),
+      ).rejects.toThrow(
+        'Could not read the version range of @ngx-formbar/schematics',
+      );
+    });
   });
 
   describe('project lookup', () => {
@@ -79,7 +382,12 @@ describe('ng-add schematic', () => {
 
   it('is idempotent: no duplicate import or provider call on re-run', async () => {
     const once = await runAdd();
-    const twice = await runner.runSchematic('ng-add', baseOptions, once);
+    const scaffolded = await new SchematicTestRunner(
+      'scaffold',
+      SCAFFOLD_COLLECTION_PATH,
+    ).runSchematic('control', { key: 'slider', project: 'test-app' }, once);
+    const scaffoldedUnion = read(scaffolded, contentTypePath);
+    const twice = await runner.runSchematic('ng-add', baseOptions, scaffolded);
 
     const sf = parseTS(read(twice, appConfigPath));
 
@@ -87,6 +395,8 @@ describe('ng-add schematic', () => {
       countNamedImport(sf, REACTIVE_FORMS_PACKAGE_NAME, 'provideFormbar'),
     ).toBe(1);
     expect(countCall(sf, 'provideFormbar')).toBe(1);
+    expect(scaffoldedUnion).toContain('SliderControlConfig');
+    expect(read(twice, contentTypePath)).toBe(scaffoldedUnion);
   });
 
   describe('Default', () => {
@@ -139,16 +449,417 @@ describe('ng-add schematic', () => {
       );
     });
 
-    it('uses schematic config without values', async () => {
+    it('uses schematics configuration file without values', async () => {
       const tree = await runAdd();
 
-      const schematicsConfig = JSON.parse(
-        read(tree, schematicsConfigPath),
-      ) as NgxFormbarAutomationConfig;
+      const schematicsConfig = tree.readJson(schematicsConfigPath);
 
-      expect(schematicsConfig.registrationType).toBeUndefined();
-      expect(schematicsConfig.controlRegistrationsPath).toBeUndefined();
-      expect(schematicsConfig.viewProviderHelperPath).toBe(DEFAULT_HELPER_PATH);
+      expect(schematicsConfig).not.toHaveProperty('registrationType');
+      expect(schematicsConfig).not.toHaveProperty('controlRegistrationsPath');
+      expect(schematicsConfig).toHaveProperty(
+        'viewProviderHelperPath',
+        DEFAULT_HELPER_PATH,
+      );
+    });
+  });
+
+  it('rejects a registration style other than token and config', async () => {
+    await expect(
+      runner.runSchematic(
+        'ng-add',
+        { ...baseOptions, registrationStyle: 'tokens' },
+        appTree,
+      ),
+    ).rejects.toThrow(/registrationStyle/);
+  });
+
+  describe('the edited root providers', () => {
+    it('imports all registrations in one statement', async () => {
+      const tree = await runAdd();
+
+      expect(read(tree, appConfigPath)).toContain(
+        "import { componentRegistrationsProvider, validatorRegistrationsProvider, asyncValidatorRegistrationsProvider } from './registrations';",
+      );
+    });
+
+    it('imports the registrations of config style in one statement', async () => {
+      const tree = await runAdd({
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(read(tree, appConfigPath)).toContain(
+        "import { componentRegistrations, validatorRegistrations, asyncValidatorRegistrations } from './registrations';",
+      );
+    });
+
+    it('indents what it adds like the array it adds to', async () => {
+      const tree = await runAdd();
+
+      expect(read(tree, appConfigPath)).toContain(
+        [
+          '    provideRouter(routes),',
+          '    provideFormbar(formbarConfig),',
+          '    componentRegistrationsProvider,',
+          '    validatorRegistrationsProvider,',
+          '    asyncValidatorRegistrationsProvider',
+          '  ]',
+        ].join('\n'),
+      );
+    });
+
+    it('indents nested objects', async () => {
+      const tree = await runAdd({
+        splitRegistrations: false,
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+      });
+
+      expect(read(tree, appConfigPath)).toContain(
+        [
+          '    {',
+          '      provide: NGX_FW_COMPONENT_REGISTRATIONS,',
+          '      useValue: new Map([])',
+          '    }',
+          '  ]',
+        ].join('\n'),
+      );
+    });
+
+    it.each([
+      ['an empty array', 'providers: []', ''],
+      [
+        'an array on one line',
+        'providers: [provideRouter(routes)]',
+        '[provideRouter(routes),',
+      ],
+      [
+        'a trailing comma on one line',
+        'providers: [provideRouter(routes),]',
+        '[provideRouter(routes),',
+      ],
+    ])('stays valid and multi-line with %s', async (_, providers, start) => {
+      appTree.overwrite(
+        appConfigPath,
+        `export const appConfig = {\n  ${providers},\n};\n`,
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(syntaxErrors(code)).toEqual([]);
+      expect(code).toContain(start);
+      expect(code).toContain('    provideFormbar(formbarConfig),\n');
+      expect(code).toContain('    asyncValidatorRegistrationsProvider\n  ]');
+    });
+
+    it('keeps comments and a trailing comma', async () => {
+      appTree.overwrite(
+        appConfigPath,
+        [
+          'export const appConfig = {',
+          '  providers: [',
+          '    // routing goes first',
+          '    provideRouter(routes), // trailing',
+          '    /* block */',
+          '    provideOther(),',
+          '  ],',
+          '};',
+          '',
+        ].join('\n'),
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(code).toContain(
+        [
+          '  providers: [',
+          '    // routing goes first',
+          '    provideRouter(routes), // trailing',
+          '    /* block */',
+          '    provideOther(),',
+          '    provideFormbar(formbarConfig),',
+          '    componentRegistrationsProvider,',
+          '    validatorRegistrationsProvider,',
+          '    asyncValidatorRegistrationsProvider,',
+          '  ],',
+        ].join('\n'),
+      );
+    });
+
+    it('keeps a comment on the last line with its element', async () => {
+      appTree.overwrite(
+        appConfigPath,
+        [
+          'export const appConfig = {',
+          '  providers: [',
+          '    provideRouter(routes) // last',
+          '  ],',
+          '};',
+          '',
+        ].join('\n'),
+      );
+
+      const code = read(await runAdd(), appConfigPath);
+
+      expect(code).toContain(
+        '    provideRouter(routes), // last\n    provideFormbar(formbarConfig),',
+      );
+      expect(syntaxErrors(code)).toEqual([]);
+    });
+  });
+
+  describe('registrations the generators could not read in place', () => {
+    const inlineOptions: Schema = {
+      registrationStyle: 'config',
+      provideInline: true,
+      splitRegistrations: false,
+    };
+    const mainFile = src('main.ts');
+    const message = `Keeping registrations in ${registrations}, where the generators can add to them. They cannot read them from ${mainFile}.`;
+
+    async function messagesOfRun() {
+      const messages: string[] = [];
+
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+      await runAdd(inlineOptions);
+
+      return messages;
+    }
+
+    it('logs where they stay with registrations in the bootstrap call', async () => {
+      appTree.overwrite(
+        mainFile,
+        `import { bootstrapApplication } from '@angular/platform-browser';\nimport { App } from './app/app';\nbootstrapApplication(App, { providers: [] });\n`,
+      );
+
+      expect(await messagesOfRun()).toContain(message);
+    });
+
+    it('stays silent with registrations in a config variable', async () => {
+      const messages = await messagesOfRun();
+
+      expect(
+        messages.filter((entry) => entry.startsWith('Keeping registrations')),
+      ).toEqual([]);
+    });
+  });
+
+  describe('the layout of the added providers', () => {
+    function configWith(providers: string, newLine = '\n') {
+      return `export const appConfig = {\n${providers}\n};\n`.replace(
+        /\n/g,
+        newLine,
+      );
+    }
+
+    async function editedConfig(providers: string, options: Schema = {}) {
+      appTree.overwrite(appConfigPath, configWith(providers));
+
+      return read(await runAdd(options), appConfigPath);
+    }
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('follows a file indented with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(
+        `${outer}providers: [\n${inner}provideRouter(routes),\n${outer}],`,
+      );
+
+      expect(edited).toContain(
+        `${inner}provideRouter(routes),\n${inner}provideFormbar(formbarConfig),\n${inner}componentRegistrationsProvider,`,
+      );
+      expect(edited).toContain(`\n${outer}],`);
+    });
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('indents an added object with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(
+        `${outer}providers: [\n${inner}provideRouter(routes),\n${outer}],`,
+        { splitRegistrations: false },
+      );
+
+      expect(edited).toContain(
+        `\n${inner}{\n${inner}${outer}provide: NGX_FW_COMPONENT_REGISTRATIONS,`,
+      );
+    });
+
+    it('puts each inline registration on its own line', async () => {
+      const edited = await editedConfig('  providers: [],', {
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(edited).toContain(
+        '    provideFormbar({\n      componentRegistrations,\n      validatorRegistrations,\n      asyncValidatorRegistrations\n    })\n',
+      );
+    });
+
+    it.each<[string, string, string]>([
+      ['four spaces', '    ', '        '],
+      ['tabs', '\t', '\t\t'],
+    ])('indents into an empty array with %s', async (_, outer, inner) => {
+      const edited = await editedConfig(`${outer}providers: [],`);
+
+      expect(edited).toContain(
+        `${outer}providers: [\n${inner}provideFormbar(formbarConfig),`,
+      );
+      expect(edited).toContain(`\n${outer}],`);
+    });
+
+    it.each<[string, string]>([
+      ['a comment after the last element', '    provideRouter(routes) // c'],
+      ['a trailing comma', '    provideRouter(routes),'],
+      ['a comment only', '    // todo'],
+    ])('keeps CRLF line endings with %s', async (_, element) => {
+      appTree.overwrite(
+        appConfigPath,
+        configWith(`  providers: [\n${element}\n  ],`, '\r\n'),
+      );
+
+      const tree = await runAdd({ splitRegistrations: false });
+      const edited = tree.readText(appConfigPath);
+
+      expect(edited).toContain('provideFormbar');
+      expect(edited).not.toMatch(/(?<!\r)\n/);
+    });
+
+    it.each<[string, string, string]>([
+      [
+        'LF around the array under a CRLF header',
+        '// header\r\nexport const appConfig = {\n  providers: [\n    provideRouter(routes),\n  ],\n};\n',
+        '    provideRouter(routes),\n    provideFormbar(formbarConfig),\n',
+      ],
+      [
+        'CRLF around the array under an LF header',
+        '// header\nexport const appConfig = {\r\n  providers: [\r\n    provideRouter(routes),\r\n  ],\r\n};\r\n',
+        '    provideRouter(routes),\r\n    provideFormbar(formbarConfig),\r\n',
+      ],
+      [
+        'an array on one line under a CRLF header',
+        '// header\r\nexport const appConfig = {\n  providers: [provideRouter(routes)],\n};\n',
+        '  providers: [provideRouter(routes),\n    provideFormbar(formbarConfig),',
+      ],
+    ])('adds to %s', async (_, config, expected) => {
+      appTree.overwrite(appConfigPath, config);
+
+      const edited = (await runAdd()).readText(appConfigPath);
+
+      expect(edited).toContain(expected);
+      expect(edited).toContain('// header');
+      expect(syntaxErrors(edited)).toEqual([]);
+    });
+
+    describe('with no providers array yet', () => {
+      const mainFile = src('main.ts');
+      const bootstrapImports =
+        "import { bootstrapApplication } from '@angular/platform-browser';\nimport { App } from './app/app';\n";
+
+      async function editedMain(main: string) {
+        appTree.overwrite(mainFile, main);
+
+        return (await runAdd()).readText(mainFile);
+      }
+
+      it.each<[string, string]>([
+        ['a call without a config', 'bootstrapApplication(App);\n'],
+        [
+          'a config object',
+          'bootstrapApplication(App, {\n  deferBlockBehavior: 1,\n});\n',
+        ],
+        [
+          'a config from a call',
+          'function make() {\n  return { providers: [] };\n}\nbootstrapApplication(App, make());\n',
+        ],
+      ])('keeps CRLF line endings with %s', async (_, call) => {
+        const edited = await editedMain(
+          `${bootstrapImports}${call}`.replace(/\n/g, '\r\n'),
+        );
+
+        expect(edited).toContain('provideFormbar');
+        expect(edited).not.toMatch(/(?<!\r)\n/);
+        expect(syntaxErrors(edited)).toEqual([]);
+      });
+
+      it('keeps CRLF line endings with a namespace import of core', async () => {
+        const edited = await editedMain(
+          `import * as ng from '@angular/core';\n${bootstrapImports}function make() {\n  return ng.isDevMode() ? {} : {};\n}\nbootstrapApplication(App, make());\n`.replace(
+            /\n/g,
+            '\r\n',
+          ),
+        );
+
+        expect(edited).toContain('mergeApplicationConfig(make()');
+        expect(edited).not.toMatch(/(?<!\r)\n/);
+      });
+
+      it.each<[string, string]>([
+        ['four spaces', '    '],
+        ['tabs', '\t'],
+      ])('follows a file indented with %s', async (_, unit) => {
+        const call = `bootstrapApplication(App);\nfunction unused() {\n${unit}return 1;\n}\n`;
+
+        expect(await editedMain(`${bootstrapImports}${call}`)).toContain(
+          `App, {\n${unit}providers: [\n${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+
+      it.each<[string, string]>([
+        ['four spaces', '    '],
+        ['tabs', '\t'],
+      ])('indents into a config object with %s', async (_, unit) => {
+        const edited = await editedMain(
+          `${bootstrapImports}bootstrapApplication(App, {\n${unit}deferBlockBehavior: 1,\n});\n`,
+        );
+
+        expect(edited).toContain(
+          `App, {\n${unit}providers: [\n${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+
+      it.each<[string, string, string]>([
+        ['four spaces and LF', '    ', '\n'],
+        ['tabs and LF', '\t', '\n'],
+        ['two spaces and CRLF', '  ', '\r\n'],
+      ])('indents an NgModule with %s', async (_, unit, newLine) => {
+        const modulePath = app('app.module.ts');
+
+        appTree.create(
+          modulePath,
+          `import { NgModule } from '@angular/core';\n@NgModule({\n${unit}declarations: [],\n})\nexport class AppModule {}\n`.replace(
+            /\n/g,
+            newLine,
+          ),
+        );
+        appTree.overwrite(
+          mainFile,
+          "import { platformBrowser } from '@angular/platform-browser';\nimport { AppModule } from './app/app.module';\nplatformBrowser().bootstrapModule(AppModule);\n",
+        );
+
+        expect((await runAdd()).readText(modulePath)).toContain(
+          `@NgModule({${newLine}${unit}providers: [${newLine}${unit}${unit}provideFormbar(formbarConfig),`,
+        );
+      });
+    });
+
+    it('adds no whitespace-only line to an array holding only a comment', async () => {
+      const edited = await editedConfig('  providers: [\n    // todo\n  ],');
+
+      expect(edited).toContain(
+        '    // todo\n    provideFormbar(formbarConfig),',
+      );
+      expect(edited).not.toMatch(/^[ \t]+$/m);
+      expect(syntaxErrors(edited)).toEqual([]);
+    });
+
+    it('adds no blank line to an array broken over two lines', async () => {
+      const edited = await editedConfig('  providers: [\n  ],');
+
+      expect(edited).toContain(
+        '  providers: [\n    provideFormbar(formbarConfig),',
+      );
     });
   });
 
@@ -246,6 +957,25 @@ describe('ng-add schematic', () => {
       expect(hasAsyncValidatorProviders).toBe(false);
     });
 
+    it('adds only the missing providers on a re-run', async () => {
+      appTree = await runAdd({
+        registrationStyle: 'token',
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+      });
+
+      const tree = await runAdd({ registrationStyle: 'token' });
+      const text = read(tree, appConfigPath);
+
+      expect(
+        [
+          'componentRegistrationsProvider',
+          'validatorRegistrationsProvider',
+          'asyncValidatorRegistrationsProvider',
+        ].map((name) => text.match(new RegExp(`\\b${name}\\b`, 'g'))?.length),
+      ).toEqual([2, 2, 2]);
+    });
+
     it('is not affecting token files by setting provideInline to true', async () => {
       const tree = await runAdd({
         registrationStyle: 'token',
@@ -277,6 +1007,54 @@ describe('ng-add schematic', () => {
       expect(hasComponentProviders).toBe(true);
       expect(hasValidatorProviders).toBe(true);
       expect(hasAsyncValidatorProviders).toBe(true);
+    });
+
+    it('leaves the registrations to the token providers with provideInline', async () => {
+      const tree = await runAdd({
+        registrationStyle: 'token',
+        provideInline: true,
+      });
+      const appConfig = parseTS(read(tree, appConfigPath));
+
+      expect(importedFrom(appConfig, './registrations')).toEqual([
+        'componentRegistrationsProvider',
+        'validatorRegistrationsProvider',
+        'asyncValidatorRegistrationsProvider',
+      ]);
+      expect(read(tree, appConfigPath)).toContain('provideFormbar()');
+    });
+
+    it('keeps one source of registrations with provideInline and without splitting', async () => {
+      const tree = await runAdd({
+        registrationStyle: 'token',
+        provideInline: true,
+        splitRegistrations: false,
+      });
+      const appConfig = read(tree, appConfigPath);
+
+      expect(appConfig).toContain('provideFormbar()');
+      expect(
+        providersArrayContainsProviderObject(
+          parseTS(appConfig),
+          'NGX_FW_COMPONENT_REGISTRATIONS',
+        ),
+      ).toBe(true);
+    });
+
+    it('registers a scaffold with provideInline', async () => {
+      const added = await runAdd({
+        installSchematics: false,
+        registrationStyle: 'token',
+        provideInline: true,
+      });
+      const scaffolded = await new SchematicTestRunner(
+        'scaffold',
+        SCAFFOLD_COLLECTION_PATH,
+      ).runSchematic('control', { key: 'slider', project: 'test-app' }, added);
+
+      expect(
+        read(scaffolded, `${registrations}/component-registrations.ts`),
+      ).toContain('SliderControl');
     });
 
     it('adds providers directly in app.config.ts if splitRegistrations is set to false', async () => {
@@ -468,6 +1246,24 @@ describe('ng-add schematic', () => {
       expect(providerConfigHasAsyncValidatorRegistrations).toBe(true);
     });
 
+    it.each<[string, Schema]>([
+      ['all validators', {}],
+      ['no sync validators', { includeSyncValidators: false }],
+      ['no async validators', { includeAsyncValidators: false }],
+      [
+        'no validators',
+        { includeSyncValidators: false, includeAsyncValidators: false },
+      ],
+    ])('writes a provider file that parses with %s', async (_, options) => {
+      const tree = await runAdd({
+        registrationStyle: 'config',
+        splitRegistrations: false,
+        ...options,
+      });
+
+      expect(syntaxErrors(read(tree, formbarConfigPath))).toEqual([]);
+    });
+
     it('uses the user provided registrationsPath', async () => {
       const registrationsPath = 'app/management/forms';
       const finalPath = src(registrationsPath);
@@ -612,6 +1408,24 @@ describe('ng-add schematic', () => {
       expect(exists(tree, `${helperDir}/view-provider.ts`)).toBe(false);
     });
 
+    it('names no helper in the schematics configuration file without helper files', async () => {
+      const tree = await runAdd({ useHelper: false });
+
+      expect(tree.readJson(schematicsConfigPath)).not.toHaveProperty(
+        'viewProviderHelperPath',
+      );
+    });
+
+    it('names no helper in angular.json without helper files', async () => {
+      const tree = await runAdd({
+        useHelper: false,
+        useSchematicConfig: false,
+      });
+      const [controlDefaults] = await generatorDefaults(tree);
+
+      expect(controlDefaults).not.toHaveProperty('viewProviderHelperPath');
+    });
+
     it('uses the user provided helperPath', async () => {
       const helperPath = 'app/management/forms/helper';
       const finalPath = src(helperPath);
@@ -622,6 +1436,24 @@ describe('ng-add schematic', () => {
 
       expect(exists(tree, `${finalPath}/view-provider.ts`)).toBe(true);
     });
+
+    it.each([
+      ['helperPath', '', `${helperDir}/view-provider.ts`],
+      ['registrationsPath', '', `${registrations}/component-registrations.ts`],
+      ['providerConfigPath', '', formbarConfigPath],
+      ['providerConfigFileName', '', formbarConfigPath],
+      ['providerConfigFileName', '.ts', formbarConfigPath],
+      ['schematicsConfigPath', '', schematicsConfigPath],
+      ['schematicConfigFileName', '', schematicsConfigPath],
+      ['schematicConfigFileName', '.json', schematicsConfigPath],
+    ])(
+      'falls back to the default for %s set to "%s"',
+      async (option, value, file) => {
+        const tree = await runAdd({ [option]: value });
+
+        expect(exists(tree, file)).toBe(true);
+      },
+    );
 
     it('uses the user provided providerConfigPath and providerConfigFileName', async () => {
       const providerConfigPath = 'app/management/forms';
@@ -638,9 +1470,253 @@ describe('ng-add schematic', () => {
     });
   });
 
+  describe('a folder whose kept index lacks what ng add seeds', () => {
+    const sharedFolder = app('shared');
+    const keptIndex = 'export const other = 1;\n';
+
+    it.each<[string, Schema]>([
+      ['token', {}],
+      ['config', { registrationStyle: 'config' }],
+      [
+        'token without validators',
+        {
+          includeSyncValidators: false,
+          includeAsyncValidators: false,
+        },
+      ],
+      [
+        'config in the root providers',
+        {
+          registrationStyle: 'config',
+          provideInline: true,
+        },
+      ],
+      ['token in the root providers', { provideInline: true }],
+    ])('compiles with the registrations of %s style', async (_, options) => {
+      appTree.create(`${sharedFolder}/index.ts`, keptIndex);
+
+      const tree = await scaffoldControl(
+        await runAdd({ registrationsPath: 'app/shared', ...options }),
+      );
+
+      expect(read(tree, `${sharedFolder}/index.ts`)).toBe(keptIndex);
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    describe('with export * in the kept index', () => {
+      const keptStar = "export * from './utils';\n";
+
+      beforeEach(() => {
+        appTree.create(`${sharedFolder}/index.ts`, keptStar);
+        appTree.create(`${sharedFolder}/utils.ts`, 'export const util = 1;\n');
+      });
+
+      it.each<[string, Schema]>([
+        ['token', {}],
+        ['config', { registrationStyle: 'config' }],
+        [
+          'config in the root providers',
+          { registrationStyle: 'config', provideInline: true },
+        ],
+      ])('compiles with the registrations of %s style', async (_, options) => {
+        const tree = await scaffoldControl(
+          await runAdd({ registrationsPath: 'app/shared', ...options }),
+        );
+
+        expect(read(tree, `${sharedFolder}/index.ts`)).toBe(keptStar);
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles with the helper in that folder', async () => {
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared/view-provider'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles when export * goes in a circle', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/utils.ts`,
+          "export * from './index';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(brokenImports(tree)).toEqual([]);
+      });
+
+      it('compiles when export * names a package or a missing file', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/index.ts`,
+          "export * from 'some-package';\nexport * from './missing';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared/view-provider'",
+        );
+      });
+
+      it('imports from the index when export * reaches the symbol', async () => {
+        appTree.overwrite(
+          `${sharedFolder}/utils.ts`,
+          "export * from './view-provider';\n",
+        );
+
+        const tree = await scaffoldControl(
+          await runAdd({ helperPath: 'app/shared' }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../shared'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      });
+    });
+
+    it('imports only what the index lacks from the seeded file', async () => {
+      appTree.create(
+        `${sharedFolder}/index.ts`,
+        "export { validatorRegistrations } from './validator-registrations';\n",
+      );
+
+      const tree = await runAdd({
+        registrationsPath: 'app/shared',
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+      const sf = parseTS(read(tree, appConfigPath));
+
+      expect(importedFrom(sf, './shared')).toEqual(['validatorRegistrations']);
+      expect(importedFrom(sf, './shared/component-registrations')).toEqual([
+        'componentRegistrations',
+      ]);
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    it('compiles with the helper in that folder', async () => {
+      appTree.create(`${sharedFolder}/index.ts`, keptIndex);
+
+      const tree = await scaffoldControl(
+        await runAdd({ helperPath: 'app/shared' }),
+      );
+
+      expect(read(tree, app('slider/slider-control.ts'))).toContain(
+        "from '../shared/view-provider'",
+      );
+      expect(brokenImports(tree)).toEqual([]);
+    });
+
+    it.each<[string, Schema]>([
+      ['token', {}],
+      ['config', { registrationStyle: 'config' }],
+    ])(
+      'compiles with registrations and helper in one new folder, in %s style',
+      async (_, options) => {
+        const tree = await scaffoldControl(
+          await runAdd({
+            registrationsPath: 'app/x',
+            helperPath: 'app/x',
+            ...options,
+          }),
+        );
+
+        expect(read(tree, app('slider/slider-control.ts'))).toContain(
+          "from '../x/view-provider'",
+        );
+        expect(brokenImports(tree)).toEqual([]);
+      },
+    );
+
+    it('compiles when a re-run adds validators the seeded index lacks', async () => {
+      appTree = await runAdd({
+        registrationStyle: 'config',
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+        provideInline: true,
+      });
+      appTree.overwrite(
+        appConfigPath,
+        read(appTree, appConfigPath)
+          .replace(/import \{ componentRegistrations \}.*\n/, '')
+          .replace(/provideFormbar\([\s\S]*?\)\s*\n/, ''),
+      );
+
+      const tree = await runAdd({
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(brokenImports(tree)).toEqual([]);
+    });
+  });
+
+  describe('registering a scaffold after ng-add', () => {
+    it.each<[string, Schema, string, string?]>([
+      [
+        'a custom registrationsPath',
+        { registrationsPath: 'app/management/forms' },
+        src('app/management/forms/component-registrations.ts'),
+      ],
+      [
+        'token registrations that are not split',
+        { splitRegistrations: false },
+        appConfigPath,
+      ],
+      [
+        'config registrations in a custom provider file',
+        {
+          registrationStyle: 'config',
+          splitRegistrations: false,
+          providerConfigPath: 'app/providers',
+        },
+        app('providers/formbar.config.ts'),
+      ],
+      [
+        'inline config registrations next to an existing formbar.config.ts',
+        {
+          registrationStyle: 'config',
+          splitRegistrations: false,
+          provideInline: true,
+        },
+        appConfigPath,
+        formbarConfigPath,
+      ],
+    ])(
+      'registers into the file ng-add set up for %s',
+      async (_, options, file, existingFile) => {
+        if (existingFile) {
+          appTree.create(existingFile, 'export const formbarConfig = {};\n');
+        }
+
+        const added = await runAdd({ installSchematics: false, ...options });
+
+        const scaffolded = await new SchematicTestRunner(
+          'scaffold',
+          SCAFFOLD_COLLECTION_PATH,
+        ).runSchematic(
+          'control',
+          { key: 'slider', project: 'test-app' },
+          added,
+        );
+
+        expect(read(scaffolded, file)).toContain('SliderControl');
+      },
+    );
+  });
+
   describe('Schematics Config', () => {
     describe('useSchematicConfig is set to false', () => {
-      it('does not create a schematics config file', async () => {
+      it('does not create a schematics configuration file', async () => {
         const tree = await runAdd({
           useSchematicConfig: false,
         });
@@ -648,38 +1724,89 @@ describe('ng-add schematic', () => {
         expect(exists(tree, schematicsConfigPath)).toBe(false);
       });
 
-      it('writes all user provided configurations in angular.json', async () => {
-        const helperPath = 'app/management/forms/helper';
+      it('does not seed a content union no config points at', async () => {
         const tree = await runAdd({
           useSchematicConfig: false,
-          helperPath,
         });
 
-        const angularJson = JSON.parse(read(tree, 'angular.json')) as {
-          projects: {
-            'test-app': {
-              schematics: {
-                '@ngx-formbar/core:control'?: BaseGenerateSchematicConfig & {
-                  viewProviderHelperPath?: string;
-                };
-                '@ngx-formbar/core:group'?: BaseGenerateSchematicConfig & {
-                  viewProviderHelperPath?: string;
-                };
-                '@ngx-formbar/core:block'?: BaseGenerateSchematicConfig & {
-                  viewProviderHelperPath?: string;
-                };
-              };
-            };
-          };
-        };
-        const schematicsConfig = angularJson.projects['test-app'].schematics;
-        const controlConfig = schematicsConfig['@ngx-formbar/core:control'];
-        const groupConfig = schematicsConfig['@ngx-formbar/core:group'];
-        const blockConfig = schematicsConfig['@ngx-formbar/core:block'];
+        expect(exists(tree, contentTypePath)).toBe(false);
+      });
 
-        expect(controlConfig?.viewProviderHelperPath).toBe(helperPath);
-        expect(groupConfig?.viewProviderHelperPath).toBe(helperPath);
-        expect(blockConfig?.viewProviderHelperPath).toBe(helperPath);
+      it('writes the schematics configuration as generator defaults in angular.json', async () => {
+        const helperPath = 'app/management/forms/helper';
+        const registrationsPath = 'app/management/forms/registrations';
+        const tree = await runAdd({
+          useSchematicConfig: false,
+          registrationStyle: 'config',
+          helperPath,
+          registrationsPath,
+        });
+
+        const workspace = await getWorkspace(tree);
+        const defined =
+          workspace.projects.get('test-app')?.extensions.schematics;
+        const schematics: JsonObject =
+          defined && isJsonObject(defined) ? defined : {};
+        const registrationsFile = `${registrationsPath}/component-registrations.ts`;
+
+        for (const generator of ['control', 'group', 'array']) {
+          expect(schematics[`@ngx-formbar/schematics:${generator}`]).toEqual({
+            registrationType: 'config',
+            controlRegistrationsPath: registrationsFile,
+            viewProviderHelperPath: helperPath,
+          });
+        }
+        expect(schematics['@ngx-formbar/schematics:block']).toEqual({
+          registrationType: 'config',
+          controlRegistrationsPath: registrationsFile,
+        });
+        expect(schematics['@ngx-formbar/schematics:register']).toEqual({
+          registrationType: 'config',
+          controlRegistrationsPath: registrationsFile,
+        });
+        expect(
+          Object.keys(schematics).filter((key) =>
+            key.startsWith('@ngx-formbar/core:'),
+          ),
+        ).toEqual([]);
+      });
+    });
+
+    describe('a re-run with useSchematicConfig set to false', () => {
+      it('drops the settings of the earlier run that no longer apply', async () => {
+        appTree = await runAdd({
+          useSchematicConfig: false,
+          registrationStyle: 'config',
+          registrationsPath: 'app/one',
+        });
+
+        const tree = await runAdd({
+          useSchematicConfig: false,
+          useHelper: false,
+        });
+        const defaults = await generatorDefaults(tree);
+
+        expect(defaults.slice(0, 5)).toEqual(
+          generators.slice(0, 5).map(() => ({})),
+        );
+      });
+
+      it('keeps the settings ng add does not own', async () => {
+        appTree = await runAdd({
+          useSchematicConfig: false,
+          registrationStyle: 'config',
+        });
+
+        seedForeignControlSetting();
+
+        const [controlDefaults] = await generatorDefaults(
+          await runAdd({ useSchematicConfig: false }),
+        );
+
+        expect(controlDefaults).toEqual({
+          interfaceSuffix: 'Type',
+          viewProviderHelperPath: DEFAULT_HELPER_PATH,
+        });
       });
     });
 
@@ -699,15 +1826,17 @@ describe('ng-add schematic', () => {
           providerConfigFileName,
         });
 
-        const schematicsConfig = JSON.parse(
-          read(tree, schematicsConfigPath),
-        ) as NgxFormbarAutomationConfig;
+        const schematicsConfig = tree.readJson(schematicsConfigPath);
 
-        expect(schematicsConfig.registrationType).toBe('config');
-        expect(schematicsConfig.controlRegistrationsPath).toBe(
-          registrationsPath,
+        expect(schematicsConfig).toHaveProperty('registrationType', 'config');
+        expect(schematicsConfig).toHaveProperty(
+          'controlRegistrationsPath',
+          `${registrationsPath}/component-registrations.ts`,
         );
-        expect(schematicsConfig.viewProviderHelperPath).toBe(helperPath);
+        expect(schematicsConfig).toHaveProperty(
+          'viewProviderHelperPath',
+          helperPath,
+        );
       });
 
       it('uses the user provided schematicsConfigPath && schematicConfigFileName', async () => {
@@ -729,6 +1858,2830 @@ describe('ng-add schematic', () => {
     });
   });
 
+  describe('path options', () => {
+    const sliderPath = app('slider/slider-control.ts');
+
+    function pathForms(directory: string): [string, string, string][] {
+      return [
+        ['a plain path', directory, src(directory)],
+        ['a "./" path', `./${directory}`, src(directory)],
+        ['a "/" path', `/${directory}`, `/${directory}`],
+        [
+          'a path with the source root',
+          src(directory).slice(1),
+          src(directory),
+        ],
+        ['a "../" path', `../${directory}`, appRoot(directory)],
+        [
+          'a path climbing out of the source root',
+          `${src().slice(1)}../${directory}`,
+          appRoot(directory),
+        ],
+        [
+          'a path climbing back into a source root spelled in full',
+          `x/../${src(directory).slice(1)}`,
+          src(src(directory).slice(1)),
+        ],
+      ];
+    }
+
+    async function addThenScaffold(options: Schema) {
+      const added = await runAdd({ installSchematics: false, ...options });
+      const [controlDefaults] = await generatorDefaults(added);
+
+      return new SchematicTestRunner(
+        'scaffold',
+        SCAFFOLD_COLLECTION_PATH,
+      ).runSchematic(
+        'control',
+        { ...controlDefaults, key: 'slider', project: 'test-app' },
+        added,
+      );
+    }
+
+    function expectHelperUsed(tree: UnitTestTree, directory: string) {
+      const slider = parseTS(read(tree, sliderPath));
+
+      expect(exists(tree, `${directory}/view-provider.ts`)).toBe(true);
+      expect(
+        hasNamedImport(
+          slider,
+          buildRelativePath(sliderPath, directory),
+          'viewProviders',
+        ),
+      ).toBe(true);
+      expect(hasNamedImport(slider, '@angular/forms', 'ControlContainer')).toBe(
+        false,
+      );
+    }
+
+    function expectRegistered(tree: UnitTestTree, directory: string) {
+      expect(read(tree, `${directory}/component-registrations.ts`)).toContain(
+        'SliderControl',
+      );
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, appConfigPath)),
+          buildRelativePath(appConfigPath, directory),
+          'componentRegistrationsProvider',
+        ),
+      ).toBe(true);
+    }
+
+    it.each(pathForms('forms/config'))(
+      'a scaffold finds a schematics configuration file placed with %s',
+      async (_, schematicsConfigPath, directory) => {
+        const helper = 'app/custom-helper';
+        const registrationsDirectory = 'app/custom-registrations';
+
+        const tree = await addThenScaffold({
+          schematicsConfigPath,
+          helperPath: helper,
+          registrationsPath: registrationsDirectory,
+        });
+
+        expect(exists(tree, `${directory}/formbar-schematic.config.json`)).toBe(
+          true,
+        );
+        expectHelperUsed(tree, src(helper));
+        expectRegistered(tree, src(registrationsDirectory));
+        expect(read(tree, contentTypePath)).toContain('SliderControlConfig');
+      },
+    );
+
+    describe.each<[string, Schema]>([
+      ['a schematics configuration file', {}],
+      ['generator defaults', { useSchematicConfig: false }],
+    ])('with the settings in %s', (_, settings) => {
+      it.each(pathForms('forms/helper'))(
+        'a scaffold uses a helper placed with %s',
+        async (__, helperPath, directory) => {
+          const tree = await addThenScaffold({ ...settings, helperPath });
+
+          expectHelperUsed(tree, directory);
+          expectRegistered(tree, registrations);
+        },
+      );
+
+      it.each(pathForms('forms/registrations'))(
+        'a scaffold registers into registrations placed with %s',
+        async (__, registrationsPath, directory) => {
+          const tree = await addThenScaffold({
+            ...settings,
+            registrationsPath,
+          });
+
+          expectHelperUsed(tree, helperDir);
+          expectRegistered(tree, directory);
+        },
+      );
+
+      it.each(pathForms('forms/provider'))(
+        'a scaffold registers into a provider file placed with %s',
+        async (__, providerConfigPath, directory) => {
+          const providerFile = `${directory}/formbar.config.ts`;
+          const tree = await addThenScaffold({
+            ...settings,
+            registrationStyle: 'config',
+            splitRegistrations: false,
+            providerConfigPath,
+          });
+
+          expect(read(tree, providerFile)).toContain('SliderControl');
+          expect(
+            hasNamedImport(
+              parseTS(read(tree, appConfigPath)),
+              buildRelativePath(appConfigPath, providerFile.slice(0, -3)),
+              'formbarConfig',
+            ),
+          ).toBe(true);
+        },
+      );
+    });
+
+    it.each(pathForms('forms/registrations'))(
+      'a provider file imports registrations placed with %s',
+      async (_, registrationsPath, directory) => {
+        const tree = await runAdd({
+          registrationStyle: 'config',
+          registrationsPath,
+        });
+
+        expect(
+          hasNamedImport(
+            parseTS(read(tree, formbarConfigPath)),
+            buildRelativePath(formbarConfigPath, directory),
+            'componentRegistrations',
+          ),
+        ).toBe(true);
+      },
+    );
+
+    it.each([
+      'registrationsPath',
+      'providerConfigPath',
+      'helperPath',
+      'schematicsConfigPath',
+    ])('names a %s above the workspace root', async (option) => {
+      await expect(runAdd({ [option]: '../../../../x' })).rejects.toThrow(
+        `"${option}" points outside the workspace root: ../../../../x`,
+      );
+    });
+
+    it.each(['providerConfigFileName', 'schematicConfigFileName'])(
+      'names a %s that climbs out of its directory',
+      async (option) => {
+        await expect(runAdd({ [option]: '../x' })).rejects.toThrow(
+          `"${option}" must be a file name inside its directory: ../x`,
+        );
+      },
+    );
+
+    it('a scaffold uses a helper placed directly in the source root', async () => {
+      const tree = await addThenScaffold({ helperPath: '.' });
+
+      expectHelperUsed(tree, src().slice(0, -1));
+    });
+
+    it('a scaffold uses a helper placed directly at the workspace root', async () => {
+      const tree = await addThenScaffold({ helperPath: '/' });
+
+      expectHelperUsed(tree, '/');
+    });
+  });
+
+  describe('in a source root named like the default directory', () => {
+    const project = 'app-rooted';
+    const appDir = (path: string) => `/app/app/${path}`;
+
+    beforeEach(() => {
+      appTree.overwrite(
+        '/angular.json',
+        read(appTree, 'angular.json').replace(
+          '"projects": {',
+          '"projects": { "app-rooted": { "projectType": "application", "root": "", "sourceRoot": "app" },',
+        ),
+      );
+      appTree.create(appDir('app.config.ts'), read(appTree, appConfigPath));
+    });
+
+    async function addThenScaffold(options: Schema = {}) {
+      const added = await runAdd({
+        installSchematics: false,
+        project,
+        ...options,
+      });
+      const [controlDefaults] = await generatorDefaults(added, project);
+
+      return new SchematicTestRunner(
+        'scaffold',
+        SCAFFOLD_COLLECTION_PATH,
+      ).runSchematic(
+        'control',
+        { ...controlDefaults, key: 'slider', project },
+        added,
+      );
+    }
+
+    it('places the defaults inside the source root and registers a scaffold', async () => {
+      const tree = await addThenScaffold();
+
+      expect(tree.getDir('/app/registrations').subfiles).toEqual([]);
+      expect(exists(tree, appDir('formbar-schematic.config.json'))).toBe(true);
+      expect(read(tree, appDir('slider/slider-control.ts'))).toContain(
+        'SliderControl',
+      );
+      expect(
+        read(tree, appDir('registrations/component-registrations.ts')),
+      ).toContain('SliderControl');
+      expect(read(tree, appDir('types/content.type.ts'))).toContain(
+        'SliderControlConfig',
+      );
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, appDir('app.config.ts'))),
+          './registrations',
+          'componentRegistrationsProvider',
+        ),
+      ).toBe(true);
+    });
+
+    it('writes schema.type "/"-rooted, as the plain path would read as inside the source root', async () => {
+      const tree = await runAdd({ installSchematics: false, project });
+
+      expect(read(tree, appDir('formbar-schematic.config.json'))).toContain(
+        '"type": "/app/app/types/content.type.ts#AppContent"',
+      );
+    });
+
+    describe.each<[string, Schema]>([
+      ['a schematics configuration file', {}],
+      ['generator defaults', { useSchematicConfig: false }],
+    ])('with the settings in %s', (_, settings) => {
+      it('uses the default helper', async () => {
+        const tree = await addThenScaffold({ ...settings, useHelper: true });
+
+        expect(exists(tree, appDir('shared/helper/view-provider.ts'))).toBe(
+          true,
+        );
+        expect(
+          hasNamedImport(
+            parseTS(read(tree, appDir('slider/slider-control.ts'))),
+            '../shared/helper',
+            'viewProviders',
+          ),
+        ).toBe(true);
+      });
+
+      it('registers into the default provider file', async () => {
+        const tree = await addThenScaffold({
+          ...settings,
+          registrationStyle: 'config',
+          splitRegistrations: false,
+        });
+
+        expect(read(tree, appDir('formbar.config.ts'))).toContain(
+          'SliderControl',
+        );
+      });
+
+      it('registers into the app config', async () => {
+        const tree = await addThenScaffold({
+          ...settings,
+          splitRegistrations: false,
+        });
+
+        expect(read(tree, appDir('app.config.ts'))).toContain('SliderControl');
+      });
+
+      it('reads a supplied path as already inside the source root', async () => {
+        const tree = await addThenScaffold({
+          ...settings,
+          registrationsPath: 'app/registrations',
+        });
+
+        expect(
+          read(tree, '/app/registrations/component-registrations.ts'),
+        ).toContain('SliderControl');
+      });
+    });
+
+    it('registers through a config with a custom name in the default directory', async () => {
+      const tree = await addThenScaffold({
+        schematicConfigFileName: 'custom.json',
+      });
+
+      expect(exists(tree, appDir('custom.json'))).toBe(true);
+      expect(
+        read(tree, appDir('registrations/component-registrations.ts')),
+      ).toContain('SliderControl');
+    });
+  });
+
+  it('follows an alias of a tsconfig above the workspace root to the root config', async () => {
+    const monorepo = mkdtempSync(join(tmpdir(), 'ngx-formbar-monorepo-'));
+    const cwd = vi
+      .spyOn(process, 'cwd')
+      .mockReturnValue(join(monorepo, 'apps/web'));
+    const mainFile = src('main.ts');
+
+    writeFileSync(
+      join(monorepo, 'tsconfig.base.json'),
+      JSON.stringify({
+        compilerOptions: {
+          paths: { '@web/*': ['./apps/web/projects/test-app/src/app/*'] },
+        },
+      }),
+    );
+    appTree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({ extends: '../../tsconfig.base.json' }),
+    );
+    appTree.overwrite(
+      mainFile,
+      read(appTree, mainFile).replace('./app/app.config', '@web/app.config'),
+    );
+    const main = read(appTree, mainFile);
+
+    const tree = await runAdd();
+
+    cwd.mockRestore();
+    rmSync(monorepo, { recursive: true, force: true });
+
+    expect(main).toContain('@web/app.config');
+    expect(read(tree, mainFile)).toBe(main);
+    expect(read(tree, app('app.config.ts'))).toContain('provideFormbar');
+  });
+
+  describe.each(['src/', './src'])(
+    'in a source root spelled %s',
+    (sourceRoot) => {
+      it('reads a path that already starts with the source root as lying in it', async () => {
+        appTree.overwrite(
+          '/angular.json',
+          read(appTree, 'angular.json').replace(
+            '"projects": {',
+            `"projects": { "spelled": { "projectType": "application", "root": "", "sourceRoot": "${sourceRoot}" },`,
+          ),
+        );
+        appTree.create('/src/app/app.config.ts', read(appTree, appConfigPath));
+
+        const tree = await runAdd({
+          installSchematics: false,
+          project: 'spelled',
+          registrationsPath: 'src/forms',
+        });
+
+        expect(exists(tree, '/src/forms/component-registrations.ts')).toBe(
+          true,
+        );
+        expect(tree.getDir('/src/src').subdirs).toEqual([]);
+      });
+    },
+  );
+
+  describe('finding the root providers from the main file', () => {
+    const standaloneMain = (configImport: string) =>
+      [
+        `import { bootstrapApplication } from '@angular/platform-browser';`,
+        `import { App } from './app/app';`,
+        `import { appConfig } from '${configImport}';`,
+        `bootstrapApplication(App, appConfig);`,
+        ``,
+      ].join('\n');
+    const mainWithCall = (call: string) =>
+      [
+        `import { bootstrapApplication } from '@angular/platform-browser';`,
+        `import { App } from './app/app';`,
+        call,
+        ``,
+      ].join('\n');
+    const moduleMain = [
+      `import { platformBrowser } from '@angular/platform-browser';`,
+      `import { AppModule } from './app/app.module';`,
+      `platformBrowser().bootstrapModule(AppModule);`,
+      ``,
+    ].join('\n');
+    const appModule = (metadata: string) =>
+      [
+        `import { NgModule } from '@angular/core';`,
+        `@NgModule(${metadata})`,
+        `export class AppModule {}`,
+        ``,
+      ].join('\n');
+    const config = `export const appConfig = { providers: [] };\n`;
+    const decoyConfig = `export const decoy = { providers: [] };\nexport const appConfig = { providers: [] };\n`;
+    const library: JsonObject = {
+      lib: {
+        projectType: 'library',
+        root: 'libs/lib',
+        sourceRoot: 'libs/lib/src',
+        architect: {},
+      },
+    };
+    const aliasTsConfig = JSON.stringify({
+      compilerOptions: {
+        paths: {
+          '@config': ['./src/bootstrap/config.ts'],
+          '@shared': ['./src/bootstrap/index.ts'],
+          '@shared/*': ['./src/bootstrap/*'],
+        },
+      },
+    });
+
+    function workspace(
+      sourceRoot: string,
+      files: Record<string, string>,
+      build: JsonObject | null = {
+        builder: '@angular/build:application',
+        options: {},
+      },
+      projects: JsonObject = {},
+    ) {
+      const tree = new UnitTestTree(Tree.empty());
+
+      tree.create(
+        '/angular.json',
+        JSON.stringify({
+          version: 1,
+          projects: {
+            a: {
+              projectType: 'application',
+              root: '',
+              sourceRoot,
+              architect: build ? { build } : {},
+            },
+            ...projects,
+          },
+        }),
+      );
+      tree.create('/package.json', JSON.stringify({ name: 'w' }));
+      Object.entries(files).forEach(([path, content]) => {
+        tree.create(path, content);
+      });
+
+      return tree;
+    }
+
+    async function add(tree: UnitTestTree, options: Schema = {}) {
+      return runner.runSchematic(
+        'ng-add',
+        { project: 'a', installSchematics: false, ...options },
+        tree,
+      );
+    }
+
+    async function addThenScaffold(tree: UnitTestTree, options: Schema = {}) {
+      const added = await add(tree, options);
+      const [controlDefaults] = await generatorDefaults(added, 'a');
+
+      return new SchematicTestRunner(
+        'scaffold',
+        SCAFFOLD_COLLECTION_PATH,
+      ).runSchematic(
+        'control',
+        { ...controlDefaults, key: 'slider', project: 'a' },
+        added,
+      );
+    }
+
+    async function warningsOf(tree: UnitTestTree) {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await add(tree);
+      subscription.unsubscribe();
+
+      return warnings;
+    }
+
+    interface Layout {
+      name: string;
+      sourceRoot: string;
+      files: Record<string, string>;
+      root: string;
+      readsInlineRegistrations: boolean;
+    }
+
+    const layouts: Layout[] = [
+      {
+        name: 'src/app/app.config.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': config,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'source root app with /app/app.config.ts',
+        sourceRoot: 'app',
+        files: {
+          '/app/main.ts': standaloneMain('./app.config'),
+          '/app/app.config.ts': config,
+        },
+        root: '/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'source root app with /app/app/app.config.ts',
+        sourceRoot: 'app',
+        files: {
+          '/app/main.ts': standaloneMain('./app/app.config'),
+          '/app/app/app.config.ts': config,
+        },
+        root: '/app/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'src/app.config.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app.config'),
+          '/src/app.config.ts': config,
+        },
+        root: '/src/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'src/app/core/app.config.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/core/app.config'),
+          '/src/app/core/app.config.ts': config,
+        },
+        root: '/src/app/core/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a renamed src/app/config.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/config'),
+          '/src/app/config.ts': config,
+        },
+        root: '/src/app/config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'src/bootstrap/config.ts beside a decoy src/app/app.config.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./bootstrap/config'),
+          '/src/bootstrap/config.ts': config,
+          '/src/app/app.config.ts': config,
+        },
+        root: '/src/bootstrap/config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config variable declared in main.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `const appConfig = { providers: [] };\nbootstrapApplication(App, appConfig);`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'an inline object',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `bootstrapApplication(App, { providers: [] });`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'no config',
+        sourceRoot: 'src',
+        files: { '/src/main.ts': mainWithCall(`bootstrapApplication(App);`) },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'an NgModule',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': moduleMain,
+          '/src/app/app.module.ts': appModule(`{ providers: [] }`),
+        },
+        root: '/src/app/app.module.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a barrel holding the config',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./config'),
+          '/src/config/index.ts': config,
+        },
+        root: '/src/config/index.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a barrel re-exporting the config by name',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./config'),
+          '/src/config/index.ts': `export { appConfig } from './app.config';\n`,
+          '/src/config/app.config.ts': config,
+        },
+        root: '/src/config/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a barrel re-exporting the config with export *',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./config'),
+          '/src/config/index.ts': `export * from './other';\nexport * from './app.config';\n`,
+          '/src/config/other.ts': `export const other = { providers: [] };\n`,
+          '/src/config/app.config.ts': config,
+        },
+        root: '/src/config/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config renamed on export and import',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `import { renamed as cfg } from './app/app.config';\nbootstrapApplication(App, cfg);`,
+          ),
+          '/src/app/app.config.ts': `const local = { providers: [] };\nexport { local as renamed };\n`,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config variable exported as default',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `import cfg from './app/app.config';\nbootstrapApplication(App, cfg);`,
+          ),
+          '/src/app/app.config.ts': `const local = { providers: [] };\nexport default local;\n`,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config typed with satisfies',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `export const appConfig = { providers: [] } satisfies object;\n`,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config imported through a path alias',
+        sourceRoot: 'src',
+        files: {
+          '/tsconfig.json': aliasTsConfig,
+          '/src/main.ts': standaloneMain('@config'),
+          '/src/bootstrap/config.ts': config,
+          '/src/app/app.config.ts': config,
+        },
+        root: '/src/bootstrap/config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config imported through a path alias in an extended tsconfig',
+        sourceRoot: 'src',
+        files: {
+          '/tsconfig.json': aliasTsConfig,
+          '/tsconfig.app.json': JSON.stringify({ extends: './tsconfig.json' }),
+          '/src/main.ts': standaloneMain('@shared/config'),
+          '/src/bootstrap/config.ts': config,
+        },
+        root: '/src/bootstrap/config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config imported through a path alias to a barrel',
+        sourceRoot: 'src',
+        files: {
+          '/tsconfig.json': aliasTsConfig,
+          '/src/main.ts': standaloneMain('@shared'),
+          '/src/bootstrap/index.ts': `export * from './config';\n`,
+          '/src/bootstrap/config.ts': config,
+        },
+        root: '/src/bootstrap/config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a config imported from a package',
+        sourceRoot: 'src',
+        files: { '/src/main.ts': standaloneMain('@acme/config') },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a call to a local function',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `function makeConfig() { return { providers: [] }; }\nbootstrapApplication(App, makeConfig());`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a call to an imported function',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `import { makeConfig } from './make-config';\nbootstrapApplication(App, makeConfig());`,
+          ),
+          '/src/make-config.ts': `export const makeConfig = () => ({ providers: [] });\n`,
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a config variable holding a call',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `const make = () => ({ providers: [] });\nexport const appConfig = make();\n`,
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a config variable without a providers array',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `const shared = [];\nexport const appConfig = { providers: shared };\n`,
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'an inline object without a providers array',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `const shared = [];\nbootstrapApplication(App, { providers: shared });`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'an inline object spreading another config',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `const base = { providers: [] };\nbootstrapApplication(App, { ...base });`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: false,
+      },
+      {
+        name: 'a decoy variable above the config',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': decoyConfig,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a decoy variable in the same statement as the config',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `export const decoy = { providers: [] }, appConfig = { providers: [] };\n`,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a decoy variable without a providers array',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `const shared = [];\nexport const decoy = { providers: shared };\nexport const appConfig = { providers: [] };\n`,
+        },
+        root: '/src/app/app.config.ts',
+        readsInlineRegistrations: true,
+      },
+      {
+        name: 'a decoy variable in main.ts',
+        sourceRoot: 'src',
+        files: {
+          '/src/main.ts': mainWithCall(
+            `const decoy = { providers: [] };\nconst appConfig = { providers: [] };\nbootstrapApplication(App, appConfig);`,
+          ),
+        },
+        root: '/src/main.ts',
+        readsInlineRegistrations: true,
+      },
+    ];
+
+    function countOf(text: string, part: string) {
+      return text.split(part).length - 1;
+    }
+
+    describe.each(layouts)('with $name', (layout) => {
+      const sourceDirectory = `/${layout.sourceRoot}/app`;
+      const splitFile = `${sourceDirectory}/registrations/component-registrations.ts`;
+      const providerFile = `${sourceDirectory}/formbar.config.ts`;
+
+      const styles: [string, Schema, string][] = [
+        ['split token registrations', {}, splitFile],
+        [
+          'split token registrations without a schematics configuration file',
+          { useSchematicConfig: false },
+          splitFile,
+        ],
+        [
+          'inline token registrations',
+          { splitRegistrations: false },
+          layout.root,
+        ],
+        [
+          'inline token registrations without a schematics configuration file',
+          { splitRegistrations: false, useSchematicConfig: false },
+          layout.root,
+        ],
+        [
+          'split config registrations',
+          { registrationStyle: 'config' },
+          splitFile,
+        ],
+        [
+          'config registrations in the provider file',
+          { registrationStyle: 'config', splitRegistrations: false },
+          providerFile,
+        ],
+        [
+          'config registrations inside provideFormbar',
+          {
+            registrationStyle: 'config',
+            splitRegistrations: false,
+            provideInline: true,
+          },
+          layout.readsInlineRegistrations ? layout.root : splitFile,
+        ],
+      ];
+
+      it.each(styles)(
+        '%s land where a scaffold registers, also after a re-run',
+        async (_, options, registrationsFile) => {
+          const scaffolded = await addThenScaffold(
+            workspace(layout.sourceRoot, layout.files),
+            options,
+          );
+
+          expect(
+            countCall(parseTS(read(scaffolded, layout.root)), 'provideFormbar'),
+          ).toBe(1);
+          expect(read(scaffolded, registrationsFile)).toContain(
+            'SliderControl',
+          );
+          expect(
+            exists(scaffolded, `${sourceDirectory}/slider/slider-control.ts`),
+          ).toBe(true);
+
+          Object.entries(layout.files)
+            .filter(
+              ([path]) => path !== layout.root && !path.endsWith('main.ts'),
+            )
+            .forEach(([path, content]) => {
+              expect(read(scaffolded, path)).toBe(content);
+            });
+
+          const rerun = await add(scaffolded, options);
+
+          expect(read(rerun, layout.root)).toBe(read(scaffolded, layout.root));
+          expect(read(rerun, registrationsFile)).toBe(
+            read(scaffolded, registrationsFile),
+          );
+        },
+      );
+
+      it('keeps one provider for each inline token', async () => {
+        const once = await add(workspace(layout.sourceRoot, layout.files), {
+          splitRegistrations: false,
+        });
+        const twice = await add(once, { splitRegistrations: false });
+        const root = read(twice, layout.root);
+
+        expect(countOf(root, 'provide: NGX_FW_COMPONENT_REGISTRATIONS')).toBe(
+          1,
+        );
+        expect(countOf(root, 'provide: NGX_FW_VALIDATOR_REGISTRATIONS')).toBe(
+          1,
+        );
+        expect(
+          countOf(root, 'provide: NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS'),
+        ).toBe(1);
+      });
+    });
+
+    describe.each<[string, JsonObject | null, string]>([
+      [
+        '@nx/angular:application',
+        {
+          builder: '@nx/angular:application',
+          options: { browser: 'src/boot.ts' },
+        },
+        '/src/boot.ts',
+      ],
+      [
+        'a custom esbuild builder',
+        {
+          builder: '@angular-builders/custom-esbuild:application',
+          options: { browser: 'src/boot.ts' },
+        },
+        '/src/boot.ts',
+      ],
+      [
+        'a "main" option',
+        {
+          builder: '@nx/angular:webpack-browser',
+          options: { main: 'src/boot.ts' },
+        },
+        '/src/boot.ts',
+      ],
+      [
+        'neither option',
+        { builder: '@angular/build:application', options: {} },
+        '/src/main.ts',
+      ],
+      ['no build target', null, '/src/main.ts'],
+    ])('with %s', (_, build, main) => {
+      it('follows the main file to its config', async () => {
+        const tree = await add(
+          workspace(
+            'src',
+            {
+              [main]: standaloneMain('./moved/config'),
+              '/src/moved/config.ts': config,
+            },
+            build,
+          ),
+        );
+
+        expect(
+          countCall(
+            parseTS(read(tree, '/src/moved/config.ts')),
+            'provideFormbar',
+          ),
+        ).toBe(1);
+      });
+
+      it('adds to an inline object in the main file', async () => {
+        const tree = await add(
+          workspace(
+            'src',
+            {
+              [main]: mainWithCall(
+                `bootstrapApplication(App, { providers: [] });`,
+              ),
+            },
+            build,
+          ),
+        );
+
+        expect(countCall(parseTS(read(tree, main)), 'provideFormbar')).toBe(1);
+      });
+
+      it('adds to the root NgModule', async () => {
+        const tree = await add(
+          workspace(
+            'src',
+            {
+              [main]: moduleMain,
+              '/src/app/app.module.ts': appModule(`{ providers: [] }`),
+            },
+            build,
+          ),
+        );
+
+        expect(
+          countCall(
+            parseTS(read(tree, '/src/app/app.module.ts')),
+            'provideFormbar',
+          ),
+        ).toBe(1);
+      });
+    });
+
+    it('adds a providers array to an NgModule without one', async () => {
+      const tree = await addThenScaffold(
+        workspace('src', {
+          '/src/main.ts': moduleMain,
+          '/src/app/app.module.ts': appModule(`{ declarations: [] }`),
+        }),
+        { splitRegistrations: false },
+      );
+      const moduleFile = read(tree, '/src/app/app.module.ts');
+
+      expect(
+        getDecoratorArrayProp(parseTS(moduleFile), 'NgModule', 'providers'),
+      ).toBeDefined();
+      expect(countCall(parseTS(moduleFile), 'provideFormbar')).toBe(1);
+      expect(moduleFile).toContain('declarations: []');
+      expect(moduleFile).toContain('SliderControl');
+    });
+
+    it('adds to the config object of mergeApplicationConfig', async () => {
+      const main = mainWithCall(
+        `import { mergeApplicationConfig } from '@angular/core';\nimport { base } from './base';\nbootstrapApplication(App, mergeApplicationConfig(base, { providers: [] }));`,
+      );
+      const tree = await addThenScaffold(
+        workspace('src', { '/src/main.ts': main, '/src/base.ts': config }),
+        { splitRegistrations: false },
+      );
+      const rerun = await add(tree, { splitRegistrations: false });
+
+      expect(read(rerun, '/src/main.ts')).toContain('SliderControl');
+      expect(
+        countCall(parseTS(read(rerun, '/src/main.ts')), 'provideFormbar'),
+      ).toBe(1);
+      expect(read(rerun, '/src/base.ts')).toBe(config);
+    });
+
+    it('adds a config object to mergeApplicationConfig without one', async () => {
+      const main = mainWithCall(
+        `import { mergeApplicationConfig } from '@angular/core';\nimport { base } from './base';\nbootstrapApplication(App, mergeApplicationConfig(base));`,
+      );
+      const tree = await add(
+        workspace('src', { '/src/main.ts': main, '/src/base.ts': config }),
+      );
+      const rerun = await add(tree);
+
+      expect(read(rerun, '/src/main.ts')).toBe(read(tree, '/src/main.ts'));
+      expect(
+        countCall(parseTS(read(rerun, '/src/main.ts')), 'provideFormbar'),
+      ).toBe(1);
+    });
+
+    it('follows an aliased bootstrapApplication import', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': `import { bootstrapApplication as boot } from '@angular/platform-browser';\nimport { App } from './app/app';\nboot(App);\n`,
+        }),
+      );
+
+      expect(
+        countCall(parseTS(read(tree, '/src/main.ts')), 'provideFormbar'),
+      ).toBe(1);
+    });
+
+    it.each<[string, Record<string, string>, string]>([
+      [
+        'a local function',
+        {
+          '/src/main.ts': mainWithCall(
+            `const makeConfig = () => ({ providers: [] });\nbootstrapApplication(App, makeConfig());`,
+          ),
+        },
+        'makeConfig()',
+      ],
+      [
+        'an imported function',
+        {
+          '/src/main.ts': mainWithCall(
+            `import { makeConfig } from './make-config';\nbootstrapApplication(App, makeConfig());`,
+          ),
+          '/src/make-config.ts': `export const makeConfig = () => ({ providers: [] });\n`,
+        },
+        'makeConfig()',
+      ],
+      [
+        'a variable holding a call',
+        {
+          '/src/main.ts': standaloneMain('./app/app.config'),
+          '/src/app/app.config.ts': `export const appConfig = make();\n`,
+        },
+        'appConfig',
+      ],
+    ])(
+      'wraps a config from %s once with mergeApplicationConfig',
+      async (_, files, config) => {
+        const once = await add(workspace('src', files));
+        const twice = await add(once);
+        const main = read(twice, '/src/main.ts');
+
+        expect(main).toBe(read(once, '/src/main.ts'));
+        expect(main).toContain(
+          `bootstrapApplication(App, mergeApplicationConfig(${config}, {`,
+        );
+        expect(countOf(main, 'mergeApplicationConfig(')).toBe(1);
+        expect(
+          countNamedImport(
+            parseTS(main),
+            '@angular/core',
+            'mergeApplicationConfig',
+          ),
+        ).toBe(1);
+        expect(countCall(parseTS(main), 'provideFormbar')).toBe(1);
+      },
+    );
+
+    it('imports mergeApplicationConfig separately from a type-only @angular/core import', async () => {
+      const typeImport = `import type { ApplicationConfig } from '@angular/core';`;
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': mainWithCall(
+            `${typeImport}\nconst config: ApplicationConfig = make();\nbootstrapApplication(App, makeConfig());`,
+          ),
+        }),
+      );
+
+      expect(read(tree, '/src/main.ts')).toContain(
+        `${typeImport}\nimport { mergeApplicationConfig } from '@angular/core';`,
+      );
+    });
+
+    it('adds the import to an existing @angular/core import when wrapping', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': mainWithCall(
+            `import { enableProdMode } from '@angular/core';\nenableProdMode();\nbootstrapApplication(App, makeConfig());`,
+          ),
+        }),
+      );
+
+      expect(countOf(read(tree, '/src/main.ts'), `from '@angular/core'`)).toBe(
+        1,
+      );
+      expect(
+        hasNamedImport(
+          parseTS(read(tree, '/src/main.ts')),
+          '@angular/core',
+          'mergeApplicationConfig',
+        ),
+      ).toBe(true);
+    });
+
+    it.each([
+      [
+        'above the config',
+        '/src/app/app.config.ts',
+        decoyConfig,
+        'export const decoy = { providers: [] };',
+      ],
+      [
+        'in the same statement as the config',
+        '/src/app/app.config.ts',
+        `export const decoy = { providers: [] }, appConfig = { providers: [] };\n`,
+        'decoy = { providers: [] }',
+      ],
+      [
+        'in main.ts',
+        '/src/main.ts',
+        mainWithCall(
+          `const decoy = { providers: [] };\nconst appConfig = { providers: [] };\nbootstrapApplication(App, appConfig);`,
+        ),
+        'const decoy = { providers: [] };',
+      ],
+    ])('leaves a decoy variable %s alone', async (_, file, content, decoy) => {
+      const files = {
+        '/src/main.ts': standaloneMain('./app/app.config'),
+        [file]: content,
+      };
+      const tree = await addThenScaffold(workspace('src', files), {
+        registrationStyle: 'config',
+        splitRegistrations: false,
+        provideInline: true,
+      });
+
+      expect(read(tree, file)).toContain(decoy);
+      expect(read(tree, file)).toContain('SliderControl');
+    });
+
+    it('edits the variable the bootstrap call references over one named appConfig', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': mainWithCall(
+            `import { real } from './app/app.config';\nbootstrapApplication(App, real);`,
+          ),
+          '/src/app/app.config.ts': `export const appConfig = { providers: [] };\nexport const real = { providers: [] };\n`,
+        }),
+      );
+
+      expect(read(tree, '/src/app/app.config.ts')).toContain(
+        'export const appConfig = { providers: [] };',
+      );
+      expect(
+        countCall(
+          parseTS(read(tree, '/src/app/app.config.ts')),
+          'provideFormbar',
+        ),
+      ).toBe(1);
+    });
+
+    describe('resolving the config variable through the compiler', () => {
+      it('takes the re-exported config over an unexported local of a barrel', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': standaloneMain('./cfg'),
+            '/src/cfg/index.ts': `const appConfig = { providers: [] };\nexport const unrelated = appConfig;\nexport * from './real';\n`,
+            '/src/cfg/real.ts': config,
+          }),
+        );
+
+        expect(read(tree, '/src/cfg/real.ts')).toContain('provideFormbar(');
+        expect(read(tree, '/src/cfg/index.ts')).not.toContain(
+          'provideFormbar(',
+        );
+      });
+
+      it('wraps a parameter shadowing a config variable', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': mainWithCall(
+              `const cfg = { providers: [] };\nfunction run(cfg) {\n  return bootstrapApplication(App, cfg);\n}\nrun(make());`,
+            ),
+          }),
+        );
+
+        expect(read(tree, '/src/main.ts')).toContain(
+          'const cfg = { providers: [] };',
+        );
+        expect(read(tree, '/src/main.ts')).toContain(
+          'bootstrapApplication(App, mergeApplicationConfig(cfg, {',
+        );
+      });
+
+      it('wraps a config variable declared inside a function', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': mainWithCall(
+              `async function run() {\n  const cfg = { providers: [] };\n  await bootstrapApplication(App, cfg);\n}\nrun();`,
+            ),
+          }),
+        );
+
+        expect(read(tree, '/src/main.ts')).toContain(
+          'bootstrapApplication(App, mergeApplicationConfig(cfg, {',
+        );
+      });
+
+      it('follows a default export through a re-export', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': mainWithCall(
+              `import cfg from './cfg';\nbootstrapApplication(App, cfg);`,
+            ),
+            '/src/cfg/index.ts': `export { default } from './real';\n`,
+            '/src/cfg/real.ts': `const local = { providers: [] };\nexport default local;\n`,
+          }),
+        );
+
+        expect(read(tree, '/src/cfg/real.ts')).toContain('provideFormbar(');
+      });
+    });
+
+    describe('finding the root NgModule', () => {
+      const mainFor = (specifier: string) =>
+        [
+          `import { platformBrowser } from '@angular/platform-browser';`,
+          `import { AppModule } from '${specifier}';`,
+          `platformBrowser().bootstrapModule(AppModule);`,
+          ``,
+        ].join('\n');
+
+      it.each<[string, Record<string, string>, string]>([
+        [
+          'a barrel',
+          {
+            '/src/main.ts': mainFor('./app'),
+            '/src/app/index.ts': `export * from './app.module';\n`,
+            '/src/app/app.module.ts': appModule(`{ providers: [] }`),
+          },
+          '/src/app/app.module.ts',
+        ],
+        [
+          'a path alias',
+          {
+            '/tsconfig.json': JSON.stringify({
+              compilerOptions: {
+                paths: { '@app/module': ['./src/app/app.module.ts'] },
+              },
+            }),
+            '/src/main.ts': mainFor('@app/module'),
+            '/src/app/app.module.ts': appModule(`{ providers: [] }`),
+          },
+          '/src/app/app.module.ts',
+        ],
+        [
+          'a declaration in main.ts',
+          {
+            '/src/main.ts': `import { NgModule } from '@angular/core';\nimport { platformBrowser } from '@angular/platform-browser';\n@NgModule({ providers: [] })\nclass AppModule {}\nplatformBrowser().bootstrapModule(AppModule);\n`,
+          },
+          '/src/main.ts',
+        ],
+      ])('follows %s to the module', async (_, files, moduleFile) => {
+        const tree = await add(workspace('src', files));
+
+        expect(read(tree, moduleFile)).toContain('provideFormbar(');
+      });
+
+      it('fails on an anonymous default-exported NgModule', async () => {
+        await expect(
+          add(
+            workspace('src', {
+              '/src/main.ts': `import { platformBrowser } from '@angular/platform-browser';\nimport AppModule from './app/app.module';\nplatformBrowser().bootstrapModule(AppModule);\n`,
+              '/src/app/app.module.ts': `import { NgModule } from '@angular/core';\n@NgModule({ providers: [] })\nexport default class {}\n`,
+            }),
+          ),
+        ).rejects.toThrow(
+          'Could not edit the root NgModule in /src/app/app.module.ts. It has to be a named class.',
+        );
+      });
+
+      it('edits the bootstrapped one of two NgModules in a file', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': mainFor('./app/app.module'),
+            '/src/app/app.module.ts': `import { NgModule } from '@angular/core';\n@NgModule({ providers: [] })\nexport class HelperModule {}\n@NgModule({ providers: [] })\nexport class AppModule {}\n`,
+          }),
+        );
+        const moduleFile = read(tree, '/src/app/app.module.ts');
+
+        expect(moduleFile.indexOf('provideFormbar(')).toBeGreaterThan(
+          moduleFile.indexOf('class HelperModule'),
+        );
+      });
+
+      it('fails naming a root NgModule outside the project', async () => {
+        await expect(
+          add(
+            workspace(
+              'src',
+              {
+                '/tsconfig.json': JSON.stringify({
+                  compilerOptions: {
+                    paths: { '@lib': ['./libs/lib/src/index.ts'] },
+                  },
+                }),
+                '/src/main.ts': mainFor('@lib'),
+                '/libs/lib/src/index.ts': appModule(`{ providers: [] }`),
+              },
+              undefined,
+              library,
+            ),
+          ),
+        ).rejects.toThrow(
+          'Could not edit the root NgModule "AppModule" bootstrapped in /src/main.ts',
+        );
+      });
+
+      it.each([
+        [
+          'an identifier',
+          `const SHARED = [];\n`,
+          `{ providers: SHARED }`,
+          '[SHARED, ',
+        ],
+        [
+          'a shorthand',
+          `const providers = [];\n`,
+          `{ providers }`,
+          'providers: [providers, ',
+        ],
+      ])(
+        'keeps providers given as %s in an array',
+        async (_, declaration, metadata, expected) => {
+          const files = {
+            '/src/main.ts': mainFor('./app/app.module'),
+            '/src/app/app.module.ts': `${declaration}${appModule(metadata)}`,
+          };
+          const once = await add(workspace('src', files));
+          const twice = await add(once);
+          const moduleFile = read(twice, '/src/app/app.module.ts');
+
+          expect(moduleFile.replace(/\s+/g, ' ')).toContain(expected);
+          expect(moduleFile).toBe(read(once, '/src/app/app.module.ts'));
+          expect(syntaxErrors(moduleFile)).toEqual([]);
+        },
+      );
+
+      it('fails on metadata spreading another object', async () => {
+        await expect(
+          add(
+            workspace('src', {
+              '/src/main.ts': mainFor('./app/app.module'),
+              '/src/app/app.module.ts': `const base = {};\n${appModule(`{ ...base }`)}`,
+            }),
+          ),
+        ).rejects.toThrow('metadata spreads another object');
+      });
+    });
+
+    describe('following imports to the bootstrap call', () => {
+      const bootstrapFile = [
+        `import { bootstrapApplication } from '@angular/platform-browser';`,
+        `import { App } from './app/app';`,
+        `import { real } from './real';`,
+        `bootstrapApplication(App, real);`,
+        ``,
+      ].join('\n');
+      const decoy = `export const decoy = { providers: [] };\n`;
+
+      it.each([
+        ['a dynamic import', `import('./bootstrap').catch(console.error);\n`],
+        ['a static import', `import './bootstrap';\n`],
+        ['a re-export', `export * from './bootstrap';\n`],
+      ])('follows %s from the main file', async (_, main) => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': main,
+            '/src/bootstrap.ts': bootstrapFile,
+            '/src/real.ts': `export const real = { providers: [] };\n`,
+            '/src/app/app.config.ts': decoy,
+          }),
+        );
+
+        expect(read(tree, '/src/real.ts')).toContain('provideFormbar(');
+        expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
+      });
+
+      it('follows a path alias from the main file', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/tsconfig.json': aliasTsConfig,
+            '/src/main.ts': `import '@shared/start';\n`,
+            '/src/bootstrap/start.ts': bootstrapFile,
+            '/src/bootstrap/real.ts': `export const real = { providers: [] };\n`,
+            '/src/app/app.config.ts': decoy,
+          }),
+        );
+
+        expect(read(tree, '/src/bootstrap/real.ts')).toContain(
+          'provideFormbar(',
+        );
+        expect(read(tree, '/src/app/app.config.ts')).toBe(decoy);
+      });
+
+      it('does not follow an import into a package', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': `import 'bootstrapping-package';\n`,
+            '/node_modules/bootstrapping-package/index.ts': bootstrapFile,
+            '/node_modules/bootstrapping-package/real.ts': `export const real = { providers: [] };\n`,
+            '/src/app/app.config.ts': config,
+          }),
+        );
+
+        expect(read(tree, '/src/app/app.config.ts')).toContain(
+          'provideFormbar(',
+        );
+      });
+
+      describe('mergeApplicationConfig under another name', () => {
+        const aliasedMerge = `import { bootstrapApplication } from '@angular/platform-browser';\nimport { mergeApplicationConfig as m } from '@angular/core';\n`;
+
+        it('adds to an object it already merges', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}bootstrapApplication(App, m({ providers: [] }, make()));\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toMatch(/m\(\{ providers: \[\s*provideFormbar\(/);
+        });
+
+        it('adds an object to a merge that has none', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}bootstrapApplication(App, m(make()));\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toContain('m(make(), {');
+          expect(main).toContain('provideFormbar(');
+        });
+
+        it('wraps a config with the name it goes by', async () => {
+          const tree = await add(
+            workspace('src', {
+              '/src/main.ts': `${aliasedMerge}m({ providers: [] }, {});\nbootstrapApplication(App, make());\n`,
+            }),
+          );
+          const main = read(tree, '/src/main.ts');
+
+          expect(main).not.toContain('mergeApplicationConfig(');
+          expect(main).toContain('bootstrapApplication(App, m(make(), {');
+          expect(countNamedImport(parseTS(main), '@angular/core', 'm')).toBe(1);
+        });
+      });
+
+      it('treats a config from a package as out of reach', async () => {
+        const packageFile = '/node_modules/config-package/index.ts';
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': `import { bootstrapApplication } from '@angular/platform-browser';\nimport { appConfig } from 'config-package';\nbootstrapApplication(App, appConfig);\n`,
+            [packageFile]: `export const appConfig = { providers: [] };\n`,
+          }),
+        );
+
+        expect(read(tree, packageFile)).not.toContain('provideFormbar(');
+        expect(read(tree, '/src/main.ts')).toContain(
+          'mergeApplicationConfig(appConfig, {',
+        );
+      });
+
+      it('wraps the config in the followed file, not the main file', async () => {
+        const main = `import('./bootstrap');\n`;
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': main,
+            '/src/bootstrap.ts': `import { bootstrapApplication } from '@angular/platform-browser';\nbootstrapApplication(App, make());\n`,
+          }),
+        );
+
+        expect(read(tree, '/src/main.ts')).toBe(main);
+        expect(read(tree, '/src/bootstrap.ts')).toContain(
+          'mergeApplicationConfig(make(), {',
+        );
+      });
+
+      it('finds a namespace call', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': `import * as pb from '@angular/platform-browser';\nimport { appConfig } from './cfg';\npb.bootstrapApplication(App, appConfig);\n`,
+            '/src/cfg.ts': config,
+            '/src/app/app.config.ts': decoy,
+          }),
+        );
+
+        expect(read(tree, '/src/cfg.ts')).toContain('provideFormbar(');
+      });
+
+      it('does not take a local function of that name for the bootstrap call', async () => {
+        const main = `function bootstrapApplication() {}\nbootstrapApplication();\n`;
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': main,
+            '/src/app/app.config.ts': config,
+          }),
+        );
+
+        expect(read(tree, '/src/main.ts')).toBe(main);
+        expect(read(tree, '/src/app/app.config.ts')).toContain(
+          'provideFormbar(',
+        );
+      });
+
+      it('warns naming the file it falls back to', async () => {
+        const warnings = await warningsOf(
+          workspace('src', {
+            '/src/main.ts': `export {};\n`,
+            '/src/app/app.config.ts': config,
+          }),
+        );
+
+        expect(warnings).toContain(
+          'Found no bootstrap call from /src/main.ts. Using /src/app/app.config.ts for the root providers.',
+        );
+      });
+
+      it('warns about a main file with several bootstrap calls', async () => {
+        const warnings = await warningsOf(
+          workspace('src', {
+            '/src/main.ts': mainWithCall(
+              `if (a) {\n  bootstrapApplication(App);\n} else {\n  bootstrapApplication(Other);\n}`,
+            ),
+          }),
+        );
+
+        expect(warnings).toContain(
+          '/src/main.ts has several bootstrap calls. Using the one in line 4.',
+        );
+      });
+    });
+
+    describe('a config it cannot add to', () => {
+      it.each([
+        [
+          'an inline object',
+          {
+            '/src/main.ts': mainWithCall(
+              `const base = {};\nbootstrapApplication(App, { providers: [], ...base });`,
+            ),
+          },
+          'mergeApplicationConfig({ providers: [], ...base }, {',
+        ],
+        [
+          'a variable',
+          {
+            '/src/main.ts': standaloneMain('./cfg'),
+            '/src/cfg.ts': `const base = {};\nexport const appConfig = { providers: [], ...base };\n`,
+          },
+          'mergeApplicationConfig(appConfig, {',
+        ],
+      ])(
+        'wraps %s spreading after its providers',
+        async (_, files, wrapped) => {
+          const once = await add(workspace('src', files));
+          const twice = await add(once);
+          const main = read(twice, '/src/main.ts');
+
+          expect(main).toContain(wrapped);
+          expect(main).toBe(read(once, '/src/main.ts'));
+          expect(countCall(parseTS(main), 'provideFormbar')).toBe(1);
+        },
+      );
+
+      it('adds to an object spreading before its providers', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': standaloneMain('./cfg'),
+            '/src/cfg.ts': `const base = {};\nexport const appConfig = { ...base, providers: [] };\n`,
+          }),
+        );
+
+        expect(read(tree, '/src/cfg.ts')).toContain('provideFormbar(');
+        expect(read(tree, '/src/main.ts')).not.toContain(
+          'mergeApplicationConfig',
+        );
+      });
+
+      it.each([
+        ['a call without a config', `bootstrapApplication(\n  App,\n);`],
+        [
+          'a merge call',
+          `import { mergeApplicationConfig } from '@angular/core';\nbootstrapApplication(App, mergeApplicationConfig(\n  base,\n));`,
+        ],
+        ['a wrapped config', `bootstrapApplication(\n  App,\n  make(),\n);`],
+      ])('stays parseable with a trailing comma in %s', async (_, call) => {
+        const tree = await add(
+          workspace('src', { '/src/main.ts': mainWithCall(call) }),
+        );
+        const main = read(tree, '/src/main.ts');
+
+        expect(syntaxErrors(main)).toEqual([]);
+        expect(countCall(parseTS(main), 'provideFormbar')).toBe(1);
+      });
+
+      it('adds a named import beside a namespace import of @angular/core', async () => {
+        const tree = await add(
+          workspace('src', {
+            '/src/main.ts': mainWithCall(
+              `import * as ng from '@angular/core';\nng.enableProdMode();\nbootstrapApplication(App, make());`,
+            ),
+          }),
+        );
+
+        expect(read(tree, '/src/main.ts')).toContain(
+          `import { mergeApplicationConfig } from '@angular/core';`,
+        );
+      });
+
+      it('wraps a config variable of another project in the main file', async () => {
+        const libraryFile = `export const appConfig = { providers: [] };\n`;
+        const tree = await add(
+          workspace(
+            'src',
+            {
+              '/tsconfig.json': JSON.stringify({
+                compilerOptions: {
+                  paths: { '@lib': ['./libs/lib/src/index.ts'] },
+                },
+              }),
+              '/src/main.ts': standaloneMain('@lib'),
+              '/libs/lib/src/index.ts': libraryFile,
+            },
+            undefined,
+            library,
+          ),
+        );
+
+        expect(read(tree, '/libs/lib/src/index.ts')).toBe(libraryFile);
+        expect(read(tree, '/src/main.ts')).toContain(
+          'mergeApplicationConfig(appConfig, {',
+        );
+      });
+    });
+
+    it('survives a barrel cycle by wrapping the config', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': standaloneMain('./a'),
+          '/src/a.ts': `export * from './b';\n`,
+          '/src/b.ts': `export * from './a';\n`,
+        }),
+      );
+
+      expect(read(tree, '/src/main.ts')).toContain(
+        'mergeApplicationConfig(appConfig, {',
+      );
+    });
+
+    it('uses the default location when the main file has no bootstrap call', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': `export {};\n`,
+          '/src/app/app.config.ts': config,
+        }),
+      );
+
+      expect(
+        countCall(
+          parseTS(read(tree, '/src/app/app.config.ts')),
+          'provideFormbar',
+        ),
+      ).toBe(1);
+    });
+
+    it('uses the default location when the main file does not exist', async () => {
+      const tree = await add(
+        workspace('src', { '/src/app/app.config.ts': config }),
+      );
+
+      expect(
+        countCall(
+          parseTS(read(tree, '/src/app/app.config.ts')),
+          'provideFormbar',
+        ),
+      ).toBe(1);
+    });
+
+    it('names the checked files when neither holds the root providers', async () => {
+      await expect(add(workspace('src', {}))).rejects.toThrow(
+        /\/src\/main\.ts.*\/src\/app\/app\.config\.ts/,
+      );
+    });
+
+    it('logs the file it updates', async () => {
+      const messages: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        messages.push(entry.message);
+      });
+
+      await add(
+        workspace('src', {
+          '/src/main.ts': standaloneMain('./moved/config'),
+          '/src/moved/config.ts': config,
+        }),
+      );
+      subscription.unsubscribe();
+
+      expect(messages).toContain('Updating /src/moved/config.ts');
+      expect(
+        messages.filter((message) => message.includes('app.config')),
+      ).toEqual([]);
+    });
+
+    it('writes the located file as the registrations path', async () => {
+      const tree = await add(
+        workspace('src', {
+          '/src/main.ts': standaloneMain('./bootstrap/config'),
+          '/src/bootstrap/config.ts': config,
+        }),
+        { splitRegistrations: false, useSchematicConfig: false },
+      );
+      const [controlDefaults] = await generatorDefaults(tree, 'a');
+
+      expect(controlDefaults?.controlRegistrationsPath).toBe(
+        'bootstrap/config.ts',
+      );
+    });
+  });
+
+  describe('pointing the generators at the schematics configuration file', () => {
+    it.each<[string, Schema]>([
+      ['a custom file name', { schematicConfigFileName: 'custom.json' }],
+      [
+        'a location outside the source root',
+        { schematicsConfigPath: '../config' },
+      ],
+    ])('registers a scaffold through a config at %s', async (_, options) => {
+      const added = await runAdd({
+        installSchematics: false,
+        registrationStyle: 'config',
+        ...options,
+      });
+      const [controlDefaults] = await generatorDefaults(added);
+
+      const scaffolded = await new SchematicTestRunner(
+        'scaffold',
+        SCAFFOLD_COLLECTION_PATH,
+      ).runSchematic(
+        'control',
+        { ...controlDefaults, key: 'slider', project: 'test-app' },
+        added,
+      );
+
+      expect(
+        read(scaffolded, `${registrations}/component-registrations.ts`),
+      ).toContain('SliderControl');
+    });
+
+    it.each<[string, Schema, string]>([
+      [
+        'a custom file name',
+        { schematicConfigFileName: 'custom.json' },
+        'app/custom.json',
+      ],
+      [
+        'a location outside the source root',
+        { schematicsConfigPath: '../config' },
+        appRoot('config/formbar-schematic.config.json'),
+      ],
+      [
+        'another folder in the source root',
+        { schematicsConfigPath: 'forms' },
+        'forms/formbar-schematic.config.json',
+      ],
+      [
+        'a folder below the app folder',
+        { schematicsConfigPath: 'app/forms' },
+        'app/forms/formbar-schematic.config.json',
+      ],
+    ])(
+      'sets schematicsConfig on every generator for %s',
+      async (_, options, path) => {
+        const tree = await runAdd(options);
+
+        expect(await generatorDefaults(tree)).toEqual(
+          generators.map(() => ({ schematicsConfig: path })),
+        );
+      },
+    );
+
+    it('sets schematicsConfig for a workspace root config the project would shadow', async () => {
+      appTree.create(schematicsConfigPath, '{}');
+
+      const tree = await runAdd({ schematicsConfigPath: '/' });
+
+      expect(await generatorDefaults(tree)).toEqual(
+        generators.map(() => ({
+          schematicsConfig: '/formbar-schematic.config.json',
+        })),
+      );
+    });
+
+    it.each<[string, Schema, () => void, string]>([
+      [
+        'a file the lookup does not look for',
+        { schematicConfigFileName: 'custom.json' },
+        () => undefined,
+        'Pointing the generators at app/custom.json, where they would not find it',
+      ],
+      [
+        'a shared file behind an own one',
+        { schematicsConfigPath: '/' },
+        () => {
+          appTree.create(schematicsConfigPath, '{}');
+        },
+        `Pointing the generators at /formbar-schematic.config.json, as they would find ${schematicsConfigPath} first`,
+      ],
+    ])(
+      'says why it points them at %s',
+      async (_, options, arrange, message) => {
+        arrange();
+
+        const messages: string[] = [];
+
+        runner.logger.subscribe((entry) => messages.push(entry.message));
+        await runAdd(options);
+
+        expect(messages).toContain(message);
+      },
+    );
+
+    it.each<[string, Schema]>([
+      ['the default location', {}],
+      ['the workspace root', { schematicsConfigPath: '/' }],
+    ])('leaves the generators to find the config at %s', async (_, options) => {
+      const tree = await runAdd(options);
+
+      expect(await generatorDefaults(tree)).toEqual(
+        generators.map(() => undefined),
+      );
+    });
+  });
+
+  describe('a re-run with settings a kept schematics configuration file lacks', () => {
+    const pointingAtUnion = {
+      schema: { type: 'app/types/content.type.ts#AppContent' },
+    };
+
+    async function warningsOfRun(options: Schema, project = 'test-app') {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+      const tree = await runAdd({ project, ...options });
+
+      subscription.unsubscribe();
+
+      return { tree, warnings };
+    }
+
+    it.each<[string, Schema, Schema, string[]]>([
+      [
+        'a helper the file lacks',
+        { useHelper: false },
+        {},
+        ['viewProviderHelperPath: app/shared/helper'],
+      ],
+      [
+        'no helper where the file has one',
+        {},
+        { useHelper: false },
+        ['viewProviderHelperPath: none'],
+      ],
+      [
+        'another style',
+        {},
+        { registrationStyle: 'config' },
+        ['registrationType: config'],
+      ],
+      [
+        'the default style',
+        { registrationStyle: 'config' },
+        {},
+        ['registrationType: token'],
+      ],
+      [
+        'several settings',
+        {},
+        { registrationStyle: 'config', registrationsPath: 'app/other' },
+        [
+          'registrationType: config',
+          'controlRegistrationsPath: app/other/component-registrations.ts',
+        ],
+      ],
+    ])(
+      'keeps the file and warns about %s',
+      async (_, firstRun, secondRun, settings) => {
+        appTree = await runAdd(firstRun);
+
+        const kept = read(appTree, schematicsConfigPath);
+        const { tree, warnings } = await warningsOfRun(secondRun);
+
+        expect(read(tree, schematicsConfigPath)).toBe(kept);
+        expect(warnings).toEqual([
+          `${schematicsConfigPath} stays as it is, so these settings of this run are ignored: ${settings.join(', ')}. Change them in that file.`,
+        ]);
+      },
+    );
+
+    it('does not warn about the same settings', async () => {
+      const options: Schema = { registrationStyle: 'config', useHelper: false };
+
+      appTree = await runAdd(options);
+
+      const { warnings } = await warningsOfRun(options);
+
+      expect(warnings).toEqual([]);
+    });
+
+    it('does not warn about a default the file states', async () => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          ...pointingAtUnion,
+          registrationType: 'token',
+          viewProviderHelperPath: 'app/shared/helper',
+        }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([]);
+    });
+
+    it.each<[string, string, string]>([
+      [
+        'the registrations spelled out',
+        'controlRegistrationsPath',
+        'app/registrations/component-registrations.ts',
+      ],
+      [
+        'the registrations with a leading ./',
+        'controlRegistrationsPath',
+        './app/registrations/component-registrations.ts',
+      ],
+      [
+        'the registrations from the workspace root',
+        'controlRegistrationsPath',
+        'projects/test-app/src/app/registrations/component-registrations.ts',
+      ],
+      [
+        'the helper from the workspace root',
+        'viewProviderHelperPath',
+        'projects/test-app/src/app/shared/helper',
+      ],
+      [
+        'the helper with a leading ./',
+        'viewProviderHelperPath',
+        './app/shared/helper',
+      ],
+      [
+        'the helper from a leading /',
+        'viewProviderHelperPath',
+        '/projects/test-app/src/app/shared/helper',
+      ],
+      [
+        'a helper file in the helper folder',
+        'viewProviderHelperPath',
+        'app/shared/helper/form-helpers.ts',
+      ],
+      [
+        'a helper file and export in the helper folder',
+        'viewProviderHelperPath',
+        'app/shared/helper/form-helpers.ts#formViewProviders',
+      ],
+    ])('does not warn about %s', async (_, setting, value) => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          ...pointingAtUnion,
+          viewProviderHelperPath: 'app/shared/helper',
+          [setting]: value,
+        }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([]);
+    });
+
+    it.each<[string, string]>([
+      ['a helper file in another folder', 'app/shared/other/helper.ts'],
+      ['a helper folder below the helper folder', 'app/shared/helper/sub'],
+    ])('warns about %s', async (_, value) => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({ ...pointingAtUnion, viewProviderHelperPath: value }),
+      );
+
+      const { warnings } = await warningsOfRun({});
+
+      expect(warnings).toEqual([
+        `${schematicsConfigPath} stays as it is, so these settings of this run are ignored: viewProviderHelperPath: app/shared/helper. Change them in that file.`,
+      ]);
+    });
+
+    describe('when this run creates the shared file', () => {
+      const ownFile = schematicsConfigPath;
+
+      beforeEach(async () => {
+        appTree = await runner.runExternalSchematic(
+          '@schematics/angular',
+          'application',
+          { name: 'other', standalone: true },
+          appTree,
+        );
+      });
+
+      it('states a default the new file would change in another project', async () => {
+        appTree = await runAdd({});
+
+        const { tree } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            updateOtherProjects: true,
+          },
+          'other',
+        );
+
+        expect(tree.readJson(ownFile)).toHaveProperty(
+          'registrationType',
+          'token',
+        );
+      });
+
+      describe('in a terminal', () => {
+        const { argv } = process;
+        const { isTTY: stdoutTty } = process.stdout;
+        const { isTTY: stdinTty } = process.stdin;
+
+        beforeEach(() => {
+          process.stdout.isTTY = true;
+          process.stdin.isTTY = true;
+          vi.stubEnv('CI', '');
+        });
+
+        afterEach(() => {
+          process.argv = argv;
+          process.stdout.isTTY = stdoutTty;
+          process.stdin.isTTY = stdinTty;
+          vi.unstubAllEnvs();
+        });
+
+        it.each([
+          '--no-interactive',
+          '--interactive=false',
+          '--interactive false',
+          '--defaults',
+          '--defaults=true',
+          '--defaults true',
+        ])('does not ask with %s', async (flags) => {
+          appTree = await runAdd({});
+          process.argv = [...argv, ...flags.split(' ')];
+
+          const { warnings } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(warnings).toHaveLength(1);
+        });
+
+        /** A terminal that takes this answer, and what was written to it. */
+        function answering(answer: string) {
+          const input = Object.assign(new PassThrough(), { isTTY: true });
+          const output = Object.assign(new PassThrough(), { isTTY: true });
+          let written = '';
+
+          output.on('data', (chunk: Buffer) => {
+            written += chunk.toString();
+          });
+          vi.spyOn(process, 'stdin', 'get').mockReturnValue(
+            input as unknown as typeof process.stdin,
+          );
+          vi.spyOn(process, 'stdout', 'get').mockReturnValue(
+            output as unknown as typeof process.stdout,
+          );
+          input.write(`${answer}\n`);
+
+          return () => written;
+        }
+
+        async function answered(answer: string, flags: string[] = []) {
+          appTree = await runAdd({});
+          process.argv = [...argv, ...flags];
+
+          const prompted = answering(answer);
+          const { tree } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          vi.restoreAllMocks();
+
+          return { prompted: prompted(), file: tree.readJson(ownFile) };
+        }
+
+        it.each(['y', 'yes', ' Y ', 'YES'])(
+          'updates the other project on %j',
+          async (answer) => {
+            const { file } = await answered(answer);
+
+            expect(file).toHaveProperty('registrationType', 'token');
+          },
+        );
+
+        it.each(['n', '', 'ye', 'xy', 'yesx', 'yy'])(
+          'leaves the other project alone on %j',
+          async (answer) => {
+            const { file } = await answered(answer);
+
+            expect(file).not.toHaveProperty('registrationType');
+          },
+        );
+
+        it('asks about what would change', async () => {
+          const { prompted } = await answered('n');
+
+          expect(prompted).toContain(
+            `/formbar-schematic.config.json would change other projects. Write what they use now into their files?\n  ${ownFile}: "registrationType": "token"\n(y/N) `,
+          );
+        });
+
+        it.each([
+          '--interactive',
+          '--interactive=true',
+          '--interactive true',
+          '--no-defaults',
+          '--defaults=false',
+          '--defaults false',
+          '--interactive-other',
+        ])('asks with %s', async (flags) => {
+          const { file } = await answered('y', flags.split(' '));
+
+          expect(file).toHaveProperty('registrationType', 'token');
+        });
+
+        it.each<[string, () => void]>([
+          [
+            'output',
+            () => {
+              process.stdout.isTTY = false;
+            },
+          ],
+          [
+            'input',
+            () => {
+              process.stdin.isTTY = false;
+            },
+          ],
+          [
+            'a terminal in CI',
+            () => {
+              vi.stubEnv('CI', 'true');
+            },
+          ],
+        ])('does not ask without %s', async (_, leaveTerminal) => {
+          appTree = await runAdd({});
+          leaveTerminal();
+
+          const { warnings } = await warningsOfRun(
+            { schematicsConfigPath: '/', registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(warnings).toHaveLength(1);
+        });
+      });
+
+      it('leaves another project alone and warns without a terminal', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+        expect(warnings).toEqual([
+          `/formbar-schematic.config.json changes other projects. To keep what they use now, write this into their files:\n  ${ownFile}: "registrationType": "token"`,
+        ]);
+      });
+
+      it('leaves another project alone when told to', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            updateOtherProjects: false,
+          },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+      });
+
+      it('leaves another project alone without a schematics configuration', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree, warnings } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            useSchematicConfig: false,
+            updateOtherProjects: true,
+          },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+        expect(warnings).toEqual([]);
+      });
+
+      it('removes a helper the new file would add to another project', async () => {
+        appTree = await runAdd({ useHelper: false });
+
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', updateOtherProjects: true },
+          'other',
+        );
+
+        expect(tree.readJson(ownFile)).toHaveProperty(
+          'viewProviderHelperPath',
+          null,
+        );
+      });
+
+      it('changes nothing when the new file agrees', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+      });
+    });
+
+    describe('in the shared file at the workspace root', () => {
+      const sharedFile = '/formbar-schematic.config.json';
+      const otherOwnFile =
+        '/projects/other/src/app/formbar-schematic.config.json';
+
+      beforeEach(async () => {
+        appTree = await runner.runExternalSchematic(
+          '@schematics/angular',
+          'application',
+          { name: 'other', standalone: true },
+          await runAdd({ schematicsConfigPath: '/' }),
+        );
+      });
+
+      it('writes only what differs to the own file of the project', async () => {
+        const kept = read(appTree, sharedFile);
+        const { tree, warnings } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            helperPath: 'app/h2',
+          },
+          'other',
+        );
+
+        expect(read(tree, sharedFile)).toBe(kept);
+        expect(tree.readJson(otherOwnFile)).toEqual({
+          registrationType: 'config',
+          viewProviderHelperPath: 'app/h2',
+        });
+        expect(warnings).toEqual([]);
+      });
+
+      it('states a setting back to its default when the shared file differs', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({
+            registrationType: 'config',
+            viewProviderHelperPath: 'app/shared/helper',
+          }),
+        );
+
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', useHelper: false },
+          'other',
+        );
+
+        expect(tree.readJson(otherOwnFile)).toEqual({
+          registrationType: 'token',
+          viewProviderHelperPath: null,
+          schema: {
+            type: 'app/types/content.type.ts#AppContent',
+            emitters: [
+              { use: 'json-schema-2020-12', output: 'form.schema.json' },
+            ],
+          },
+        });
+      });
+
+      it('inherits the emitters of the shared file', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({
+            schema: { emitters: [{ use: 'json-schema-draft-07' }] },
+          }),
+        );
+
+        const { tree } = await warningsOfRun({}, 'other');
+
+        expect(tree.readJson(otherOwnFile)).toHaveProperty('schema', {
+          type: 'app/types/content.type.ts#AppContent',
+        });
+      });
+
+      it('does not ignore a setting the kept own file inherits', async () => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({
+            registrationType: 'config',
+            schema: { type: 'app/types/content.type.ts#AppContent' },
+          }),
+        );
+        appTree.create(otherOwnFile, JSON.stringify({ control: {} }));
+
+        const { warnings } = await warningsOfRun(
+          { registrationStyle: 'config', useHelper: false },
+          'other',
+        );
+
+        expect(warnings).toEqual([]);
+      });
+
+      it.each<[string, Record<string, string>]>([
+        [
+          'a path spelled differently',
+          { viewProviderHelperPath: './app/shared/helper' },
+        ],
+        [
+          'a helper file in the helper folder',
+          {
+            viewProviderHelperPath:
+              'app/shared/helper/form-helpers.ts#formViewProviders',
+          },
+        ],
+      ])('shares the file with %s', async (_, settings) => {
+        appTree.overwrite(
+          sharedFile,
+          JSON.stringify({ ...pointingAtUnion, ...settings }),
+        );
+
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(tree.exists(otherOwnFile)).toBe(false);
+        expect(warnings).toEqual([]);
+      });
+
+      it('points the generators at the own file by the lookup alone', async () => {
+        const { tree } = await warningsOfRun(
+          { schematicsConfigPath: '/', registrationStyle: 'config' },
+          'other',
+        );
+        const defaults = await generatorDefaults(tree, 'other');
+        const scaffolded = await new SchematicTestRunner(
+          'scaffold',
+          SCAFFOLD_COLLECTION_PATH,
+        ).runSchematic('control', { key: 'slider', project: 'other' }, tree);
+
+        expect(
+          defaults.map((generator) => generator?.schematicsConfig),
+        ).toEqual(generators.map(() => undefined));
+        expect(
+          read(
+            scaffolded,
+            '/projects/other/src/app/registrations/component-registrations.ts',
+          ),
+        ).toMatch(/slider["']?:\s*loadComponent\(/);
+      });
+
+      it('shares the file while the settings are the same', async () => {
+        const { tree, warnings } = await warningsOfRun(
+          { schematicsConfigPath: '/' },
+          'other',
+        );
+
+        expect(tree.exists(otherOwnFile)).toBe(false);
+        expect(warnings).toEqual([]);
+      });
+
+      describe('with no location given', () => {
+        const otherDirectory = '/projects/other/src/app';
+
+        it('uses it while the settings are the same', async () => {
+          const kept = read(appTree, sharedFile);
+          const { tree, warnings } = await warningsOfRun({}, 'other');
+          const defaults = await generatorDefaults(tree, 'other');
+          const messages: string[] = [];
+          const scaffoldRunner = new SchematicTestRunner(
+            'scaffold',
+            SCAFFOLD_COLLECTION_PATH,
+          );
+
+          scaffoldRunner.logger.subscribe(({ message }) =>
+            messages.push(message),
+          );
+          await scaffoldRunner.runSchematic(
+            'control',
+            { key: 'slider', project: 'other' },
+            tree,
+          );
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+          expect(read(tree, sharedFile)).toBe(kept);
+          expect(warnings).toEqual([]);
+          expect(defaults).toEqual(generators.map(() => undefined));
+          expect(messages).toContain(
+            `Using schematics configuration file ${sharedFile}`,
+          );
+        });
+
+        it('uses one written by hand with the same settings', async () => {
+          const handWritten = JSON.stringify({
+            ...pointingAtUnion,
+            viewProviderHelperPath: './app/shared/helper',
+            control: { interfaceSuffix: 'Type' },
+          });
+
+          appTree.overwrite(sharedFile, handWritten);
+
+          const { tree, warnings } = await warningsOfRun({}, 'other');
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+          expect(read(tree, sharedFile)).toBe(handWritten);
+          expect(warnings).toEqual([]);
+        });
+
+        it('writes the own file when the settings differ', async () => {
+          appTree.overwrite(
+            sharedFile,
+            JSON.stringify({
+              viewProviderHelperPath: 'app/shared/helper',
+              control: { interfaceSuffix: 'Type' },
+            }),
+          );
+
+          const { tree, warnings } = await warningsOfRun(
+            { registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(tree.readJson(otherOwnFile)).toHaveProperty(
+            'registrationType',
+            'config',
+          );
+          expect(tree.readJson(otherOwnFile)).not.toHaveProperty('control');
+          expect(warnings).toEqual([]);
+        });
+
+        it('stays with the own file on a further run', async () => {
+          appTree = (
+            await warningsOfRun({ registrationStyle: 'config' }, 'other')
+          ).tree;
+
+          const own = read(appTree, otherOwnFile);
+          const { tree, warnings } = await warningsOfRun(
+            { registrationStyle: 'config' },
+            'other',
+          );
+
+          expect(read(tree, otherOwnFile)).toBe(own);
+          expect(warnings).toEqual([]);
+        });
+
+        it('writes the own file when the app folder is named', async () => {
+          const { tree, warnings } = await warningsOfRun(
+            { schematicsConfigPath: 'app' },
+            'other',
+          );
+
+          expect(
+            tree.exists(`${otherDirectory}/formbar-schematic.config.json`),
+          ).toBe(true);
+          expect(warnings).toEqual([]);
+        });
+
+        it('does not count the default file name as a location', async () => {
+          const { tree } = await warningsOfRun(
+            { schematicConfigFileName: 'formbar-schematic.config.json' },
+            'other',
+          );
+
+          expect(tree.exists(otherOwnFile)).toBe(false);
+        });
+      });
+
+      it('stays with its own file over a shared one with the same settings', async () => {
+        const settings = JSON.stringify({
+          viewProviderHelperPath: 'app/shared/helper',
+        });
+
+        appTree.create(otherOwnFile, settings);
+        appTree.overwrite(sharedFile, settings);
+
+        const { tree } = await warningsOfRun({}, 'other');
+
+        expect(await generatorDefaults(tree, 'other')).toEqual(
+          generators.map(() => undefined),
+        );
+        expect(read(tree, otherOwnFile)).toBe(settings);
+      });
+
+      it('keeps the own file on a further run with the same settings', async () => {
+        const options: Schema = {
+          schematicsConfigPath: '/',
+          registrationStyle: 'config',
+        };
+
+        appTree = (await warningsOfRun(options, 'other')).tree;
+
+        const own = read(appTree, otherOwnFile);
+        const { tree, warnings } = await warningsOfRun(options, 'other');
+
+        expect(read(tree, otherOwnFile)).toBe(own);
+        expect(warnings).toEqual([]);
+      });
+    });
+  });
+
+  describe('a schematicsConfig link', () => {
+    const customFile = app('custom.json');
+    const link = 'app/custom.json';
+
+    async function run(options: Schema) {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+      const tree = await runAdd(options);
+
+      subscription.unsubscribe();
+
+      return { tree, warnings };
+    }
+
+    function links(defaults: Awaited<ReturnType<typeof generatorDefaults>>) {
+      return defaults.map((generator) => generator?.schematicsConfig);
+    }
+
+    beforeEach(async () => {
+      appTree = await runAdd({ schematicConfigFileName: 'custom.json' });
+    });
+
+    it('stays on a plain re-run, with the linked file as the kept one', async () => {
+      const kept = read(appTree, customFile);
+      const { tree, warnings } = await run({});
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => link),
+      );
+      expect(read(tree, customFile)).toBe(kept);
+      expect(tree.exists(schematicsConfigPath)).toBe(false);
+      expect(warnings).toEqual([]);
+    });
+
+    it('finds the link on a later generator', async () => {
+      await lastValueFrom(
+        runner.callRule(
+          updateWorkspace(({ projects }) => {
+            const project = projects.get('test-app');
+
+            if (project) {
+              project.extensions.schematics = {
+                '@ngx-formbar/schematics:control': {},
+                '@ngx-formbar/schematics:register': { schematicsConfig: link },
+              };
+            }
+          }),
+          appTree,
+        ),
+      );
+
+      const kept = read(appTree, customFile);
+      const { tree, warnings } = await run({});
+
+      expect(read(tree, customFile)).toBe(kept);
+      expect(tree.exists(schematicsConfigPath)).toBe(false);
+      expect(warnings).toEqual([]);
+    });
+
+    it('warns about settings the linked file lacks on a plain re-run', async () => {
+      const { tree, warnings } = await run({ registrationStyle: 'config' });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => link),
+      );
+      expect(warnings).toEqual([
+        `${customFile} stays as it is, so these settings of this run are ignored: registrationType: config. Change them in that file.`,
+      ]);
+    });
+
+    it('stays when it points at the file the lookup finds', async () => {
+      const ownLink = 'app/formbar-schematic.config.json';
+
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          schema: { type: 'app/types/content.type.ts#AppContent' },
+        }),
+      );
+      appTree.overwrite(
+        'angular.json',
+        read(appTree, 'angular.json').split(link).join(ownLink),
+      );
+
+      const { tree, warnings } = await run({ useHelper: false });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => ownLink),
+      );
+      expect(warnings).toEqual([]);
+    });
+
+    it('moves when the run names another location', async () => {
+      const { tree, warnings } = await run({
+        schematicConfigFileName: 'other.json',
+      });
+
+      expect(links(await generatorDefaults(tree))).toEqual(
+        generators.map(() => 'app/other.json'),
+      );
+      expect(warnings).toEqual([]);
+    });
+
+    it.each<[string, Schema, () => void, string]>([
+      [
+        'the run names a location the lookup finds',
+        { schematicsConfigPath: 'app' },
+        () => undefined,
+        `Removed the schematicsConfig link to ${link} from angular.json, as the generators find ${schematicsConfigPath} without it.`,
+      ],
+      [
+        'the linked file is gone',
+        {},
+        () => {
+          appTree.delete(customFile);
+        },
+        `Removed the schematicsConfig link to ${link} from angular.json, as the generators find ${schematicsConfigPath} without it.`,
+      ],
+      [
+        'no config file is used now',
+        { useSchematicConfig: false },
+        () => undefined,
+        `Removed the schematicsConfig link to ${link} from angular.json, as this run uses no schematics configuration file.`,
+      ],
+    ])(
+      'is removed with a warning when %s',
+      async (_, options, arrange, message) => {
+        arrange();
+
+        const { tree, warnings } = await run(options);
+
+        expect(links(await generatorDefaults(tree))).toEqual(
+          generators.map(() => undefined),
+        );
+        expect(warnings).toContain(message);
+      },
+    );
+
+    it('keeps the other settings of a generator', async () => {
+      seedForeignControlSetting();
+
+      const tree = await runAdd({
+        useSchematicConfig: false,
+        registrationStyle: 'config',
+      });
+      const [controlDefaults] = await generatorDefaults(tree);
+
+      expect(controlDefaults?.interfaceSuffix).toBe('Type');
+      expect(controlDefaults?.registrationType).toBe('config');
+      expect(controlDefaults).not.toHaveProperty('schematicsConfig');
+    });
+  });
+
+  describe('useSchematicConfig is false with a config file in reach', () => {
+    async function warningsOfRun(options: Schema) {
+      const warnings: string[] = [];
+      const subscription = runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await runAdd(options);
+      subscription.unsubscribe();
+
+      return warnings;
+    }
+
+    it('warns about the settings a config file wins with', async () => {
+      appTree.create(
+        '/formbar-schematic.config.json',
+        JSON.stringify({ registrationType: 'config' }),
+      );
+
+      expect(await warningsOfRun({ useSchematicConfig: false })).toContain(
+        'The schematics configuration of this project sets registrationType, which win over the settings written to angular.json.',
+      );
+    });
+
+    it('does not warn about a config file without those settings', async () => {
+      appTree.create(
+        '/formbar-schematic.config.json',
+        JSON.stringify({ control: { componentSuffix: 'X' } }),
+      );
+
+      expect(await warningsOfRun({ useSchematicConfig: false })).toEqual([]);
+    });
+
+    it('does not warn without a config file', async () => {
+      expect(await warningsOfRun({ useSchematicConfig: false })).toEqual([]);
+    });
+  });
+
   it('seeds an empty content union and the schema config', async () => {
     const result = await runner.runSchematic(
       'ng-add',
@@ -743,29 +4696,14 @@ describe('ng-add schematic', () => {
       result.readText('/projects/test-app/src/app/types/content.type.ts'),
     ).toContain('export type AppContent = never;');
 
-    const config = JSON.parse(
-      result.readText(
-        '/projects/test-app/src/app/formbar-schematic.config.json',
-      ),
-    ) as NgxFormbarAutomationConfig;
+    const config = result.readJson(
+      '/projects/test-app/src/app/formbar-schematic.config.json',
+    );
 
-    expect(config.schema).toEqual({
+    expect(config).toHaveProperty('schema', {
       type: 'app/types/content.type.ts#AppContent',
       emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
     });
-  });
-
-  it('does not seed a content union no config points at', async () => {
-    const tree = await runAdd({ useSchematicConfig: false });
-
-    expect(exists(tree, contentTypePath)).toBe(false);
-  });
-
-  it('does not seed a content union when no config is written for an empty config path', async () => {
-    const tree = await runAdd({ schematicsConfigPath: '' });
-
-    expect(exists(tree, schematicsConfigPath)).toBe(false);
-    expect(exists(tree, contentTypePath)).toBe(false);
   });
 
   it('keeps an existing content union file untouched', async () => {
@@ -775,5 +4713,119 @@ describe('ng-add schematic', () => {
     const result = await runAdd();
 
     expect(read(result, contentTypePath)).toBe(existing);
+  });
+
+  describe('with a kept config whose schema.type points elsewhere', () => {
+    const elsewhere = {
+      viewProviderHelperPath: 'app/shared/helper',
+      schema: { type: 'forms/union.ts#Forms' },
+    };
+    const sharedConfig = '/formbar-schematic.config.json';
+
+    it.each<[string, string]>([
+      ['its own file', schematicsConfigPath],
+      ['the shared file', sharedConfig],
+    ])('seeds no union with %s', async (_, configPath) => {
+      appTree.create(configPath, JSON.stringify(elsewhere));
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('seeds no union with a linked file', async () => {
+      const linked = src('forms/formbar-schematic.config.json');
+
+      appTree.create(linked, JSON.stringify(elsewhere));
+      await lastValueFrom(
+        runner.callRule(
+          updateWorkspace(({ projects }) => {
+            const project = projects.get('test-app');
+
+            if (project) {
+              project.extensions.schematics = {
+                '@ngx-formbar/schematics:control': {
+                  schematicsConfig: 'forms/formbar-schematic.config.json',
+                },
+              };
+            }
+          }),
+          appTree,
+        ),
+      );
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('seeds the union with a kept config pointing at it', async () => {
+      appTree.create(
+        schematicsConfigPath,
+        JSON.stringify({
+          schema: { type: 'app/types/content.type.ts#AppContent' },
+        }),
+      );
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(true);
+    });
+
+    it.each<[string, object]>([
+      ['no schema', {}],
+      ['a schema without a type', { schema: { emitters: [] } }],
+    ])('seeds no union with a kept config with %s', async (_, kept) => {
+      appTree.create(schematicsConfigPath, JSON.stringify(kept));
+
+      expect(exists(await runAdd(), contentTypePath)).toBe(false);
+    });
+
+    it('names the setting a kept config without a schema lacks', async () => {
+      appTree.create(schematicsConfigPath, JSON.stringify({}));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await runAdd();
+
+      expect(warnings).toContain(
+        `${schematicsConfigPath} stays as it is, without this setting of this run: schema.type: app/types/content.type.ts#AppContent. No content union file is created for it.`,
+      );
+    });
+
+    it('does not warn about a kept config naming another union', async () => {
+      appTree.create(schematicsConfigPath, JSON.stringify(elsewhere));
+      const warnings: string[] = [];
+      runner.logger.subscribe((entry) => {
+        if (entry.level === 'warn') {
+          warnings.push(entry.message);
+        }
+      });
+
+      await runAdd();
+
+      expect(
+        warnings.filter((message) => message.includes('schema.type')),
+      ).toEqual([]);
+    });
+  });
+
+  it('reports creating a seeded file that does not exist yet', async () => {
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    await runAdd();
+
+    expect(messages).toContain('Creating content union file');
+    expect(messages).not.toContain(`Keeping existing ${contentTypePath}`);
+  });
+
+  it('reports keeping a seeded file that already exists', async () => {
+    appTree.create(contentTypePath, 'export type AppContent = never;\n');
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    await runAdd();
+
+    expect(messages).toContain(`Keeping existing ${contentTypePath}`);
+    expect(messages).not.toContain('Creating content union file');
   });
 });

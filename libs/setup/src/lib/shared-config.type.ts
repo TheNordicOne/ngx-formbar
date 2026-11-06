@@ -1,6 +1,8 @@
 export type RegistrationType = 'token' | 'config';
 
 export interface BaseGenerateSchematicConfig {
+  /** Relative to the source root, unlike the workspace-relative `--path`. */
+  path?: string;
   interfaceSuffix?: string;
   componentSuffix?: string;
   interfaceFileSuffix?: string;

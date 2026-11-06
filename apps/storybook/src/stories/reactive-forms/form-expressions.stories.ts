@@ -18,7 +18,12 @@ type Story = StoryObj<StoryFormHostComponent>;
 
 export const FunctionHidden: Story = {
   parameters: {
-    docs: { description: { story: 'Function-based hidden expression removes the field from the DOM.' } },
+    docs: {
+      description: {
+        story:
+          'Function-based hidden expression removes the field from the DOM.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -42,7 +47,9 @@ export const FunctionHidden: Story = {
     ).toBeInTheDocument();
 
     // Type "hide" → field removed from DOM
-    const trigger = await canvas.findByRole('textbox', { name: 'Type "hide" to hide target' });
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide target',
+    });
     await userEvent.type(trigger, 'hide');
     await expect(
       canvas.queryByRole('textbox', { name: 'Target' }),
@@ -62,7 +69,12 @@ export const FunctionHidden: Story = {
 
 export const DeepHierarchyVisibility: Story = {
   parameters: {
-    docs: { description: { story: 'Hidden expressions across three levels of nesting with mixed strategies.' } },
+    docs: {
+      description: {
+        story:
+          'Hidden expressions across three levels of nesting with mixed strategies.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -139,12 +151,20 @@ export const DeepHierarchyVisibility: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Initially all fields should be visible
-    await expect(await canvas.findByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 2A Field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 3A Field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 3B Field' }),
+    ).toBeInTheDocument();
 
     // Hide fields with the toggle control
-    const toggleControl = await canvas.findByRole('textbox', { name: 'Type "hide" to hide nested fields' });
+    const toggleControl = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide nested fields',
+    });
     await userEvent.clear(toggleControl);
     await userEvent.type(toggleControl, 'hide');
 
@@ -160,17 +180,29 @@ export const DeepHierarchyVisibility: Story = {
     ).not.toBeInTheDocument();
 
     // Fields without hidden condition should still be visible
-    await expect(await canvas.findByRole('textbox', { name: 'Root level field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 1 Field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 2B Field' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Root level field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 1 Field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 2B Field' }),
+    ).toBeInTheDocument();
 
     // Show fields again by clearing the toggle control
     await userEvent.clear(toggleControl);
 
     // All fields should be visible again
-    await expect(await canvas.findByRole('textbox', { name: 'Level 2A Field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 3A Field' })).toBeInTheDocument();
-    await expect(await canvas.findByRole('textbox', { name: 'Level 3B Field' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 2A Field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 3A Field' }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Level 3B Field' }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -180,7 +212,11 @@ export const DeepHierarchyVisibility: Story = {
 
 export const CrossGroupDependencies: Story = {
   parameters: {
-    docs: { description: { story: 'A field in one group depends on a field in another group.' } },
+    docs: {
+      description: {
+        story: 'A field in one group depends on a field in another group.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -222,7 +258,9 @@ export const CrossGroupDependencies: Story = {
     ).not.toBeInTheDocument();
 
     // Set the toggle field value to "show"
-    const toggleField = await canvas.findByRole('textbox', { name: 'Type "show" to reveal field in Branch B' });
+    const toggleField = await canvas.findByRole('textbox', {
+      name: 'Type "show" to reveal field in Branch B',
+    });
     await userEvent.clear(toggleField);
     await userEvent.type(toggleField, 'show');
 
@@ -248,7 +286,12 @@ export const CrossGroupDependencies: Story = {
 
 export const UndefinedComparisonForMissingField: Story = {
   parameters: {
-    docs: { description: { story: 'An expression using === undefined on a field that does not exist in the form.' } },
+    docs: {
+      description: {
+        story:
+          'An expression using === undefined on a field that does not exist in the form.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -261,14 +304,21 @@ export const UndefinedComparisonForMissingField: Story = {
     }),
   },
   play: async ({ canvas }) => {
-    const field = await canvas.findByRole('textbox', { name: 'Disabled because "nonExistent" is absent' });
+    const field = await canvas.findByRole('textbox', {
+      name: 'Disabled because "nonExistent" is absent',
+    });
     await expect(field).toBeDisabled();
   },
 };
 
 export const UndefinedComparisonForPresentField: Story = {
   parameters: {
-    docs: { description: { story: 'An expression using === undefined on a field that exists — should evaluate to false.' } },
+    docs: {
+      description: {
+        story:
+          'An expression using === undefined on a field that exists. It should evaluate to false.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -286,14 +336,21 @@ export const UndefinedComparisonForPresentField: Story = {
     }),
   },
   play: async ({ canvas }) => {
-    const field = await canvas.findByRole('textbox', { name: 'Enabled because "existing" is present' });
+    const field = await canvas.findByRole('textbox', {
+      name: 'Enabled because "existing" is present',
+    });
     await expect(field).toBeEnabled();
   },
 };
 
 export const UndefinedComparisonAfterStructuralRemoval: Story = {
   parameters: {
-    docs: { description: { story: 'An expression using === undefined on a field that was present but got structurally removed.' } },
+    docs: {
+      description: {
+        story:
+          'An expression using === undefined on a field that was present but got structurally removed.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -318,12 +375,18 @@ export const UndefinedComparisonAfterStructuralRemoval: Story = {
     }),
   },
   play: async ({ canvas, userEvent }) => {
-    const checked = await canvas.findByRole('textbox', { name: 'Removed when trigger is "hide"' });
-    const observer = await canvas.findByRole('textbox', { name: 'Disabled when checked field is absent' });
+    const checked = await canvas.findByRole('textbox', {
+      name: 'Removed when trigger is "hide"',
+    });
+    const observer = await canvas.findByRole('textbox', {
+      name: 'Disabled when checked field is absent',
+    });
     await expect(checked).toBeInTheDocument();
     await expect(observer).toBeEnabled();
 
-    const trigger = await canvas.findByRole('textbox', { name: 'Type "hide" to remove the checked field' });
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to remove the checked field',
+    });
     await userEvent.clear(trigger);
     await userEvent.type(trigger, 'hide');
 
@@ -331,14 +394,21 @@ export const UndefinedComparisonAfterStructuralRemoval: Story = {
       canvas.queryByRole('textbox', { name: 'Removed when trigger is "hide"' }),
     ).not.toBeInTheDocument();
 
-    const observerAfter = await canvas.findByRole('textbox', { name: 'Disabled when checked field is absent' });
+    const observerAfter = await canvas.findByRole('textbox', {
+      name: 'Disabled when checked field is absent',
+    });
     await expect(observerAfter).toBeDisabled();
   },
 };
 
 export const UndefinedComparisonAfterStructuralAddition: Story = {
   parameters: {
-    docs: { description: { story: 'An expression using === undefined updates when a structurally hidden field reappears.' } },
+    docs: {
+      description: {
+        story:
+          'An expression using === undefined updates when a structurally hidden field reappears.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -368,17 +438,25 @@ export const UndefinedComparisonAfterStructuralAddition: Story = {
       canvas.queryByRole('textbox', { name: 'Removed when trigger is "hide"' }),
     ).not.toBeInTheDocument();
 
-    const observer = await canvas.findByRole('textbox', { name: 'Disabled when checked field is absent' });
+    const observer = await canvas.findByRole('textbox', {
+      name: 'Disabled when checked field is absent',
+    });
     await expect(observer).toBeDisabled();
 
-    // Clear trigger — checked reappears
-    const trigger = await canvas.findByRole('textbox', { name: 'Clear to show the checked field' });
+    // Clear trigger: checked reappears
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Clear to show the checked field',
+    });
     await userEvent.clear(trigger);
 
-    await canvas.findByRole('textbox', { name: 'Removed when trigger is "hide"' });
+    await canvas.findByRole('textbox', {
+      name: 'Removed when trigger is "hide"',
+    });
 
-    // Observer should now be enabled — checked exists in the form
-    const observerAfter = await canvas.findByRole('textbox', { name: 'Disabled when checked field is absent' });
+    // Observer should now be enabled because checked exists in the form
+    const observerAfter = await canvas.findByRole('textbox', {
+      name: 'Disabled when checked field is absent',
+    });
     await expect(observerAfter).toBeEnabled();
   },
 };
@@ -389,7 +467,12 @@ export const UndefinedComparisonAfterStructuralAddition: Story = {
 
 export const DisabledExpressionWithInitiallyAbsentField: Story = {
   parameters: {
-    docs: { description: { story: 'A disabled expression referencing a field that starts structurally hidden evaluates correctly on initial render.' } },
+    docs: {
+      description: {
+        story:
+          'A disabled expression referencing a field that starts structurally hidden evaluates correctly on initial render.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -419,14 +502,21 @@ export const DisabledExpressionWithInitiallyAbsentField: Story = {
     ).not.toBeInTheDocument();
 
     // source is absent (not "lock"), so target should be enabled
-    const target = await canvas.findByRole('textbox', { name: 'Disabled while source is "lock"' });
+    const target = await canvas.findByRole('textbox', {
+      name: 'Disabled while source is "lock"',
+    });
     await expect(target).toBeEnabled();
   },
 };
 
 export const ComputedValueWithInitiallyAbsentField: Story = {
   parameters: {
-    docs: { description: { story: 'A computed value referencing a field that starts structurally hidden evaluates correctly on initial render.' } },
+    docs: {
+      description: {
+        story:
+          'A computed value referencing a field that starts structurally hidden evaluates correctly on initial render.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -454,14 +544,21 @@ export const ComputedValueWithInitiallyAbsentField: Story = {
       canvas.queryByRole('textbox', { name: 'Removed when trigger is "hide"' }),
     ).not.toBeInTheDocument();
 
-    const computed = await canvas.findByRole('textbox', { name: 'Shows greeting using source value' });
+    const computed = await canvas.findByRole('textbox', {
+      name: 'Shows greeting using source value',
+    });
     await expect(computed).toHaveValue('No source');
   },
 };
 
 export const DynamicLabelWithInitiallyAbsentField: Story = {
   parameters: {
-    docs: { description: { story: 'A dynamic label referencing a field that starts structurally hidden evaluates correctly on initial render.' } },
+    docs: {
+      description: {
+        story:
+          'A dynamic label referencing a field that starts structurally hidden evaluates correctly on initial render.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -481,7 +578,8 @@ export const DynamicLabelWithInitiallyAbsentField: Story = {
         type: 'text',
         label: 'Static label',
         defaultValue: '',
-        dynamicLabel: 'nameField ? "Greeting for " + nameField : "No recipient"',
+        dynamicLabel:
+          'nameField ? "Greeting for " + nameField : "No recipient"',
       },
     }),
   },
@@ -490,7 +588,9 @@ export const DynamicLabelWithInitiallyAbsentField: Story = {
       canvas.queryByRole('textbox', { name: 'Removed when trigger is "hide"' }),
     ).not.toBeInTheDocument();
 
-    const greeting = await canvas.findByRole('textbox', { name: 'No recipient' });
+    const greeting = await canvas.findByRole('textbox', {
+      name: 'No recipient',
+    });
     await expect(greeting).toBeInTheDocument();
   },
 };
@@ -501,7 +601,12 @@ export const DynamicLabelWithInitiallyAbsentField: Story = {
 
 export const DisabledExpressionAfterStructuralRemoval: Story = {
   parameters: {
-    docs: { description: { story: 'A disabled expression referencing a removed field\'s value stops matching after removal.' } },
+    docs: {
+      description: {
+        story:
+          "A disabled expression referencing a removed field's value stops matching after removal.",
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -527,12 +632,16 @@ export const DisabledExpressionAfterStructuralRemoval: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Initially: source="lock", so target is disabled
-    const target = await canvas.findByRole('textbox', { name: 'Disabled while source is "lock"' });
+    const target = await canvas.findByRole('textbox', {
+      name: 'Disabled while source is "lock"',
+    });
     await expect(target).toBeDisabled();
 
-    // Remove source by typing "hide" — source is gone, expression should
+    // Remove source by typing "hide". Source is gone, so the expression should
     // no longer match (source is undefined, not "lock")
-    const trigger = await canvas.findByRole('textbox', { name: 'Type "hide" to remove the source field' });
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to remove the source field',
+    });
     await userEvent.clear(trigger);
     await userEvent.type(trigger, 'hide');
 
@@ -540,14 +649,21 @@ export const DisabledExpressionAfterStructuralRemoval: Story = {
       canvas.queryByRole('textbox', { name: 'Removed when trigger is "hide"' }),
     ).not.toBeInTheDocument();
 
-    const targetAfter = await canvas.findByRole('textbox', { name: 'Disabled while source is "lock"' });
+    const targetAfter = await canvas.findByRole('textbox', {
+      name: 'Disabled while source is "lock"',
+    });
     await expect(targetAfter).toBeEnabled();
   },
 };
 
 export const ComputedValueAfterStructuralRemoval: Story = {
   parameters: {
-    docs: { description: { story: 'A computed value referencing a removed field updates when that field disappears.' } },
+    docs: {
+      description: {
+        story:
+          'A computed value referencing a removed field updates when that field disappears.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -572,11 +688,15 @@ export const ComputedValueAfterStructuralRemoval: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     // Initially: source="world", computed shows "Hello world"
-    const computed = await canvas.findByRole('textbox', { name: 'Shows greeting using source value' });
+    const computed = await canvas.findByRole('textbox', {
+      name: 'Shows greeting using source value',
+    });
     await expect(computed).toHaveValue('Hello world');
 
     // Remove source
-    const trigger = await canvas.findByRole('textbox', { name: 'Type "hide" to remove the source field' });
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to remove the source field',
+    });
     await userEvent.clear(trigger);
     await userEvent.type(trigger, 'hide');
 
@@ -585,14 +705,21 @@ export const ComputedValueAfterStructuralRemoval: Story = {
     ).not.toBeInTheDocument();
 
     // Computed should now show "No source"
-    const computedAfter = await canvas.findByRole('textbox', { name: 'Shows greeting using source value' });
+    const computedAfter = await canvas.findByRole('textbox', {
+      name: 'Shows greeting using source value',
+    });
     await expect(computedAfter).toHaveValue('No source');
   },
 };
 
 export const DynamicLabelAfterStructuralRemoval: Story = {
   parameters: {
-    docs: { description: { story: 'A dynamic label referencing a removed field updates when that field disappears.' } },
+    docs: {
+      description: {
+        story:
+          'A dynamic label referencing a removed field updates when that field disappears.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -612,17 +739,22 @@ export const DynamicLabelAfterStructuralRemoval: Story = {
         type: 'text',
         label: 'Static label',
         defaultValue: '',
-        dynamicLabel: 'nameField ? "Greeting for " + nameField : "No recipient"',
+        dynamicLabel:
+          'nameField ? "Greeting for " + nameField : "No recipient"',
       },
     }),
   },
   play: async ({ canvas, userEvent }) => {
     // Initially: nameField="Alice", label shows "Greeting for Alice"
-    const greeting = await canvas.findByRole('textbox', { name: 'Greeting for Alice' });
+    const greeting = await canvas.findByRole('textbox', {
+      name: 'Greeting for Alice',
+    });
     await expect(greeting).toBeInTheDocument();
 
     // Remove nameField
-    const trigger = await canvas.findByRole('textbox', { name: 'Type "hide" to remove the name field' });
+    const trigger = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to remove the name field',
+    });
     await userEvent.clear(trigger);
     await userEvent.type(trigger, 'hide');
 
@@ -631,7 +763,9 @@ export const DynamicLabelAfterStructuralRemoval: Story = {
     ).not.toBeInTheDocument();
 
     // Label should now show "No recipient"
-    const greetingAfter = await canvas.findByRole('textbox', { name: 'No recipient' });
+    const greetingAfter = await canvas.findByRole('textbox', {
+      name: 'No recipient',
+    });
     await expect(greetingAfter).toBeInTheDocument();
   },
 };
@@ -642,7 +776,11 @@ export const DynamicLabelAfterStructuralRemoval: Story = {
 
 export const FunctionHiddenKeepStrategy: Story = {
   parameters: {
-    docs: { description: { story: 'Function-based hidden expression with keep strategy.' } },
+    docs: {
+      description: {
+        story: 'Function-based hidden expression with keep strategy.',
+      },
+    },
   },
   args: {
     formConfig: formConfig({
@@ -654,7 +792,8 @@ export const FunctionHiddenKeepStrategy: Story = {
       targetFieldFuncKeep: {
         type: 'text',
         label: 'Target Field (Function Hidden, Keep)',
-        hidden: (formValue: FormContext) => formValue['triggerFieldFuncKeep'] === 'hide',
+        hidden: (formValue: FormContext) =>
+          formValue['triggerFieldFuncKeep'] === 'hide',
         hideStrategy: 'keep',
         defaultValue: 'I can be hidden by a function (kept in DOM)',
       },
@@ -663,23 +802,31 @@ export const FunctionHiddenKeepStrategy: Story = {
   play: async ({ canvas, userEvent }) => {
     // Initially visible
     await expect(
-      await canvas.findByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+      await canvas.findByRole('textbox', {
+        name: 'Target Field (Function Hidden, Keep)',
+      }),
     ).toBeInTheDocument();
 
     // Type 'hide' → hidden (not in document)
-    const triggerField = await canvas.findByRole('textbox', { name: 'Type "hide" to hide target (keep)' });
+    const triggerField = await canvas.findByRole('textbox', {
+      name: 'Type "hide" to hide target (keep)',
+    });
     await userEvent.clear(triggerField);
     await userEvent.type(triggerField, 'hide');
 
     await expect(
-      canvas.queryByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+      canvas.queryByRole('textbox', {
+        name: 'Target Field (Function Hidden, Keep)',
+      }),
     ).not.toBeInTheDocument();
 
     // Clear → visible again
     await userEvent.clear(triggerField);
 
     await expect(
-      await canvas.findByRole('textbox', { name: 'Target Field (Function Hidden, Keep)' }),
+      await canvas.findByRole('textbox', {
+        name: 'Target Field (Function Hidden, Keep)',
+      }),
     ).toBeInTheDocument();
   },
 };

@@ -8,6 +8,8 @@ export interface Schema extends BaseGenerateSchematicConfig {
   key: string;
   path?: string;
   project?: string;
+  registrationType?: RegistrationType;
+  controlRegistrationsPath?: string;
   viewProviderHelperPath?: string;
   schematicsConfig?: string;
 }
@@ -26,16 +28,20 @@ export interface ScaffoldContext extends Schema {
   componentFileName: string;
   componentPath: string;
   componentFilePath: string;
-  projectRoot: string;
+  sourceRoot: string;
+  tsConfigPath: string;
   hasViewProviderHelper: boolean;
   viewProviderHelperPath?: string;
   viewProviderIdentifier?: string;
-  controlRegistrationsPath?: string | null;
 }
 
 export interface RegisterComponentContext {
-  controlRegistrationsPath?: string | null;
+  controlRegistrationsPath: string;
   key: string;
   componentFilePath: string;
   componentClassName: string;
+  tsConfigPath: string;
+  addedWarning?: string;
+  /** A `register` run meets every component it registered before. */
+  alreadyRegisteredLevel: 'info' | 'warn';
 }

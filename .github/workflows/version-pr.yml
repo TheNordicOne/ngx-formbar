@@ -88,7 +88,7 @@ jobs:
       - name: Dry-run summary
         if: steps.changes.outputs.has_changes == 'true' && env.DRY_RUN == 'true'
         run: |
-          echo "::notice::Dry-run mode — skipped branch creation, commit, push, and PR"
+          echo "::notice::Dry-run mode: skipped branch creation, commit, push, and PR"
           echo "::group::Version diff"
           git diff
           echo "::endgroup::"

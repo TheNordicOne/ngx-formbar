@@ -5,12 +5,14 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
+  insertNamedImport,
   loadSourceFile,
+  registrationsMissingMessage,
+  registrationsNotFoundMessage,
   addComponentRegistration,
   componentRegistrationsObjectHasKey,
-  componentRegistrationsObjectUsesIdentifier,
+  componentRegistrationsObjectUsesComponent,
   findComponentRegistrationsObject,
 } from '@ngx-formbar/setup';
 
@@ -23,11 +25,10 @@ export function registerTypeConfig(
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
+      addedWarning,
+      alreadyRegisteredLevel,
     } = ruleContext;
-
-    if (!controlRegistrationsPath) {
-      return tree;
-    }
 
     const registrationsSourceFile = loadSourceFile(
       tree,
@@ -36,7 +37,7 @@ export function registerTypeConfig(
 
     if (!registrationsSourceFile) {
       context.logger.warn(
-        `Registration file ${controlRegistrationsPath} could be found. Skipping registration.`,
+        registrationsNotFoundMessage(controlRegistrationsPath),
       );
       return tree;
     }
@@ -46,16 +47,25 @@ export function registerTypeConfig(
     );
 
     if (!registrationsObject) {
+      context.logger.warn(
+        registrationsMissingMessage(controlRegistrationsPath),
+      );
       return tree;
     }
 
-    const identifierAlreadyUsed = componentRegistrationsObjectUsesIdentifier(
+    const componentAlreadyUsed = componentRegistrationsObjectUsesComponent(
       registrationsObject,
-      componentClassName,
+      {
+        tree,
+        tsConfigPath,
+        className: componentClassName,
+        filePath: componentFilePath,
+      },
     );
 
-    if (identifierAlreadyUsed) {
-      context.logger.warn(
+    if (componentAlreadyUsed) {
+      context.logger.log(
+        alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,
       );
       return tree;
@@ -77,7 +87,7 @@ export function registerTypeConfig(
 
     const changes: Change[] = [];
 
-    const loadComponentImport = insertImport(
+    const loadComponentImport = insertNamedImport(
       registrationsSourceFile,
       controlRegistrationsPath,
       'loadComponent',
@@ -86,7 +96,6 @@ export function registerTypeConfig(
     changes.push(loadComponentImport);
 
     const updateChanges = addComponentRegistration(
-      tree,
       registrationsSourceFile,
       controlRegistrationsPath,
       registrationsObject,
@@ -100,6 +109,10 @@ export function registerTypeConfig(
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
+
+    if (addedWarning) {
+      context.logger.warn(addedWarning);
+    }
 
     return tree;
   };

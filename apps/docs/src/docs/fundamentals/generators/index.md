@@ -1,69 +1,90 @@
-ngx-formbar includes four generator schematics that scaffold and register a new control, group, block, or array, plus a [`schema` generator](/fundamentals/schema) that runs pluggable emitters over your content union.
+_ngx-formbar_ includes four generator schematics that scaffold and register a new control, group, block, or array, plus a [`schema` generator](/fundamentals/schema) that runs pluggable emitters over your content union.
 
 ## Options
 
-All four schematics (`control`, `group`, `block`, `array`) support the same options:
+`control`, `group`, `block` and `array` support these options. Only `control`, `group` and `array` support `--view-provider-helper-path`.
 
-| Option                   | Type    | Required | Default (control/group/block/array)                             | Description                                                                                                                                                                                                                                                                                          |
-|--------------------------|---------|----------|-----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --key                    | string  | Yes      | -                                                               | Registration key used in the Formbar configuration.                                                                                                                                                                                                                                                  |
-| --name                   | string  | No       | `key`                                                           | Base name for component and config interface.                                                                                                                                                                                                                                                        |
-| --project                | string  | No       | workspace default project                                       | Angular project name where files are generated.                                                                                                                                                                                                                                                      |
-| --path                   | string  | No       | current working directory                                       | Path to where the generated files will be placed.                                                                                                                                                                                                                                                    |
-| --interfaceSuffix        | string  | No       | `ControlConfig` / `GroupConfig` / `BlockConfig` / `ArrayConfig` | Suffix appended to the config interface name.                                                                                                                                                                                                                                                        |
-| --componentSuffix        | string  | No       | `Control` / `Group` / `Block` / `Array`                         | Suffix appended to the component name.                                                                                                                                                                                                                                                               |
-| --interfaceFileSuffix    | string  | No       | derived (see Naming)                                            | Segment before `.ts` in the interface file name (e.g. `type` gives `name.type.ts`). See Naming.                                                                                                                                                                                                      |
-| --viewProviderHelperPath | string  | No       | -                                                               | Path to the viewProvider helper, relative to the project root. If the file cannot be found or the option was not provided, it will fall back to using the verbose syntax.                                                                                                                            |
-| --schematicsConfig       | string  | No       | -                                                               | Path of the schematics configuration, relative to the project root, that is to be used by this schematic. If this parameter is left out, the schematic will try to resolve the file from its default location. Configuration set in this file will override all duplicate options passed to the CLI. |
-| --skipRegistration       | boolean | No       | `false`                                                         | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                                                                                                                                                                                          |
+| Option                       | Type                | Required | Default (control/group/block/array)                             | Description                                                                                                                                                                                                          |
+| ---------------------------- | ------------------- | -------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --key                        | string              | Yes      | -                                                               | Registration key used in the Formbar configuration.                                                                                                                                                                  |
+| --name                       | string              | No       | `key`                                                           | Base name for component and config interface.                                                                                                                                                                        |
+| --project                    | string              | No       | [Default Project](#default-project)                             | Angular project name where files are generated.                                                                                                                                                                      |
+| --registration-type          | `token` \| `config` | No       | `token`                                                         | How the component is registered. `token` adds it to an injection token, `config` adds it to the config passed to `provideFormbar()`. See [Registration Types](/fundamentals/configuring-formbar#registration-types). |
+| --control-registrations-path | string              | No       | -                                                               | The component registrations file. See [Paths](#paths) and [Default Registration Locations](#default-registration-locations).                                                                                         |
+| --path                       | string              | No       | `app` in the source root                                        | The directory the component's own directory is created in. See [Where Components Go](#where-components-go).                                                                                                          |
+| --interface-suffix           | string              | No       | `ControlConfig` / `GroupConfig` / `BlockConfig` / `ArrayConfig` | Suffix appended to the config interface name.                                                                                                                                                                        |
+| --component-suffix           | string              | No       | `Control` / `Group` / `Block` / `Array`                         | Suffix appended to the component name.                                                                                                                                                                               |
+| --interface-file-suffix      | string              | No       | derived (see Naming)                                            | Segment before `.ts` in the interface file name (e.g. `type` gives `name.type.ts`). See Naming.                                                                                                                      |
+| --view-provider-helper-path  | string              | No       | -                                                               | The view provider helper of a control, group or array. Without it, the component declares the view providers itself. See [Paths](#paths).                                                                            |
+| --schematics-config          | string              | No       | -                                                               | The schematics configuration file to use. See [Finding the Schematics Configuration](#finding-the-schematics-configuration).                                                                                         |
+| --skip-registration          | boolean             | No       | `false`                                                         | Skip automatic registration. You will have to register the component yourself or run the Register Schematic                                                                                                          |
 
 ### Notes for the View Provider Path Option
 
-The path for `viewProviderHelperPath` can have three different shapes, that all resolve differently.
+`viewProviderHelperPath` takes one of these forms. It follows [Paths](#paths).
 
-These are the relevant default values:
+| You write                                             | The helper is                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `app/shared/helper`                                   | The export `viewProviders` of `index.ts` in that folder if it has one, otherwise of `view-provider.ts` in that folder |
+| `app/shared/helper/form-helpers.ts`                   | The export `viewProviders` of that file                                                                               |
+| `app/shared/helper/form-helpers.ts#formViewProviders` | The export `formViewProviders` of that file                                                                           |
 
-- View Provider Helper File Name: `view-provider.ts`
-- View Provider Identifier: `viewProviders`
+When the helper file cannot be found, the generator logs a warning naming the resolved path, and the component declares the view providers itself.
 
-#### Folder
+## Default Project
 
-Shape: `path/to/helper/folder`
+{% include "../../shared/default-project.md" %}
 
-This will resolve to the folder path and assumes the helper files are set up with the default names and identifiers.
+## Paths
 
-If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
+{% include "../../shared/paths.md" %}
 
-#### Folder and File
+## Default Registration Locations
 
-Shape: `path/to/helper/folder/file-name.ts`
+{% include "../../shared/default-registrations.md" %}
 
-This will resolve to the file path and assumes the helper files are set up with the default identifier.
+## Where Components Go
 
-If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
+`--path` follows these tables, not [Paths](#paths). They show where `ng generate @ngx-formbar/schematics:control --key slider` writes.
 
-#### Folder, File and Identifier
+With the default `ng new` layout, where the project is the workspace root and its source root is `src`:
 
-Shape: `path/to/helper/folder/file-name.ts#customIdentifier`
+| Run                         | The component goes in  |
+| --------------------------- | ---------------------- |
+| From the workspace root     | `src/app/slider`       |
+| From `src/app/forms`        | `src/app/forms/slider` |
+| With `--path src/app/forms` | `src/app/forms/slider` |
+| With `--path app/forms`     | `app/forms/slider`     |
+| With `--path /forms`        | `forms/slider`         |
 
-This will resolve to the file path and use the identifier as is. Make sure the spelling matches exactly that of the exported name
+With a project at `projects/my-app` and its source root at `projects/my-app/src`:
 
-If an `index.ts` exists, it will use this for the import. Otherwise, it falls back to importing from the helper file directly.
+| Run                                     | The component goes in                           |
+| --------------------------------------- | ----------------------------------------------- |
+| From the workspace root                 | `projects/my-app/src/app/slider`                |
+| From `projects/my-app/src/app/forms`    | `projects/my-app/src/app/forms/slider`          |
+| With `--path projects/my-app/tools`     | `projects/my-app/tools/slider`                  |
+| With `--path forms`                     | `projects/my-app/src/forms/slider`              |
+| With `--path /forms`                    | `forms/slider`                                  |
+| With `--path projects/other-app/forms`  | Fails, because that lies inside another project |
+| With `--path /projects/other-app/forms` | Fails, because that lies inside another project |
+
+`register` only finds components in the source root, so it skips a component written anywhere else.
 
 ## Naming
 
 The generated **component** follows Angular's own component naming. The generators read Angular's `@schematics/angular:component` settings from `angular.json`, so you configure this the same way you configure `ng generate component`. The `type` value is the file and class suffix, `addTypeToClassName` gates whether the class gets it, and a project-level entry takes precedence over a workspace-level one. For `generate control --key text`:
 
 | `angular.json` `type`        | `addTypeToClassName` | File                        | Class                  |
-|------------------------------|----------------------|-----------------------------|------------------------|
-| unset (Angular v20+ default) | —                    | `text-control.ts`           | `TextControl`          |
+| ---------------------------- | -------------------- | --------------------------- | ---------------------- |
+| unset (Angular v20+ default) | -                    | `text-control.ts`           | `TextControl`          |
 | `"component"`                | `true` (default)     | `text-control.component.ts` | `TextControlComponent` |
 | `"component"`                | `false`              | `text-control.component.ts` | `TextControl`          |
 
 The generated **config interface** is named after the control with a `Config` suffix (`TextControlConfig`) and lives in its own file. The file gets a matching type segment, defaulting to `type` but applied only when the component has a type suffix:
 
 | Angular `type` set? | Interface file (`interfaceFileSuffix` unset) |
-|---------------------|----------------------------------------------|
+| ------------------- | -------------------------------------------- |
 | no                  | `text-control-config.ts`                     |
 | yes                 | `text-control-config.type.ts`                |
 
@@ -76,7 +97,7 @@ Override the segment with `interfaceFileSuffix` (set it to an empty string to dr
 Run:
 
 ```bash
-ng generate @ngx-formbar/schematics:control --key <control-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:control --key text
 ```
 
 This will:
@@ -92,7 +113,7 @@ For implementation details and advanced usage, see the [Controls](/reactive-form
 Run:
 
 ```bash
-ng generate @ngx-formbar/schematics:group --key <group-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:group --key layout
 ```
 
 This will:
@@ -108,7 +129,7 @@ For implementation details and advanced usage, see the [Groups](/reactive-forms/
 Run:
 
 ```bash
-ng generate @ngx-formbar/schematics:block --key <block-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:block --key note
 ```
 
 This will:
@@ -124,7 +145,7 @@ For implementation details and advanced usage, see the [Blocks](/reactive-forms/
 Run:
 
 ```bash
-ng generate @ngx-formbar/schematics:array --key <array-key> [--name <ComponentName>] [--project <project>] [--path <path>] [--interface-suffix <suffix>] [--component-suffix <suffix>]
+ng generate @ngx-formbar/schematics:array --key tags
 ```
 
 This will:
@@ -139,15 +160,17 @@ For implementation details and advanced usage, see the [Arrays](/reactive-forms/
 
 There are two ways to set custom default options, avoiding repeated parameters on every CLI command.
 
-### In formbar-schematic.config.json
+### In the Schematics Configuration File
 
-All options are optional, but are listed here in full. You can put any combination of them.
+Every option is optional.
 
 ```json name="formbar-schematic.config.json"
 {
+  "registrationType": "config",
   "controlRegistrationsPath": "app/form/registrations.ts",
-  "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+  "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders",
   "control": {
+    "path": "app/forms",
     "interfaceSuffix": "Type",
     "componentSuffix": "Input",
     "interfaceFileSuffix": "type",
@@ -174,12 +197,16 @@ All options are optional, but are listed here in full. You can put any combinati
 }
 ```
 
+The `path` key in a generator section takes precedence over `--path`. It follows [Paths](#paths), like every other path in this file.
+
 ### In angular.json
 
-You can set default values for any ngx-formbar schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
+You can set default values for any _ngx-formbar_ schematic option in your `angular.json`. Add a `schematics` section under your project with the schematic name and desired defaults.
 
-All options are optional, but are listed here in full. You can put any combination of them.
-Note, that compared to `formbar-schematic.config.json`, you have to repeat all values.
+Every option is optional.
+Note, that compared to the schematics configuration file, you have to repeat all values.
+
+This example is for a project at `projects/my-app`. `path` is a value for `--path`, so it follows [Where Components Go](#where-components-go). The other paths follow [Paths](#paths).
 
 ```json name="angular.json"
 {
@@ -187,42 +214,57 @@ Note, that compared to `formbar-schematic.config.json`, you have to repeat all v
     "my-app": {
       "schematics": {
         "@ngx-formbar/schematics:control": {
+          "path": "projects/my-app/src/app/forms",
+          "registrationType": "config",
           "controlRegistrationsPath": "app/form/registrations.ts",
-          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders",
           "interfaceSuffix": "Type",
           "componentSuffix": "Input",
           "interfaceFileSuffix": "type",
-          "skipRegistration": true
+          "skipRegistration": true,
+          "schematicsConfig": "config/formbar-schematic.config.json"
         },
         "@ngx-formbar/schematics:group": {
+          "path": "projects/my-app/src/app/forms",
+          "registrationType": "config",
           "controlRegistrationsPath": "app/form/registrations.ts",
-          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders",
           "interfaceSuffix": "GroupType",
           "componentSuffix": "Group",
           "interfaceFileSuffix": "type",
-          "skipRegistration": true
+          "skipRegistration": true,
+          "schematicsConfig": "config/formbar-schematic.config.json"
         },
         "@ngx-formbar/schematics:block": {
+          "path": "projects/my-app/src/app/forms",
+          "registrationType": "config",
           "controlRegistrationsPath": "app/form/registrations.ts",
-          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
           "interfaceSuffix": "BlockType",
           "componentSuffix": "Block",
           "interfaceFileSuffix": "type",
-          "skipRegistration": true
+          "skipRegistration": true,
+          "schematicsConfig": "config/formbar-schematic.config.json"
         },
         "@ngx-formbar/schematics:array": {
+          "path": "projects/my-app/src/app/forms",
+          "registrationType": "config",
           "controlRegistrationsPath": "app/form/registrations.ts",
-          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts",
+          "viewProviderHelperPath": "app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders",
           "interfaceSuffix": "ArrayType",
           "componentSuffix": "Array",
           "interfaceFileSuffix": "type",
-          "skipRegistration": true
+          "skipRegistration": true,
+          "schematicsConfig": "config/formbar-schematic.config.json"
         }
       }
     }
   }
 }
 ```
+
+## Finding the Schematics Configuration
+
+{% include "../../shared/config-discovery.md" %}
 
 ## Resolving Options
 

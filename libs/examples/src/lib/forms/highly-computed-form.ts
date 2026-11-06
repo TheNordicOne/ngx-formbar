@@ -8,14 +8,14 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       type: 'text',
       label: 'Seed',
       hint: 'Base string many fields will derive from.',
-      defaultValue: 'alpha'
+      defaultValue: 'alpha',
     },
 
     mode: {
       type: 'text',
       label: 'Mode (none | alpha | beta | gamma)',
       hint: 'Toggle visibility/readonly/disabled cascades by typing one of the keywords.',
-      defaultValue: 'alpha'
+      defaultValue: 'alpha',
     },
 
     // --------- Simple cascades at root ---------
@@ -24,7 +24,7 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       label: '',
       readonly: 'true',
       computedValue: 'seed',
-      dynamicLabel: '`Root Echo → ${seed ?? ""}`'
+      dynamicLabel: '`Root Echo → ${seed ?? ""}`',
     },
 
     rootUpper: {
@@ -32,15 +32,15 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       label: 'Root Upper',
       readonly: 'true',
       computedValue: '(seed ?? "").toUpperCase()',
-      hidden: 'mode === "none"'
+      hidden: 'mode === "none"',
     },
 
     rootDecorated: {
       type: 'text',
       label: 'Root Decorated',
       readonly: 'true',
-      computedValue: '`«${(seed ?? "").trim() ? (seed ?? "").trim() : "—"}»`',
-      disabled: 'mode === "beta"'
+      computedValue: '`«${(seed ?? "").trim() ? (seed ?? "").trim() : "-"}»`',
+      disabled: 'mode === "beta"',
     },
 
     // --------- Chain group with deep cascades ---------
@@ -53,34 +53,34 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           type: 'text',
           label: 'L1',
           readonly: 'true',
-          computedValue: '`L1:${seed ?? ""}`'
+          computedValue: '`L1:${seed ?? ""}`',
         },
         l2: {
           type: 'text',
           label: 'L2',
           readonly: 'true',
-          computedValue: '`L2:${chain?.l1 ?? ""}`'
+          computedValue: '`L2:${chain?.l1 ?? ""}`',
         },
         l3: {
           type: 'text',
           label: 'L3',
           readonly: 'true',
           computedValue: '`L3:${chain?.l2 ?? ""}`',
-          hidden: 'mode === "none" || !(chain?.l2)'
+          hidden: 'mode === "none" || !(chain?.l2)',
         },
         l4: {
           type: 'text',
           label: 'L4',
           readonly: 'true',
           computedValue: '(chain?.l3 ?? "").toString().concat(":L4")',
-          disabled: 'mode === "alpha"'
+          disabled: 'mode === "alpha"',
         },
         l5: {
           type: 'text',
           label: 'L5',
           readonly: 'true',
           computedValue: '`L5:${(chain?.l4 ?? "").slice(0, 20)}`',
-          dynamicLabel: '`L5 (from "${chain?.l4 ?? ""}")`'
+          dynamicLabel: '`L5 (from "${chain?.l4 ?? ""}")`',
         },
 
         // Deep nested group showing member access + inheritance of states
@@ -96,23 +96,23 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
               type: 'text',
               label: 'L6',
               readonly: 'true',
-              computedValue: '`L6:${chain?.l5 ?? ""}`'
+              computedValue: '`L6:${chain?.l5 ?? ""}`',
             },
             l7: {
               type: 'text',
               label: 'L7',
               readonly: 'true',
-              computedValue: '`L7:${(chain?.deep?.l6) ?? ""}`'
+              computedValue: '`L7:${(chain?.deep?.l6) ?? ""}`',
             },
             l8: {
               type: 'text',
               label: 'L8 (Upper)',
               readonly: 'true',
-              computedValue: '(chain?.deep?.l7 ?? "").toUpperCase()'
-            }
-          }
-        }
-      }
+              computedValue: '(chain?.deep?.l7 ?? "").toUpperCase()',
+            },
+          },
+        },
+      },
     },
 
     // --------- Cross-group fan-out (multiple dependents from one source) ---------
@@ -125,27 +125,27 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           type: 'text',
           label: 'A',
           readonly: 'true',
-          computedValue: '`A:${seed ?? ""}`'
+          computedValue: '`A:${seed ?? ""}`',
         },
         b: {
           type: 'text',
           label: 'B',
           readonly: 'true',
-          computedValue: '`B:${seed ?? ""}`'
+          computedValue: '`B:${seed ?? ""}`',
         },
         c: {
           type: 'text',
           label: 'C = A + B',
           readonly: 'true',
-          computedValue: '`C:${fanOut?.a ?? ""}|${fanOut?.b ?? ""}`'
+          computedValue: '`C:${fanOut?.a ?? ""}|${fanOut?.b ?? ""}`',
         },
         cMirror: {
           type: 'text',
           label: 'C Mirror (Lower)',
           readonly: 'true',
-          computedValue: '(fanOut?.c ?? "").toLowerCase()'
-        }
-      }
+          computedValue: '(fanOut?.c ?? "").toLowerCase()',
+        },
+      },
     },
 
     // --------- Options-like string building to show arrow functions + array ops ---------
@@ -157,13 +157,16 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       computedValue:
         '(' +
         '[' +
-        '(seed ?? "")' + ',' +
-        '(chain?.l3 ?? "")' + ',' +
-        '(chain?.l5 ?? "")' + ',' +
+        '(seed ?? "")' +
+        ',' +
+        '(chain?.l3 ?? "")' +
+        ',' +
+        '(chain?.l5 ?? "")' +
+        ',' +
         '(chain?.deep?.l8 ?? "")' +
         ']' +
         ')' +
-        '.join(",")'
+        '.join(",")',
     },
 
     // --------- Visibility/readonly/disabled matrix driven by mode ---------
@@ -176,22 +179,22 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           label: 'Hidden when mode=none',
           hidden: 'mode === "none"',
           computedValue: '`mode=${mode ?? ""}`',
-          readonly: 'true'
+          readonly: 'true',
         },
         disabledWhenBeta: {
           type: 'text',
           label: 'Disabled when mode=beta',
           disabled: 'mode === "beta"',
           computedValue: '`seed=${seed ?? ""}`',
-          readonly: 'true'
+          readonly: 'true',
         },
         readonlyWhenAlpha: {
           type: 'text',
           label: 'Readonly when mode=alpha',
           readonly: 'mode === "alpha"',
-          computedValue: '`concat:${(seed ?? "") + "|" + (chain?.l1 ?? "")}`'
-        }
-      }
+          computedValue: '`concat:${(seed ?? "") + "|" + (chain?.l1 ?? "")}`',
+        },
+      },
     },
 
     // --------- Summary (grand finale) ---------
@@ -204,7 +207,7 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           label: 'Flat Summary',
           readonly: 'true',
           computedValue:
-            '`S:${seed ?? ""}; M:${mode ?? ""}; L5:${chain?.l5 ?? ""}; L8:${chain?.deep?.l8 ?? ""}`'
+            '`S:${seed ?? ""}; M:${mode ?? ""}; L5:${chain?.l5 ?? ""}; L8:${chain?.deep?.l8 ?? ""}`',
         },
         verboseSummary: {
           type: 'text',
@@ -213,14 +216,19 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           computedValue:
             '(' +
             '[' +
-            '"seed=" + (seed ?? "")' + ',' +
-            '"mode=" + (mode ?? "")' + ',' +
-            '"l1=" + (chain?.l1 ?? "")' + ',' +
-            '"l3=" + (chain?.l3 ?? "")' + ',' +
-            '"l5=" + (chain?.l5 ?? "")' + ',' +
+            '"seed=" + (seed ?? "")' +
+            ',' +
+            '"mode=" + (mode ?? "")' +
+            ',' +
+            '"l1=" + (chain?.l1 ?? "")' +
+            ',' +
+            '"l3=" + (chain?.l3 ?? "")' +
+            ',' +
+            '"l5=" + (chain?.l5 ?? "")' +
+            ',' +
             '"l8=" + (chain?.deep?.l8 ?? "")' +
             ']' +
-            ').join(" | ")'
+            ').join(" | ")',
         },
         submitReadyHint: {
           type: 'text',
@@ -229,9 +237,9 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           computedValue:
             '(mode === "none") ? "Hidden parts skipped" : ' +
             '(mode === "beta") ? "Some disabled" : ' +
-            '(mode === "alpha") ? "Readonly chain" : "Free form"'
-        }
-      }
+            '(mode === "alpha") ? "Readonly chain" : "Free form"',
+        },
+      },
     },
 
     // Echoes values across groups and mutates strings heavily.
@@ -244,28 +252,28 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           type: 'text',
           label: 'E1 = L5 + A',
           readonly: 'true',
-          computedValue: '`E1:${(chain?.l5 ?? "") + "|" + (fanOut?.a ?? "")}`'
+          computedValue: '`E1:${(chain?.l5 ?? "") + "|" + (fanOut?.a ?? "")}`',
         },
         e2: {
           type: 'text',
           label: 'E2 Upper Slice',
           readonly: 'true',
-          computedValue: '((echoChamber?.e1 ?? "").toUpperCase()).slice(0, 16)'
+          computedValue: '((echoChamber?.e1 ?? "").toUpperCase()).slice(0, 16)',
         },
         e3: {
           type: 'text',
           label: 'E3 Decor',
           readonly: 'true',
-          computedValue: '`(${(echoChamber?.e2 ?? "").replace("|", "⇄")})`'
+          computedValue: '`(${(echoChamber?.e2 ?? "").replace("|", "⇄")})`',
         },
         e4: {
           type: 'text',
           label: 'E4 Seed Aware',
           readonly: 'true',
           computedValue:
-            '(seed ?? "").includes("a") ? "contains-a:" + (echoChamber?.e3 ?? "") : "no-a:" + (echoChamber?.e3 ?? "")'
-        }
-      }
+            '(seed ?? "").includes("a") ? "contains-a:" + (echoChamber?.e3 ?? "") : "no-a:" + (echoChamber?.e3 ?? "")',
+        },
+      },
     },
 
     // Serial chain S1..S10, each depending on the previous, with cross-links to chain.deep.
@@ -274,17 +282,67 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
       legend: 'Serial',
       dynamicTitle: '`Serial from "${seed ?? ""}"`',
       controls: {
-        s1:  { type: 'text', label: 'S1', readonly: 'true', computedValue: '`S1:${seed ?? ""}`' },
-        s2:  { type: 'text', label: 'S2', readonly: 'true', computedValue: '`S2:${serial?.s1 ?? ""}`' },
-        s3:  { type: 'text', label: 'S3', readonly: 'true', computedValue: '`S3:${serial?.s2 ?? ""}`' },
-        s4:  { type: 'text', label: 'S4', readonly: 'true', computedValue: '`S4:${serial?.s3 ?? ""}|${chain?.deep?.l8 ?? ""}`' },
-        s5:  { type: 'text', label: 'S5', readonly: 'true', computedValue: '(serial?.s4 ?? "").toLowerCase()' },
-        s6:  { type: 'text', label: 'S6', readonly: 'true', computedValue: '(serial?.s5 ?? "").replace("s4", "S4")' },
-        s7:  { type: 'text', label: 'S7', readonly: 'true', computedValue: '(serial?.s6 ?? "").concat("|", (fanOut?.c ?? ""))' },
-        s8:  { type: 'text', label: 'S8', readonly: 'true', computedValue: '(serial?.s7 ?? "").slice(0, 32)' },
-        s9:  { type: 'text', label: 'S9', readonly: 'true', computedValue: '`S9:${serial?.s8 ?? ""}`' },
-        s10: { type: 'text', label: 'S10', readonly: 'true', computedValue: '(serial?.s9 ?? "").toUpperCase()' }
-      }
+        s1: {
+          type: 'text',
+          label: 'S1',
+          readonly: 'true',
+          computedValue: '`S1:${seed ?? ""}`',
+        },
+        s2: {
+          type: 'text',
+          label: 'S2',
+          readonly: 'true',
+          computedValue: '`S2:${serial?.s1 ?? ""}`',
+        },
+        s3: {
+          type: 'text',
+          label: 'S3',
+          readonly: 'true',
+          computedValue: '`S3:${serial?.s2 ?? ""}`',
+        },
+        s4: {
+          type: 'text',
+          label: 'S4',
+          readonly: 'true',
+          computedValue: '`S4:${serial?.s3 ?? ""}|${chain?.deep?.l8 ?? ""}`',
+        },
+        s5: {
+          type: 'text',
+          label: 'S5',
+          readonly: 'true',
+          computedValue: '(serial?.s4 ?? "").toLowerCase()',
+        },
+        s6: {
+          type: 'text',
+          label: 'S6',
+          readonly: 'true',
+          computedValue: '(serial?.s5 ?? "").replace("s4", "S4")',
+        },
+        s7: {
+          type: 'text',
+          label: 'S7',
+          readonly: 'true',
+          computedValue: '(serial?.s6 ?? "").concat("|", (fanOut?.c ?? ""))',
+        },
+        s8: {
+          type: 'text',
+          label: 'S8',
+          readonly: 'true',
+          computedValue: '(serial?.s7 ?? "").slice(0, 32)',
+        },
+        s9: {
+          type: 'text',
+          label: 'S9',
+          readonly: 'true',
+          computedValue: '`S9:${serial?.s8 ?? ""}`',
+        },
+        s10: {
+          type: 'text',
+          label: 'S10',
+          readonly: 'true',
+          computedValue: '(serial?.s9 ?? "").toUpperCase()',
+        },
+      },
     },
 
     // Complex gating: hidden/disabled/readonly interact based on mixed conditions.
@@ -300,28 +358,29 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           type: 'text',
           label: 'G1 (Mode Echo)',
           readonly: 'true',
-          computedValue: '`g1:${mode ?? ""}`'
+          computedValue: '`g1:${mode ?? ""}`',
         },
         g2: {
           type: 'text',
           label: 'G2 (Seed Len)',
           readonly: 'true',
-          computedValue: '`len:${(seed ?? "").length}`'
+          computedValue: '`len:${(seed ?? "").length}`',
         },
         g3: {
           type: 'text',
           label: 'G3 (Switch-ish)',
           readonly: 'true',
           computedValue:
-            '(mode === "alpha") ? "α" : (mode === "beta") ? "β" : (mode === "gamma") ? "γ" : "∅"'
+            '(mode === "alpha") ? "α" : (mode === "beta") ? "β" : (mode === "gamma") ? "γ" : "∅"',
         },
         g4: {
           type: 'text',
           label: 'G4 (Cross Peek)',
           readonly: 'true',
-          computedValue: '`peek:${(summary?.flatSummary ?? "").indexOf("L5:")}`'
-        }
-      }
+          computedValue:
+            '`peek:${(summary?.flatSummary ?? "").indexOf("L5:")}`',
+        },
+      },
     },
 
     // Cross-matrix: build a CSV overview by pulling from many places.
@@ -337,12 +396,15 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           computedValue:
             '(' +
             '[' +
-            '(rootEcho ?? "")' + ',' +
-            '(fanOut?.a ?? "")' + ',' +
-            '(chain?.l3 ?? "")' + ',' +
+            '(rootEcho ?? "")' +
+            ',' +
+            '(fanOut?.a ?? "")' +
+            ',' +
+            '(chain?.l3 ?? "")' +
+            ',' +
             '(chain?.deep?.l8 ?? "")' +
             ']' +
-            ').join(";")'
+            ').join(";")',
         },
         m2: {
           type: 'text',
@@ -351,14 +413,17 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           computedValue:
             '(' +
             '[' +
-            '(serial?.s6 ?? "")' + ',' +
-            '(echoChamber?.e4 ?? "")' + ',' +
-            '(matrix?.readonlyWhenAlpha ?? "")' + ',' +
+            '(serial?.s6 ?? "")' +
+            ',' +
+            '(echoChamber?.e4 ?? "")' +
+            ',' +
+            '(matrix?.readonlyWhenAlpha ?? "")' +
+            ',' +
             '(summary?.verboseSummary ?? "")' +
             ']' +
-            ').join("||")'
-        }
-      }
+            ').join("||")',
+        },
+      },
     },
 
     // String lab: aggressive transformations to showcase method coverage.
@@ -372,7 +437,7 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           label: 'T1 (Trim/Pad/Case)',
           readonly: 'true',
           computedValue:
-            '(("[" + (seed ?? "").trim() + "]").toUpperCase()).concat("|", (mode ?? "").toLowerCase())'
+            '(("[" + (seed ?? "").trim() + "]").toUpperCase()).concat("|", (mode ?? "").toLowerCase())',
         },
         t2: {
           type: 'text',
@@ -381,16 +446,16 @@ export const highlyComputedForm: NgxFbForm<ExampleControls> = {
           computedValue:
             '(' +
             '((fanOut?.c ?? "").replace("|", ",")).split(",")' +
-            ').join("+")'
+            ').join("+")',
         },
         t3: {
           type: 'text',
           label: 'T3 (Find)',
           readonly: 'true',
           computedValue:
-            '`L5@${(summary?.flatSummary ?? "").includes("L5:") ? "yes" : "no"}`'
-        }
-      }
-    }
-  }
+            '`L5@${(summary?.flatSummary ?? "").includes("L5:") ? "yes" : "no"}`',
+        },
+      },
+    },
+  },
 } as const;

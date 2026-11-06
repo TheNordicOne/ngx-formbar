@@ -1,6 +1,6 @@
 ## Overview
 
-Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library _directives_ and instead _implement an interface_. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
+Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is split into four focused packages. Component registrations move from a bare `Type<unknown>` to a `ComponentRegistrationEntry` shape. The headline change is that consumer components stop applying library _directives_ and instead _implement an interface_. You write a normal Angular component with `input()` signals matching one of the formbar contracts (`ReactiveFormbarControl`, `ReactiveFormbarGroup`, `ReactiveFormbarArray`, `FormbarBlock`). The library mounts the component dynamically and writes the inputs by name. There are no more `hostDirectives`, no more `inject(NgxfbControlDirective)`, and no `ngxfbAbstractControl` template iteration in groups.
 
 **New package structure:**
 
@@ -8,12 +8,12 @@ Version 2.0.0 is a structural overhaul. The monolithic `@ngx-formbar/core` is sp
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ngx-formbar/core`           | Types, expression engine, DI tokens, services. Peer dependencies are `@angular/core` and `rxjs`; `@angular/forms` and `@angular/cdk` are no longer required by core. |
 | `@ngx-formbar/reactive-forms` | Form component, provider setup, validators, composables, the interface contracts.                                                                                    |
-| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `register` generators.                                                                                                               |
+| `@ngx-formbar/schematics`     | `control` / `group` / `block` / `array` / `register` / `schema` generators.                                                                                          |
 | `@ngx-formbar/setup`          | Internal helper for the schematics (installed automatically as a dep).                                                                                               |
 
 ## Prerequisites
 
-- Angular 20.0.0 or higher
+- Angular 20.0.0 up to (but not including) Angular 23
 
 ## Step 1: Install the new packages
 
@@ -41,13 +41,14 @@ ng add @ngx-formbar/reactive-forms
 
 ## Step 3: Update generator commands
 
-Code generators now live in `@ngx-formbar/schematics` and there is a new `register` generator.
+Code generators now live in `@ngx-formbar/schematics` and there are new `array` and `schema` generators.
 
 ```shell
 # Before
 ng generate @ngx-formbar/core:control
 ng generate @ngx-formbar/core:group
 ng generate @ngx-formbar/core:block
+ng generate @ngx-formbar/core:register
 
 # After
 ng generate @ngx-formbar/schematics:control
@@ -55,11 +56,65 @@ ng generate @ngx-formbar/schematics:group
 ng generate @ngx-formbar/schematics:block
 ng generate @ngx-formbar/schematics:array
 ng generate @ngx-formbar/schematics:register
+ng generate @ngx-formbar/schematics:schema
 ```
 
-The `--hostDirectiveHelperPath` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at.
+`register` now takes each key from the `type` of the component's config. It only searches the source root, and an `--include` outside it fails. `register` only finds components implementing a contract, so run it after [Step 6](#step-6-refactor-consumer-components-to-the-interface-contract).
+
+The `--host-directive-helper-path` option no longer exists. Generators emit interface-based components and have no host-directive scaffolding to point at. The `block` generator no longer takes `--view-provider-helper-path`.
+
+`--path` inside the project is relative to the workspace root, as in Angular's generators. In a project rooted at the workspace root (the default `ng new` layout), `--path app/forms` now writes to `app/forms`, where v1 wrote to `src/app/forms`. A path outside the project goes under the source root, a leading `/` means the workspace root, and a path inside another project fails.
+
+A schematics configuration file anywhere other than the `app` folder of the source root or the workspace root is no longer found, so set `schematicsConfig` to its path. A `schematicsConfig` pointing at a missing file now fails. A project no longer picks up another project's file. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
 
 Generated file and class names now follow Angular's `@schematics/angular:component` config, so by default there is no `.component`/`Component` suffix. The config interface is named with a `Config` suffix. See [Naming](/fundamentals/generators#naming) for the full behavior.
+
+### Generator settings written by v1's `ng add`
+
+The generators read their `angular.json` defaults from keys such as `@ngx-formbar/schematics:control`. With `--use-schematic-config=false`, v1's `ng add` wrote them under `@ngx-formbar/core:control`, `@ngx-formbar/core:group` and `@ngx-formbar/core:block`, and the `2.0.0-next.x` prereleases did the same. Rename these keys in the project's `schematics` section and remove `hostDirectiveHelperPath`. Under the `block` key, delete `viewProviderHelperPath` too:
+
+**Before:**
+
+```json name="angular.json"
+{
+  "schematics": {
+    "@ngx-formbar/core:control": {
+      "hostDirectiveHelperPath": "app/shared/helper",
+      "viewProviderHelperPath": "app/shared/helper"
+    }
+  }
+}
+```
+
+**After:**
+
+```json name="angular.json"
+{
+  "schematics": {
+    "@ngx-formbar/schematics:control": {
+      "viewProviderHelperPath": "app/shared/helper"
+    }
+  }
+}
+```
+
+`controlRegistrationsPath` names the registrations file. With a custom `--registrations-path`, v1's `ng add` set it to the registrations directory in the schematics configuration file, and the `2.0.0-next.x` prereleases did the same. Append the file name:
+
+**Before:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/forms/registrations"
+}
+```
+
+**After:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/forms/registrations/component-registrations.ts"
+}
+```
 
 ## Step 4: Move runtime imports to `@ngx-formbar/reactive-forms`
 
@@ -134,12 +189,13 @@ If you have a custom `ComponentResolver`, change its `registrations` signal type
 
 This is the biggest change. In v1 your components attached library directives via `hostDirectives` and pulled state out by injecting them. In v2 your component declares signal inputs and _implements_ one of the formbar contracts. The library writes those inputs when it mounts the component.
 
-The three contracts live in `@ngx-formbar/reactive-forms`:
+The four contracts live in `@ngx-formbar/reactive-forms`:
 
 | Contract                    | Use for                               | `T extends`      |
-|-----------------------------|---------------------------------------|------------------|
+| --------------------------- | ------------------------------------- | ---------------- |
 | `ReactiveFormbarControl<T>` | Leaf form controls (input, select, …) | `NgxFbControl`   |
 | `ReactiveFormbarGroup<T>`   | Container nodes that hold children    | `NgxFbFormGroup` |
+| `ReactiveFormbarArray<T>`   | Repeating rows of controls            | `NgxFbArray`     |
 | `FormbarBlock<T>`           | Non-control content (notes, dividers) | `NgxFbBlock`     |
 
 Custom properties on `T` beyond the base interface automatically become signal inputs on the component contract. Required properties must be declared; optional ones (`?`) can be omitted.
@@ -181,10 +237,11 @@ export class TextControlComponent {
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
-import { NgxFbControl, Expression } from '@ngx-formbar/core';
+import { NgxFbControl } from '@ngx-formbar/core';
 
 interface TextControl extends NgxFbControl {
-  placeholder?: Expression<string>;
+  type: 'text';
+  placeholder?: string;
 }
 
 @Component({
@@ -306,11 +363,12 @@ export class NoteComponent {
 ```typescript
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormbarBlock } from '@ngx-formbar/reactive-forms';
-import { NgxFbBlock, Expression } from '@ngx-formbar/core';
+import { NgxFbBlock } from '@ngx-formbar/core';
 
 interface NoteBlock extends NgxFbBlock {
-  message: Expression<string>;
-  severity?: Expression<'info' | 'warn' | 'danger'>;
+  type: 'note';
+  message: string;
+  severity?: 'info' | 'warn' | 'danger';
 }
 
 @Component({
@@ -335,7 +393,7 @@ If your codebase has any of the following, delete it. None of it has any meaning
 - `hostDirectives: [{ directive: NgxfbControlDirective, inputs: [...] }]` (and the group/block variants) on consumer components.
 - `inject(NgxfbControlDirective)`, `inject(NgxfbGroupDirective)`, `inject(NgxfbBlockDirective)` from inside consumer components.
 - Any local "host directive helper" file your generator emitted in v1 that re-exported a configured `hostDirectives` entry.
-- A `hostDirectiveHelperPath` setting in your `angular.json` schematic options.
+- A `hostDirectiveHelperPath` setting in your `angular.json` schematic options, or under `control`, `group` and `block` in `formbar-schematic.config.json`.
 
 The library's directives still exist as **internal mounting infrastructure**, but they are no longer the public consumer-facing surface. Your components do not reference them.
 
@@ -346,7 +404,7 @@ The v1 `visibilityHandling` registration option has been renamed to `hiddenHandl
 Two registration options replace any in-component lifecycle wiring you may have done in v1:
 
 | Option             | Values               | Default  | Effect                                                                                                                                                                                                                                                                                                                                  |
-|--------------------|----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------ | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `hiddenHandling`   | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library destroys the consumer component when the resolved hidden state becomes true and recreates it when shown again, then runs the configured `valueStrategy`. `'manual'`: the library only forwards the resolved `isHidden` signal. The component stays mounted and is responsible for its own DOM and value handling. |
 | `disabledHandling` | `'auto' \| 'manual'` | `'auto'` | `'auto'`: the library calls `enable()`/`disable()` on the form control as the resolved disabled signal changes. `'manual'`: the library does not touch the form control. The component reads `isDisabled` and applies it itself.                                                                                                        |
 
@@ -389,13 +447,13 @@ The parser has also been switched from `acorn` to an in-tree allow-list parser a
 Loose equality coercion is no longer applied. `==` behaves identically to `===` and `!=` identically to `!==`. The following return `false` in v2.0.0:
 
 | Expression                                    | v1      | v2.0.0  |
-|-----------------------------------------------|---------|---------|
+| --------------------------------------------- | ------- | ------- |
 | `age == "18"` (when `age` is a number)        | `true`  | `false` |
 | `value != null` (when `value` is `undefined`) | `false` | `true`  |
 | `"" == 0`                                     | `true`  | `false` |
 | `null == undefined`                           | `true`  | `false` |
 
-If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `String(age) == "18"`).
+If an expression relied on cross-type coercion, compare same-type operands explicitly (`age == 18` or `age.toString() == "18"`).
 
 ### Array mutators throw
 
@@ -464,6 +522,28 @@ const flag = service.evaluateExpression<boolean>(ast, ctx);
 
 The default `T = unknown` keeps existing call sites working.
 
+## Step 11: Drop the leading `/` from source-root paths
+
+A leading `/` in a schematics path now means the workspace root. This applies to the options, the schematics configuration file and `angular.json`, and it also changes values written for the `2.0.0-next.x` prereleases. Drop it from values such as `path`, `--path`, `controlRegistrationsPath`, `viewProviderHelperPath` and `schematicsConfig` that were meant relative to the source root:
+
+**Before:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "/app/registrations/component-registrations.ts"
+}
+```
+
+**After:**
+
+```json name="formbar-schematic.config.json"
+{
+  "controlRegistrationsPath": "app/registrations/component-registrations.ts"
+}
+```
+
+A `schematicsConfig` that still has it fails with `Schematics configuration file not found`. A `controlRegistrationsPath` or `viewProviderHelperPath` that still has it logs a warning naming the path it resolved to. A `path` or `--path` that still has it writes under the workspace root.
+
 ## What stays in `@ngx-formbar/core`
 
 The following remain in `@ngx-formbar/core` and need no path change:
@@ -481,7 +561,7 @@ If your code only imports types and tokens from `@ngx-formbar/core`, those impor
 ## Quick reference
 
 | Symbol                                                           | v1                                                   | v2.0.0                                                          |
-|------------------------------------------------------------------|------------------------------------------------------|-----------------------------------------------------------------|
+| ---------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
 | `NgxFbFormComponent`                                             | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
 | `provideFormbar`                                                 | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |
 | `defineFormbarConfig`, `FormbarConfig`                           | `@ngx-formbar/core`                                  | `@ngx-formbar/reactive-forms`                                   |

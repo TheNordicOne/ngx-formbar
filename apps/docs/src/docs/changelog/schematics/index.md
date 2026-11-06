@@ -6,25 +6,40 @@ New package containing all code generators, previously part of `@ngx-formbar/cor
 
 ### Added
 
-- `control` generator: scaffolds a control component implementing `ReactiveFormbarControl<T>`, with signal `input()` bindings, and registers itself automatically.
-- `group` generator: scaffolds a group component implementing `ReactiveFormbarGroup<T>` using `<ngxfb-control-outlet />`, and registers itself automatically.
-- `block` generator: scaffolds a block component implementing `FormbarBlock<T>`, and registers itself automatically.
-- `array` generator: scaffolds an array component implementing `ReactiveFormbarArray<T>` with a minimal `<ngxfb-form-array-outlet />` row template, and registers itself automatically.
+- `control` generator: scaffolds and registers a control.
+- `group` generator: scaffolds and registers a group.
+- `block` generator: scaffolds and registers a block.
+- `array` generator: scaffolds and registers an array.
 - `register` generator: discovers existing components and bulk-registers them as `ComponentRegistrationEntry` values.
 - `interfaceFileSuffix` option to control the interface file's name segment.
 - `schema` generator: emits documents such as JSON Schema from the content union. See [Schema Generation](/fundamentals/schema).
+- `--registration-type` and `--control-registrations-path` options on the scaffold generators.
 
 ### Changed
 
 - Generated control, group, block, and array components now implement the corresponding `@ngx-formbar/reactive-forms` interface and expose inputs as signals.
 - Generated components follow Angular's component naming, with no `.component`/`Component` suffix by default.
 - Config interfaces are generated with a `Config` suffix.
-- Group templates render children through `<ngxfb-control-outlet />`.
-- Generated registrations use `ComponentRegistrationEntry` from `@ngx-formbar/core` (`staticComponent()` / `loadComponent()`).
+- `--path` inside the project is relative to the workspace root, as in Angular's generators.
+- A `--path` inside another project fails.
+- The schematics configuration file is looked up in fixed places, and a project's own file goes on top of the one at the workspace root. See [Finding the Schematics Configuration](/fundamentals/generators#finding-the-schematics-configuration).
+- Each schematic logs which schematics configuration file it used.
+- A leading `/` in a path means the workspace root, in every schematic.
+- Generated registrations use `loadComponent()`.
+- `register` takes each key from the `type` of the component's config.
+- `register` only searches the source root.
+- `register` only registers components implementing a contract.
+
+### Fixed
+
+- `register` honors `--control-registrations-path`, `--control-registrations` and `--registration-type`.
+- A scaffold warns when the registrations file is missing or holds no registrations.
+- Paths above the workspace root give a clear error.
 
 ### Removed
 
-- `--hostDirectiveHelperPath` CLI option from the `control`, `group`, and `block` generators. The `--viewProviderHelperPath` option still applies to `control` and `group`.
+- `--host-directive-helper-path` CLI option from the `control`, `group`, and `block` generators.
+- `--view-provider-helper-path` from the `block` generator.
 - Generated components no longer reference `hostDirectives` or `inject(NgxfbControlDirective)`.
 
 ### Migration
@@ -35,4 +50,4 @@ Install as a dev dependency to replace the generators previously in `@ngx-formba
 npm install -D @ngx-formbar/schematics
 ```
 
-Update any scripts using `@ngx-formbar/core:<generator>` to `@ngx-formbar/schematics:<generator>`, and drop the `--hostDirectiveHelperPath` flag. Existing v1-generated components continue to work; see [Migrating from v1](/changelog/migrating-from-v1) to convert them.
+Replace `@ngx-formbar/core:control` with `@ngx-formbar/schematics:control`, and the same for the other generators. Drop the `--host-directive-helper-path` flag, and `--view-provider-helper-path` from `block`. Convert v1-generated components with [Migrating from v1](/changelog/migrating-from-v1).

@@ -51,6 +51,10 @@ describe('splitHashReference', () => {
     });
   });
 
+  it('leaves the path empty when the reference starts with the "#"', () => {
+    expect(splitHashReference('#B')).toEqual({ path: '', exportName: 'B' });
+  });
+
   it('splits on the first "#" only', () => {
     expect(splitHashReference('a.ts#B#C')).toEqual({
       path: 'a.ts',

@@ -756,6 +756,213 @@ describe('buildJsonSchema', () => {
   });
 });
 
+describe('buildJsonSchema document shape', () => {
+  it('names an inline root union FormContent', () => {
+    const document = buildJsonSchema(
+      { ...controlModel(), root: { name: null, members: ['C'] } },
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(keysAt(document, '$defs')).toEqual(['C', 'FormContent']);
+    expect(
+      at(document, 'properties', 'content', 'additionalProperties'),
+    ).toEqual({ $ref: '#/$defs/FormContent' });
+  });
+
+  it('names an inline child union after its node', () => {
+    const document = buildJsonSchema(nestingModel(), DRAFT_2020_12, {
+      docs: true,
+    });
+
+    expect(at(document, '$defs', 'Rows', 'properties', 'rowControl')).toEqual({
+      $ref: '#/$defs/RowsChildren',
+    });
+    expect(at(document, '$defs', 'RowsChildren')).toEqual({
+      anyOf: [{ $ref: '#/$defs/TextControl' }],
+    });
+  });
+
+  it('requires content and a string $schema', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(MODEL, DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate({})).toBe(false);
+    expect(validate({ $schema: 1, ...VALID })).toBe(false);
+  });
+
+  it('requires the controls of a group', () => {
+    const validate = new Ajv2020({ strict: false }).compile(
+      buildJsonSchema(nestingModel(), DRAFT_2020_12, { docs: true }),
+    );
+
+    expect(validate({ content: { section: { type: 'group' } } })).toBe(false);
+  });
+
+  it('leaves the discriminant an open string without a literal', () => {
+    const model = controlModel();
+    model.nodes['C'].typeLiteral = null;
+
+    const document = buildJsonSchema(model, DRAFT_2020_12, { docs: true });
+
+    expect(at(document, '$defs', 'C', 'properties', 'type')).toEqual({
+      type: 'string',
+    });
+  });
+
+  it('lists the literals of a discriminant with several', () => {
+    const model = controlModel();
+    model.nodes['C'].typeLiteral = ['a', 'b'];
+
+    const document = buildJsonSchema(model, DRAFT_2020_12, { docs: true });
+
+    expect(at(document, '$defs', 'C', 'properties', 'type')).toEqual({
+      enum: ['a', 'b'],
+    });
+  });
+
+  it.each<[string, TypeNode, object]>([
+    ['null', { k: 'null' }, { type: 'null' }],
+    ['any', { k: 'any' }, {}],
+    ['unknown', { k: 'unknown' }, {}],
+  ])('emits a %s property', (_, type, schema) => {
+    const document = buildJsonSchema(
+      controlModel({ name: 'p', optional: false, type }),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'C', 'properties', 'p')).toEqual(schema);
+  });
+
+  it('states no length for a tuple that needs no item', () => {
+    const document = buildJsonSchema(
+      controlModel({
+        name: 'p',
+        optional: false,
+        type: { k: 'tuple', elements: [{ k: 'string' }], minItems: 0 },
+      }),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'C', 'properties', 'p')).toEqual({
+      type: 'array',
+      prefixItems: [{ type: 'string' }],
+      items: false,
+    });
+  });
+
+  it('keeps a documented property nothing satisfies a plain false', () => {
+    const document = buildJsonSchema(
+      controlModel({
+        name: 'p',
+        optional: false,
+        doc: 'A callback.',
+        type: { k: 'function' },
+      }),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'C', 'properties', 'p')).toBe(false);
+  });
+
+  it('adds no description key to an undocumented property', () => {
+    const document = buildJsonSchema(
+      controlModel({ name: 'p', optional: false, type: { k: 'string' } }),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'C', 'properties', 'p')).not.toHaveProperty(
+      'description',
+    );
+  });
+
+  it('counts up through the names of same-named shapes', () => {
+    const shape = (name: string): Property => ({
+      name,
+      optional: false,
+      type: {
+        k: 'object',
+        name: 'Options',
+        properties: [{ name, optional: false, type: { k: 'string' } }],
+      },
+    });
+    const document = buildJsonSchema(
+      controlModel(shape('a'), shape('b'), shape('c')),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(keysAt(document, '$defs')).toEqual([
+      'C',
+      'AppContent',
+      'Options',
+      'Options2',
+      'Options3',
+    ]);
+  });
+
+  it.each([
+    ['__Options__', 'Options'],
+    ['<>', 'Type'],
+  ])('defines a shape printed as %s under %s', (printed, defName) => {
+    const document = buildJsonSchema(
+      controlModel({
+        name: 'p',
+        optional: false,
+        type: { k: 'object', name: printed, properties: [] },
+      }),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(at(document, '$defs', 'C', 'properties', 'p')).toEqual({
+      $ref: `#/$defs/${defName}`,
+    });
+  });
+
+  const CYCLE: TypeNode = { k: 'cycle', name: 'Outer' };
+
+  it.each<[string, TypeNode]>([
+    ['an array', { k: 'array', items: CYCLE }],
+    ['a tuple position', { k: 'tuple', elements: [CYCLE], minItems: 0 }],
+    ['a tuple rest', { k: 'tuple', elements: [], minItems: 0, rest: CYCLE }],
+    ['a union', { k: 'union', members: [CYCLE, { k: 'string' }] }],
+    ['an index signature', { k: 'object', properties: [], index: CYCLE }],
+  ])('sees a cycle through %s when sharing a shape', (_, back) => {
+    const leaf: TypeNode = {
+      k: 'object',
+      name: 'Leaf',
+      properties: [{ name: 'back', optional: true, type: back }],
+    };
+    const outer = (name: string): Property => ({
+      name,
+      optional: false,
+      type: {
+        k: 'object',
+        name: 'Outer',
+        properties: [
+          { name: 'leaf', optional: false, type: leaf },
+          { name, optional: false, type: { k: 'string' } },
+        ],
+      },
+    });
+    const document = buildJsonSchema(
+      controlModel(outer('a'), outer('b')),
+      DRAFT_2020_12,
+      { docs: true },
+    );
+
+    expect(keysAt(document, '$defs')).toEqual(
+      expect.arrayContaining(['Leaf', 'Leaf2']),
+    );
+  });
+});
+
 describe('the built-in emitters', () => {
   it.each([
     [draft202012Emitter, '/projects/test-app/src/form.schema.json'],
@@ -896,6 +1103,21 @@ function context(
     options,
     logger: new logging.NullLogger(),
     paths,
+  };
+}
+
+function controlModel(...properties: Property[]): FormModel {
+  return {
+    root: { name: 'AppContent', members: ['C'] },
+    nodes: {
+      C: {
+        name: 'C',
+        kind: 'control',
+        typeLiteral: ['c'],
+        open: false,
+        properties,
+      },
+    },
   };
 }
 

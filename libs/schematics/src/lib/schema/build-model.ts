@@ -4,15 +4,21 @@ import {
   IndexKind,
   InterfaceDeclaration,
   isInterfaceDeclaration,
+  isIntersectionTypeNode,
+  isTypeAliasDeclaration,
+  isTypeReferenceNode,
   Node,
+  NodeArray,
+  StringLiteralType,
   Symbol as TsSymbol,
   SymbolFlags,
-  SyntaxKind,
   Type,
   TypeChecker,
   TypeFlags,
   TupleTypeReference,
+  TypeNode as TsTypeNode,
 } from 'typescript';
+import { isUtilityType } from './utility-types';
 import {
   FormModel,
   FormNode,
@@ -210,10 +216,9 @@ function addNode(type: Type, builder: Builder) {
  * not an InterfaceType, and `isClassOrInterface()` is false for it.
  */
 function resolveKind(type: Type, builder: Builder) {
-  const declaration = type
-    .getSymbol()
-    ?.declarations?.find(isInterfaceDeclaration);
-  const kind = declaration ? kindFromHeritage(declaration, builder) : null;
+  const kind = interfaceDeclarations(type)
+    .map((declaration) => kindFromHeritage(declaration, builder))
+    .find(Boolean);
 
   if (!kind) {
     throw new SchematicsException(
@@ -228,36 +233,61 @@ function kindFromHeritage(
   declaration: InterfaceDeclaration,
   builder: Builder,
 ): NodeKind | null {
-  for (const clause of declaration.heritageClauses ?? []) {
-    if (clause.token !== SyntaxKind.ExtendsKeyword) {
-      continue;
-    }
+  return (
+    (declaration.heritageClauses ?? [])
+      .flatMap(({ types }) => [...types])
+      .flatMap(({ expression, typeArguments }) =>
+        baseInterfaces(expression, typeArguments, builder),
+      )
+      .map(
+        (base) =>
+          coreBaseKind(base, builder.coreRoot) ??
+          kindFromHeritage(base, builder),
+      )
+      .find(Boolean) ?? null
+  );
+}
 
-    for (const heritage of clause.types) {
-      const baseDeclaration = resolveInterfaceDeclaration(
-        heritage.expression,
-        builder,
-      );
+/** What a name builds on, seen through utility types and type aliases. */
+function baseInterfaces(
+  name: Node,
+  typeArguments: NodeArray<TsTypeNode> | undefined,
+  builder: Builder,
+): InterfaceDeclaration[] {
+  const { checker } = builder;
+  const written = checker.getSymbolAtLocation(name);
+  const symbol =
+    written && written.flags & SymbolFlags.Alias
+      ? checker.getAliasedSymbol(written)
+      : written;
+  const references = referencesBehind(symbol, typeArguments);
 
-      if (!baseDeclaration) {
-        continue;
-      }
+  return references
+    ? references
+        .filter(isTypeReferenceNode)
+        .flatMap((reference) =>
+          baseInterfaces(reference.typeName, reference.typeArguments, builder),
+        )
+    : interfaceDeclarations(checker.getTypeAtLocation(name));
+}
 
-      const coreKind = coreBaseKind(baseDeclaration, builder.coreRoot);
-
-      if (coreKind) {
-        return coreKind;
-      }
-
-      const inherited = kindFromHeritage(baseDeclaration, builder);
-
-      if (inherited) {
-        return inherited;
-      }
-    }
+function referencesBehind(
+  symbol: TsSymbol | undefined,
+  typeArguments: NodeArray<TsTypeNode> | undefined,
+) {
+  if (isUtilityType(symbol)) {
+    return [...(typeArguments ?? [])].slice(0, 1);
   }
 
-  return null;
+  const alias = symbol?.declarations?.find(isTypeAliasDeclaration);
+
+  if (!alias) {
+    return null;
+  }
+
+  return isIntersectionTypeNode(alias.type)
+    ? [...alias.type.types]
+    : [alias.type];
 }
 
 function coreBaseKind(declaration: InterfaceDeclaration, coreRoot: string) {
@@ -265,22 +295,6 @@ function coreBaseKind(declaration: InterfaceDeclaration, coreRoot: string) {
   return file.startsWith(coreRoot)
     ? (CORE_BASES[declaration.name.text] ?? null)
     : null;
-}
-
-/** Base types are always imported in a real consumer, so the alias must be followed. */
-function resolveInterfaceDeclaration(expression: Node, builder: Builder) {
-  const symbol = builder.checker.getSymbolAtLocation(expression);
-
-  if (!symbol) {
-    return undefined;
-  }
-
-  const resolved =
-    (symbol.flags & SymbolFlags.Alias) !== 0
-      ? builder.checker.getAliasedSymbol(symbol)
-      : symbol;
-
-  return resolved.declarations?.find(isInterfaceDeclaration);
 }
 
 function readChildren(
@@ -327,9 +341,7 @@ function childMembers(itemType: Type, builder: Builder) {
  * on, so emitting it would let a mistyped `type` pass as that base.
  */
 function registeredFor(type: Type, builder: Builder) {
-  const declaration = type
-    .getSymbol()
-    ?.declarations?.find(isInterfaceDeclaration);
+  const declaration = declaredInterface(type);
   const kind = declaration ? coreBaseKind(declaration, builder.coreRoot) : null;
 
   return kind
@@ -455,15 +467,19 @@ function toTypeNode(
     return ANY_OBJECT;
   }
 
-  if (type.getCallSignatures().length > 0) {
+  if (
+    type.getCallSignatures().length > 0 ||
+    type.getConstructSignatures().length > 0
+  ) {
     return { k: 'function' };
   }
 
-  if (checker.isArrayType(type)) {
-    const items = checker.getIndexTypeOfType(type, IndexKind.Number);
-    return items
-      ? { k: 'array', items: toTypeNode(items, builder, expansion) }
-      : { k: 'array', items: { k: 'unknown' } };
+  const items = checker.isArrayType(type)
+    ? checker.getIndexTypeOfType(type, IndexKind.Number)
+    : undefined;
+
+  if (items) {
+    return { k: 'array', items: toTypeNode(items, builder, expansion) };
   }
 
   if (isTupleReference(type, checker)) {
@@ -516,10 +532,9 @@ function toTupleNode(
   builder: Builder,
   expansion: Expansion,
 ) {
-  const { fixedLength, minLength, elementFlags } = type.target;
+  const { fixedLength, minLength } = type.target;
   const items = builder.checker
     .getTypeArguments(type)
-    .slice(0, elementFlags.length)
     .map((item) => toTypeNode(item, builder, expansion));
   const trailing = items.slice(fixedLength);
   const rest: TypeNode | undefined =
@@ -536,10 +551,8 @@ function toTupleNode(
 /** `{}` and an empty interface place no demand on a value beyond being non-nullish. */
 function isEmptyObject(type: Type, checker: TypeChecker) {
   return (
-    (type.flags & TypeFlags.Object) !== 0 &&
     type.getProperties().length === 0 &&
-    checker.getIndexInfosOfType(type).length === 0 &&
-    type.getConstructSignatures().length === 0
+    checker.getIndexInfosOfType(type).length === 0
   );
 }
 
@@ -705,7 +718,15 @@ function toDeclaredNode(type: Type) {
 }
 
 function isDeclaredInterface(type: Type) {
-  return type.getSymbol()?.declarations?.some(isInterfaceDeclaration) === true;
+  return declaredInterface(type) !== undefined;
+}
+
+function interfaceDeclarations(type: Type) {
+  return type.getSymbol()?.declarations?.filter(isInterfaceDeclaration) ?? [];
+}
+
+function declaredInterface(type: Type) {
+  return type.getSymbol()?.declarations?.find(isInterfaceDeclaration);
 }
 
 function aliasName(type: Type) {
@@ -719,23 +740,20 @@ function readTypeLiterals(type: Type, checker: TypeChecker) {
     return null;
   }
 
-  // An open `string` arm collapses the result to null. Any string is allowed,
-  // so the schema must not pin literals.
-  const literals: string[] = [];
+  // Any arm that is not a literal admits more strings than literals could list,
+  // so the schema must not pin them.
   const propertyType = checker.getTypeOfSymbol(property);
+  const members = propertyType.isUnion() ? propertyType.types : [propertyType];
 
-  for (const member of propertyType.isUnion()
-    ? propertyType.types
-    : [propertyType]) {
-    if (member.isStringLiteral()) {
-      literals.push(member.value);
-    } else if ((member.flags & TypeFlags.String) !== 0) {
-      return null;
-    }
-  }
-
-  return literals.length > 0 ? literals : null;
+  return members.every(isStringLiteral)
+    ? members.map((member) => member.value)
+    : null;
 }
+
+function isStringLiteral(type: Type): type is StringLiteralType {
+  return type.isStringLiteral();
+}
+
 function hasIndexSignature(type: Type, checker: TypeChecker) {
   return checker.getIndexInfosOfType(type).length > 0;
 }
@@ -755,7 +773,6 @@ function indexedValueType(type: Type, checker: TypeChecker) {
 }
 
 function docOf(symbol: TsSymbol | undefined, checker: TypeChecker) {
-  const comment = symbol?.getDocumentationComment(checker);
-  const text = comment ? displayPartsToString(comment) : '';
+  const text = displayPartsToString(symbol?.getDocumentationComment(checker));
   return text === '' ? undefined : text;
 }

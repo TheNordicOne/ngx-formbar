@@ -7,6 +7,14 @@ const config: StorybookConfig = {
     name: '@storybook/angular',
     options: {},
   },
+  // Minifying breaks the stories around a mutant switch on `?.`.
+  webpackFinal: (webpackConfig) =>
+    process.env['STRYKER_BUILD']
+      ? {
+          ...webpackConfig,
+          optimization: { ...webpackConfig.optimization, minimize: false },
+        }
+      : webpackConfig,
 };
 
 export default config;

@@ -120,7 +120,7 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
     details: {
       type: 'group',
       dynamicTitle:
-        "'Issue Details' + (details && details.category ? ' — ' + details.category : '')",
+        "'Issue Details' + (details && details.category ? ' (' + details.category + ')' : '')",
       controls: {
         category: {
           type: 'dropdown',
@@ -305,7 +305,7 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
     approvals: {
       type: 'group',
       dynamicTitle:
-        "'Approvals' + (details && details.urgency ? ' — ' + details.urgency : '')",
+        "'Approvals' + (details && details.urgency ? ' (' + details.urgency + ')' : '')",
       hidden: '!(details.urgency === "high" || details.urgency === "critical")',
       hideStrategy: 'remove',
       valueStrategy: 'reset',
@@ -347,7 +347,8 @@ export const complexMaintenanceForm: NgxFbForm<ExampleControls> = {
         "'Line Items' + (lineItems && lineItems.length ? ' (' + lineItems.length + ')' : '')",
       addLabel: 'Add line item',
       itemLabel: 'line item',
-      emptyMessage: 'No line items yet. Add parts or labor to itemize the cost.',
+      emptyMessage:
+        'No line items yet. Add parts or labor to itemize the cost.',
       rowControl: {
         type: 'group',
         controls: {

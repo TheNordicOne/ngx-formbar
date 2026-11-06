@@ -1,21 +1,5 @@
 export function toSafeString(value: unknown): string {
-  if (value === null) {
-    return 'null';
-  }
-
-  switch (typeof value) {
-    case 'undefined':
-      return 'undefined';
-    case 'string':
-      return value;
-    case 'boolean':
-      return value ? 'true' : 'false';
-    case 'number':
-    case 'symbol':
-    case 'bigint':
-    case 'function':
-      return value.toString();
-    default:
-      return JSON.stringify(value);
-  }
+  // Objects take the first branch, so String() never sees one.
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
 }

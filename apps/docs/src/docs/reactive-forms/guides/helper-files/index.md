@@ -2,15 +2,18 @@ To reduce boilerplate per component and improve maintainability, you can set up 
 
 ## Manual Helper File Integration
 
-You can place the helper files in any folder in your project. If you put them in the default location (`app/shared/helper`), they can be discovered automatically.
+`ng add` normally creates the helper files and points the generators at them.
 
-Otherwise, run schematics with the `--viewProviderHelperPath` flag to point to your file or configure it as a default. The configuration for each schematic is described on the schematics pages Generators and Register.
+If you write them yourself, you can place them in any folder in your project. Point the generators at your file with `viewProviderHelperPath`. See [Notes for the View Provider Path Option](/fundamentals/generators#notes-for-the-view-provider-path-option).
 
 ## Control Container View Providers
 
 `ControlContainer` is required for all controls and groups used within ngx-formbar. Injecting the control container lets components use reactive forms functionality without passing the form group through inputs or wrapping the template in extra tags. For a more detailed explanation, see this YouTube video: [How to Make Forms in Angular REUSABLE (Advanced, 2023)](https://www.youtube.com/watch?v=o74WSoJxGPI).
 
 ```typescript group="view-provider" name="control-container.view-provider.ts"
+import { inject } from '@angular/core';
+import { ControlContainer } from '@angular/forms';
+
 export const controlContainerViewProviders = [
   {
     provide: ControlContainer,
@@ -26,7 +29,7 @@ export const controlContainerViewProviders = [
 })
 ```
 
-> **Note:** Earlier versions of ngx-formbar shipped additional helpers (`ngxfbControlHostDirective`, `ngxfbGroupHostDirective`, `ngxfbBlockHostDirective`) for applying host directives to consumer components. As of v2.0.0, components implement the interface contract directly, so those host-directive helpers are no longer needed and have been removed.
+To have the generators use this file, set `viewProviderHelperPath` to `app/shared/helper/control-container.view-provider.ts#controlContainerViewProviders`.
 
 ## Union Types
 

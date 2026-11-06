@@ -1,6 +1,6 @@
 import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import { createRequire } from 'node:module';
-import { join, posix, resolve } from 'node:path';
+import { dirname, join, posix, resolve } from 'node:path';
 import { runInThisContext } from 'node:vm';
 import {
   flattenDiagnosticMessageText,
@@ -143,11 +143,16 @@ function loadModule(context: LoadContext, absolutePath: string) {
 }
 
 /**
- * `.js` siblings are already CommonJS and pass through untouched. `esModuleInterop`
+ * `.js` siblings are already CommonJS and pass through untouched, and `.json`
+ * siblings become the value of their module. `esModuleInterop`
  * matches what the generated workspace tsconfig implies, so a default import that
  * type-checks in the consumer's editor is not `undefined` at emit time.
  */
 function compile(text: string, absolutePath: string) {
+  if (absolutePath.endsWith('.json')) {
+    return `module.exports = ${text};`;
+  }
+
   if (!absolutePath.endsWith('.ts')) {
     return text;
   }
@@ -178,7 +183,8 @@ function compile(text: string, absolutePath: string) {
  * Relative specifiers are served from the Tree, so a multi-file emitter works and
  * sees files a chained schematic has written but not yet flushed to disk. Bare
  * specifiers fall through to Node resolution on disk, because the emitter's own
- * path exists only in the Tree and resolves nothing there.
+ * path exists only in the Tree and resolves nothing there. `__filename` and
+ * `__dirname` hold the path on disk, as an emitter passes them to Node APIs.
  */
 function evaluate(
   context: LoadContext,
@@ -202,14 +208,24 @@ function evaluate(
     return resolved;
   }
 
-  // `runInThisContext` is untyped; the signature is fixed by the wrapper compiled here.
-  const wrapped: unknown = runInThisContext(
-    `(function (exports, require, module, __filename, __dirname) {${javaScript}\n})`,
-    { filename },
-  );
-  const run = wrapped as ModuleWrapper;
+  const run = wrapInFunction(javaScript, filename);
+  const diskPath = join(context.host.workspaceRoot, filename);
 
-  run(record.exports, localRequire, record, filename, posix.dirname(filename));
+  run(record.exports, localRequire, record, diskPath, dirname(diskPath));
+}
+
+function wrapInFunction(javaScript: string, filename: string) {
+  try {
+    // `runInThisContext` is untyped; the signature is fixed by the wrapper compiled here.
+    return runInThisContext(
+      `(function (exports, require, module, __filename, __dirname) {${javaScript}\n})`,
+      { filename },
+    ) as ModuleWrapper;
+  } catch (error) {
+    throw new SchematicsException(
+      `Emitter ${filename} failed to compile: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /** Tree paths are virtual and '/'-rooted on every platform, so `posix` walks them. */

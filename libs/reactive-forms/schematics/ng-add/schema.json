@@ -14,18 +14,18 @@
     },
     "registrationStyle": {
       "type": "string",
-      "description": "How components and validators will be registered. Possible values: token, config",
+      "enum": ["token", "config"],
+      "description": "How components and validators will be registered",
       "default": "token"
     },
     "provideInline": {
       "type": "boolean",
-      "description": "Put configuration of provideFormbar call directly in app.config.ts (defaults to false)",
+      "description": "Configure provideFormbar in the root providers, without a provider configuration file (defaults to false)",
       "default": false
     },
     "providerConfigPath": {
       "type": "string",
-      "description": "Where the provider configuration file should be placed, relative to the project root. Defaults to 'app'",
-      "default": "app"
+      "description": "Folder for the provider configuration file. Defaults to 'app'"
     },
     "providerConfigFileName": {
       "type": "string",
@@ -44,13 +44,12 @@
     },
     "useHelper": {
       "type": "boolean",
-      "description": "Include helper files for view providers and host directives",
+      "description": "Include helper files for view providers",
       "default": true
     },
     "helperPath": {
       "type": "string",
-      "description": "Where helper files should be placed, relative to the project root. Defaults to 'app/shared/helper'",
-      "default": "app/shared/helper"
+      "description": "Folder for the helper files. Defaults to 'app/shared/helper'"
     },
     "splitRegistrations": {
       "type": "boolean",
@@ -59,29 +58,31 @@
     },
     "registrationsPath": {
       "type": "string",
-      "description": "Where registration files should be placed, relative to the project root. Defaults to 'app/registrations'",
-      "default": "app/registrations"
+      "description": "Folder for the registration files. Defaults to 'app/registrations'"
     },
     "useSchematicConfig": {
       "type": "boolean",
-      "description": "Whether to include an extra file for schematics configuration. If set to false, all configuration for the schematics will be set up in angular.json",
+      "description": "Create a schematics configuration file. If false, registration and helper settings go in angular.json, no content union is created, and the schema generator has to be set up by hand",
       "default": true
     },
     "schematicsConfigPath": {
       "type": "string",
-      "description": "Where the schematics config should be placed, relative to the project root. Defaults to 'app'",
-      "default": "app"
+      "description": "Folder for the schematics configuration file. Defaults to 'app'"
     },
     "schematicConfigFileName": {
       "type": "string",
-      "description": "Name of the schematic config file. Defaults to 'formbar-schematic.config.json'",
+      "description": "Name of the schematics configuration file. Defaults to 'formbar-schematic.config.json'",
       "default": "formbar-schematic.config.json"
     },
     "installSchematics": {
       "type": "boolean",
-      "description": "Whether to install @ngx-formbar/schematics (generators for control, group, block)",
+      "description": "Whether to install @ngx-formbar/schematics (generators for control, group, block, array, register, schema)",
       "default": true,
-      "x-prompt": "Would you like to install @ngx-formbar/schematics for component generators (control, group, block)?"
+      "x-prompt": "Would you like to install @ngx-formbar/schematics for component generators (control, group, block, array, register, schema)?"
+    },
+    "updateOtherProjects": {
+      "type": "boolean",
+      "description": "When this run creates the schematics configuration file at the workspace root, whether to write what other projects use now into their files. Without it, you are asked in a terminal, and nothing changes elsewhere."
     }
   }
 }

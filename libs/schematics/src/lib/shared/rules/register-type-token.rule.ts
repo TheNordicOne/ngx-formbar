@@ -6,13 +6,15 @@ import {
   applyToUpdateRecorder,
   Change,
 } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
+  insertNamedImport,
   loadSourceFile,
+  registrationsMissingMessage,
+  registrationsNotFoundMessage,
   findComponentRegistrationsNode,
   findMapArrayLiteral,
   registrationNodeHasKey,
-  registrationNodeUsesIdentifier,
+  registrationNodeUsesComponent,
   updateMapEntries,
 } from '@ngx-formbar/setup';
 
@@ -23,11 +25,10 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
       key,
       componentFilePath,
       componentClassName,
+      tsConfigPath,
+      addedWarning,
+      alreadyRegisteredLevel,
     } = ruleContext;
-
-    if (!controlRegistrationsPath) {
-      return tree;
-    }
 
     const registrationsSourceFile = loadSourceFile(
       tree,
@@ -36,24 +37,32 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
 
     if (!registrationsSourceFile) {
       context.logger.warn(
-        `Registration file ${controlRegistrationsPath} could be found. Skipping registration.`,
+        registrationsNotFoundMessage(controlRegistrationsPath),
       );
       return tree;
     }
 
     const mapNode = findComponentRegistrationsNode(registrationsSourceFile);
 
-    if (!mapNode) {
+    const mapArrayLiteral = mapNode && findMapArrayLiteral(mapNode);
+
+    if (!mapNode || !mapArrayLiteral) {
+      context.logger.warn(
+        registrationsMissingMessage(controlRegistrationsPath),
+      );
       return tree;
     }
 
-    const identifierAlreadyUsed = registrationNodeUsesIdentifier(
-      mapNode,
-      componentClassName,
-    );
+    const componentAlreadyUsed = registrationNodeUsesComponent(mapNode, {
+      tree,
+      tsConfigPath,
+      className: componentClassName,
+      filePath: componentFilePath,
+    });
 
-    if (identifierAlreadyUsed) {
-      context.logger.warn(
+    if (componentAlreadyUsed) {
+      context.logger.log(
+        alreadyRegisteredLevel,
         `A component with the name "${componentClassName}" is already used`,
       );
       return tree;
@@ -72,7 +81,7 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
 
     const changes: Change[] = [];
 
-    const loadComponentImport = insertImport(
+    const loadComponentImport = insertNamedImport(
       registrationsSourceFile,
       controlRegistrationsPath,
       'loadComponent',
@@ -80,25 +89,25 @@ export function registerTypeToken(ruleContext: RegisterComponentContext): Rule {
     );
     changes.push(loadComponentImport);
 
-    const mapArrayLiteral = findMapArrayLiteral(mapNode);
+    const updateChanges = updateMapEntries(
+      registrationsSourceFile,
+      controlRegistrationsPath,
+      mapArrayLiteral,
+      key,
+      componentClassName,
+      componentImportPath,
+    );
 
-    if (mapArrayLiteral) {
-      const updateChanges = updateMapEntries(
-        tree,
-        registrationsSourceFile,
-        controlRegistrationsPath,
-        mapArrayLiteral,
-        key,
-        componentClassName,
-        componentImportPath,
-      );
-
-      changes.push(...updateChanges);
-    }
+    changes.push(...updateChanges);
 
     const recorder = tree.beginUpdate(controlRegistrationsPath);
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
+
+    if (addedWarning) {
+      context.logger.warn(addedWarning);
+    }
+
     return tree;
   };
 }

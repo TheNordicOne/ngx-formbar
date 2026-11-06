@@ -19,6 +19,12 @@
         "tsConfig": "libs/setup/tsconfig.lib.json",
         "assets": ["libs/setup/*.md"]
       }
+    },
+    "mutation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "stryker run stryker/setup.conf.mjs"
+      }
     }
   }
 }

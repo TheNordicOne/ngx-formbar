@@ -24,7 +24,7 @@ export const DefaultChangeStrategy: Story = {
     docs: {
       description: {
         story:
-          'Default Angular behavior — form model updates on every keystroke.',
+          'Default Angular behavior: form model updates on every keystroke.',
       },
     },
   },
@@ -56,7 +56,7 @@ export const GlobalBlurStrategy: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Global blur strategy — form model updates only on blur.',
+        story: 'Global blur strategy: form model updates only on blur.',
       },
     },
   },
@@ -95,7 +95,7 @@ export const GlobalSubmitStrategy: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Global submit strategy — form model updates only on submit.',
+        story: 'Global submit strategy: form model updates only on submit.',
       },
     },
   },
@@ -161,7 +161,7 @@ export const ControlOverride: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    // The override control uses 'change' — updates immediately
+    // The override control uses 'change', so it updates immediately
     const overrideInput = await canvas.findByRole('textbox', {
       name: 'Override Control',
     });
@@ -177,7 +177,7 @@ export const ControlOverride: Story = {
     await userEvent.type(defaultInput, 'default-text');
     await userEvent.tab();
 
-    // Not committed yet — still needs submit
+    // Not committed yet: still needs submit
     await expect(getFormValue()['default-control']).not.toBe('default-text');
 
     // Submit commits the value
@@ -308,7 +308,7 @@ export const ExplicitPerControlStrategies: Story = {
     } satisfies NgxFbForm,
   },
   play: async ({ canvas, userEvent }) => {
-    // Change strategy — updates immediately
+    // Change strategy: updates immediately
     const changeInput = await canvas.findByRole('textbox', {
       name: 'Change Control',
     });
@@ -316,7 +316,7 @@ export const ExplicitPerControlStrategies: Story = {
     await userEvent.type(changeInput, 'change-text');
     await expect(getFormValue()['change-control']).toBe('change-text');
 
-    // Blur strategy — updates only on blur
+    // Blur strategy: updates only on blur
     const blurInput = await canvas.findByRole('textbox', {
       name: 'Blur Control',
     });
@@ -326,7 +326,7 @@ export const ExplicitPerControlStrategies: Story = {
     await userEvent.tab();
     await expect(getFormValue()['blur-control']).toBe('blur-text');
 
-    // Submit strategy — updates only on submit
+    // Submit strategy: updates only on submit
     const submitInput = await canvas.findByRole('textbox', {
       name: 'Submit Control',
     });

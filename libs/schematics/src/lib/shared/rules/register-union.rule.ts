@@ -1,7 +1,10 @@
 import { noop, Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { addUnionMember, loadSourceFile } from '@ngx-formbar/setup';
+import {
+  addUnionMember,
+  insertNamedImport,
+  loadSourceFile,
+} from '@ngx-formbar/setup';
 import { buildRelativePath } from '@schematics/angular/utility/find-module';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
 import { parseTypeReference, resolveTypeFile } from '../type-reference';
 import { ScaffoldContext, ScaffoldType } from '../schema';
@@ -23,7 +26,7 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
   }
 
   return (tree: Tree, context: SchematicContext) => {
-    const parsed = parseReference(reference, ruleContext.projectRoot, context);
+    const parsed = parseReference(reference, ruleContext.sourceRoot, context);
 
     if (!parsed) {
       return tree;
@@ -31,28 +34,20 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
 
     const { unionPath, exportName } = parsed;
     const added = addMember(tree, unionPath, exportName, ruleContext, context);
-
-    if (!added) {
-      return tree;
-    }
-
-    const sourceFile = loadSourceFile(tree, unionPath);
+    const sourceFile = added && loadSourceFile(tree, unionPath);
 
     if (!sourceFile) {
-      context.logger.warn(
-        `${unionPath} could not be re-read after the union update. Skipping import registration.`,
-      );
       return tree;
     }
 
     const importPath = buildRelativePath(
       unionPath,
-      `/${ruleContext.componentPath}/${ruleContext.interfaceFileName}`,
+      `${ruleContext.componentPath}/${ruleContext.interfaceFileName}`,
     );
     const recorder = tree.beginUpdate(unionPath);
 
     applyToUpdateRecorder(recorder, [
-      insertImport(
+      insertNamedImport(
         sourceFile,
         unionPath,
         ruleContext.interfaceName,
@@ -67,14 +62,14 @@ export function registerUnion(ruleContext: ScaffoldContext): Rule {
 
 function parseReference(
   reference: string,
-  projectRoot: string,
+  sourceRoot: string,
   context: SchematicContext,
 ) {
   try {
     const { filePath, exportName } = parseTypeReference(reference);
 
     return {
-      unionPath: resolveTypeFile(filePath, projectRoot),
+      unionPath: resolveTypeFile(filePath, sourceRoot),
       exportName,
     };
   } catch (error) {

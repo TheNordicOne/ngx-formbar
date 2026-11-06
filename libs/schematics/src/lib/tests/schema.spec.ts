@@ -1,3 +1,4 @@
+import { lastValueFrom } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,6 +16,7 @@ import {
 import { SchematicsException } from '@angular-devkit/schematics';
 import { app, appRoot, read, src, writeJson } from './helper';
 import { DRAFT_07, DRAFT_2020_12 } from '../schema/emitter/json-schema/build';
+import { schema } from '../schema';
 
 interface EmittedSchemaDocument {
   $schema: string;
@@ -70,6 +72,46 @@ export type AppContent = TextControl;
     await expect(
       runner.runSchematic('schema', { project: 'test-app' }, tree),
     ).rejects.toThrow(/No content type configured/);
+  });
+
+  it('fails on a config without a schema section when no type is passed', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {});
+
+    await expect(
+      runner.runSchematic('schema', { project: 'test-app' }, tree),
+    ).rejects.toThrow(/No content type configured/);
+  });
+
+  it.each([
+    ['no config file', false],
+    ['a config without a schema section', true],
+  ])('writes nothing with --type and %s', async (_, hasConfig) => {
+    if (hasConfig) {
+      writeJson(tree, app('formbar-schematic.config.json'), {});
+    }
+
+    const messages: string[] = [];
+    runner.logger.subscribe((entry) => messages.push(entry.message));
+
+    await runner.runSchematic(
+      'schema',
+      { project: 'test-app', type: 'app/types/content.type.ts#AppContent' },
+      tree,
+    );
+
+    expect(messages).toContain(
+      'No emitters configured in "schema.emitters". Nothing was written.',
+    );
+  });
+
+  it('treats an --emitter the option schema never defaulted as no filter', async () => {
+    writeJson(tree, app('formbar-schematic.config.json'), {
+      schema: { type: 'app/types/content.type.ts#AppContent' },
+    });
+
+    await expect(
+      lastValueFrom(runner.callRule(schema({ project: 'test-app' }), tree)),
+    ).resolves.toBeDefined();
   });
 
   it('fails with a helpful message when the content union is empty', async () => {
@@ -359,6 +401,94 @@ export type AppContent = TextControl;
     });
   });
 
+  describe('in a project with source root "src"', () => {
+    beforeEach(() => {
+      addProject(tree, 'root-app', '', 'src');
+      addCoreStub(tree);
+      tree.create(
+        '/src/app/types/content.type.ts',
+        `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`,
+      );
+      writeJson(tree, '/src/app/formbar-schematic.config.json', {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [{ use: 'json-schema-2020-12' }],
+        },
+      });
+    });
+
+    it.each([
+      ['app/form.json', '/src/app/form.json'],
+      ['src/app/form.json', '/src/app/form.json'],
+      ['/schemas/form.json', '/schemas/form.json'],
+    ])('writes --output %s to %s', async (output, expected) => {
+      const result = await runner.runSchematic(
+        'schema',
+        { project: 'root-app', output },
+        tree,
+      );
+
+      expect(result.exists(expected)).toBe(true);
+    });
+  });
+
+  describe('in a workspace with several projects', () => {
+    const union = `import { NgxFbControl } from '@ngx-formbar/core';
+export interface TextControl extends NgxFbControl { type: 'text'; }
+export type AppContent = TextControl;
+`;
+
+    beforeEach(() => {
+      addCoreStub(tree);
+      addProject(tree, 'other', 'projects/other', 'projects/other/src');
+      tree.create(app('types/content.type.ts'), union);
+      tree.create('/projects/other/src/app/types/content.type.ts', union);
+    });
+
+    it('reads the workspace root config for every project without its own', async () => {
+      writeJson(tree, '/formbar-schematic.config.json', {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [
+            { use: 'json-schema-2020-12', output: 'form.schema.json' },
+          ],
+        },
+      });
+
+      const first = await runner.runSchematic(
+        'schema',
+        { project: 'test-app' },
+        tree,
+      );
+      const second = await runner.runSchematic(
+        'schema',
+        { project: 'other' },
+        first,
+      );
+
+      expect(second.exists(src('form.schema.json'))).toBe(true);
+      expect(second.exists('/projects/other/src/form.schema.json')).toBe(true);
+    });
+
+    it("never reads another project's config", async () => {
+      writeJson(tree, app('formbar-schematic.config.json'), {
+        schema: {
+          type: 'app/types/content.type.ts#AppContent',
+          emitters: [
+            { use: 'json-schema-2020-12', output: 'form.schema.json' },
+          ],
+        },
+      });
+
+      await expect(
+        runner.runSchematic('schema', { project: 'other' }, tree),
+      ).rejects.toThrow('No content type configured');
+    });
+  });
+
   describe('emitter entries sharing an output', () => {
     const OUTPUT = '/projects/test-app/src/form.schema.json';
     const DEFAULT_DRAFT_07_OUTPUT =
@@ -461,6 +591,9 @@ export default defineEmitter({
         },
       });
 
+      const messages: string[] = [];
+      runner.logger.subscribe((entry) => messages.push(entry.message));
+
       const result = await runner.runSchematic(
         'schema',
         { project: 'test-app' },
@@ -469,6 +602,9 @@ export default defineEmitter({
 
       expect(result.exists(src('de.json'))).toBe(true);
       expect(result.exists(src('en.json'))).toBe(true);
+      expect(messages).toContain(
+        'Emitted with "by-language" to "(emitter default)"',
+      );
     });
 
     it('fails on the same explicit output of a custom emitter', async () => {
@@ -772,8 +908,10 @@ export type AppContent = TextControl;
     await runner.runSchematic('schema', { project: 'test-app' }, tree);
 
     // Which copy answered is otherwise invisible, and it decides every kind.
-    expect(messages).toContain(
-      'Resolved @ngx-formbar/core at "/node_modules/@ngx-formbar/core/"',
+    expect(messages).toContainEqual(
+      expect.stringMatching(
+        /^Resolved @ngx-formbar\/core at ".*\/node_modules\/@ngx-formbar\/core\/"$/,
+      ),
     );
   });
 
@@ -1146,6 +1284,7 @@ export interface CallbackControl extends NgxFbControl {
   type: 'callback';
   onPick: (value: string) => void;
   onHover?: (value: string) => void;
+  caption: string;
 }
 export type AppContent = CallbackControl;
 `,
@@ -1169,6 +1308,9 @@ export type AppContent = CallbackControl;
     // The config can simply omit it, so it must not warn.
     expect(
       messages.some((message) => message.includes('CallbackControl.onHover')),
+    ).toBe(false);
+    expect(
+      messages.some((message) => message.includes('CallbackControl.caption')),
     ).toBe(false);
   });
 

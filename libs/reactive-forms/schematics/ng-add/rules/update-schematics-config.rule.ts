@@ -1,16 +1,30 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { Rule } from '@angular-devkit/schematics';
+import { findSchematicsConfig, readSchematicsConfig } from '@ngx-formbar/setup';
 
 import { RuleContext } from '../schema';
-import { updateSchematicConfig } from '../helper';
-import { JsonObject } from '@angular-devkit/core';
+import { generatorDefaults, updateSchematicConfigs } from '../helper';
+import { SCAFFOLD_GENERATORS } from '../../shared/constants';
+
+const OVERRIDING_SETTINGS = [
+  'registrationType',
+  'controlRegistrationsPath',
+  'viewProviderHelperPath',
+] as const;
+
+const NG_ADD_SETTINGS = [
+  'registrationType',
+  'controlRegistrationsPath',
+  'viewProviderHelperPath',
+  'controlRegistrations',
+];
 
 /**
- * Update angular.json for ngx-formbar schematics
+ * Without a schematics configuration file, its settings become generator defaults in
+ * angular.json.
  */
 export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
-  return (_, context) => {
-    const { useHelper, helperPath, projectName, useSchematicConfig } =
-      ruleContext;
+  return (tree, context) => {
+    const { projectName, sourceRoot, useSchematicConfig } = ruleContext;
 
     if (useSchematicConfig) {
       return;
@@ -18,16 +32,33 @@ export function updateSchematicsConfig(ruleContext: RuleContext): Rule {
 
     context.logger.info('Updating schematics configuration');
 
-    const config: JsonObject = {};
+    const overridingConfig = findSchematicsConfig(tree, sourceRoot);
+    const config = readSchematicsConfig(tree, overridingConfig);
+    const overridden = OVERRIDING_SETTINGS.filter(
+      (setting) => config?.[setting] !== undefined,
+    );
 
-    if (useHelper && helperPath) {
-      config.viewProviderHelperPath = helperPath;
+    if (overridden.length > 0) {
+      context.logger.warn(
+        `The schematics configuration of this project sets ${overridden.join(', ')}, which win over the settings written to angular.json.`,
+      );
     }
 
-    return chain([
-      updateSchematicConfig('control', config, projectName),
-      updateSchematicConfig('group', config, projectName),
-      updateSchematicConfig('block', config, projectName),
-    ]);
+    const defaults = generatorDefaults(ruleContext);
+    const { viewProviderHelperPath: _, ...withoutHelper } = defaults;
+
+    return updateSchematicConfigs(
+      {
+        ...Object.fromEntries(
+          SCAFFOLD_GENERATORS.map((generator) => [
+            generator,
+            generator === 'block' ? withoutHelper : defaults,
+          ]),
+        ),
+        register: withoutHelper,
+      },
+      projectName,
+      NG_ADD_SETTINGS,
+    );
   };
 }

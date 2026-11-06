@@ -91,13 +91,11 @@ function projectArray(items: TypeNode): TypeNode | null {
 function projectTuple(
   type: Extract<TypeNode, { k: 'tuple' }>,
 ): TypeNode | null {
-  const projected = type.elements.map(toJsonTypes);
-  const cut = projected.indexOf(null);
-  const elements = (cut === -1 ? projected : projected.slice(0, cut)).filter(
-    (element): element is TypeNode => element !== null,
-  );
+  const elements = leadingJsonTypes(type.elements);
   const rest =
-    cut === -1 && type.rest ? (toJsonTypes(type.rest) ?? undefined) : undefined;
+    elements.length === type.elements.length && type.rest
+      ? (toJsonTypes(type.rest) ?? undefined)
+      : undefined;
   const capacity = rest ? Infinity : elements.length;
 
   return type.minItems > capacity
@@ -108,4 +106,20 @@ function projectTuple(
         minItems: type.minItems,
         ...(rest ? { rest } : {}),
       };
+}
+
+function leadingJsonTypes(types: TypeNode[]) {
+  const leading: TypeNode[] = [];
+
+  for (const type of types) {
+    const projected = toJsonTypes(type);
+
+    if (!projected) {
+      break;
+    }
+
+    leading.push(projected);
+  }
+
+  return leading;
 }

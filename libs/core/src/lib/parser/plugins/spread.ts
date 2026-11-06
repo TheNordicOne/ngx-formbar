@@ -11,8 +11,6 @@ import type { Plugin } from '../plugins';
 import type { SpreadElement } from '../ast';
 
 export const spreadPlugin: Plugin = {
-  name: 'spread',
-
   init(jsep) {
     jsep.hooks.add('gobble-token', function gobbleSpread(env) {
       if (

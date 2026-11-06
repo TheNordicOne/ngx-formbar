@@ -62,3 +62,6 @@ storybook-static
 
 .nx/self-healing
 .nx/migrate-runs
+# Mutation testing
+.stryker-tmp*
+/reports

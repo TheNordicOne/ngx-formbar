@@ -6,13 +6,14 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { app, src, writeTs } from './helper';
-import { COMPONENT_SCHEMATIC } from '@ngx-formbar/setup';
 import { strings } from '@angular-devkit/core';
 const { classify } = strings;
 import {
   CORE_PACKAGE_NAME,
   REACTIVE_FORMS_PACKAGE_NAME,
 } from '../shared/constants';
+
+const COMPONENT_SCHEMATIC = '@schematics/angular:component';
 
 export const COLLECTION_PATH = join(
   __dirname,
@@ -65,8 +66,33 @@ export interface NgxFbControl extends NgxFbAbstractControl { label?: string; def
 export interface NgxFbFormGroup<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { controls: Record<string, T>; }
 export interface NgxFbArray<T extends NgxFbBaseContent = NgxFbItem> extends NgxFbAbstractControl { rowControl: T & { hideStrategy?: 'keep' }; }
 export interface NgxFbBlock extends NgxFbBaseContent { isControl: false; [key: string]: unknown; }
+export interface FormbarContract<T extends NgxFbBaseContent = NgxFbBaseContent> {}
+export declare const NGX_FW_COMPONENT_REGISTRATIONS: unknown;
+export declare function staticComponent(component: unknown, options?: unknown): unknown;
+export declare function loadComponent(load: unknown, options?: unknown): unknown;
 export type NgxFbItem = NgxFbFormGroup | NgxFbControl | NgxFbArray | NgxFbBlock;
 export interface NgxFbForm<C extends NgxFbBaseContent = NgxFbItem> { content: Record<string, C>; }
+`,
+  );
+}
+
+export function addReactiveFormsStub(tree: UnitTestTree): void {
+  tree.create(
+    '/node_modules/@ngx-formbar/reactive-forms/package.json',
+    JSON.stringify({
+      name: '@ngx-formbar/reactive-forms',
+      types: './index.d.ts',
+    }),
+  );
+  tree.create(
+    '/node_modules/@ngx-formbar/reactive-forms/index.d.ts',
+    `import { FormbarContract, NgxFbArray, NgxFbBlock, NgxFbControl, NgxFbFormGroup } from '@ngx-formbar/core';
+interface ReactiveFormbarAbstractControl { readonly name: unknown; }
+export type ReactiveFormbarControl<T extends NgxFbControl = NgxFbControl> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type ReactiveFormbarGroup<T extends NgxFbFormGroup = NgxFbFormGroup> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type ReactiveFormbarArray<T extends NgxFbArray = NgxFbArray> = ReactiveFormbarAbstractControl & FormbarContract<T>;
+export type FormbarBlock<T extends NgxFbBlock = NgxFbBlock> = { readonly testId?: unknown } & FormbarContract<T>;
+export declare class NgxFbFormComponent {}
 `,
   );
 }
@@ -104,6 +130,11 @@ export function setComponentTypeConfig(
   };
 
   appTree.overwrite('/angular.json', JSON.stringify(angularJson, null, 2));
+}
+
+/** Adds a project whose root is the workspace root, so every other project sits inside it. */
+export function addRootProject(appTree: UnitTestTree, name: string): void {
+  addProject(appTree, name, '');
 }
 
 export function addProject(
@@ -333,6 +364,14 @@ export function addHelperIndexFile(
   writeTs(appTree, src(`${helperPath}/index.ts`), index);
 }
 
+export function addHelperFile(
+  appTree: UnitTestTree,
+  helperFilePath: string,
+  identifier: string,
+): void {
+  writeTs(appTree, src(helperFilePath), `export const ${identifier} = [];`);
+}
+
 export function addComponentFiles(
   appTree: UnitTestTree,
   files: TestComponentDetails[],
@@ -355,6 +394,8 @@ export function createControlComponent(
 import { ReactiveFormbarControl } from '${REACTIVE_FORMS_PACKAGE_NAME}';
 import { ReactiveFormsModule } from '@angular/forms';
 ${imports}
+
+interface ${classifiedName}Control { type: string; }
 
 @Component({
   selector: 'app-${name}-control',

@@ -10,16 +10,18 @@ export function resolveContentType(
   ctx: SchemaContext,
 ): { type: Type; checker: TypeChecker; coreRoot: string } {
   const { filePath, exportName } = parseTypeReference(ctx.typeReference);
-  const absolutePath = resolveTypeFile(filePath, ctx.projectRoot);
+  const absolutePath = resolveTypeFile(filePath, ctx.sourceRoot);
 
   if (!tree.exists(absolutePath)) {
     throw new SchematicsException(`Type file not found: ${absolutePath}`);
   }
 
-  const { program, checker } = createTreeProgram(tree, ctx.tsConfigPath, [
-    absolutePath,
-  ]);
-  const sourceFile = program.getSourceFile(absolutePath);
+  const { program, checker, sourceFileAt } = createTreeProgram(
+    tree,
+    ctx.tsConfigPath,
+    [absolutePath],
+  );
+  const sourceFile = sourceFileAt(absolutePath);
 
   if (!sourceFile) {
     throw new SchematicsException(`Could not parse ${absolutePath}`);

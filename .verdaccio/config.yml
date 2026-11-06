@@ -12,7 +12,7 @@ packages:
     access: $all
     publish: $all
     unpublish: $all
-    # no proxy — always serve from local storage
+    # no proxy: always serve from local storage
 
   '**':
     # give all users (including non-authenticated users) full access

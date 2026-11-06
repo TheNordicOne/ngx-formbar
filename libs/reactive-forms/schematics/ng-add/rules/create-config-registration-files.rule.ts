@@ -7,25 +7,23 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { RuleContext } from '../schema';
-import { normalize, strings } from '@angular-devkit/core';
+import { skipExistingFiles } from './skip-existing-files.rule';
+import { normalize } from '@angular-devkit/core';
 import { includeTemplates } from './include-templates.rule';
 
 export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
-  return (_, context) => {
+  return (tree, context) => {
     const {
       includeAsyncValidators,
       includeSyncValidators,
       useTokens,
       splitRegistrations,
-      registrationsPath,
-      projectRoot,
+      registrationsDirectory,
     } = ruleContext;
 
-    if (useTokens || !splitRegistrations || !registrationsPath) {
+    if (useTokens || !splitRegistrations) {
       return;
     }
-
-    context.logger.info('Creating registration configuration files');
 
     const templatesToInclude = [
       normalize('/index.ts.template'),
@@ -50,9 +48,9 @@ export function createConfigRegistrationFiles(ruleContext: RuleContext): Rule {
         applyTemplates({
           includeSyncValidators,
           includeAsyncValidators,
-          ...strings,
         }),
-        move(normalize(`${projectRoot}/${registrationsPath}`)),
+        move(registrationsDirectory),
+        skipExistingFiles(tree, context, 'registration configuration files'),
       ]),
     );
   };

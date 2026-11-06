@@ -1,12 +1,19 @@
 /**
  * Runs the schematics the way a consumer does: packed tarballs, installed into
  * fresh Angular apps outside this repository, driven through the real Angular
- * CLI. One app runs `schema` over a hand-written content union, from its root
- * and from a subdirectory, and over the union of a library project in it. A
- * second one goes through `ng add`, scaffolds into the seeded union, runs
- * `schema` and builds. Every other test in these libraries runs inside this
- * workspace against a virtual Tree, which is the shape of test that passes while
- * the shipped artifact is broken.
+ * CLI. One app runs `schema` over a hand-written content union and over the
+ * union of a library project in it, then goes through `ng add` with a renamed
+ * config and scaffolds through it, and with paths in the forms the generators
+ * read differently from plain concatenation, and in every layout the root
+ * providers can have. A second one starts from `ng new --no-standalone`. A
+ * third one goes through `ng add`, scaffolds into the seeded union, re-runs
+ * `ng add`, runs `schema` and builds. Two more do this on Angular 20.0 and 20.3
+ * with TypeScript 5.8, one is a member of an npm workspace and one installs with
+ * Yarn Plug'n'Play in strict mode. The rows of "Where Components Go" and a run
+ * without a schematics configuration file go through the CLI too. Every
+ * other test in these libraries runs inside this workspace against a virtual
+ * Tree, which is the shape of test that passes while the shipped artifact is
+ * broken.
  */
 import { spawnSync } from 'node:child_process';
 import {
@@ -32,6 +39,145 @@ const SCHEMATICS_PACKAGE_NAME = '@ngx-formbar/schematics';
 const REACTIVE_FORMS_PACKAGE_NAME = '@ngx-formbar/reactive-forms';
 const DRAFT_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
 const DRAFT_07 = 'http://json-schema.org/draft-07/schema#';
+
+const WRITTEN_BARREL = `export type { ReactiveFormbarControl as Control } from '@ngx-formbar/reactive-forms';
+`;
+const ALIASED_CONTROL = `import { Component, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { Control } from './index';
+
+type AliasedConfig = NgxFbControl & { type: 'aliased' };
+
+@Component({ selector: 'app-aliased-input', template: '' })
+export class AliasedInput implements Control<AliasedConfig> {
+  readonly name = input.required<string>();
+}
+`;
+const BASE_CONTROL = `import { Directive, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface InheritingConfig extends NgxFbControl {
+  type: 'inheriting';
+}
+
+@Directive()
+export abstract class BaseInput implements ReactiveFormbarControl<InheritingConfig> {
+  readonly name = input.required<string>();
+}
+
+@Directive()
+export abstract class MiddleInput extends BaseInput {}
+`;
+const INHERITING_CONTROL = `import { Component } from '@angular/core';
+import { MiddleInput } from './base-input';
+
+@Component({ selector: 'app-inheriting-input', template: '' })
+export class InheritingInput extends MiddleInput {}
+`;
+const GENERIC_ALIAS_CONTROL = `import { Component, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+type MyControl<C extends NgxFbControl> = ReactiveFormbarControl<C>;
+
+interface GenericAliasConfig extends NgxFbControl {
+  type: 'generic-alias';
+}
+
+@Component({ selector: 'app-generic-alias-input', template: '' })
+export class GenericAliasInput implements MyControl<GenericAliasConfig> {
+  readonly name = input.required<string>();
+}
+`;
+const MIXIN_CONTROLS = `import { Component, input, InputSignal } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface MixinCallConfig extends NgxFbControl {
+  type: 'mixin-call';
+}
+
+interface MixinVariableConfig extends NgxFbControl {
+  type: 'mixin-variable';
+}
+
+interface ClassExpressionConfig extends NgxFbControl {
+  type: 'class-expression';
+}
+
+type Constructor = abstract new (...args: any[]) => object;
+
+abstract class PlainInput {}
+
+function withCallConfig<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base implements ReactiveFormbarControl<MixinCallConfig> {
+    abstract readonly name: InputSignal<string>;
+  }
+
+  return Mixed;
+}
+
+function withVariableConfig<T extends Constructor>(Base: T) {
+  abstract class Mixed extends Base implements ReactiveFormbarControl<MixinVariableConfig> {
+    abstract readonly name: InputSignal<string>;
+  }
+
+  return Mixed;
+}
+
+@Component({ selector: 'app-mixin-call-input', template: '' })
+export class MixinCallInput extends withCallConfig(PlainInput) {
+  readonly name = input.required<string>();
+}
+
+const VariableBase = withVariableConfig(PlainInput);
+
+@Component({ selector: 'app-mixin-variable-input', template: '' })
+export class MixinVariableInput extends VariableBase {
+  readonly name = input.required<string>();
+}
+
+const ExpressionBase = class implements ReactiveFormbarControl<ClassExpressionConfig> {
+  declare readonly name: InputSignal<string>;
+};
+
+@Component({ selector: 'app-class-expression-input', template: '' })
+export class ClassExpressionInput extends ExpressionBase {
+  override readonly name = input.required<string>();
+}
+`;
+const UNREGISTRABLE_CONTROLS = `import { Component, input } from '@angular/core';
+import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+interface UnregistrableConfig extends NgxFbControl {
+  type: 'unregistrable';
+}
+
+@Component({ selector: 'app-abstract-input', template: '' })
+export abstract class AbstractInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
+
+@Component({ selector: 'app-hidden-input', template: '' })
+class HiddenInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
+
+@Component({ selector: 'app-default-input', template: '' })
+export default class DefaultInput implements ReactiveFormbarControl<UnregistrableConfig> {
+  readonly name = input.required<string>();
+}
+`;
+const HOST_PAGE = `import { Component } from '@angular/core';
+import { NgxFbForm } from '@ngx-formbar/core';
+
+@Component({ selector: 'app-summary-page', template: '' })
+export class SummaryPage {
+  readonly form: NgxFbForm = { content: {} };
+}
+`;
 
 const CONTENT_TYPE = `import {
   NgxFbArray,
@@ -281,33 +427,48 @@ function readJson(path) {
 }
 
 /**
- * `workspace:` ranges are rewritten at release time against the registry. Here
- * the sibling tarball takes that role for dependencies, and peer dependencies
- * get the caret range the release writes, so the manifest a consumer installs
- * is the built one and not a hand-assembled node_modules.
+ * The release gives all packages one version, which `ng add` relies on for the
+ * range it saves, and then runs this script over the manifests. Staging does the
+ * same with the built packages, so a consumer installs what the release writes.
  */
-function stagePackage(name, stagingDir, tarballs, versions) {
-  const staged = join(stagingDir, name);
-  cpSync(join(WORKSPACE_ROOT, 'dist', 'libs', name), staged, {
-    recursive: true,
-  });
+function stagePackages(stagingDir) {
+  const { version } = readJson(
+    join(WORKSPACE_ROOT, 'dist', 'libs', 'reactive-forms', 'package.json'),
+  );
 
+  for (const name of PACKAGES) {
+    const staged = join(stagingDir, 'dist', 'libs', name);
+
+    cpSync(join(WORKSPACE_ROOT, 'dist', 'libs', name), staged, {
+      recursive: true,
+    });
+
+    const manifestPath = join(staged, 'package.json');
+
+    writeFileSync(
+      manifestPath,
+      `${JSON.stringify({ ...readJson(manifestPath), version }, null, 2)}\n`,
+    );
+  }
+
+  run(
+    'node',
+    [join(WORKSPACE_ROOT, 'scripts', 'resolve-workspace-protocols.mjs')],
+    stagingDir,
+  );
+
+  return version;
+}
+
+/** The sibling tarball stands in for the registry a resolved range points at. */
+function useSiblingTarballs(name, stagingDir, tarballs) {
+  const staged = join(stagingDir, 'dist', 'libs', name);
   const manifestPath = join(staged, 'package.json');
   const manifest = readJson(manifestPath);
 
-  for (const [dependency, range] of Object.entries(
-    manifest.dependencies ?? {},
-  )) {
-    if (typeof range === 'string' && range.startsWith('workspace:')) {
+  for (const dependency of Object.keys(manifest.dependencies ?? {})) {
+    if (tarballs.has(dependency)) {
       manifest.dependencies[dependency] = `file:${tarballs.get(dependency)}`;
-    }
-  }
-
-  for (const [dependency, range] of Object.entries(
-    manifest.peerDependencies ?? {},
-  )) {
-    if (typeof range === 'string' && range.startsWith('workspace:')) {
-      manifest.peerDependencies[dependency] = `^${versions.get(dependency)}`;
     }
   }
 
@@ -359,15 +520,15 @@ function readLoggedCoreRoot(output) {
 }
 
 /**
- * The schematic's CompilerHost reads the Tree first and falls back to disk, and
- * `getCurrentDirectory()` is '/', so a Tree path and a real path travel the
- * same fallback. Anchoring the logged value against the app is the only way to
+ * The schematic's CompilerHost reads the Tree first and falls back to disk, so
+ * the file it read tells nothing. Anchoring the logged value against the app is
+ * the only way to
  * tell the consumer's own install from something else the machine happens to
  * have at that path.
  */
 function checkCoreRoot(coreRoot, appDir) {
   const expected = join(appDir, 'node_modules', CORE_PACKAGE_NAME) + sep;
-  const resolved = existsSync(coreRoot) ? coreRoot : join(appDir, coreRoot);
+  const resolved = join(coreRoot);
 
   console.log(`  core root: ${coreRoot} -> ${resolved}`);
 
@@ -549,14 +710,14 @@ function checkPackedFiles(files) {
   );
 }
 
-function createApp(name, appParent) {
+function createApp(name, appParent, newOptions = [], cliVersion = '21') {
   const appDir = join(appParent, name);
 
   run(
     'npx',
     [
       '--yes',
-      '@angular/cli@21',
+      `@angular/cli@${cliVersion}`,
       'new',
       name,
       '--skip-git',
@@ -564,6 +725,7 @@ function createApp(name, appParent) {
       '--defaults',
       '--package-manager',
       'npm',
+      ...newOptions,
     ],
     appParent,
   );
@@ -582,9 +744,9 @@ function findFile(directory, fileName) {
 
 /**
  * The tarball is installed beforehand, so `ng add` uses it as is. ng-add then
- * queues installs of core and the schematics by package name, which could
- * replace the tarballs with whatever the registry has. Those installs run as
- * npm dry runs, so the app keeps the packages under test.
+ * queues an install of what it adds to package.json, which could replace the
+ * tarballs with whatever the registry has. That install runs as an npm dry run,
+ * so the app keeps the packages under test.
  */
 function ngAdd(appDir, project, args = []) {
   return run(
@@ -619,6 +781,1141 @@ function generate(cwd, project, schematic, args = []) {
   );
 }
 
+/**
+ * The lookup does not find a config under another name, so ng add has to point
+ * the generators at the one it wrote. The consumer app's own config sits where
+ * the lookup looks first, so a generator that missed the link would read that
+ * one and register by token.
+ */
+function runLinkedConfigFlow(appDir, tarballs) {
+  run('npm', ['install', tarballs.get(REACTIVE_FORMS_PACKAGE_NAME)], appDir);
+  ngAdd(appDir, 'consumer', [
+    '--schematic-config-file-name=custom.json',
+    '--registration-style=config',
+  ]);
+  generate(appDir, 'consumer', 'control', ['--key', 'slider']);
+
+  console.log('linked config assertions:');
+
+  const schematics = readJson(join(appDir, 'angular.json')).projects.consumer
+    .schematics;
+  const registrationsPath = join(
+    appDir,
+    'src',
+    'app',
+    'registrations',
+    'component-registrations.ts',
+  );
+
+  check(
+    schematics?.[`${SCHEMATICS_PACKAGE_NAME}:control`]?.schematicsConfig ===
+      'app/custom.json',
+    'ng add pointed the generators at the config it wrote under another name',
+  );
+  check(
+    existsSync(registrationsPath) &&
+      /["']?slider["']?:\s*loadComponent\(/.test(
+        readFileSync(registrationsPath, 'utf8'),
+      ),
+    'the scaffolded control registered as the linked config says',
+  );
+}
+
+/**
+ * `ng add` and the generators have to agree on what a path option means, so
+ * this runs in a project whose source root is not the workspace root, using
+ * the forms where plain concatenation would land elsewhere.
+ */
+function runPathOptionsFlow(appDir) {
+  const project = 'paths-app';
+  const sourceRoot = join(appDir, 'projects', project, 'src');
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+
+  ngAdd(appDir, project, [
+    '--schematics-config-path=/paths-config',
+    `--helper-path=projects/${project}/src/app/paths-helper`,
+    '--registrations-path=/paths-registrations',
+  ]);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  run('npx', ['ng', 'build', project], appDir);
+
+  console.log('path options assertions:');
+
+  const schematics = readJson(join(appDir, 'angular.json')).projects[project]
+    .schematics;
+  const component = readFileSync(
+    join(sourceRoot, 'app', 'slider', 'slider-control.ts'),
+    'utf8',
+  );
+  const registrationsPath = join(
+    appDir,
+    'paths-registrations',
+    'component-registrations.ts',
+  );
+
+  check(
+    existsSync(join(appDir, 'paths-config', 'formbar-schematic.config.json')),
+    'a "/" schematicsConfigPath wrote the config under the workspace root',
+  );
+  check(
+    schematics?.[`${SCHEMATICS_PACKAGE_NAME}:control`]?.schematicsConfig ===
+      '/paths-config/formbar-schematic.config.json',
+    'ng add pointed the generators at the "/" config',
+  );
+  check(
+    existsSync(join(sourceRoot, 'app', 'paths-helper', 'view-provider.ts')),
+    'a helperPath with the source root did not nest the source root again',
+  );
+  check(
+    /import \{ viewProviders \} from '\.\.\/paths-helper';/.test(component),
+    'the scaffold uses the helper',
+  );
+  check(
+    existsSync(registrationsPath) &&
+      readFileSync(registrationsPath, 'utf8').includes('SliderControl'),
+    'the scaffold registered into the "/" registrations file',
+  );
+  check(
+    readFileSync(
+      join(sourceRoot, 'app', 'types', 'content.type.ts'),
+      'utf8',
+    ).includes('SliderControlConfig'),
+    'the scaffold read schema.type from the "/" config',
+  );
+}
+
+/**
+ * `main.ts` moves to a config elsewhere. The generated `app.config.ts` stays
+ * behind unused, so a run that assumed the default location would edit it.
+ */
+function runMovedConfigFlow(appDir) {
+  const project = 'moved-config-app';
+  const sourceRoot = join(appDir, 'projects', project, 'src');
+  const defaultConfigPath = join(sourceRoot, 'app', 'app.config.ts');
+  const movedConfigPath = join(sourceRoot, 'bootstrap', 'config.ts');
+  const mainPath = join(sourceRoot, 'main.ts');
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+
+  const defaultConfig = readFileSync(defaultConfigPath, 'utf8');
+
+  mkdirSync(dirname(movedConfigPath), { recursive: true });
+  writeFileSync(
+    movedConfigPath,
+    defaultConfig.replace('./app.routes', '../app/app.routes'),
+  );
+  writeFileSync(
+    mainPath,
+    readFileSync(mainPath, 'utf8').replace(
+      './app/app.config',
+      './bootstrap/config',
+    ),
+  );
+
+  ngAdd(appDir, project, ['--split-registrations=false']);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  run('npx', ['ng', 'build', project], appDir);
+
+  console.log('moved config assertions:');
+
+  const movedConfig = readFileSync(movedConfigPath, 'utf8');
+
+  check(
+    movedConfig.includes('provideFormbar('),
+    'ng add provided formbar in the config main.ts imports',
+  );
+  check(
+    movedConfig.includes('SliderControl'),
+    'the scaffold registered into the config main.ts imports',
+  );
+  check(
+    readFileSync(defaultConfigPath, 'utf8') === defaultConfig,
+    'ng add left the unused config at the default location alone',
+  );
+}
+
+const KEPT_INDEX = 'export const other = 1;\n';
+
+/**
+ * `ng add` keeps an existing `index.ts`, which need not export what it seeds,
+ * and registrations and helper files seeded into one folder share one index.
+ * The build proves the imports go where the exports are.
+ */
+function runKeptIndexFlow(appDir) {
+  const sharedFolder = [
+    '--registrations-path=app/shared',
+    '--helper-path=app/shared',
+  ];
+  const runs = [
+    { name: 'kept-index-token', args: sharedFolder, keptIndex: 'shared' },
+    {
+      name: 'kept-index-config',
+      args: [...sharedFolder, '--registration-style=config'],
+      keptIndex: 'shared',
+    },
+    {
+      name: 'one-folder-token',
+      args: ['--registrations-path=app/x', '--helper-path=app/x'],
+    },
+    {
+      name: 'one-folder-config',
+      args: [
+        '--registrations-path=app/x',
+        '--helper-path=app/x',
+        '--registration-style=config',
+      ],
+    },
+  ];
+
+  for (const { name, args, keptIndex } of runs) {
+    const app = join(appDir, 'projects', name, 'src', 'app');
+    const index = join(app, keptIndex ?? '', 'index.ts');
+
+    run(
+      'npx',
+      ['ng', 'generate', 'application', name, '--skip-install', '--defaults'],
+      appDir,
+    );
+
+    if (keptIndex) {
+      mkdirSync(dirname(index), { recursive: true });
+      writeFileSync(index, KEPT_INDEX);
+    }
+
+    ngAdd(appDir, name, args);
+    generate(appDir, name, 'control', ['--key', 'slider']);
+    run('npx', ['ng', 'build', name], appDir);
+
+    console.log(`${name} assertions:`);
+
+    check(
+      !keptIndex || readFileSync(index, 'utf8') === KEPT_INDEX,
+      `${name}: ng add kept the index and the build passed`,
+    );
+    check(
+      /from '\.\.\/[a-z]+\/view-provider'/.test(
+        readFileSync(join(app, 'slider', 'slider-control.ts'), 'utf8'),
+      ),
+      `${name}: the scaffold imports the helper from its file`,
+    );
+  }
+}
+
+function replaceInFile(path, search, replacement) {
+  writeFileSync(path, readFileSync(path, 'utf8').replace(search, replacement));
+}
+
+const APP_CONFIG_CALL = 'bootstrapApplication(App, appConfig)';
+
+const SHARED_APP_CONFIG = `import { ApplicationConfig } from '@angular/core';
+
+export const appConfig: ApplicationConfig = { providers: [] };
+`;
+
+/**
+ * Each layout starts from a generated application. `arrange` changes where the
+ * root providers live, and `holder` names the file that has to end up holding
+ * them, relative to the source root. The build proves the edited file compiles.
+ */
+const ROOT_CONFIG_LAYOUTS = [
+  {
+    name: 'inline-object',
+    holder: 'main.ts',
+    arrange: ({ main }) =>
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'bootstrapApplication(App, { providers: [] })',
+      ),
+  },
+  {
+    name: 'no-config',
+    holder: 'main.ts',
+    arrange: ({ main }) =>
+      replaceInFile(main, APP_CONFIG_CALL, 'bootstrapApplication(App)'),
+  },
+  {
+    name: 'function-call',
+    holder: 'main.ts',
+    arrange: ({ main }) => {
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'bootstrapApplication(App, makeConfig())',
+      );
+      writeFileSync(
+        main,
+        `${readFileSync(main, 'utf8')}\nfunction makeConfig() {\n  return appConfig;\n}\n`,
+      );
+    },
+  },
+  {
+    name: 'imported-function-call',
+    holder: 'main.ts',
+    arrange: ({ main, sourceRoot }) => {
+      writeFileSync(
+        join(sourceRoot, 'make-config.ts'),
+        `import { appConfig } from './app/app.config';\n\nexport const makeConfig = () => appConfig;\n`,
+      );
+      replaceInFile(
+        main,
+        /import \{ appConfig \} from '\.\/app\/app\.config';/,
+        `import { makeConfig } from './make-config';`,
+      );
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'bootstrapApplication(App, makeConfig())',
+      );
+    },
+  },
+  {
+    name: 'barrel',
+    holder: 'config/app.config.ts',
+    arrange: ({ main, sourceRoot }) => {
+      const configDir = join(sourceRoot, 'config');
+      const config = readFileSync(
+        join(sourceRoot, 'app', 'app.config.ts'),
+        'utf8',
+      );
+
+      mkdirSync(configDir, { recursive: true });
+      writeFileSync(
+        join(configDir, 'app.config.ts'),
+        config.replace('./app.routes', '../app/app.routes'),
+      );
+      writeFileSync(
+        join(configDir, 'index.ts'),
+        `export * from './app.config';\n`,
+      );
+      replaceInFile(main, './app/app.config', './config');
+    },
+  },
+  {
+    name: 'path-alias',
+    holder: 'app/app.config.ts',
+    arrange: ({ main, project, appDir }) => {
+      const tsConfigPath = join(appDir, 'tsconfig.json');
+      const { config } = ts.parseConfigFileTextToJson(
+        tsConfigPath,
+        readFileSync(tsConfigPath, 'utf8'),
+      );
+
+      config.compilerOptions.paths = {
+        ...config.compilerOptions.paths,
+        [`@${project}/config`]: [`./projects/${project}/src/app/app.config.ts`],
+      };
+      writeFileSync(tsConfigPath, `${JSON.stringify(config, null, 2)}\n`);
+      replaceInFile(main, './app/app.config', `@${project}/config`);
+    },
+  },
+  {
+    name: 'dynamic-import',
+    holder: 'app/app.config.ts',
+    arrange: ({ main, sourceRoot }) => {
+      writeFileSync(
+        join(sourceRoot, 'bootstrap.ts'),
+        readFileSync(main, 'utf8'),
+      );
+      writeFileSync(main, `import('./bootstrap').catch(console.error);\n`);
+    },
+  },
+  {
+    name: 'namespace-call',
+    holder: 'app/app.config.ts',
+    arrange: ({ main }) => {
+      replaceInFile(
+        main,
+        `import { bootstrapApplication } from '@angular/platform-browser';`,
+        `import * as pb from '@angular/platform-browser';`,
+      );
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'pb.bootstrapApplication(App, appConfig)',
+      );
+    },
+  },
+  {
+    name: 'trailing-comma',
+    holder: 'main.ts',
+    arrange: ({ main }) => {
+      replaceInFile(main, APP_CONFIG_CALL, 'bootstrapApplication(\n  App,\n)');
+      writeFileSync(
+        main,
+        readFileSync(main, 'utf8').replace(
+          /import \{ appConfig \} from '\.\/app\/app\.config';\n/,
+          '',
+        ),
+      );
+    },
+  },
+  {
+    name: 'namespace-core',
+    holder: 'main.ts',
+    arrange: ({ main }) => {
+      writeFileSync(
+        main,
+        `import * as ng from '@angular/core';\n${readFileSync(main, 'utf8')}\nng.isDevMode();\n\nfunction makeConfig() {\n  return appConfig;\n}\n`,
+      );
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'bootstrapApplication(App, makeConfig())',
+      );
+    },
+  },
+  {
+    name: 'spread-after-providers',
+    holder: 'main.ts',
+    arrange: ({ main }) =>
+      replaceInFile(
+        main,
+        APP_CONFIG_CALL,
+        'const base: Partial<typeof appConfig> = appConfig;\n\nbootstrapApplication(App, { providers: [], ...base })',
+      ),
+  },
+  {
+    name: 'other-project-config',
+    holder: 'main.ts',
+    keeps: 'shared-config/app.config.ts',
+    arrange: ({ main, appDir }) => {
+      const tsConfigPath = join(appDir, 'tsconfig.json');
+      const { config } = ts.parseConfigFileTextToJson(
+        tsConfigPath,
+        readFileSync(tsConfigPath, 'utf8'),
+      );
+
+      mkdirSync(join(appDir, 'shared-config'), { recursive: true });
+      writeFileSync(
+        join(appDir, 'shared-config', 'app.config.ts'),
+        SHARED_APP_CONFIG,
+      );
+      config.compilerOptions.paths = {
+        ...config.compilerOptions.paths,
+        '@shared/config': ['./shared-config/app.config.ts'],
+      };
+      writeFileSync(tsConfigPath, `${JSON.stringify(config, null, 2)}\n`);
+      replaceInFile(main, './app/app.config', '@shared/config');
+    },
+  },
+  {
+    name: 'decoy-variable',
+    holder: 'app/app.config.ts',
+    arrange: ({ sourceRoot }) => {
+      replaceInFile(
+        join(sourceRoot, 'app', 'app.config.ts'),
+        'export const appConfig',
+        'export const decoy: ApplicationConfig = { providers: [] };\n\nexport const appConfig',
+      );
+    },
+  },
+];
+
+const INLINE_PROVIDE = ['--provide-inline', '--split-registrations=false'];
+
+/** Layouts run with the default registrations, and the ones listed here too. */
+const ROOT_CONFIG_RUNS = [
+  ...ROOT_CONFIG_LAYOUTS.map((layout) => ({ ...layout, args: [] })),
+  { name: 'inline-provide', holder: 'app/app.config.ts', args: INLINE_PROVIDE },
+  {
+    name: 'split-provide-inline',
+    holder: 'app/app.config.ts',
+    args: ['--provide-inline'],
+  },
+  {
+    name: 'config-in-provider-file',
+    holder: 'app/formbar.config.ts',
+    holds: 'SliderControl',
+    args: ['--registration-style=config', '--split-registrations=false'],
+  },
+  {
+    name: 'inline-provide-config',
+    holder: 'app/app.config.ts',
+    args: ['--registration-style=config', ...INLINE_PROVIDE],
+  },
+  {
+    ...ROOT_CONFIG_LAYOUTS[0],
+    name: 'inline-object-inline-provide-config',
+    args: ['--registration-style=config', ...INLINE_PROVIDE],
+  },
+];
+
+function runRootConfigFlow(appDir) {
+  for (const {
+    name,
+    holder,
+    holds = 'provideFormbar(',
+    keeps,
+    arrange,
+    args,
+  } of ROOT_CONFIG_RUNS) {
+    const sourceRoot = join(appDir, 'projects', name, 'src');
+    const holderPath = join(sourceRoot, holder);
+
+    run(
+      'npx',
+      ['ng', 'generate', 'application', name, '--skip-install', '--defaults'],
+      appDir,
+    );
+
+    arrange?.({
+      main: join(sourceRoot, 'main.ts'),
+      sourceRoot,
+      project: name,
+      appDir,
+    });
+
+    const kept = keeps && readFileSync(join(appDir, keeps), 'utf8');
+
+    ngAdd(appDir, name, args);
+    generate(appDir, name, 'control', ['--key', 'slider']);
+
+    const added = readFileSync(holderPath, 'utf8');
+
+    ngAdd(appDir, name, args);
+    run('npx', ['ng', 'build', name], appDir);
+
+    console.log(`${name} assertions:`);
+
+    check(added.includes(holds), `${name}: ${holder} holds ${holds}`);
+    check(
+      !keeps || readFileSync(join(appDir, keeps), 'utf8') === kept,
+      `${name}: ng add left ${keeps ?? 'other files'} alone`,
+    );
+    check(
+      readFileSync(holderPath, 'utf8') === added,
+      `${name}: re-running ng add kept ${holder}`,
+    );
+    check(
+      readFileSync(
+        join(sourceRoot, 'app', 'types', 'content.type.ts'),
+        'utf8',
+      ).includes('SliderControlConfig'),
+      `${name}: the generator found the config ng add wrote`,
+    );
+  }
+}
+
+/**
+ * `ng new --no-standalone` has no app config, so the providers go into the root
+ * NgModule, with the registrations in their own files and in the module itself.
+ */
+function runNgModuleFlow(appParent, tarballs) {
+  const appDir = createApp('ng-module', appParent, ['--no-standalone']);
+  const inlineProject = 'inline-module-app';
+
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, 'ng-module');
+  generate(appDir, 'ng-module', 'control', ['--key', 'slider']);
+  run('npx', ['ng', 'build', 'ng-module'], appDir);
+
+  run(
+    'npx',
+    [
+      'ng',
+      'generate',
+      'application',
+      inlineProject,
+      '--no-standalone',
+      '--skip-install',
+      '--defaults',
+    ],
+    appDir,
+  );
+  ngAdd(appDir, inlineProject, ['--split-registrations=false']);
+  generate(appDir, inlineProject, 'control', ['--key', 'slider']);
+  run('npx', ['ng', 'build', inlineProject], appDir);
+
+  const barrelProject = 'barrel-module-app';
+  const barrelSourceRoot = join(appDir, 'projects', barrelProject, 'src');
+  const barrelModulePath = join(barrelSourceRoot, 'app', 'app-module.ts');
+
+  run(
+    'npx',
+    [
+      'ng',
+      'generate',
+      'application',
+      barrelProject,
+      '--no-standalone',
+      '--skip-install',
+      '--defaults',
+    ],
+    appDir,
+  );
+  writeFileSync(
+    join(barrelSourceRoot, 'app', 'index.ts'),
+    `export * from './app-module';\n`,
+  );
+  replaceInFile(join(barrelSourceRoot, 'main.ts'), './app/app-module', './app');
+  replaceInFile(barrelModulePath, /providers: \[[^\]]*\]/, 'providers: SHARED');
+  replaceInFile(
+    barrelModulePath,
+    '@NgModule(',
+    'const SHARED = [provideBrowserGlobalErrorListeners()];\n\n@NgModule(',
+  );
+  ngAdd(appDir, barrelProject);
+  run('npx', ['ng', 'build', barrelProject], appDir);
+
+  console.log('NgModule assertions:');
+
+  check(
+    /providers: \[\s*SHARED,/.test(readFileSync(barrelModulePath, 'utf8')),
+    'ng add followed a barrel to the root NgModule and kept its providers in an array',
+  );
+
+  const rootModule = readFileSync(
+    join(appDir, 'src', 'app', 'app-module.ts'),
+    'utf8',
+  );
+  const inlineModule = readFileSync(
+    join(appDir, 'projects', inlineProject, 'src', 'app', 'app-module.ts'),
+    'utf8',
+  );
+
+  check(
+    rootModule.includes('provideFormbar(') &&
+      rootModule.includes('componentRegistrationsProvider'),
+    'ng add provided formbar in the root NgModule',
+  );
+  check(
+    readFileSync(
+      join(appDir, 'src', 'app', 'registrations', 'component-registrations.ts'),
+      'utf8',
+    ).includes('SliderControl'),
+    'the scaffold registered into the split registrations of an NgModule app',
+  );
+  check(
+    inlineModule.includes('SliderControl'),
+    'the scaffold registered into an NgModule holding the registrations',
+  );
+
+  return appDir;
+}
+
+/**
+ * Without the schematics package in package.json, as a consumer starts out.
+ * The dry run leaves node_modules alone, so package.json alone gets restored.
+ */
+function runDevDependencyFlow(appDir, version) {
+  const project = 'dev-dependency-app';
+  const manifestPath = join(appDir, 'package.json');
+  const original = readFileSync(manifestPath, 'utf8');
+  const withoutSchematics = JSON.parse(original);
+
+  delete withoutSchematics.devDependencies[SCHEMATICS_PACKAGE_NAME];
+  delete withoutSchematics.dependencies[CORE_PACKAGE_NAME];
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+  writeFileSync(
+    manifestPath,
+    `${JSON.stringify(withoutSchematics, null, 2)}\n`,
+  );
+
+  ngAdd(appDir, project);
+
+  const manifest = readJson(manifestPath);
+
+  writeFileSync(manifestPath, original);
+
+  console.log('dev dependency assertions:');
+
+  check(
+    manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME] === `^${version}`,
+    `ng add saved the schematics package as a dev dependency in ^${version}: ${manifest.devDependencies?.[SCHEMATICS_PACKAGE_NAME]}`,
+  );
+  check(
+    manifest.dependencies?.[CORE_PACKAGE_NAME] === `^${version}`,
+    `ng add saved core as a dependency in ^${version}: ${manifest.dependencies?.[CORE_PACKAGE_NAME]}`,
+  );
+  check(
+    !manifest.dependencies?.[SCHEMATICS_PACKAGE_NAME],
+    'ng add did not save the schematics package as a dependency',
+  );
+}
+
+/**
+ * Without a schematics configuration file, the generators only get what ng add
+ * wrote to angular.json through the CLI, which validates it against each schema.
+ */
+function runAngularJsonDefaultsFlow(appDir) {
+  const project = 'angular-json-app';
+  const sourceRoot = join(appDir, 'projects', project, 'src');
+  const registrationsPath = join(
+    sourceRoot,
+    'app',
+    'forms',
+    'component-registrations.ts',
+  );
+
+  run(
+    'npx',
+    ['ng', 'generate', 'application', project, '--skip-install', '--defaults'],
+    appDir,
+  );
+
+  ngAdd(appDir, project, [
+    '--use-schematic-config=false',
+    '--registration-style=config',
+    '--registrations-path=app/forms',
+  ]);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  generate(appDir, project, 'block', ['--key', 'note']);
+  generate(appDir, project, 'control', [
+    '--key',
+    'rating',
+    '--skip-registration',
+  ]);
+
+  const registeredByControl = readFileSync(registrationsPath, 'utf8');
+
+  mkdirSync(join(sourceRoot, 'app', 'written'), { recursive: true });
+  writeFileSync(join(sourceRoot, 'app', 'written', 'index.ts'), WRITTEN_BARREL);
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'aliased-input.ts'),
+    ALIASED_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'base-input.ts'),
+    BASE_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'inheriting-input.ts'),
+    INHERITING_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'generic-alias-input.ts'),
+    GENERIC_ALIAS_CONTROL,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'mixin-inputs.ts'),
+    MIXIN_CONTROLS,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'unregistrable-inputs.ts'),
+    UNREGISTRABLE_CONTROLS,
+  );
+  writeFileSync(
+    join(sourceRoot, 'app', 'written', 'summary-page.ts'),
+    HOST_PAGE,
+  );
+
+  generate(appDir, project, 'register');
+  run('npx', ['ng', 'build', project], appDir);
+
+  console.log('angular.json defaults assertions:');
+
+  const registered = readFileSync(registrationsPath, 'utf8');
+
+  check(
+    !existsSync(join(sourceRoot, 'app', 'formbar-schematic.config.json')),
+    'ng add wrote no schematics configuration file',
+  );
+  check(
+    /["']?slider["']?:\s*loadComponent\(/.test(registeredByControl),
+    'control registered as the angular.json defaults say',
+  );
+  check(
+    /["']?note["']?:\s*loadComponent\(/.test(registeredByControl),
+    'block took the angular.json defaults',
+  );
+  check(
+    !registeredByControl.includes('RatingControl') &&
+      registered.includes('RatingControl'),
+    'register found the control and the file through the angular.json defaults',
+  );
+  check(
+    /["']?rating["']?:\s*loadComponent\(/.test(registered),
+    'register used the key the control was scaffolded with',
+  );
+  check(
+    /["']?aliased["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config intersected with a type of core, through a barrel renaming the contract',
+  );
+  check(
+    /["']?inheriting["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config fixed by a base class two levels up, in a file without the word implements',
+  );
+  check(
+    /["']?generic-alias["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config passed through a generic local alias of the contract',
+  );
+  check(
+    /["']?mixin-call["']?:\s*loadComponent\(/.test(registered) &&
+      /["']?mixin-variable["']?:\s*loadComponent\(/.test(registered) &&
+      /["']?class-expression["']?:\s*loadComponent\(/.test(registered),
+    'register read the type of a config behind a mixin call and a variable, and the app still builds',
+  );
+  check(
+    !/["']?unregistrable["']?:/.test(registered),
+    'register skipped abstract, non-exported and default-exported classes, and the app still builds',
+  );
+  check(
+    !registered.includes('SummaryPage'),
+    'register skipped a page that only uses a type of the package',
+  );
+}
+
+function generateFailure(cwd, project, args) {
+  return spawnSync(
+    'npx',
+    [
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:control`,
+      '--project',
+      project,
+      ...args,
+    ],
+    {
+      cwd,
+      encoding: 'utf8',
+      env: { ...process.env, CI: 'true', NG_CLI_ANALYTICS: 'false' },
+    },
+  );
+}
+
+/**
+ * The tables of "Where Components Go". `from` is the directory the command runs
+ * in, relative to the app, and `expected` where the component's folder ends up.
+ */
+function checkPathRows(appDir, project, rows) {
+  for (const { key, from = '', path, expected } of rows) {
+    const cwd = join(appDir, from);
+
+    mkdirSync(cwd, { recursive: true });
+    generate(cwd, project, 'control', [
+      '--key',
+      key,
+      '--skip-registration',
+      ...(path ? ['--path', path] : []),
+    ]);
+
+    check(
+      existsSync(join(appDir, expected, key, `${key}-control.ts`)),
+      `${project}: ${path ? `--path ${path}` : `running from "${from}"`} writes to ${expected}/${key}`,
+    );
+  }
+}
+
+function runProjectPathFlow(appDir) {
+  const project = 'path-table-app';
+  const other = 'other-table-app';
+  const sourceRoot = `projects/${project}/src`;
+
+  for (const name of [project, other]) {
+    run(
+      'npx',
+      ['ng', 'generate', 'application', name, '--skip-install', '--defaults'],
+      appDir,
+    );
+  }
+  ngAdd(appDir, project);
+
+  console.log('--path in a project of its own assertions:');
+
+  checkPathRows(appDir, project, [
+    { key: 'alpha', expected: `${sourceRoot}/app` },
+    {
+      key: 'bravo',
+      from: `${sourceRoot}/app/forms`,
+      expected: `${sourceRoot}/app/forms`,
+    },
+    {
+      key: 'charlie',
+      path: `projects/${project}/tools`,
+      expected: `projects/${project}/tools`,
+    },
+    { key: 'delta', path: 'forms', expected: `${sourceRoot}/forms` },
+    { key: 'echo', path: '/forms', expected: 'forms' },
+  ]);
+
+  for (const path of [`projects/${other}/forms`, `/projects/${other}/forms`]) {
+    const { status, stderr, stdout } = generateFailure(appDir, project, [
+      '--key',
+      'foxtrot',
+      '--skip-registration',
+      '--path',
+      path,
+    ]);
+
+    check(
+      status !== 0 &&
+        `${stdout}${stderr}`.includes('lies inside another project'),
+      `${project}: --path ${path} fails naming the other project`,
+    );
+  }
+}
+
+/** The default `ng new` layout, where the project is the workspace root. */
+function runRootProjectPathFlow(appDir, project) {
+  console.log('--path at the workspace root assertions:');
+
+  checkPathRows(appDir, project, [
+    { key: 'alpha', expected: 'src/app' },
+    { key: 'bravo', from: 'src/app/forms', expected: 'src/app/forms' },
+    { key: 'charlie', path: 'src/app/forms', expected: 'src/app/forms' },
+    { key: 'delta', path: 'app/forms', expected: 'app/forms' },
+    { key: 'echo', path: '/forms', expected: 'forms' },
+  ]);
+}
+
+/**
+ * Angular 20.0 is the oldest supported version, so anything imported from
+ * `@schematics/angular` has to exist there. `@schematics/angular` 20.3 bundles a
+ * TypeScript whose syntax kinds differ from the 5.8 Angular 20.3 still allows,
+ * so passing it nodes parsed by the app's TypeScript crashes or misreads them.
+ */
+function runAngular20Flow(appParent, tarballs, cliVersion) {
+  const project = `angular-${cliVersion.replace('.', '-')}`;
+  const appDir = createApp(project, appParent, [], cliVersion);
+
+  run(
+    'npm',
+    ['install', '--save-dev', '--save-exact', 'typescript@5.8.3'],
+    appDir,
+  );
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, project);
+  generate(appDir, project, 'control', ['--key', 'slider']);
+  generate(appDir, project, 'schema');
+  run('npx', ['ng', 'build'], appDir);
+
+  return appDir;
+}
+
+/**
+ * npm installs the packages of a workspace member at the monorepo root, above
+ * `angular.json` and so above the Tree the schematics run on.
+ */
+function addControlWithContractAboveRoot(monorepo, appDir) {
+  const tsConfig = join(appDir, 'tsconfig.json');
+  const componentDir = join(appDir, 'src/app/knob');
+
+  writeFileSync(
+    join(monorepo, 'tsconfig.base.json'),
+    JSON.stringify({
+      compilerOptions: { paths: { '@shared/*': ['./shared/*'] } },
+    }),
+  );
+  writeFileSync(
+    tsConfig,
+    readFileSync(tsConfig, 'utf8').replace(
+      '"compileOnSave"',
+      '"extends": "../../tsconfig.base.json",\n  "compileOnSave"',
+    ),
+  );
+  mkdirSync(join(monorepo, 'shared'));
+  writeFileSync(
+    join(monorepo, 'shared/knob.ts'),
+    `import { NgxFbControl } from '@ngx-formbar/core';
+import { ReactiveFormbarControl } from '@ngx-formbar/reactive-forms';
+
+export interface Knob extends NgxFbControl {
+  type: 'knob';
+}
+
+export type KnobContract = ReactiveFormbarControl<Knob>;
+`,
+  );
+  mkdirSync(componentDir);
+  writeFileSync(
+    join(componentDir, 'knob.component.ts'),
+    `import { Component, input } from '@angular/core';
+import type { KnobContract } from '@shared/knob';
+
+@Component({ selector: 'app-knob', template: '' })
+export class KnobComponent implements KnobContract {
+  readonly name = input.required<string>();
+}
+`,
+  );
+}
+
+/**
+ * Packages live in archives inside the workspace root, read through the file
+ * system Yarn patches, and strict mode leaves a missing peer unresolved.
+ */
+function runYarnPnpFlow(appParent, tarballs) {
+  const appDir = createApp('pnp', appParent);
+  const yarn = (...args) =>
+    run('corepack', ['yarn', ...args], appDir, {
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
+    });
+  const manifestPath = join(appDir, 'package.json');
+  const fileRange = (name) => `file:${tarballs.get(name)}`;
+
+  rmSync(join(appDir, 'node_modules'), { recursive: true, force: true });
+  rmSync(join(appDir, 'package-lock.json'), { force: true });
+  writeFileSync(
+    manifestPath,
+    JSON.stringify({
+      ...readJson(manifestPath),
+      packageManager: 'yarn@4.18.1',
+      resolutions: Object.fromEntries(
+        [...tarballs.keys()].map((name) => [name, fileRange(name)]),
+      ),
+    }),
+  );
+  writeFileSync(
+    join(appDir, '.yarnrc.yml'),
+    'nodeLinker: pnp\npnpMode: strict\nenableGlobalCache: false\n',
+  );
+  writeFileSync(join(appDir, 'yarn.lock'), '');
+
+  yarn(
+    'add',
+    `${CORE_PACKAGE_NAME}@${fileRange(CORE_PACKAGE_NAME)}`,
+    `${REACTIVE_FORMS_PACKAGE_NAME}@${fileRange(REACTIVE_FORMS_PACKAGE_NAME)}`,
+  );
+  yarn(
+    'add',
+    '--dev',
+    `${SCHEMATICS_PACKAGE_NAME}@${fileRange(SCHEMATICS_PACKAGE_NAME)}`,
+    '@angular-devkit/core@21',
+    '@angular-devkit/schematics@21',
+    '@schematics/angular@21',
+  );
+
+  const generateInPnp = (schematic, ...args) =>
+    yarn(
+      'ng',
+      'generate',
+      `${SCHEMATICS_PACKAGE_NAME}:${schematic}`,
+      '--project',
+      'pnp',
+      ...args,
+    );
+
+  yarn(
+    'ng',
+    'add',
+    REACTIVE_FORMS_PACKAGE_NAME,
+    '--project',
+    'pnp',
+    '--defaults',
+    '--skip-confirmation',
+  );
+  generateInPnp('control', '--key', 'slider', '--skip-registration');
+  generateInPnp('register');
+  generateInPnp('schema');
+  yarn('ng', 'build');
+
+  check(
+    readFileSync(
+      join(appDir, 'src/app/registrations/component-registrations.ts'),
+      'utf8',
+    ).includes("'slider'"),
+    'register finds a control under Yarn PnP',
+  );
+  check(
+    existsSync(join(appDir, 'src/form.schema.json')),
+    'schema emits under Yarn PnP',
+  );
+}
+
+function runNpmWorkspaceFlow(appParent, tarballs) {
+  const monorepo = join(appParent, 'monorepo');
+  const appsDir = join(monorepo, 'apps');
+
+  mkdirSync(appsDir, { recursive: true });
+  writeFileSync(
+    join(monorepo, 'package.json'),
+    JSON.stringify({ name: 'monorepo', private: true, workspaces: ['apps/*'] }),
+  );
+
+  const appDir = createApp('web', appsDir);
+
+  check(
+    !existsSync(join(appDir, 'node_modules', '@angular', 'core')),
+    'the monorepo hoists the packages above angular.json',
+  );
+
+  run(
+    'npm',
+    [
+      'install',
+      tarballs.get(CORE_PACKAGE_NAME),
+      tarballs.get(REACTIVE_FORMS_PACKAGE_NAME),
+    ],
+    appDir,
+  );
+  run(
+    'npm',
+    ['install', '--save-dev', tarballs.get(SCHEMATICS_PACKAGE_NAME)],
+    appDir,
+  );
+
+  ngAdd(appDir, 'web');
+  generate(appDir, 'web', 'control', [
+    '--key',
+    'slider',
+    '--skip-registration',
+  ]);
+  addControlWithContractAboveRoot(monorepo, appDir);
+  generate(appDir, 'web', 'register');
+  generate(appDir, 'web', 'schema');
+  run('npx', ['ng', 'build'], appDir);
+
+  const registrations = readFileSync(
+    join(appDir, 'src/app/registrations/component-registrations.ts'),
+    'utf8',
+  );
+
+  check(
+    registrations.includes("'slider'"),
+    'register finds a control when the packages are installed above angular.json',
+  );
+  check(
+    registrations.includes("'knob'"),
+    'register follows a tsconfig extending one above angular.json to a contract there',
+  );
+
+  return appDir;
+}
+
 function runNgAddFlow(appParent, tarballs) {
   const appDir = createApp('formbar', appParent);
 
@@ -641,9 +1938,15 @@ function runNgAddFlow(appParent, tarballs) {
   generate(appDir, 'formbar', 'control', ['--key', 'phoneNumber']);
   generate(appDir, 'formbar', 'group', ['--key', 'address']);
 
+  // The CLI hands --path the directory the command runs in.
+  const featuresDir = join(appDir, 'src', 'app', 'features');
+  mkdirSync(featuresDir, { recursive: true });
+  generate(featuresDir, 'formbar', 'control', ['--key', 'rating']);
+
   const unionPath = join(appDir, 'src', 'app', 'types', 'content.type.ts');
   const scaffoldedUnion = readFileSync(unionPath, 'utf8');
 
+  ngAdd(appDir, 'formbar');
   generate(appDir, 'formbar', 'schema');
   run('npx', ['ng', 'build'], appDir);
 
@@ -666,8 +1969,16 @@ function runNgAddFlow(appParent, tarballs) {
     'the union imports the camelCase scaffold from where it was written',
   );
   check(
+    existsSync(join(featuresDir, 'rating', 'rating-control.ts')),
+    'a generator run from a subdirectory wrote into that subdirectory',
+  );
+  check(
     scaffoldedUnion.includes('AddressGroupConfig<AppContent>'),
     'the scaffolded group joined the union with the union as its content',
+  );
+  check(
+    readFileSync(unionPath, 'utf8') === scaffoldedUnion,
+    're-running ng add kept the scaffolded union',
   );
 
   const schemaPath = join(appDir, 'src', 'form.schema.json');
@@ -690,6 +2001,8 @@ function runNgAddFlow(appParent, tarballs) {
       'the generated schema rejects a type nothing was scaffolded for',
     );
   }
+
+  runRootProjectPathFlow(appDir, 'formbar');
 
   return appDir;
 }
@@ -717,25 +2030,24 @@ function main() {
   );
 
   const tarballs = new Map();
-  const versions = new Map();
+  const version = stagePackages(stagingDir);
   let schematicsFiles = [];
 
   for (const name of PACKAGES) {
-    const { staged, manifest } = stagePackage(
-      name,
-      stagingDir,
-      tarballs,
-      versions,
-    );
+    const { staged, manifest } = useSiblingTarballs(name, stagingDir, tarballs);
     const { tarball, files } = packPackage(staged, stagingDir);
 
     tarballs.set(manifest.name, tarball);
-    versions.set(manifest.name, manifest.version);
 
     if (manifest.name === SCHEMATICS_PACKAGE_NAME) {
       schematicsFiles = files;
     }
   }
+
+  runNpmWorkspaceFlow(appParent, tarballs);
+  runYarnPnpFlow(appParent, tarballs);
+  runAngular20Flow(appParent, tarballs, '20.0');
+  runAngular20Flow(appParent, tarballs, '20.3');
 
   createApp('consumer', appParent);
   run('npm', ['install', tarballs.get(CORE_PACKAGE_NAME)], appDir);
@@ -773,6 +2085,12 @@ function main() {
 
   const coreRoot = readLoggedCoreRoot(output);
   check(coreRoot !== null, 'the run reported which core it resolved');
+  check(
+    output.includes(
+      'Using schematics configuration file /src/app/formbar-schematic.config.json',
+    ),
+    'the run reported which schematics configuration file it used',
+  );
 
   if (coreRoot) {
     checkCoreRoot(coreRoot, appDir);
@@ -812,11 +2130,23 @@ function main() {
 
   checkSubdirectoryRun(appDir);
   runLibraryFlow(appDir);
+  runLinkedConfigFlow(appDir, tarballs);
+  runPathOptionsFlow(appDir);
+  runMovedConfigFlow(appDir);
+  runRootConfigFlow(appDir);
+  runKeptIndexFlow(appDir);
 
+  runDevDependencyFlow(appDir, version);
+  runAngularJsonDefaultsFlow(appDir);
+  runProjectPathFlow(appDir);
+
+  const ngModuleAppDir = runNgModuleFlow(appParent, tarballs);
   const formbarAppDir = runNgAddFlow(appParent, tarballs);
 
   if (failures.length > 0) {
-    console.log(`\nkept for inspection: ${appDir} and ${formbarAppDir}`);
+    console.log(
+      `\nkept for inspection: ${appDir}, ${ngModuleAppDir} and ${formbarAppDir}`,
+    );
     throw new Error(
       `${failures.length} assertion(s) failed:\n  ${failures.join('\n  ')}`,
     );

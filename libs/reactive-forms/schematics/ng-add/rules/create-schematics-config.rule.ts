@@ -6,64 +6,67 @@ import {
   Rule,
   url,
 } from '@angular-devkit/schematics';
-import { normalize } from '@angular-devkit/core';
 import { RuleContext } from '../schema';
+import { skipExistingFiles } from './skip-existing-files.rule';
+import { NgxFormbarAutomationConfig } from '@ngx-formbar/setup';
+import { generatorDefaults } from '../helper';
 import {
-  DEFAULT_REGISTRATION_TYPE,
-  DEFAULT_REGISTRATIONS_PATH,
-  NgxFormbarAutomationConfig,
-} from '@ngx-formbar/setup';
-import {
-  DEFAULT_CONTENT_TYPE_EXPORT_NAME,
-  DEFAULT_CONTENT_TYPE_FILE_NAME,
-  DEFAULT_CONTENT_TYPE_PATH,
-} from '../../shared/constants';
+  ignoredSettings,
+  schematicsConfigFile,
+  seededUnionType,
+  settingsOverShared,
+  SHARED_CONFIG_FILE,
+} from '../schematics-config-file';
+import { posix } from 'node:path';
 
 export function createSchematicsConfig(ruleContext: RuleContext): Rule {
-  return (_, context) => {
-    const {
-      useSchematicConfig,
-      schematicsConfigPath,
-      schematicConfigFileName,
-      projectRoot,
-      helperPath,
-      useHelper,
-      registrationsPath,
-      registrationStyle,
-    } = ruleContext;
+  return (tree, context) => {
+    const { useSchematicConfig, sourceRoot } = ruleContext;
 
-    if (!useSchematicConfig || !schematicsConfigPath) {
+    if (!useSchematicConfig) {
       return;
     }
 
-    context.logger.info('Creating schematics config file');
+    const configFile = schematicsConfigFile(tree, ruleContext);
+    const ignored = ignoredSettings(tree, configFile, ruleContext);
 
-    const schematicConfig: NgxFormbarAutomationConfig = {};
-
-    if (registrationStyle !== DEFAULT_REGISTRATION_TYPE) {
-      schematicConfig.registrationType = registrationStyle;
+    if (ignored.length > 0) {
+      context.logger.warn(
+        `${configFile} stays as it is, so these settings of this run are ignored: ${ignored.join(', ')}. Change them in that file.`,
+      );
     }
 
-    if (registrationsPath !== DEFAULT_REGISTRATIONS_PATH) {
-      schematicConfig.controlRegistrationsPath = registrationsPath;
-    }
-
-    if (useHelper) {
-      schematicConfig.viewProviderHelperPath = helperPath;
-    }
-
-    schematicConfig.schema = {
-      type: `${DEFAULT_CONTENT_TYPE_PATH}/${DEFAULT_CONTENT_TYPE_FILE_NAME}.ts#${DEFAULT_CONTENT_TYPE_EXPORT_NAME}`,
-      emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+    const schematicConfig: NgxFormbarAutomationConfig = {
+      ...generatorDefaults(ruleContext),
+      schema: {
+        type: seededUnionType(sourceRoot),
+        emitters: [{ use: 'json-schema-2020-12', output: 'form.schema.json' }],
+      },
     };
+
+    // A file that exists is kept as it is, so only a new one can go over the shared file.
+    const overShared = tree.exists(SHARED_CONFIG_FILE);
+
+    if (overShared && !tree.exists(configFile)) {
+      context.logger.info(
+        `${configFile} goes over ${SHARED_CONFIG_FILE} and holds what differs from it.`,
+      );
+    }
 
     return mergeWith(
       apply(url('./ng-add/files/schematics-config'), [
         applyTemplates({
-          schematicConfigFileName,
-          schematicConfig: JSON.stringify(schematicConfig, null, 2),
+          schematicConfigFileName: posix.basename(configFile, '.json'),
+          schematicConfig: JSON.stringify(
+            overShared
+              ? settingsOverShared(tree, ruleContext, schematicConfig)
+              : schematicConfig,
+            null,
+            2,
+          ),
         }),
-        move(normalize(`${projectRoot}/${schematicsConfigPath}`)),
+        move(posix.dirname(configFile)),
+        skipExistingFiles(tree, context, 'schematics configuration file'),
       ]),
     );
   };

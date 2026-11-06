@@ -14,8 +14,6 @@ const OCURLY_CODE = 123; // {
 const CCURLY_CODE = 125; // }
 
 export const objectPlugin: Plugin = {
-  name: 'object',
-
   init(jsep) {
     jsep.hooks.add('gobble-token', function gobbleObjectExpression(env) {
       if (this.code() !== OCURLY_CODE) {
@@ -53,7 +51,16 @@ export const objectPlugin: Plugin = {
             value: key as Expression,
             shorthand: true,
           });
+        } else if (key.type === 'SpreadElement') {
+          properties.push(key);
         } else if (this.code() === jsep.COLON_CODE) {
+          if (
+            key.type !== jsep.IDENTIFIER &&
+            key.type !== jsep.LITERAL &&
+            !(key.type === jsep.ARRAY_EXP && key.elements.length === 1)
+          ) {
+            this.throwError('Expected a property name');
+          }
           this.index++;
           const value = this.gobbleExpression();
           if (!value || value.type === 'SpreadElement') {
@@ -66,18 +73,19 @@ export const objectPlugin: Plugin = {
             computed: isArrayKey,
             key: isArrayKey
               ? (key as { elements: Expression[] }).elements[0]
-              : (key as Expression),
+              : key,
             value: value as Expression,
             shorthand: false,
           });
           this.gobbleSpaces();
         } else {
-          // Anything the spread plugin produced (SpreadElement).
-          properties.push(key as unknown as SpreadElement);
+          this.throwError('Expected : after a property name');
         }
 
         if (this.code() === jsep.COMMA_CODE) {
           this.index++;
+        } else if (this.code() !== CCURLY_CODE) {
+          break;
         }
       }
       this.throwError('missing }');

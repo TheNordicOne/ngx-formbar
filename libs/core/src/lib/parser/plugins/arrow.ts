@@ -30,11 +30,9 @@ interface SequenceLike {
 }
 
 export const arrowPlugin: Plugin = {
-  name: 'arrow',
-
   init(jsep) {
     // Right-associative low-precedence so `=>` binds last.
-    jsep.addBinaryOp('=>', 0.1, true);
+    jsep.addRightAssociativeOp('=>', 0.1);
 
     // Empty-parameter arrows (`() => x`) need a special case: `()` would
     // otherwise parse as an empty group and short-circuit before `=>`.
@@ -48,15 +46,23 @@ export const arrowPlugin: Plugin = {
           this.index++;
           const biop = this.gobbleBinaryOp();
           if (biop === '=>') {
-            const body = this.gobbleBinaryExpression();
+            const body = this.gobbleExpression();
             if (!body) {
               this.throwError('Expected expression after ' + biop);
+            }
+            if (
+              body.type === 'SpreadElement' ||
+              body.type === 'SequenceExpression'
+            ) {
+              this.throwError(
+                `Arrow function body must be an expression, got ${body.type}`,
+              );
             }
             env.node = {
               type: 'ArrowFunctionExpression',
               params: [],
               body,
-            } as ArrowFunctionExpression;
+            };
             return;
           }
         }
@@ -72,12 +78,7 @@ export const arrowPlugin: Plugin = {
     });
 
     function updateBinariesToArrows(
-      node:
-        | Expression
-        | SpreadElement
-        | SequenceExpression
-        | false
-        | undefined,
+      node: Expression | SpreadElement | SequenceExpression | false | undefined,
     ) {
       if (!node) {
         return;
@@ -86,13 +87,7 @@ export const arrowPlugin: Plugin = {
       for (const key of Object.keys(node)) {
         const value = (node as unknown as Record<string, unknown>)[key];
         if (value && typeof value === 'object') {
-          if (Array.isArray(value)) {
-            for (const item of value) {
-              updateBinariesToArrows(item as Expression);
-            }
-          } else {
-            updateBinariesToArrows(value as Expression);
-          }
+          updateBinariesToArrows(value as Expression);
         }
       }
 

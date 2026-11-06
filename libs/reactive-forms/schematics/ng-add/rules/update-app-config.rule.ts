@@ -1,103 +1,71 @@
 import { RuleContext } from '../schema';
 import { Rule, SchematicsException } from '@angular-devkit/schematics';
 
-import {
-  applyToUpdateRecorder,
-  Change,
-} from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import {
-  findVariableWithObjectLiteral,
-  isObjectLiteralWithProperty,
-} from '@ngx-formbar/setup';
+import { applyToUpdateRecorder } from '@schematics/angular/utility/change';
+import { appendToLiteral, findProvidersProperty } from '@ngx-formbar/setup';
 
 import {
   createSourceFile,
   isArrayLiteralExpression,
-  isIdentifier,
   isPropertyAssignment,
-  PropertyAssignment,
   ScriptTarget,
 } from 'typescript';
-import { buildProvidersUpdate, replaceNodeWithPrinted } from '../helper';
-import { REACTIVE_FORMS_PACKAGE_NAME } from '../../shared/constants';
+import { buildProvidersUpdate } from '../helper';
+import { addMissingProviders, findProvidersOwner } from '../root-providers';
 
 export function updateAppConfig(ruleContext: RuleContext): Rule {
   return (tree, context) => {
-    const { appConfigPath } = ruleContext;
+    const { appConfigPath, rootConfig } = ruleContext;
 
-    context.logger.info('Updating app.config.ts');
+    context.logger.info(`Updating ${appConfigPath}`);
 
-    const buffer = tree.read(appConfigPath);
-    if (!buffer) {
-      throw new SchematicsException(
-        `Missing file or unreadable: ${appConfigPath}`,
-      );
-    }
-
-    const content = buffer.toString('utf-8');
-    const sourceFile = createSourceFile(
-      appConfigPath,
-      content,
-      ScriptTarget.Latest,
-      true,
-    );
-
-    const changes: Change[] = [
-      insertImport(
-        sourceFile,
+    const parse = () =>
+      createSourceFile(
         appConfigPath,
-        'provideFormbar',
-        REACTIVE_FORMS_PACKAGE_NAME,
-        false,
-      ),
-    ];
+        tree.readText(appConfigPath),
+        ScriptTarget.Latest,
+        true,
+      );
 
-    const appConfig = findVariableWithObjectLiteral(sourceFile, (variable) =>
-      isObjectLiteralWithProperty(variable, 'providers'),
-    );
+    addMissingProviders(tree, parse(), rootConfig);
 
-    const providersProp = appConfig?.properties.find(
-      (prop) =>
-        isPropertyAssignment(prop) &&
-        isIdentifier(prop.name) &&
-        prop.name.text === 'providers',
-    ) as PropertyAssignment | undefined;
+    const sourceFile = parse();
+    const owner = findProvidersOwner(sourceFile, rootConfig);
+    const providers = owner && findProvidersProperty(owner);
+    const providersInit =
+      providers && isPropertyAssignment(providers)
+        ? providers.initializer
+        : null;
 
-    const providersInit = providersProp?.initializer;
-    if (!providersInit) {
-      throw new SchematicsException(`'providers' array not found in appConfig`);
-    }
-    if (!isArrayLiteralExpression(providersInit)) {
-      throw new SchematicsException(`'providers' is not an array`);
-    }
-
-    context.logger.info(
-      `providerConfigPath=${ruleContext.providerConfigPath ?? ''}`,
-    );
-
-    const { updatedProvidersArray, extraChanges, didChange } =
-      buildProvidersUpdate(sourceFile, ruleContext, providersInit);
-
-    changes.push(...extraChanges);
-
-    if (didChange) {
-      changes.push(
-        ...replaceNodeWithPrinted(
-          sourceFile,
-          appConfigPath,
-          content,
-          providersInit,
-          updatedProvidersArray,
-        ),
+    if (!providersInit || !isArrayLiteralExpression(providersInit)) {
+      throw new SchematicsException(
+        `'providers' array not found in ${appConfigPath}`,
       );
     }
+
+    const { addedElements, importChanges } = buildProvidersUpdate(
+      tree,
+      sourceFile,
+      ruleContext,
+      providersInit,
+    );
+    const changes = [
+      ...importChanges,
+      ...(addedElements.length > 0
+        ? appendToLiteral(
+            sourceFile,
+            appConfigPath,
+            providersInit,
+            addedElements,
+          )
+        : []),
+    ];
 
     const recorder = tree.beginUpdate(appConfigPath);
     applyToUpdateRecorder(recorder, changes);
     tree.commitUpdate(recorder);
 
-    context.logger.info('app.config.ts updated');
+    context.logger.info(`${appConfigPath} updated`);
     return tree;
   };
 }

@@ -110,6 +110,7 @@ export function withHiddenLifecycle(options: {
   hiddenEffects({
     component: options.component,
     isHidden: options.isHidden,
+    handleVisibility: options.handleVisibility,
     parentControl: options.parentControl,
     host: options.host,
     onHidden,

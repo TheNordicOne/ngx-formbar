@@ -1,10 +1,9 @@
 import { computed, Signal } from '@angular/core';
-import { Program } from '../parser';
 import { Expression, FormContext } from '../types/expression.type';
 import { ExpressionService } from '../services/expression';
 
 function isExpressionFn<T>(
-  value: Expression<T> | T,
+  value: unknown,
 ): value is (formValue: FormContext) => T {
   return typeof value === 'function';
 }
@@ -14,7 +13,6 @@ function isExpressionFn<T>(
  *
  * String expressions are parsed and evaluated against the form context.
  * Functions are called with the form context. Static values pass through.
- * The parsed AST is cached so it is only recomputed when the option changes.
  *
  * @param option Signal carrying the configured value. May be a string
  *   expression, a predicate function, a literal value, or `undefined`.
@@ -31,20 +29,8 @@ export function resolveExpression<T>(
   formContext: Signal<FormContext>,
   expressionService: ExpressionService,
 ): Signal<T | null | undefined> {
-  const ast = computed<Program | null>(() => {
-    const expression = option();
-    if (typeof expression !== 'string') {
-      return null;
-    }
-    return expressionService.parseExpressionToAst(expression);
-  });
-
   return computed(() => {
     const value = option();
-
-    if (value === undefined) {
-      return undefined;
-    }
 
     if (isExpressionFn<T>(value)) {
       return value(formContext());
@@ -55,10 +41,9 @@ export function resolveExpression<T>(
       return value;
     }
 
-    const parsedAst = ast();
-    if (!parsedAst) {
-      return undefined;
-    }
-    return expressionService.evaluateExpression<T>(parsedAst, formContext());
+    const ast = expressionService.parseExpressionToAst(value);
+    return ast
+      ? expressionService.evaluateExpression<T>(ast, formContext())
+      : undefined;
   });
 }

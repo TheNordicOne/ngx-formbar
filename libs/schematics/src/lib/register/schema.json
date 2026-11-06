@@ -6,23 +6,28 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add ngx-formbar to.",
+      "description": "Angular project to register components in.",
       "$default": {
         "$source": "projectName"
       }
     },
     "registrationType": {
       "type": "string",
-      "description": "How components will be registered. Possible values: token, config",
+      "enum": ["token", "config"],
+      "description": "How components will be registered",
       "default": "token"
+    },
+    "controlRegistrationsPath": {
+      "type": "string",
+      "description": "The component registrations file"
     },
     "controlRegistrations": {
       "type": "string",
-      "description": "Path to the registration file that should be used."
+      "description": "The same as controlRegistrationsPath"
     },
     "schematicsConfig": {
       "type": "string",
-      "description": "Path of the configuration that is to be used by this schematic"
+      "description": "The schematics configuration file to use"
     },
     "include": {
       "type": "array",
@@ -34,7 +39,7 @@
     },
     "exclude": {
       "type": "array",
-      "description": "Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded",
+      "description": "Glob patterns to exclude when searching for components (node_modules and spec files will always be excluded)",
       "default": [],
       "items": {
         "type": "string"

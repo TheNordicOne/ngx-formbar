@@ -11,7 +11,7 @@ export interface Schema {
 export interface SchemaContext {
   typeReference: string;
   entries: SchemaEmitterEntry[];
-  projectRoot: string;
+  sourceRoot: string;
   workspaceRoot: string;
   tsConfigPath: string;
 }

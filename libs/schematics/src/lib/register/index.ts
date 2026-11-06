@@ -8,20 +8,27 @@ import {
 import { discoverComponents } from './discover-components';
 import { DiscoverOptions, RegisterContext } from './schema';
 import { registerComponents } from './register-components';
-import { ProjectDefinition } from '@schematics/angular/utility/workspace';
 import {
-  findConfigPath,
+  getWorkspace,
+  ProjectDefinition,
+  WorkspaceDefinition,
+} from '@schematics/angular/utility/workspace';
+import {
   loadAutomationConfig,
   DEFAULT_REGISTRATION_TYPE,
-  getProject,
+  findTsConfigPath,
+  getProjectDefinition,
+  otherProjectDirectories,
+  resolveRegistrationsPath,
 } from '@ngx-formbar/setup';
 
 export function register(options: DiscoverOptions): Rule {
   let registerContext: RegisterContext;
 
-  const mergeConfigs: Rule = async (tree: Tree) => {
-    const project = await getProject(tree, options.project);
-    registerContext = mergeOptions(options, project, tree);
+  const mergeConfigs: Rule = async (tree: Tree, context: SchematicContext) => {
+    const workspace = await getWorkspace(tree);
+    const project = getProjectDefinition(workspace, options.project);
+    registerContext = mergeOptions(options, project, workspace, tree, context);
     return tree;
   };
 
@@ -40,31 +47,45 @@ export function register(options: DiscoverOptions): Rule {
 function mergeOptions(
   options: DiscoverOptions,
   project: ProjectDefinition,
+  workspace: WorkspaceDefinition,
   tree: Tree,
+  context: SchematicContext,
 ) {
-  const projectRoot = project.sourceRoot ?? project.root;
+  const sourceRoot = project.sourceRoot ?? project.root;
 
   const automationConfig = loadAutomationConfig(
     tree,
-    projectRoot,
+    sourceRoot,
+    context.logger,
     options.schematicsConfig,
   );
 
   const discoverConfig = automationConfig ? automationConfig.discovery : {};
 
-  const controlRegistrations = automationConfig?.controlRegistrationsPath
-    ? `/${projectRoot}/${automationConfig.controlRegistrationsPath}`
-    : findConfigPath(tree, projectRoot);
+  const configuredRegistrations =
+    automationConfig?.controlRegistrationsPath ??
+    options.controlRegistrationsPath ??
+    options.controlRegistrations;
+
+  const controlRegistrations = resolveRegistrationsPath(
+    tree,
+    sourceRoot,
+    configuredRegistrations,
+  );
 
   const mergedConfig: RegisterContext = {
     ...options,
     ...discoverConfig,
     controlRegistrations,
+    configuredRegistrations,
     registrationType:
       automationConfig?.registrationType ??
       options.registrationType ??
       DEFAULT_REGISTRATION_TYPE,
     components: [],
+    sourceRoot,
+    tsConfigPath: findTsConfigPath(tree, project),
+    otherProjectDirectories: otherProjectDirectories(project, workspace),
   };
 
   return mergedConfig;

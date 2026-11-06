@@ -1,12 +1,168 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { COLLECTION_PATH, setupWorkspace } from './workspace-setup';
-import { readCompilerOptions } from '../schema/program';
+import { readCompilerOptions } from '@ngx-formbar/setup';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createTreeProgram } from '../schema/program';
 
 const TS_CONFIG_PATH = 'projects/test-app/tsconfig.app.json';
+
+describe('createTreeProgram', () => {
+  const file = '/projects/test-app/src/app/uses-hoisted.ts';
+  let tree: UnitTestTree;
+  let monorepo: string;
+
+  function writeOnDisk(path: string, content: string) {
+    const full = join(monorepo, path);
+
+    mkdirSync(join(full, '..'), { recursive: true });
+    writeFileSync(full, content);
+  }
+
+  function loadedFiles() {
+    return createTreeProgram(
+      tree,
+      '/tsconfig.json',
+      [file],
+      join(monorepo, 'apps/web'),
+    )
+      .program.getSourceFiles()
+      .map(({ fileName }) => fileName);
+  }
+
+  beforeEach(async () => {
+    tree = await setupWorkspace(
+      new SchematicTestRunner('schematics', COLLECTION_PATH),
+    );
+    monorepo = mkdtempSync(join(tmpdir(), 'ngx-formbar-monorepo-'));
+  });
+
+  afterEach(() => {
+    rmSync(monorepo, { recursive: true, force: true });
+  });
+
+  it('finds a package installed above the workspace root', () => {
+    writeOnDisk(
+      'node_modules/hoisted/package.json',
+      JSON.stringify({ name: 'hoisted', types: 'index.d.ts' }),
+    );
+    writeOnDisk(
+      'node_modules/hoisted/index.d.ts',
+      "export * from 'hoisted-dependency';\n",
+    );
+    writeOnDisk(
+      'node_modules/hoisted-dependency/package.json',
+      JSON.stringify({ name: 'hoisted-dependency', types: 'index.d.ts' }),
+    );
+    writeOnDisk(
+      'node_modules/hoisted-dependency/index.d.ts',
+      'export type Hoisted = string;\n',
+    );
+    tree.create(file, "export { Hoisted } from 'hoisted';\n");
+
+    expect(loadedFiles()).toEqual(
+      expect.arrayContaining([
+        join(monorepo, 'node_modules/hoisted/index.d.ts'),
+        join(monorepo, 'node_modules/hoisted-dependency/index.d.ts'),
+      ]),
+    );
+  });
+
+  it('finds a path mapping pointing above the workspace root', () => {
+    writeOnDisk('vendor/mapped.d.ts', 'export type Mapped = string;\n');
+    tree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({
+        compilerOptions: { paths: { mapped: ['../../vendor/mapped.d.ts'] } },
+      }),
+    );
+    tree.create(file, "export { Mapped } from 'mapped';\n");
+
+    expect(loadedFiles()).toContain(join(monorepo, 'vendor/mapped.d.ts'));
+  });
+
+  it('follows a tsconfig extending one above the workspace root', () => {
+    writeOnDisk('vendor/mapped.d.ts', 'export type Mapped = string;\n');
+    writeOnDisk(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: { paths: { mapped: ['./vendor/mapped.d.ts'] } },
+      }),
+    );
+    tree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({ extends: '../../tsconfig.base.json' }),
+    );
+    tree.create(file, "export { Mapped } from 'mapped';\n");
+
+    expect(loadedFiles()).toContain(join(monorepo, 'vendor/mapped.d.ts'));
+  });
+
+  it('follows a relative import leaving the workspace root', () => {
+    writeOnDisk('shared/types.ts', 'export type Shared = string;\n');
+    tree.create(
+      file,
+      "export { Shared } from '../../../../../../shared/types';\n",
+    );
+
+    expect(loadedFiles()).toContain(join(monorepo, 'shared/types.ts'));
+  });
+
+  it('reads a package inside an archive under the workspace root', () => {
+    const inArchive = 'apps/web/.yarn/cache/pkg.zip/index.d.ts';
+
+    writeOnDisk(inArchive, "export * from 'beside-the-archive';\n");
+    tree.create('/.yarn/cache/pkg.zip', 'archive');
+    tree.overwrite(
+      '/tsconfig.json',
+      JSON.stringify({
+        compilerOptions: {
+          paths: { zipped: ['./.yarn/cache/pkg.zip/index.d.ts'] },
+        },
+      }),
+    );
+    tree.create(file, "export { Zipped } from 'zipped';\n");
+
+    expect(loadedFiles()).toContain(join(monorepo, inArchive));
+  });
+
+  it('takes an import of a file that is not a module', () => {
+    tree.create('/projects/test-app/src/app/styles.css', '');
+    tree.create(file, "import './styles.css';\nexport const a = 1;\n");
+
+    expect(loadedFiles()).toContain(
+      join(monorepo, 'apps/web/projects/test-app/src/app/uses-hoisted.ts'),
+    );
+  });
+
+  it('prefers the Tree over the disk inside the workspace root', () => {
+    tree.create(file, "export { Fresh } from './fresh';\n");
+    tree.create(
+      '/projects/test-app/src/app/fresh.ts',
+      'export type Fresh = 1;\n',
+    );
+    writeOnDisk(
+      'apps/web/projects/test-app/src/app/fresh.ts',
+      'export type Stale = 1;\n',
+    );
+
+    const { sourceFileAt } = createTreeProgram(
+      tree,
+      '/tsconfig.json',
+      [file],
+      join(monorepo, 'apps/web'),
+    );
+
+    expect(sourceFileAt('/projects/test-app/src/app/fresh.ts')?.text).toContain(
+      'Fresh',
+    );
+  });
+});
 
 describe('readCompilerOptions', () => {
   let tree: UnitTestTree;

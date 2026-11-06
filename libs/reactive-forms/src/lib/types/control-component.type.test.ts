@@ -62,28 +62,28 @@ declare class FullTextControl implements ReactiveFormbarControl<TextControl> {
   readonly placeHolder: InputSignal<string | undefined>;
 }
 
-// minimal control — only name required (optional custom props can be omitted)
+// minimal control: only name required (optional custom props can be omitted)
 declare class MinimalTextControl
   implements ReactiveFormbarControl<TextControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
 }
 
-// no custom props — only name required
+// no custom props: only name required
 declare class MinimalCheckboxControl
   implements ReactiveFormbarControl<CheckboxControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
 }
 
-// no required custom props — only name required
+// no required custom props: only name required
 declare class MinimalNumberControl
   implements ReactiveFormbarControl<NumberControl>
 {
   readonly name: InputSignalWithTransform<string, string>;
 }
 
-// optional custom props included — type includes undefined
+// optional custom props included: type includes undefined
 declare class FullNumberControl
   implements ReactiveFormbarControl<NumberControl>
 {
@@ -104,7 +104,7 @@ declare class FullGroupControl implements ReactiveFormbarGroup<GroupControl> {
   readonly legend: InputSignal<string | undefined>;
 }
 
-// minimal group — name only (legend is optional)
+// minimal group: name only (legend is optional)
 declare class MinimalGroupControl
   implements ReactiveFormbarGroup<GroupControl>
 {
@@ -128,7 +128,7 @@ declare class FullArrayControl implements ReactiveFormbarArray<ArrayControl> {
   readonly addLabel: InputSignal<string | undefined>;
 }
 
-// minimal array — name only
+// minimal array: name only
 declare class MinimalArrayControl
   implements ReactiveFormbarArray<ArrayControl>
 {
@@ -143,17 +143,17 @@ declare class FullNoteBlock implements FormbarBlock<NoteControl> {
   readonly severity: InputSignal<'info' | 'warn' | 'danger' | undefined>;
 }
 
-// minimal block — only required custom props
+// minimal block: only required custom props
 declare class MinimalNoteBlock implements FormbarBlock<NoteControl> {
   readonly message: InputSignalWithTransform<string, string>;
 }
 
-// @ts-expect-error — missing required 'name'
+// @ts-expect-error: missing required 'name'
 declare class MissingName implements ReactiveFormbarControl<CheckboxControl> {
   readonly isDisabled: InputSignal<boolean>;
 }
 
-// @ts-expect-error — missing required 'message'
+// @ts-expect-error: missing required 'message'
 declare class MissingMessage implements FormbarBlock<NoteControl> {
   readonly isHidden: InputSignal<boolean>;
 }
