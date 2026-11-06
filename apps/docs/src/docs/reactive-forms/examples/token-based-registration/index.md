@@ -1,14 +1,5 @@
 Registering components and validators via Angular DI tokens: the explicit, provider-based approach.
 
-<details>
-<summary>Form Configuration (click to expand)</summary>
-
-```typescript file="./../../../../../../../libs/examples/src/lib/forms/maintenance-form.ts"
-
-```
-
-</details>
-
 {{ NgDocActions.demo("TokenBasedDemoComponent") }}
 
 ## Concepts Used

@@ -1,23 +1,5 @@
 Performance testing with large forms and cascading computations: switch between a realistic large form and a stress-test with deep dependency chains.
 
-<details>
-<summary>Large Maintenance Form Configuration (click to expand)</summary>
-
-```typescript file="./../../../../../../../libs/examples/src/lib/forms/maintenance-form-large.ts"
-
-```
-
-</details>
-
-<details>
-<summary>Highly Computed Form Configuration (click to expand)</summary>
-
-```typescript file="./../../../../../../../libs/examples/src/lib/forms/highly-computed-form.ts"
-
-```
-
-</details>
-
 {{ NgDocActions.demo("VeryLargeFormDemoComponent") }}
 
 ## Concepts Used

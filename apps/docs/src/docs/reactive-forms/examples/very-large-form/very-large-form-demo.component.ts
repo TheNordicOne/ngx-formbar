@@ -1,3 +1,5 @@
+// snippet-from-file="../../../../../../../libs/examples/src/lib/forms/maintenance-form-large.ts" "Large Maintenance Form Configuration"
+// snippet-from-file="../../../../../../../libs/examples/src/lib/forms/highly-computed-form.ts" "Highly Computed Form Configuration"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbForm } from '@ngx-formbar/core';

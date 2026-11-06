@@ -1,3 +1,4 @@
+// snippet-from-file="../../../../../../../libs/examples/src/lib/forms/maintenance-form.ts" "Form Configuration"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { loadComponent, NGX_FW_COMPONENT_RESOLVER } from '@ngx-formbar/core';

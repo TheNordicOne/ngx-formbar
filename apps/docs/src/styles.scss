@@ -54,3 +54,8 @@ summary {
 .ng-doc-fullscreen-route {
   background-image: none !important;
 }
+
+// Long demo sources get more room before they scroll; short ones stay short.
+ng-doc-demo {
+  --ng-doc-code-max-height: 75vh;
+}
