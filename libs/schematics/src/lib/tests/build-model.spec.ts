@@ -822,6 +822,22 @@ export type AppContent = TextControl;
       expect(model.nodes['TextControl'].kind).toBe('control');
     });
 
+    it('finds the kind through an imported alias of an intersection', async () => {
+      const model = await modelFor(
+        `import { Base } from './base';
+export interface TextControl extends Base { type: 'text'; }
+export type AppContent = TextControl;
+`,
+        {
+          'base.ts': `import { NgxFbControl } from '@ngx-formbar/core';
+export type Base = NgxFbControl & { extra?: string };
+`,
+        },
+      );
+
+      expect(model.nodes['TextControl'].kind).toBe('control');
+    });
+
     it('still rejects a utility type around something else', async () => {
       await expect(
         modelFor(

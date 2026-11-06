@@ -532,10 +532,9 @@ function toTupleNode(
   builder: Builder,
   expansion: Expansion,
 ) {
-  const { fixedLength, minLength, elementFlags } = type.target;
+  const { fixedLength, minLength } = type.target;
   const items = builder.checker
     .getTypeArguments(type)
-    .slice(0, elementFlags.length)
     .map((item) => toTypeNode(item, builder, expansion));
   const trailing = items.slice(fixedLength);
   const rest: TypeNode | undefined =
