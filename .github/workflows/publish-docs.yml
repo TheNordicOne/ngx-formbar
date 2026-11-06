@@ -52,7 +52,7 @@ jobs:
           if [ -z "$VERSION" ]; then
             VERSION=$(node -p "require('./libs/core/package.json').version")
           fi
-          npx nx build @ngx-formbar/docs "--define.NGXFB_VERSION=\"'v${VERSION}'\""
+          NGXFB_VERSION="v${VERSION}" npx nx build @ngx-formbar/docs
 
       - name: Install lftp
         run: sudo apt-get install -y lftp

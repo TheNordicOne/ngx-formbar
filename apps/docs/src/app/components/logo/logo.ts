@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import favicon from '../../../../public/favicon.svg';
+import favicon from '../../../../public/favicon.svg?raw';
 
 @Component({
   selector: 'docs-logo',
