@@ -686,6 +686,17 @@ describe('ng-add schematic', () => {
       );
     });
 
+    it('puts each inline registration on its own line', async () => {
+      const edited = await editedConfig('  providers: [],', {
+        registrationStyle: 'config',
+        provideInline: true,
+      });
+
+      expect(edited).toContain(
+        '    provideFormbar({\n      componentRegistrations,\n      validatorRegistrations,\n      asyncValidatorRegistrations\n    })\n',
+      );
+    });
+
     it.each<[string, string, string]>([
       ['four spaces', '    ', '        '],
       ['tabs', '\t', '\t\t'],
@@ -944,6 +955,25 @@ describe('ng-add schematic', () => {
       expect(hasComponentProviders).toBe(true);
       expect(hasValidatorProviders).toBe(false);
       expect(hasAsyncValidatorProviders).toBe(false);
+    });
+
+    it('adds only the missing providers on a re-run', async () => {
+      appTree = await runAdd({
+        registrationStyle: 'token',
+        includeSyncValidators: false,
+        includeAsyncValidators: false,
+      });
+
+      const tree = await runAdd({ registrationStyle: 'token' });
+      const text = read(tree, appConfigPath);
+
+      expect(
+        [
+          'componentRegistrationsProvider',
+          'validatorRegistrationsProvider',
+          'asyncValidatorRegistrationsProvider',
+        ].map((name) => text.match(new RegExp(`\\b${name}\\b`, 'g'))?.length),
+      ).toEqual([2, 2, 2]);
     });
 
     it('is not affecting token files by setting provideInline to true', async () => {
@@ -4120,6 +4150,24 @@ describe('ng-add schematic', () => {
         expect(read(tree, ownFile)).toBe(kept);
       });
 
+      it('leaves another project alone without a schematics configuration', async () => {
+        appTree = await runAdd({});
+
+        const kept = read(appTree, ownFile);
+        const { tree, warnings } = await warningsOfRun(
+          {
+            schematicsConfigPath: '/',
+            registrationStyle: 'config',
+            useSchematicConfig: false,
+            updateOtherProjects: true,
+          },
+          'other',
+        );
+
+        expect(read(tree, ownFile)).toBe(kept);
+        expect(warnings).toEqual([]);
+      });
+
       it('removes a helper the new file would add to another project', async () => {
         appTree = await runAdd({ useHelper: false });
 
@@ -4470,6 +4518,31 @@ describe('ng-add schematic', () => {
       expect(links(await generatorDefaults(tree))).toEqual(
         generators.map(() => link),
       );
+      expect(read(tree, customFile)).toBe(kept);
+      expect(tree.exists(schematicsConfigPath)).toBe(false);
+      expect(warnings).toEqual([]);
+    });
+
+    it('finds the link on a later generator', async () => {
+      await lastValueFrom(
+        runner.callRule(
+          updateWorkspace(({ projects }) => {
+            const project = projects.get('test-app');
+
+            if (project) {
+              project.extensions.schematics = {
+                '@ngx-formbar/schematics:control': {},
+                '@ngx-formbar/schematics:register': { schematicsConfig: link },
+              };
+            }
+          }),
+          appTree,
+        ),
+      );
+
+      const kept = read(appTree, customFile);
+      const { tree, warnings } = await run({});
+
       expect(read(tree, customFile)).toBe(kept);
       expect(tree.exists(schematicsConfigPath)).toBe(false);
       expect(warnings).toEqual([]);

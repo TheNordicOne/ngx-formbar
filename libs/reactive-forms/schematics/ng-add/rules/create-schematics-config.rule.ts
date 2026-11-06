@@ -44,8 +44,8 @@ export function createSchematicsConfig(ruleContext: RuleContext): Rule {
       },
     };
 
-    const overShared =
-      configFile !== SHARED_CONFIG_FILE && tree.exists(SHARED_CONFIG_FILE);
+    // A file that exists is kept as it is, so only a new one can go over the shared file.
+    const overShared = tree.exists(SHARED_CONFIG_FILE);
 
     if (overShared && !tree.exists(configFile)) {
       context.logger.info(

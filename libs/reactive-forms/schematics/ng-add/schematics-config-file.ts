@@ -222,6 +222,6 @@ function isSamePath(
     (resolvedKept === resolvedStated ||
       (setting === 'viewProviderHelperPath' &&
         keptPath.endsWith('.ts') &&
-        isWithin(resolvedKept.slice(1), resolvedStated.slice(1))))
+        isWithin(resolvedKept.slice(1), resolvedStated)))
   );
 }
