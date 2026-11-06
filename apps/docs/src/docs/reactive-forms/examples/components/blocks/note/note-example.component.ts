@@ -1,8 +1,9 @@
+// snippet-from-file="./note-form.ts" "Form Configuration"
+// snippet-from-file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/note/note-control.component.ts" "TypeScript"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
-import { NgxFbForm } from '@ngx-formbar/core';
-import { ExampleControls } from '@ngx-formbar/examples';
+import { noteForm } from './note-form';
 
 @Component({
   selector: 'docs-note-example',
@@ -13,16 +14,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 export class NoteExampleComponent {
   private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly formContent: NgxFbForm<ExampleControls> = {
-    content: {
-      infoNote: {
-        type: 'note',
-        isControl: false,
-        severity: 'info',
-        message: 'An informational note rendered as a block.',
-      },
-    },
-  };
+  protected readonly formContent = noteForm;
 
   protected readonly form = this.formBuilder.group({});
 }

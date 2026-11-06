@@ -1,3 +1,5 @@
+// snippet-from-file="./layout-form.ts" "Form Configuration"
+// snippet-from-file="./layout-example.component.ts" "TypeScript"
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,13 +16,10 @@ import {
   ComponentRegistrationService,
   NGX_FW_COMPONENT_REGISTRATIONS,
   NGX_FW_COMPONENT_RESOLVER,
-  NgxFbForm,
   staticComponent,
 } from '@ngx-formbar/core';
-import {
-  LayoutField,
-  LayoutFieldComponent,
-} from '../layout-field/layout-field.component';
+import { LayoutFieldComponent } from '../layout-field/layout-field.component';
+import { layoutForm } from './layout-form';
 
 const PRESETS = [
   {
@@ -95,24 +94,7 @@ export class StylingLayoutExampleComponent {
     this.highlighter.highlight(this.selected().rule),
   );
 
-  protected readonly formContent: NgxFbForm<LayoutField> = {
-    content: {
-      fullName: {
-        type: 'field',
-        label: 'Full Name',
-        placeHolder: 'e.g., Emma Frost',
-      },
-      email: { type: 'field', label: 'Email', placeHolder: 'name@example.com' },
-      building: { type: 'field', label: 'Building', placeHolder: 'A' },
-      floor: { type: 'field', label: 'Floor', placeHolder: 'B1, G, 1, 2, …' },
-      room: { type: 'field', label: 'Room / Area', placeHolder: 'e.g., A-310' },
-      category: {
-        type: 'field',
-        label: 'Category',
-        placeHolder: 'e.g., Plumbing',
-      },
-    },
-  };
+  protected readonly formContent = layoutForm;
 
   protected readonly form = this.formBuilder.group({});
 }

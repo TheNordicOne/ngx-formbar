@@ -1,8 +1,9 @@
+// snippet-from-file="./dropdown-form.ts" "Form Configuration"
+// snippet-from-file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/dropdown/dropdown-control.component.ts" "TypeScript"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
-import { NgxFbForm } from '@ngx-formbar/core';
-import { ExampleControls } from '@ngx-formbar/examples';
+import { dropdownForm } from './dropdown-form';
 
 @Component({
   selector: 'docs-dropdown-example',
@@ -13,19 +14,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 export class DropdownExampleComponent {
   private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly formContent: NgxFbForm<ExampleControls> = {
-    content: {
-      country: {
-        type: 'dropdown',
-        label: 'Country',
-        options: [
-          { id: 'us', value: 'us', label: 'United States' },
-          { id: 'uk', value: 'uk', label: 'United Kingdom' },
-          { id: 'de', value: 'de', label: 'Germany' },
-        ],
-      },
-    },
-  };
+  protected readonly formContent = dropdownForm;
 
   protected readonly form = this.formBuilder.group({});
 }

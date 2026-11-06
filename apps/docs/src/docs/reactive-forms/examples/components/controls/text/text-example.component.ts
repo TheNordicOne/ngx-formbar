@@ -1,8 +1,9 @@
+// snippet-from-file="./text-form.ts" "Form Configuration"
+// snippet-from-file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/text/text-control.component.ts" "TypeScript"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
-import { NgxFbForm } from '@ngx-formbar/core';
-import { ExampleControls } from '@ngx-formbar/examples';
+import { textForm } from './text-form';
 
 @Component({
   selector: 'docs-text-example',
@@ -13,15 +14,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 export class TextExampleComponent {
   private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly formContent: NgxFbForm<ExampleControls> = {
-    content: {
-      fullName: {
-        type: 'text',
-        label: 'Full Name',
-        placeHolder: 'e.g., Emma Frost',
-      },
-    },
-  };
+  protected readonly formContent = textForm;
 
   protected readonly form = this.formBuilder.group({});
 }

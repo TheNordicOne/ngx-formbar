@@ -1,8 +1,9 @@
+// snippet-from-file="./number-form.ts" "Form Configuration"
+// snippet-from-file="../../../../../../../../../libs/examples/reactive-forms/src/lib/components/number/number-control.component.ts" "TypeScript"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgxFbFormComponent } from '@ngx-formbar/reactive-forms';
-import { NgxFbForm } from '@ngx-formbar/core';
-import { ExampleControls } from '@ngx-formbar/examples';
+import { numberForm } from './number-form';
 
 @Component({
   selector: 'docs-number-example',
@@ -13,16 +14,7 @@ import { ExampleControls } from '@ngx-formbar/examples';
 export class NumberExampleComponent {
   private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly formContent: NgxFbForm<ExampleControls> = {
-    content: {
-      peopleAffected: {
-        type: 'number',
-        label: 'People Affected',
-        min: 0,
-        max: 5000,
-      },
-    },
-  };
+  protected readonly formContent = numberForm;
 
   protected readonly form = this.formBuilder.group({});
 }
