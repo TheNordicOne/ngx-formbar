@@ -23,9 +23,5 @@ A layout set on `<ngxfb-form>` arranges your components. This live demo shows yo
 
 Switch between the layouts below to see different examples.
 
-<docs-component-example>
-
-{{ NgDocActions.demo("StylingLayoutExampleComponent", { container: false }) }}
-
-</docs-component-example>
+{{ NgDocActions.demo("StylingLayoutExampleComponent") }}
 

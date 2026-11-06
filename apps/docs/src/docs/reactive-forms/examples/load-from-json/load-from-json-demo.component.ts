@@ -1,3 +1,4 @@
+// snippet-from-file="../../../../../public/examples/maintenanceForm.json":json "Form Configuration"
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';

@@ -45,3 +45,17 @@
 summary {
   cursor: pointer;
 }
+
+// ng-doc paints a dot grid behind every demo. Its rules are scoped to its
+// components, so a plain global rule loses on specificity.
+.ng-doc-demo-stage,
+.ng-doc-demo-container,
+.ng-doc-demo-pane-stage,
+.ng-doc-fullscreen-route {
+  background-image: none !important;
+}
+
+// Long demo sources get more room before they scroll; short ones stay short.
+ng-doc-demo {
+  --ng-doc-code-max-height: 75vh;
+}

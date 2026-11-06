@@ -12,84 +12,37 @@
   },
   "targets": {
     "build": {
-      "executor": "@ng-doc/builder:application",
+      "executor": "@ng-doc/builder:vite-application",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/docs",
-        "browser": "apps/docs/src/main.ts",
-        "tsConfig": "apps/docs/tsconfig.app.json",
-        "inlineStyleLanguage": "scss",
-        "assets": [
-          {
-            "glob": "**/*",
-            "input": "node_modules/@ng-doc/app/assets",
-            "output": "assets/ng-doc/app"
-          },
-          {
-            "glob": "**/*",
-            "input": "node_modules/@ng-doc/ui-kit/assets",
-            "output": "assets/ng-doc/ui-kit"
-          },
-          {
-            "glob": "**/*",
-            "input": "ng-doc/@ngx-formbar/docs/assets",
-            "output": "assets/ng-doc"
-          },
-          {
-            "glob": "**/*",
-            "input": "apps/docs/public"
-          }
-        ],
-        "styles": [
-          "node_modules/@ng-doc/app/styles/global.css",
-          "node_modules/@ng-doc/app/styles/themes/dark.css",
-          "libs/examples/reactive-forms/src/lib/styles/demo.scss",
-          "apps/docs/src/styles.scss"
-        ],
-        "allowedCommonJsDependencies": ["@ng-doc/core"],
-        "loader": {
-          ".svg": "text"
-        },
-        "define": {
-          "NGXFB_VERSION": "'v0.0.0'"
-        }
+        "configFile": "apps/docs/vite.config.mts",
+        "outputPath": "dist/apps/docs"
       },
       "configurations": {
         "production": {
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "2mb"
-            },
-            {
-              "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
-            }
-          ],
-          "outputHashing": "all"
+          "mode": "production"
         },
         "development": {
-          "optimization": false,
-          "extractLicenses": false,
-          "sourceMap": true
+          "mode": "development"
         }
-      }
+      },
+      "defaultConfiguration": "production"
     },
     "serve": {
+      "executor": "@ng-doc/builder:vite-dev-server",
       "continuous": true,
-      "executor": "@ng-doc/builder:dev-server",
-      "defaultConfiguration": "development",
+      "options": {
+        "configFile": "apps/docs/vite.config.mts"
+      },
       "configurations": {
         "production": {
-          "buildTarget": "@ngx-formbar/docs:build:production"
+          "mode": "production"
         },
         "development": {
-          "buildTarget": "@ngx-formbar/docs:build:development"
+          "mode": "development"
         }
-      }
+      },
+      "defaultConfiguration": "development"
     },
     "lint": {
       "inputs": [
