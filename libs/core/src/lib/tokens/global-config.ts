@@ -37,7 +37,7 @@ function mergeDeep<T>(base: T, ...partials: readonly Partial<T>[]): T {
 
       if (isMergeable(dst) && isMergeable(src)) {
         (out as unknown as Record<keyof T, unknown>)[k] = mergeDeep(
-          dst as unknown as T,
+          dst as T,
           src as Partial<T>,
         );
         continue;

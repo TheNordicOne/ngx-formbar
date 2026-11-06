@@ -32,7 +32,7 @@ class HiddenParentDirective {
   selector: 'ngxfb-with-parent',
   imports: [ProbeDirective, HiddenParentDirective],
   template: `<div ngxfbParent><span ngxfbProbe></span></div>`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class WithParent {
   readonly probe = viewChild.required(ProbeDirective);

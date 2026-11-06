@@ -73,7 +73,7 @@ export const objectPlugin: Plugin = {
             computed: isArrayKey,
             key: isArrayKey
               ? (key as { elements: Expression[] }).elements[0]
-              : (key as Expression),
+              : key,
             value: value as Expression,
             shorthand: false,
           });

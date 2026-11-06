@@ -74,7 +74,7 @@ PRs are **squash-merged**. The PR title becomes the commit message on `main`, so
 Common types:
 
 | Type       | Purpose                                    | Triggers version bump? |
-|------------|--------------------------------------------|------------------------|
+| ---------- | ------------------------------------------ | ---------------------- |
 | `feat`     | New functionality                          | Yes (minor)            |
 | `fix`      | Bug fix                                    | Yes (patch)            |
 | `refactor` | Code restructuring without behavior change | No                     |
@@ -156,7 +156,7 @@ Critical fixes for released versions use maintenance branches:
 This is an [Nx](https://nx.dev) monorepo. Published packages live under `libs/`, applications under `apps/`:
 
 | Package                       | Path                  | Description                                   |
-|-------------------------------|-----------------------|-----------------------------------------------|
+| ----------------------------- | --------------------- | --------------------------------------------- |
 | `@ngx-formbar/core`           | `libs/core`           | Core library (no `@angular/forms` dependency) |
 | `@ngx-formbar/reactive-forms` | `libs/reactive-forms` | Reactive forms integration (depends on core)  |
 | `@ngx-formbar/schematics`     | `libs/schematics`     | Code generation schematics                    |

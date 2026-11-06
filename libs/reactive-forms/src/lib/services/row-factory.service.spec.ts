@@ -36,7 +36,7 @@ describe('RowFactoryService', () => {
           rowControl: { type: 'text', label: 'Tag' },
         },
       },
-    } as unknown as NgxFbItem);
+    });
 
     expect((row as FormGroup).get('list')).toBeInstanceOf(FormArray);
     expect((row as FormGroup).get('list')?.updateOn).toBe('blur');

@@ -49,10 +49,7 @@ export const templatePlugin: Plugin = {
           pushQuasi();
           env.node = this.gobbleTokenProperty(node);
           return;
-        } else if (
-          ch === '$' &&
-          this.expr.charAt(this.index + 1) === '{'
-        ) {
+        } else if (ch === '$' && this.expr.charAt(this.index + 1) === '{') {
           this.index += 2;
           pushQuasi();
           raw = '';

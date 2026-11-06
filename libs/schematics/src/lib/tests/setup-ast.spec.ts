@@ -583,9 +583,9 @@ describe('readCompilerOptions', () => {
       '/tsconfig.json': '{ "compilerOptions": { "baseUrl": "." } }',
     });
 
-    expect(readCompilerOptions(tree, '/tsconfig.json', '/work').baseUrl).toBe(
-      '/work',
-    );
+    expect(readCompilerOptions(tree, '/tsconfig.json', '/work')).toMatchObject({
+      baseUrl: '/work',
+    });
   });
 
   it('survives a file that is not JSON', () => {
@@ -617,7 +617,7 @@ describe('createTreeCompilerHost', () => {
     expect(() => {
       host.writeFile('/a.ts', '', false);
     }).not.toThrow();
-    expect(host.getDefaultLibFileName({})).toMatch(/lib\.d\.ts$/);
+    expect(host.getDefaultLibFileName({})).toMatch(/\/lib\.([\w.]+\.)?d\.ts$/);
   });
 
   it.each([

@@ -62,7 +62,7 @@ export const arrowPlugin: Plugin = {
               type: 'ArrowFunctionExpression',
               params: [],
               body,
-            } as ArrowFunctionExpression;
+            };
             return;
           }
         }

@@ -108,7 +108,7 @@ describe('provideFormbar', () => {
   it('merges registered validators over the defaults', () => {
     configure({
       validatorRegistrations: { email: [first], extra: [second] },
-    } as never);
+    });
 
     const map = TestBed.inject(NGX_FW_VALIDATOR_REGISTRATIONS_RESOLVED);
 
@@ -121,7 +121,7 @@ describe('provideFormbar', () => {
     const asyncValidator = () => Promise.resolve(null);
     configure({
       asyncValidatorRegistrations: { unique: [asyncValidator] },
-    } as never);
+    });
 
     expect(
       TestBed.inject(NGX_FW_ASYNC_VALIDATOR_REGISTRATIONS_RESOLVED).get(

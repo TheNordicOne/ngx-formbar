@@ -104,7 +104,7 @@ describe('FormLoaderService', () => {
       const root = form();
       root.controls.group.controls.inner.push(new FormGroup({}));
 
-      service.load(root, config, { group } as Record<string, unknown>);
+      service.load(root, config, { group });
 
       expect(root.controls.group.controls.inner.length).toBe(0);
     },

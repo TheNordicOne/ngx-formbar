@@ -14,7 +14,12 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { loadComponent, NgxFbForm, staticComponent } from '@ngx-formbar/core';
+import {
+  loadComponent,
+  NgxFbForm,
+  NgxFbItem,
+  staticComponent,
+} from '@ngx-formbar/core';
 import { provideFormbar } from '../../config/provide-formbar';
 import { controlContainerViewProviders } from '../../helper/control-container-view-providers';
 import { NGXFB_ARRAY_CONTROL } from '../../tokens/control-entries';
@@ -88,7 +93,7 @@ class RowsComponent {
 })
 class HostComponent {
   readonly form = new FormGroup<Record<string, FormControl>>({});
-  readonly config = signal({ content: {} } as NgxFbForm);
+  readonly config = signal<NgxFbForm>({ content: {} });
 }
 
 const manual = {
@@ -97,7 +102,7 @@ const manual = {
 } as const;
 
 async function render(
-  content: object,
+  content: NgxFbForm['content'],
   prepare?: (form: FormGroup) => void,
 ): Promise<ComponentFixture<HostComponent>> {
   TestBed.configureTestingModule({
@@ -113,12 +118,12 @@ async function render(
           'manual-group': staticComponent(GroupComponent, manual),
           'manual-array': staticComponent(ArrayComponent, manual),
         },
-      } as never),
+      }),
     ],
   });
   const fixture = TestBed.createComponent(HostComponent);
   prepare?.(fixture.componentInstance.form);
-  fixture.componentInstance.config.set({ content } as NgxFbForm);
+  fixture.componentInstance.config.set({ content });
   await fixture.whenStable();
   return fixture;
 }
@@ -248,13 +253,13 @@ describe('NgxFbFormComponent', () => {
       const { form, config: formConfig } = fixture.componentInstance;
       expect(form.get(name)).not.toBeNull();
 
-      formConfig.set({ content: {} } as NgxFbForm);
+      formConfig.set({ content: {} });
       await fixture.whenStable();
 
       expect(form.get(name)).toBeNull();
     });
 
-    it.each([
+    it.each<[string, NgxFbItem]>([
       ['field', { type: 'text', label: 'Field', hideStrategy: 'keep' }],
       [
         'group',
@@ -265,7 +270,7 @@ describe('NgxFbFormComponent', () => {
       const fixture = await render({ [name]: config });
       const { form, config: formConfig } = fixture.componentInstance;
 
-      formConfig.set({ content: {} } as NgxFbForm);
+      formConfig.set({ content: {} });
       await fixture.whenStable();
 
       expect(form.get(name)).not.toBeNull();
