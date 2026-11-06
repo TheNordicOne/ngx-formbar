@@ -10,3 +10,5 @@ onlyBuiltDependencies:
   - msgpackr-extract
   - nx
   - unrs-resolver
+overrides:
+  '@storybook/builder-webpack5>webpack-dev-middleware': ^7.4.5
